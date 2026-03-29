@@ -1,0 +1,10 @@
+docker/
+helm/
+.git/
+.gitignore
+README.md
+notes.md
+*.md
+src/node_modules/
+src/.git/
+*.bak

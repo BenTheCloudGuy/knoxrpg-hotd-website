@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hotd-website
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hotd-website.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "hotd-website.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http

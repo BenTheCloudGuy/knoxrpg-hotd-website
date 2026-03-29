@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hotd-website
+description: Halls of the Damned campaign website deployed on MicroK8s (Cortana)
+type: application
+version: 1.0.0
+appVersion: "latest"

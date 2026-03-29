@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.bak
+*.log
+npm-debug.log*
+
+# Helm release overrides (may contain passwords)
+helm/**/values-local.yaml
+helm/**/secrets.yaml

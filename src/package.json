@@ -1,0 +1,23 @@
+{
+  "name": "knoxrpg-hotd-campaign",
+  "version": "1.0.0",
+  "description": "Halls of the Damned — KnoxRPG D&D Campaign Website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js --port 3001"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.6.0",
+    "@azure/keyvault-secrets": "^4.10.0",
+    "@azure/storage-blob": "^12.26.0",
+    "applicationinsights": "^3.4.0",
+    "bcryptjs": "^2.4.3",
+    "openai": "^4.77.0",
+    "pg": "^8.13.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}

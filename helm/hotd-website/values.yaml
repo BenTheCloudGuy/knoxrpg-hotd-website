@@ -1,0 +1,82 @@
+# =============================================================================
+# HotD Website - Helm Values
+# =============================================================================
+
+# -- Namespace ----------------------------------------------------------------
+namespace: hotd-website
+createNamespace: true
+
+# -- Naming overrides ---------------------------------------------------------
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Replicas -----------------------------------------------------------------
+replicaCount: 1
+
+# -- Container Image ----------------------------------------------------------
+image:
+  repository: localhost:32000/hotd-website
+  tag: latest
+  pullPolicy: Always
+
+# -- PostgreSQL (reuse AI stack's pgvector instance) --------------------------
+# REQUIRED: Set postgres.password at deploy time via --set or a secrets file.
+postgres:
+  host: postgres-pgvector.ai.svc.cluster.local
+  port: "5432"
+  user: cortana
+  password: ""               # REQUIRED — do NOT commit a real password here
+  database: dnd_website
+
+# -- NAS Content Paths --------------------------------------------------------
+nas:
+  hotdContent: /mnt/nas/Gaming/ASSETS/DDB_CONTENT/hotd-website-content
+
+# -- Ollama -------------------------------------------------------------------
+ollama:
+  url: http://ollama.ai.svc.cluster.local:11434
+
+# -- RAG Service --------------------------------------------------------------
+rag:
+  url: http://dnd-rag.hotd-website.svc.cluster.local:3001
+
+# -- Ingress ------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: public
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+  host: hotd.knoxrpg.com
+  tls:
+    secretName: tls-hotd-website
+
+# -- Resources ----------------------------------------------------------------
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "2"
+    memory: "1Gi"
+
+# -- Security Context ---------------------------------------------------------
+securityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Probes -------------------------------------------------------------------
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 20
+  periodSeconds: 30
