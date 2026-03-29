@@ -1,0 +1,88 @@
+name: Deploy HotD Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docker/**'
+      - 'helm/**'
+      - 'CHANGELOG.md'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: localhost:32000/hotd-website
+  HELM_RELEASE: hotd-website
+  NAMESPACE: hotd-website
+
+jobs:
+  version:
+    name: Extract Version
+    runs-on: [self-hosted, linux, cortana]
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from CHANGELOG.md
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^\## \[' CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+  build:
+    name: Build & Push Image
+    runs-on: [self-hosted, linux, cortana]
+    needs: version
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container image
+        run: |
+          buildah bud --no-cache \
+            -f docker/Dockerfile \
+            -t ${{ env.IMAGE_NAME }}:${{ needs.version.outputs.version }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push to local registry
+        run: |
+          buildah push --tls-verify=false \
+            ${{ env.IMAGE_NAME }}:${{ needs.version.outputs.version }} \
+            docker://${{ env.IMAGE_NAME }}:${{ needs.version.outputs.version }}
+          buildah push --tls-verify=false \
+            ${{ env.IMAGE_NAME }}:latest \
+            docker://${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    name: Deploy to MicroK8s
+    runs-on: [self-hosted, linux, cortana]
+    needs: [version, build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via Helm
+        run: |
+          microk8s helm upgrade --install ${{ env.HELM_RELEASE }} helm/hotd-website/ \
+            --namespace ${{ env.NAMESPACE }} \
+            --set image.tag=${{ needs.version.outputs.version }} \
+            --set postgres.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --set createNamespace=false
+
+      - name: Wait for rollout
+        run: |
+          microk8s kubectl rollout status deployment/hotd-website \
+            -n ${{ env.NAMESPACE }} --timeout=120s
+
+      - name: Verify health
+        run: |
+          microk8s kubectl exec -n ${{ env.NAMESPACE }} deploy/hotd-website -- \
+            node -e "fetch('http://localhost:3000/health').then(r=>{console.log('Health:',r.status);process.exit(r.status===200?0:1)}).catch(e=>{console.error(e);process.exit(1)})"
+
+      - name: Show deployment info
+        if: always()
+        run: |
+          echo "Version: ${{ needs.version.outputs.version }}"
+          microk8s kubectl get pods -n ${{ env.NAMESPACE }} -l app=hotd-website
+          microk8s helm list -n ${{ env.NAMESPACE }}

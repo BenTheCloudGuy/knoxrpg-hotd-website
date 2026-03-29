@@ -25,10 +25,11 @@ A dedicated campaign companion website for the **Halls of the Damned** D&D 5th E
 
 ```
 knoxrpg-hotd-website/
+├── .github/
+│   └── workflows/  # CI/CD pipeline (self-hosted Cortana runner)
 ├── docker/             # Dockerfile for container image build
 ├── helm/               # Helm chart for Kubernetes deployment
 │   └── hotd-website/
-│       ├── files/      # ConfigMap JS override files (7 files)
 │       └── templates/  # K8s resource templates
 ├── src/                # Node.js application source
 │   ├── server.js       # HTTP server entry point

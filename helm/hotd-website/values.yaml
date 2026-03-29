@@ -16,7 +16,7 @@ replicaCount: 1
 # -- Container Image ----------------------------------------------------------
 image:
   repository: localhost:32000/hotd-website
-  tag: latest
+  tag: "1.0.0"
   pullPolicy: Always
 
 # -- PostgreSQL (reuse AI stack's pgvector instance) --------------------------
