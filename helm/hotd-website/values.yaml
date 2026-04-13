@@ -32,9 +32,9 @@ postgres:
 nas:
   hotdContent: /mnt/nas/Gaming/ASSETS/DDB_CONTENT/hotd-website-content
 
-# -- Ollama -------------------------------------------------------------------
-ollama:
-  url: http://ollama.ai.svc.cluster.local:11434
+# -- OpenAI -------------------------------------------------------------------
+openai:
+  apiKey: ""                 # REQUIRED — set via --set or a secrets file
 
 # -- RAG Service --------------------------------------------------------------
 rag:

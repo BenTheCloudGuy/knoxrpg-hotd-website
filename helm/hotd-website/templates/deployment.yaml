@@ -47,8 +47,8 @@ spec:
               value: {{ .Values.postgres.database | quote }}
             - name: HOTD_CONTENT_DIR
               value: "/data/hotd-content"
-            - name: OLLAMA_HOST
-              value: {{ .Values.ollama.url | quote }}
+            - name: OPENAI_API_KEY
+              value: {{ .Values.openai.apiKey | quote }}
             - name: RAG_SERVICE_URL
               value: {{ .Values.rag.url | quote }}
           volumeMounts:

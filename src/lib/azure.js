@@ -23,22 +23,14 @@ if (SecretClient && credential) {
   console.log("  Key Vault: disabled (no SDK or credential)");
 }
 
-// ── AI client (Ollama or OpenAI, initialized async via initOpenAI) ──
+// ── AI client (OpenAI, initialized async via initOpenAI) ──
 let openaiClient = null;
-let aiModel = process.env.AI_MODEL || "llama3";
+let aiModel = process.env.AI_MODEL || "gpt-4o-mini";
 
 async function initOpenAI() {
   if (openaiClient) return;
 
-  // Prefer Ollama (OpenAI-compatible API)
-  const ollamaHost = process.env.OLLAMA_HOST || "";
-  if (OpenAI && ollamaHost) {
-    openaiClient = new OpenAI({ baseURL: `${ollamaHost}/v1`, apiKey: "ollama" });
-    console.log(`  AI: Ollama client initialized → ${ollamaHost} (model: ${aiModel})`);
-    return;
-  }
-
-  // Fall back to OpenAI via Key Vault or env var
+  // Load OpenAI API key from Key Vault or env var
   let apiKey = "";
   if (kvClient) {
     try {
@@ -55,10 +47,9 @@ async function initOpenAI() {
   }
   if (OpenAI && apiKey) {
     openaiClient = new OpenAI({ apiKey });
-    aiModel = "gpt-4o-mini";
-    console.log("  AI: OpenAI client initialized");
+    console.log(`  AI: OpenAI client initialized (model: ${aiModel})`);
   } else {
-    console.log("  AI: disabled (no Ollama host or OpenAI key)");
+    console.log("  AI: disabled (no OpenAI key found)");
   }
 }
 
