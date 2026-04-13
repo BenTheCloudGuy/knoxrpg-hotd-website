@@ -438,7 +438,7 @@ async function renderNpcDetailPage(npcId, session) {
 // ── Sessions Page (DB-backed) ─────────────────────────────────
 async function renderSessionsPage(session) {
   let sessions = [];
-  try { const r = await pgPool.query("SELECT * FROM hotd_sessions ORDER BY session_number"); sessions = r.rows; } catch (_) {}
+  try { const r = await pgPool.query("SELECT * FROM hotd_sessions ORDER BY session_number DESC"); sessions = r.rows; } catch (_) {}
 
   const sessionList = sessions.length > 0 ? sessions.map(s => {
     const playDateStr = s.play_date ? new Date(s.play_date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "";
