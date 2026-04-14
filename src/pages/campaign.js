@@ -129,7 +129,7 @@ async function renderHomePage(session) {
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128506; Map of Barovia</h3>
           <div id="mapContainer" style="width:100%;height:420px;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
-            <img id="baroviaMap" src="/images/main_map.jpg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;" />
+            <img id="baroviaMap" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;" />
           </div>
           <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Click and drag to pan</div>
         </div>
