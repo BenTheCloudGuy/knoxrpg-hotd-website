@@ -585,13 +585,14 @@ async function renderMapAdminPage(session) {
   const IMG_W = 5025, IMG_H = 3225;
   // Hex size: ~67px per hex on the 5025×3225 image (measured from grid)
   const HEX_SIZE = 67;
-  const markerJson = JSON.stringify(markers.map(m => ({ id: m.id, type: m.marker_type, label: m.label, x: parseFloat(m.x), y: parseFloat(m.y) })));
+  const markerJson = JSON.stringify(markers.map(m => ({ id: m.id, type: m.marker_type, label: m.label, x: parseFloat(m.x), y: parseFloat(m.y), size: parseFloat(m.size || 54) })));
   const markerTableRows = markers.map(m => `
     <tr>
       <td>${m.id}</td>
       <td>${esc(m.marker_type)}</td>
       <td>${esc(m.label)}</td>
-      <td>${parseFloat(m.x).toFixed(1)}, ${parseFloat(m.y).toFixed(1)}</td>
+      <td>${parseFloat(m.x).toFixed(0)}, ${parseFloat(m.y).toFixed(0)}</td>
+      <td>${parseFloat(m.size || 54).toFixed(0)}</td>
       <td>
         <form method="POST" action="/admin/map-markers/delete" style="display:inline;">
           <input type="hidden" name="id" value="${m.id}" />
@@ -605,26 +606,29 @@ async function renderMapAdminPage(session) {
     <h2 class="section-title">&#9881; Map Markers Admin</h2>
     <p style="color:#888;margin-bottom:16px;"><a href="/" style="color:#e8b923;text-decoration:none;">&larr; Back to Home</a> &nbsp;|&nbsp; <a href="/home/admin" style="color:#e8b923;text-decoration:none;">Home Admin</a></p>
 
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
       <!-- MAP -->
       <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
-        <h3 style="color:#e8b923;margin:0 0 8px 0;font-size:1rem;">Click on map to place a marker</h3>
+        <h3 style="color:#e8b923;margin:0 0 8px 0;font-size:1rem;">Click to place &middot; Drag to move &middot; Right-drag to pan</h3>
         <div style="margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <label style="color:#ccc;font-size:0.85rem;">Type:</label>
           <select id="markerTypeSelect" style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;">
-            <option value="city">🏛️ City</option>
-            <option value="battle">⚔️ Battle</option>
-            <option value="vistani">🛒 Vistani</option>
-            <option value="party">🎭 Party</option>
+            <option value="city">\u{1F3DB}\uFE0F City</option>
+            <option value="battle">\u2694\uFE0F Battle</option>
+            <option value="vistani">\u{1F6D2} Vistani</option>
+            <option value="party">\u{1F3AD} Party</option>
           </select>
           <label style="color:#ccc;font-size:0.85rem;">Label:</label>
-          <input type="text" id="markerLabelInput" placeholder="Marker label..." style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;width:180px;" />
+          <input type="text" id="markerLabelInput" placeholder="Marker label..." style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;width:160px;" />
+          <label style="color:#ccc;font-size:0.85rem;">Size:</label>
+          <input type="range" id="markerSizeSlider" min="10" max="200" value="54" style="width:100px;accent-color:#e8b923;" />
+          <span id="markerSizeVal" style="color:#e8b923;font-size:0.85rem;min-width:30px;">54</span>
         </div>
         <div id="adminMapContainer" style="width:100%;aspect-ratio:${IMG_W}/${IMG_H};overflow:hidden;cursor:crosshair;border-radius:8px;position:relative;background:#111;">
           <img id="adminMapImg" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:${IMG_W}px;height:${IMG_H}px;" />
-          <div id="adminMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
+          <div id="adminMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;"></div>
         </div>
-        <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Right-click+drag to pan &middot; Left-click to place marker</div>
+        <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Right-click+drag to pan &middot; Left-click empty area to place &middot; Drag markers to move</div>
       </div>
 
       <!-- SIDEBAR -->
@@ -632,36 +636,53 @@ async function renderMapAdminPage(session) {
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Marker Icons</h3>
           <div style="color:#ccc;font-size:0.85rem;line-height:2;">
-            <div>🏛️ <strong>City</strong> — Buildings / Settlements</div>
-            <div>⚔️ <strong>Battle</strong> — Crossed Swords</div>
-            <div>🛒 <strong>Vistani</strong> — Wagon / Camp</div>
-            <div>🎭 <strong>Party</strong> — Player Party Location</div>
+            <div>\u{1F3DB}\uFE0F <strong>City</strong> \u2014 Buildings / Settlements</div>
+            <div>\u2694\uFE0F <strong>Battle</strong> \u2014 Crossed Swords</div>
+            <div>\u{1F6D2} <strong>Vistani</strong> \u2014 Wagon / Camp</div>
+            <div>\u{1F3AD} <strong>Party</strong> \u2014 Player Party Location</div>
+          </div>
+        </div>
+        <div id="selectedMarkerPanel" style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;display:none;">
+          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Selected Marker</h3>
+          <div style="color:#ccc;font-size:0.85rem;">
+            <div style="margin-bottom:8px;"><strong id="selMarkerLabel"></strong> (<span id="selMarkerType"></span>)</div>
+            <div style="margin-bottom:8px;">
+              <label style="color:#888;">Resize:</label>
+              <input type="range" id="selMarkerSize" min="10" max="200" value="54" style="width:140px;accent-color:#e8b923;vertical-align:middle;" />
+              <span id="selMarkerSizeVal" style="color:#e8b923;min-width:30px;">54</span>px
+            </div>
+            <button id="selMarkerDeselect" style="padding:4px 12px;background:#333;border:1px solid #555;color:#ccc;border-radius:4px;cursor:pointer;font-size:0.8rem;">Deselect</button>
           </div>
         </div>
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;max-height:400px;overflow-y:auto;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Placed Markers (${markers.length})</h3>
-          ${markers.length > 0 ? `<table class="admin-table" style="width:100%;font-size:0.8rem;"><thead><tr><th>ID</th><th>Type</th><th>Label</th><th>Pos</th><th></th></tr></thead><tbody>${markerTableRows}</tbody></table>` : '<p style="color:#888;font-size:0.85rem;">No markers placed yet.</p>'}
+          ${markers.length > 0 ? `<table class="admin-table" style="width:100%;font-size:0.8rem;"><thead><tr><th>ID</th><th>Type</th><th>Label</th><th>Pos</th><th>Size</th><th></th></tr></thead><tbody>${markerTableRows}</tbody></table>` : '<p style="color:#888;font-size:0.85rem;">No markers placed yet.</p>'}
         </div>
       </div>
     </div>
   </div>
   <script>
   (function() {
-    var IMG_W = ${IMG_W}, IMG_H = ${IMG_H}, HEX = ${HEX_SIZE};
+    var IMG_W = ${IMG_W}, IMG_H = ${IMG_H};
     var container = document.getElementById('adminMapContainer');
     var img = document.getElementById('adminMapImg');
     var markersEl = document.getElementById('adminMapMarkers');
     if (!container || !img) return;
 
-    // Pan / zoom state
     var cw = container.clientWidth, ch = container.clientHeight;
     var scale = Math.min(cw / IMG_W, ch / IMG_H);
     var minScale = scale * 0.5, maxScale = 5;
     var panX = (cw - IMG_W * scale) / 2, panY = (ch - IMG_H * scale) / 2;
     var isPanning = false, startX = 0, startY = 0;
 
-    var ICONS = { city: '🏛️', battle: '⚔️', vistani: '🛒', party: '🎭' };
+    var ICONS = { city: '\u{1F3DB}\uFE0F', battle: '\u2694\uFE0F', vistani: '\u{1F6D2}', party: '\u{1F3AD}' };
     var markers = ${markerJson};
+    var dragging = null, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0, didDrag = false;
+    var selectedId = null;
+
+    var sizeSlider = document.getElementById('markerSizeSlider');
+    var sizeVal = document.getElementById('markerSizeVal');
+    sizeSlider.addEventListener('input', function() { sizeVal.textContent = sizeSlider.value; });
 
     function applyTransform() {
       img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
@@ -669,20 +690,106 @@ async function renderMapAdminPage(session) {
     }
     applyTransform();
 
+    function selectMarker(m) {
+      selectedId = m.id;
+      document.getElementById('selectedMarkerPanel').style.display = 'block';
+      document.getElementById('selMarkerLabel').textContent = m.label;
+      document.getElementById('selMarkerType').textContent = m.type;
+      var ss = document.getElementById('selMarkerSize');
+      ss.value = m.size;
+      document.getElementById('selMarkerSizeVal').textContent = Math.round(m.size);
+      renderMarkers();
+    }
+
+    document.getElementById('selMarkerDeselect').addEventListener('click', function() {
+      selectedId = null;
+      document.getElementById('selectedMarkerPanel').style.display = 'none';
+      renderMarkers();
+    });
+
+    document.getElementById('selMarkerSize').addEventListener('input', function() {
+      var v = parseInt(this.value);
+      document.getElementById('selMarkerSizeVal').textContent = v;
+      var m = markers.find(function(x) { return x.id === selectedId; });
+      if (m) { m.size = v; renderMarkers(); }
+    });
+    document.getElementById('selMarkerSize').addEventListener('change', function() {
+      var v = parseInt(this.value);
+      if (!selectedId) return;
+      fetch('/api/map-markers/' + selectedId, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ size: v })
+      });
+    });
+
     function renderMarkers() {
       markersEl.innerHTML = '';
-      var mSize = HEX * 0.8;
       markers.forEach(function(m) {
+        var mSize = m.size || 54;
         var div = document.createElement('div');
-        div.style.cssText = 'position:absolute;width:' + mSize + 'px;height:' + mSize + 'px;display:flex;align-items:center;justify-content:center;font-size:' + (mSize * 0.6) + 'px;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));';
+        var isSelected = m.id === selectedId;
+        div.style.cssText = 'position:absolute;width:' + mSize + 'px;height:' + mSize + 'px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:' + (mSize * 0.55) + 'px;cursor:grab;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.9));user-select:none;border-radius:50%;' + (isSelected ? 'outline:3px solid #e8b923;outline-offset:2px;' : '');
         div.style.left = (m.x - mSize / 2) + 'px';
         div.style.top = (m.y - mSize / 2) + 'px';
-        div.title = m.label + ' (' + m.type + ')';
-        div.textContent = ICONS[m.type] || '📍';
+        div.title = m.label + ' (' + m.type + ', size:' + mSize + ')';
+        div.dataset.markerId = m.id;
+
+        var icon = document.createElement('span');
+        icon.textContent = ICONS[m.type] || '\u{1F4CD}';
+        icon.style.lineHeight = '1';
+        div.appendChild(icon);
+
+        if (m.label) {
+          var lbl = document.createElement('span');
+          lbl.textContent = m.label;
+          lbl.style.cssText = 'font-size:' + Math.max(8, mSize * 0.18) + 'px;color:#fff;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:3px;white-space:nowrap;margin-top:2px;max-width:' + (mSize * 2) + 'px;overflow:hidden;text-overflow:ellipsis;';
+          div.appendChild(lbl);
+        }
+
+        // Drag start
+        div.addEventListener('mousedown', function(e) {
+          if (e.button !== 0) return;
+          e.stopPropagation();
+          dragging = m;
+          didDrag = false;
+          dragStartX = e.clientX;
+          dragStartY = e.clientY;
+          dragOrigX = m.x;
+          dragOrigY = m.y;
+          div.style.cursor = 'grabbing';
+        });
+
+        div.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (!didDrag) selectMarker(m);
+        });
+
         markersEl.appendChild(div);
       });
     }
     renderMarkers();
+
+    // Global mousemove/up for dragging markers
+    window.addEventListener('mousemove', function(e) {
+      if (isPanning) { panX = e.clientX - startX; panY = e.clientY - startY; applyTransform(); return; }
+      if (!dragging) return;
+      var dx = (e.clientX - dragStartX) / scale;
+      var dy = (e.clientY - dragStartY) / scale;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag = true;
+      dragging.x = dragOrigX + dx;
+      dragging.y = dragOrigY + dy;
+      renderMarkers();
+    });
+    window.addEventListener('mouseup', function() {
+      if (isPanning) { isPanning = false; container.style.cursor = 'crosshair'; }
+      if (dragging && didDrag) {
+        fetch('/api/map-markers/' + dragging.id, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ x: dragging.x, y: dragging.y })
+        });
+      }
+      dragging = null;
+    });
 
     // Zoom
     container.addEventListener('wheel', function(e) {
@@ -702,40 +809,28 @@ async function renderMapAdminPage(session) {
       if (e.button === 2) { isPanning = true; startX = e.clientX - panX; startY = e.clientY - panY; container.style.cursor = 'grabbing'; e.preventDefault(); }
     });
     container.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-    window.addEventListener('mousemove', function(e) { if (!isPanning) return; panX = e.clientX - startX; panY = e.clientY - startY; applyTransform(); });
-    window.addEventListener('mouseup', function() { if (isPanning) { isPanning = false; container.style.cursor = 'crosshair'; } });
 
-    // Place marker on left-click
+    // Place marker on left-click (only on empty area)
     container.addEventListener('click', function(e) {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || didDrag) return;
       var rect = container.getBoundingClientRect();
-      var clickX = e.clientX - rect.left;
-      var clickY = e.clientY - rect.top;
-      // Convert screen coords to image coords
-      var imgX = (clickX - panX) / scale;
-      var imgY = (clickY - panY) / scale;
+      var imgX = (e.clientX - rect.left - panX) / scale;
+      var imgY = (e.clientY - rect.top - panY) / scale;
       if (imgX < 0 || imgY < 0 || imgX > IMG_W || imgY > IMG_H) return;
-
-      // Snap to hex grid
-      imgX = Math.round(imgX / HEX) * HEX;
-      imgY = Math.round(imgY / HEX) * HEX;
 
       var markerType = document.getElementById('markerTypeSelect').value;
       var label = document.getElementById('markerLabelInput').value.trim();
+      var mSize = parseInt(sizeSlider.value) || 54;
       if (!label) { alert('Please enter a label for the marker.'); return; }
 
-      // POST to server
       fetch('/api/map-markers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marker_type: markerType, label: label, x: imgX, y: imgY })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marker_type: markerType, label: label, x: imgX, y: imgY, size: mSize })
       }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.error) { alert(data.error); return; }
-        markers.push({ id: data.id, type: markerType, label: label, x: imgX, y: imgY });
+        markers.push({ id: data.id, type: markerType, label: label, x: imgX, y: imgY, size: mSize });
         renderMarkers();
-        // Refresh page to update table
-        window.location.reload();
-      }).catch(function(err) { alert('Error placing marker: ' + err.message); });
+      }).catch(function(err) { alert('Error: ' + err.message); });
     });
 
     // Touch support

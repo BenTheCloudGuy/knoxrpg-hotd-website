@@ -213,9 +213,11 @@ async function ensureHotdTables() {
         label        TEXT NOT NULL DEFAULT '',
         x            NUMERIC NOT NULL DEFAULT 0,
         y            NUMERIC NOT NULL DEFAULT 0,
+        size         NUMERIC NOT NULL DEFAULT 54,
         created_at   TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+    await pgPool.query(`ALTER TABLE hotd_map_markers ADD COLUMN IF NOT EXISTS size NUMERIC NOT NULL DEFAULT 54`).catch(() => {});
 
     // Add backstory columns if they don't exist (for existing tables)
     const backstoryCols = [

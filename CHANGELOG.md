@@ -4,6 +4,21 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-14
+
+### Added
+- Drag-to-move markers on the Map Admin page (left-click drag)
+- Per-marker size with slider control (10–200px range)
+- "Selected Marker" panel for resizing placed markers after placement
+- `PUT /api/map-markers/:id` endpoint for updating marker position and size
+- `size` column on `hotd_map_markers` DB table (default 54px)
+- Labels rendered below marker icons with auto-sized text
+
+### Changed
+- Map Admin: markers now draggable instead of fixed after placement
+- Map Admin: removed hex-grid snapping for free placement
+- Homepage markers use per-marker size from database instead of fixed hex size
+
 ## [1.2.0] - 2026-04-14
 
 ### Added

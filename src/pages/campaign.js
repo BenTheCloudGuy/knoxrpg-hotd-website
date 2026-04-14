@@ -174,7 +174,7 @@ async function renderHomePage(session) {
     var img = document.getElementById('baroviaMap');
     var markersEl = document.getElementById('homeMapMarkers');
     if (!container || !img) return;
-    var IMG_W = 5025, IMG_H = 3225, HEX = 67;
+    var IMG_W = 5025, IMG_H = 3225;
     var ICONS = { city: '\u{1F3DB}\uFE0F', battle: '\u2694\uFE0F', vistani: '\u{1F6D2}', party: '\u{1F3AD}' };
     var cw = container.clientWidth, ch = container.clientHeight;
     var scale = Math.min(cw / IMG_W, ch / IMG_H);
@@ -190,14 +190,23 @@ async function renderHomePage(session) {
     if (markersEl) {
       fetch('/api/map-markers').then(function(r){return r.json();}).then(function(data) {
         if (!data.markers) return;
-        var mSize = HEX * 0.8;
         data.markers.forEach(function(m) {
+          var mSize = m.size || 54;
           var d = document.createElement('div');
-          d.style.cssText = 'position:absolute;width:'+mSize+'px;height:'+mSize+'px;display:flex;align-items:center;justify-content:center;font-size:'+(mSize*0.6)+'px;pointer-events:auto;cursor:default;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));';
+          d.style.cssText = 'position:absolute;width:'+mSize+'px;height:'+mSize+'px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:'+(mSize*0.55)+'px;pointer-events:auto;cursor:default;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.9));user-select:none;';
           d.style.left = (m.x - mSize/2) + 'px';
           d.style.top = (m.y - mSize/2) + 'px';
           d.title = m.label + ' (' + m.type + ')';
-          d.textContent = ICONS[m.type] || '\u{1F4CD}';
+          var icon = document.createElement('span');
+          icon.textContent = ICONS[m.type] || '\u{1F4CD}';
+          icon.style.lineHeight = '1';
+          d.appendChild(icon);
+          if (m.label) {
+            var lbl = document.createElement('span');
+            lbl.textContent = m.label;
+            lbl.style.cssText = 'font-size:'+Math.max(8,mSize*0.18)+'px;color:#fff;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:3px;white-space:nowrap;margin-top:2px;max-width:'+(mSize*2)+'px;overflow:hidden;text-overflow:ellipsis;';
+            d.appendChild(lbl);
+          }
           markersEl.appendChild(d);
         });
       }).catch(function(){});
