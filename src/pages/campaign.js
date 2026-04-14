@@ -130,6 +130,7 @@ async function renderHomePage(session) {
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128506; Map of Barovia</h3>
           <div id="mapContainer" style="width:100%;aspect-ratio:5025/3225;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
             <img id="baroviaMap" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:5025px;height:3225px;" />
+            <div id="homeMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
           </div>
           <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Click and drag to pan</div>
         </div>
@@ -171,15 +172,36 @@ async function renderHomePage(session) {
   (function() {
     var container = document.getElementById('mapContainer');
     var img = document.getElementById('baroviaMap');
+    var markersEl = document.getElementById('homeMapMarkers');
     if (!container || !img) return;
-    var IMG_W = 5025, IMG_H = 3225;
+    var IMG_W = 5025, IMG_H = 3225, HEX = 67;
+    var ICONS = { city: '\u{1F3DB}\uFE0F', battle: '\u2694\uFE0F', vistani: '\u{1F6D2}', party: '\u{1F3AD}' };
     var cw = container.clientWidth, ch = container.clientHeight;
     var scale = Math.min(cw / IMG_W, ch / IMG_H);
     var minScale = scale * 0.5, maxScale = 5;
     var panX = (cw - IMG_W * scale) / 2, panY = (ch - IMG_H * scale) / 2;
     var isPanning = false, startX = 0, startY = 0;
-    function applyTransform() { img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')'; }
+    function applyTransform() {
+      img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+      if (markersEl) markersEl.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+    }
     applyTransform();
+    // Fetch and render markers
+    if (markersEl) {
+      fetch('/api/map-markers').then(function(r){return r.json();}).then(function(data) {
+        if (!data.markers) return;
+        var mSize = HEX * 0.8;
+        data.markers.forEach(function(m) {
+          var d = document.createElement('div');
+          d.style.cssText = 'position:absolute;width:'+mSize+'px;height:'+mSize+'px;display:flex;align-items:center;justify-content:center;font-size:'+(mSize*0.6)+'px;pointer-events:auto;cursor:default;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));';
+          d.style.left = (m.x - mSize/2) + 'px';
+          d.style.top = (m.y - mSize/2) + 'px';
+          d.title = m.label + ' (' + m.type + ')';
+          d.textContent = ICONS[m.type] || '\u{1F4CD}';
+          markersEl.appendChild(d);
+        });
+      }).catch(function(){});
+    }
     container.addEventListener('wheel', function(e) {
       e.preventDefault();
       var rect = container.getBoundingClientRect();

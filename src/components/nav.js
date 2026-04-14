@@ -157,11 +157,7 @@ function renderNav(activePath, session) {
     const tp = isCrossSite ? ` onclick="teleportTo('${item.href}','${esc(item.label)}');return false;"` : '';
     return `<a href="${esc(item.href)}"${isActive ? ' class="active"' : ''}${tp}>${esc(item.label)}</a>`;
   }).join("");
-  const searchBar = session ? `<div class="nav-search">
-        <input type="text" class="nav-search-input" id="navSearchInput" placeholder="Search campaign..." autocomplete="off" />
-        <button class="nav-search-btn" id="navSearchBtn" aria-label="Search">&#128269;</button>
-        <div class="search-dropdown" id="searchDropdown"></div>
-      </div>` : "";
+  const searchBar = "";
 
   // Mobile drawer
   const mobileLinks = NAV_ITEMS.map((item) => {
@@ -190,7 +186,7 @@ function renderNav(activePath, session) {
     const tp = isCrossSite ? ` onclick="teleportTo('${item.href}','${esc(item.label)}');return false;"` : '';
     return `<a href="${esc(item.href)}"${tp}>${esc(item.label)}</a>`;
   }).join("");
-  const mobileSearch = session ? `<div class="nav-mobile-search"><input type="text" id="navSearchInputMobile" placeholder="Search campaign..." autocomplete="off" /></div>` : "";
+  const mobileSearch = "";
 
   return `<header class="site-header">
     <nav class="site-nav">

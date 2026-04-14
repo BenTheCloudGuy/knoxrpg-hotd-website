@@ -35,6 +35,11 @@ async function renderHomeAdminPage(session) {
     </div>
 
     <div class="admin-campaign-form" style="margin-top:16px;">
+      <h3>&#128506; Map Markers</h3>
+      <p style="color:#888;font-size:0.85rem;">Place and manage markers on the Barovia map. <a href="/map/admin" style="color:#e8b923;">Edit Map Markers &rarr;</a></p>
+    </div>
+
+    <div class="admin-campaign-form" style="margin-top:16px;">
       <h3>&#9876; Player Characters</h3>
       <p style="color:#888;font-size:0.85rem;">Player characters are NPCs with alignment_tag set to <strong style="color:#e8b923;">player</strong>. Manage them via <a href="/npcs/admin" style="color:#e8b923;">NPCs Admin</a>.</p>
     </div>
@@ -568,6 +573,197 @@ async function renderBulkUploadAdminPage(session) {
   return pageShell("Bulk Upload — Halls of the Damned", "/", body, session);
 }
 
+// ── Map Markers Admin ─────────────────────────────────────────
+async function renderMapAdminPage(session) {
+  if (!session || session.role !== "admin") return null;
+  let markers = [];
+  try {
+    const r = await pgPool.query("SELECT * FROM hotd_map_markers ORDER BY id");
+    markers = r.rows;
+  } catch (_) {}
+
+  const IMG_W = 5025, IMG_H = 3225;
+  // Hex size: ~67px per hex on the 5025×3225 image (measured from grid)
+  const HEX_SIZE = 67;
+  const markerJson = JSON.stringify(markers.map(m => ({ id: m.id, type: m.marker_type, label: m.label, x: parseFloat(m.x), y: parseFloat(m.y) })));
+  const markerTableRows = markers.map(m => `
+    <tr>
+      <td>${m.id}</td>
+      <td>${esc(m.marker_type)}</td>
+      <td>${esc(m.label)}</td>
+      <td>${parseFloat(m.x).toFixed(1)}, ${parseFloat(m.y).toFixed(1)}</td>
+      <td>
+        <form method="POST" action="/admin/map-markers/delete" style="display:inline;">
+          <input type="hidden" name="id" value="${m.id}" />
+          <button type="submit" class="delete-btn-inline" onclick="return confirm('Delete this marker?')">Delete</button>
+        </form>
+      </td>
+    </tr>`).join("");
+
+  const body = `
+  <div class="content" style="width:95%;max-width:95%;margin:0 auto;">
+    <h2 class="section-title">&#9881; Map Markers Admin</h2>
+    <p style="color:#888;margin-bottom:16px;"><a href="/" style="color:#e8b923;text-decoration:none;">&larr; Back to Home</a> &nbsp;|&nbsp; <a href="/home/admin" style="color:#e8b923;text-decoration:none;">Home Admin</a></p>
+
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+      <!-- MAP -->
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
+        <h3 style="color:#e8b923;margin:0 0 8px 0;font-size:1rem;">Click on map to place a marker</h3>
+        <div style="margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <label style="color:#ccc;font-size:0.85rem;">Type:</label>
+          <select id="markerTypeSelect" style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;">
+            <option value="city">🏛️ City</option>
+            <option value="battle">⚔️ Battle</option>
+            <option value="vistani">🛒 Vistani</option>
+            <option value="party">🎭 Party</option>
+          </select>
+          <label style="color:#ccc;font-size:0.85rem;">Label:</label>
+          <input type="text" id="markerLabelInput" placeholder="Marker label..." style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;width:180px;" />
+        </div>
+        <div id="adminMapContainer" style="width:100%;aspect-ratio:${IMG_W}/${IMG_H};overflow:hidden;cursor:crosshair;border-radius:8px;position:relative;background:#111;">
+          <img id="adminMapImg" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:${IMG_W}px;height:${IMG_H}px;" />
+          <div id="adminMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
+        </div>
+        <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Right-click+drag to pan &middot; Left-click to place marker</div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;">
+          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Marker Icons</h3>
+          <div style="color:#ccc;font-size:0.85rem;line-height:2;">
+            <div>🏛️ <strong>City</strong> — Buildings / Settlements</div>
+            <div>⚔️ <strong>Battle</strong> — Crossed Swords</div>
+            <div>🛒 <strong>Vistani</strong> — Wagon / Camp</div>
+            <div>🎭 <strong>Party</strong> — Player Party Location</div>
+          </div>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;max-height:400px;overflow-y:auto;">
+          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Placed Markers (${markers.length})</h3>
+          ${markers.length > 0 ? `<table class="admin-table" style="width:100%;font-size:0.8rem;"><thead><tr><th>ID</th><th>Type</th><th>Label</th><th>Pos</th><th></th></tr></thead><tbody>${markerTableRows}</tbody></table>` : '<p style="color:#888;font-size:0.85rem;">No markers placed yet.</p>'}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function() {
+    var IMG_W = ${IMG_W}, IMG_H = ${IMG_H}, HEX = ${HEX_SIZE};
+    var container = document.getElementById('adminMapContainer');
+    var img = document.getElementById('adminMapImg');
+    var markersEl = document.getElementById('adminMapMarkers');
+    if (!container || !img) return;
+
+    // Pan / zoom state
+    var cw = container.clientWidth, ch = container.clientHeight;
+    var scale = Math.min(cw / IMG_W, ch / IMG_H);
+    var minScale = scale * 0.5, maxScale = 5;
+    var panX = (cw - IMG_W * scale) / 2, panY = (ch - IMG_H * scale) / 2;
+    var isPanning = false, startX = 0, startY = 0;
+
+    var ICONS = { city: '🏛️', battle: '⚔️', vistani: '🛒', party: '🎭' };
+    var markers = ${markerJson};
+
+    function applyTransform() {
+      img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+      markersEl.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+    }
+    applyTransform();
+
+    function renderMarkers() {
+      markersEl.innerHTML = '';
+      var mSize = HEX * 0.8;
+      markers.forEach(function(m) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:absolute;width:' + mSize + 'px;height:' + mSize + 'px;display:flex;align-items:center;justify-content:center;font-size:' + (mSize * 0.6) + 'px;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));';
+        div.style.left = (m.x - mSize / 2) + 'px';
+        div.style.top = (m.y - mSize / 2) + 'px';
+        div.title = m.label + ' (' + m.type + ')';
+        div.textContent = ICONS[m.type] || '📍';
+        markersEl.appendChild(div);
+      });
+    }
+    renderMarkers();
+
+    // Zoom
+    container.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      var rect = container.getBoundingClientRect();
+      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      var oldScale = scale;
+      scale *= e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      scale = Math.max(minScale, Math.min(maxScale, scale));
+      panX = mx - (mx - panX) * (scale / oldScale);
+      panY = my - (my - panY) * (scale / oldScale);
+      applyTransform();
+    }, { passive: false });
+
+    // Pan with right-click drag
+    container.addEventListener('mousedown', function(e) {
+      if (e.button === 2) { isPanning = true; startX = e.clientX - panX; startY = e.clientY - panY; container.style.cursor = 'grabbing'; e.preventDefault(); }
+    });
+    container.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    window.addEventListener('mousemove', function(e) { if (!isPanning) return; panX = e.clientX - startX; panY = e.clientY - startY; applyTransform(); });
+    window.addEventListener('mouseup', function() { if (isPanning) { isPanning = false; container.style.cursor = 'crosshair'; } });
+
+    // Place marker on left-click
+    container.addEventListener('click', function(e) {
+      if (e.button !== 0) return;
+      var rect = container.getBoundingClientRect();
+      var clickX = e.clientX - rect.left;
+      var clickY = e.clientY - rect.top;
+      // Convert screen coords to image coords
+      var imgX = (clickX - panX) / scale;
+      var imgY = (clickY - panY) / scale;
+      if (imgX < 0 || imgY < 0 || imgX > IMG_W || imgY > IMG_H) return;
+
+      // Snap to hex grid
+      imgX = Math.round(imgX / HEX) * HEX;
+      imgY = Math.round(imgY / HEX) * HEX;
+
+      var markerType = document.getElementById('markerTypeSelect').value;
+      var label = document.getElementById('markerLabelInput').value.trim();
+      if (!label) { alert('Please enter a label for the marker.'); return; }
+
+      // POST to server
+      fetch('/api/map-markers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marker_type: markerType, label: label, x: imgX, y: imgY })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.error) { alert(data.error); return; }
+        markers.push({ id: data.id, type: markerType, label: label, x: imgX, y: imgY });
+        renderMarkers();
+        // Refresh page to update table
+        window.location.reload();
+      }).catch(function(err) { alert('Error placing marker: ' + err.message); });
+    });
+
+    // Touch support
+    var lastTouchDist = 0;
+    container.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) { isPanning = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY; }
+      if (e.touches.length === 2) { isPanning = false; lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY); }
+    }, { passive: false });
+    container.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (e.touches.length === 1 && isPanning) { panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; applyTransform(); }
+      if (e.touches.length === 2) {
+        var dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+        var rect = container.getBoundingClientRect();
+        var mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        var my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        var oldScale = scale; scale *= dist / lastTouchDist;
+        scale = Math.max(minScale, Math.min(maxScale, scale));
+        panX = mx - (mx - panX) * (scale / oldScale); panY = my - (my - panY) * (scale / oldScale);
+        lastTouchDist = dist; applyTransform();
+      }
+    }, { passive: false });
+    container.addEventListener('touchend', function() { isPanning = false; });
+  })();
+  </script>`;
+  return pageShell("Map Admin — Halls of the Damned", "/", body, session);
+}
+
 module.exports = {
   renderHomeAdminPage,
   renderCalendarAdminPage,
@@ -578,4 +774,5 @@ module.exports = {
   renderHandoutsAdminPage,
   renderArtAdminPage,
   renderBulkUploadAdminPage,
+  renderMapAdminPage,
 };

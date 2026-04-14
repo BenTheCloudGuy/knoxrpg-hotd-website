@@ -205,6 +205,18 @@ async function ensureHotdTables() {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_advj_date_user ON hotd_adventure_journal (actual_date, user_id);
     `);
 
+    // ── Map Markers table ──
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_map_markers (
+        id           SERIAL PRIMARY KEY,
+        marker_type  TEXT NOT NULL DEFAULT 'city',
+        label        TEXT NOT NULL DEFAULT '',
+        x            NUMERIC NOT NULL DEFAULT 0,
+        y            NUMERIC NOT NULL DEFAULT 0,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     // Add backstory columns if they don't exist (for existing tables)
     const backstoryCols = [
       ["backstory", "TEXT DEFAULT ''"], ["personality_traits", "TEXT DEFAULT ''"],

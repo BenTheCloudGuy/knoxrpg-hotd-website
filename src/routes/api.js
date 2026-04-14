@@ -503,6 +503,26 @@ When the user asks for rulings or advice:
     return true;
   }
 
+  // ── Map Markers API ─────────────────────────────────────────
+  if (decoded === "/api/map-markers" && req.method === "GET") {
+    try {
+      const r = await pgPool.query("SELECT id, marker_type, label, x, y FROM hotd_map_markers ORDER BY id");
+      return sendJSON(res, { markers: r.rows.map(m => ({ id: m.id, type: m.marker_type, label: m.label, x: parseFloat(m.x), y: parseFloat(m.y) })) }), true;
+    } catch (e) { return sendJSON(res, { error: e.message }, 500), true; }
+  }
+  if (decoded === "/api/map-markers" && req.method === "POST") {
+    if (!session || session.role !== "admin") return sendJSON(res, { error: "Unauthorized" }, 403), true;
+    try {
+      const body = await readBody(req);
+      const { marker_type, label, x, y } = JSON.parse(body);
+      const validTypes = ["city", "battle", "vistani", "party"];
+      if (!validTypes.includes(marker_type)) return sendJSON(res, { error: "Invalid marker type" }, 400), true;
+      if (!label || typeof label !== "string") return sendJSON(res, { error: "Label is required" }, 400), true;
+      const r = await pgPool.query("INSERT INTO hotd_map_markers (marker_type, label, x, y) VALUES ($1, $2, $3, $4) RETURNING id", [marker_type, String(label).slice(0, 200), parseFloat(x), parseFloat(y)]);
+      return sendJSON(res, { id: r.rows[0].id }), true;
+    } catch (e) { return sendJSON(res, { error: e.message }, 500), true; }
+  }
+
   return false;
 }
 

@@ -302,6 +302,13 @@ async function handleAdminRoutes(decoded, req, res, session) {
     res.writeHead(302, { Location: "/maps/admin" }); res.end(); return true;
   }
 
+  // ── Map Markers ─────────────────────────────────────────────
+  if (decoded === "/admin/map-markers/delete") {
+    const body = await readBody(req); const form = parseForm(body);
+    try { await pgPool.query("DELETE FROM hotd_map_markers WHERE id = $1", [form.id]); } catch (e) { console.error(e); }
+    res.writeHead(302, { Location: "/map/admin" }); res.end(); return true;
+  }
+
   return false;
 }
 

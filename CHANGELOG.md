@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-14
+
+### Added
+- Map Markers Admin page (`/map/admin`) for placing markers on the Barovia map
+- Four marker types: City (🏛️), Battle (⚔️), Vistani (🛒), Party (🎭)
+- Markers sized to hex grid, snap-to-grid on placement
+- `hotd_map_markers` DB table with marker_type, label, x/y coordinates
+- API endpoints: `GET /api/map-markers`, `POST /api/map-markers`
+- Homepage map now fetches and renders markers from the database
+- "Edit Map Markers" link on Home Admin dashboard
+
+### Removed
+- Nav bar search (desktop and mobile) — search is now only on homepage and `/search` page
+
 ## [1.1.1] - 2026-04-14
 
 ### Fixed
