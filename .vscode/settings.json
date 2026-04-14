@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Test-Path \"c:\\\\Users\\\\benthebuilder\\\\\\.working\\\\homeNetwork\\\\knoxrpg-hotd-website\\\\src\\\\hotd-campaign\\\\images\\\\main_map\\.jpeg\"; \\(Get-Item \"c:\\\\Users\\\\benthebuilder\\\\\\.working\\\\homeNetwork\\\\knoxrpg-hotd-website\\\\src\\\\hotd-campaign\\\\images\\\\main_map\\.jpeg\"\\)\\.Length$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

@@ -4,6 +4,13 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-04-14
+
+### Fixed
+- Map of Barovia container now uses aspect ratio matching the image (5025×3225)
+- Map auto-fits and centers within the container on initial load
+- Minimum zoom level tied to fit-to-container scale
+
 ## [1.1.0] - 2026-04-14
 
 ### Added

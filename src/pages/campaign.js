@@ -128,8 +128,8 @@ async function renderHomePage(session) {
         <!-- Map of Barovia -->
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128506; Map of Barovia</h3>
-          <div id="mapContainer" style="width:100%;height:420px;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
-            <img id="baroviaMap" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;" />
+          <div id="mapContainer" style="width:100%;aspect-ratio:5025/3225;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
+            <img id="baroviaMap" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:5025px;height:3225px;" />
           </div>
           <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Click and drag to pan</div>
         </div>
@@ -172,9 +172,14 @@ async function renderHomePage(session) {
     var container = document.getElementById('mapContainer');
     var img = document.getElementById('baroviaMap');
     if (!container || !img) return;
-    var scale = 1, minScale = 0.2, maxScale = 5, panX = 0, panY = 0;
+    var IMG_W = 5025, IMG_H = 3225;
+    var cw = container.clientWidth, ch = container.clientHeight;
+    var scale = Math.min(cw / IMG_W, ch / IMG_H);
+    var minScale = scale * 0.5, maxScale = 5;
+    var panX = (cw - IMG_W * scale) / 2, panY = (ch - IMG_H * scale) / 2;
     var isPanning = false, startX = 0, startY = 0;
     function applyTransform() { img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')'; }
+    applyTransform();
     container.addEventListener('wheel', function(e) {
       e.preventDefault();
       var rect = container.getBoundingClientRect();
