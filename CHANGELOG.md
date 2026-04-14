@@ -4,6 +4,24 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-14
+
+### Added
+- Interactive Map of Barovia on homepage with pan/zoom support (mouse wheel + drag, touch pinch)
+- Search bar box on homepage right column above Last Session
+- Search link under Campaign dropdown menu
+- DM AI link under Game Info dropdown menu
+- Account/Login link under Home dropdown menu
+
+### Changed
+- Home nav item is now a dropdown containing Dashboard and Account/Login
+- Navigation restructured: right-side items consolidated into dropdown menus
+
+### Removed
+- Campaign Calendar from homepage (replaced with Barovia map)
+- KnoxRPG external link from navigation
+- Standalone Account/Login link from right side of nav bar
+
 ## [1.0.0] - 2026-03-28
 
 ### Added

@@ -131,6 +131,13 @@ function renderNav(activePath, session) {
         !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)))
       );
       const ddLinks = item.dropdown.map(c => {
+        // Session-aware Account/Login swap
+        if (c.sessionAware) {
+          const href = session ? "/account" : "/login";
+          const label = session ? "Account" : "Login";
+          const aActive = activePath === href;
+          return `<a href="${href}"${aActive ? ' class="active"' : ""}>${label}</a>`;
+        }
         const cActive = !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)));
         const isCrossSite = c.external && c.href && c.href.includes("knoxrpg.com");
         const target = c.external && !isCrossSite ? ' target="_blank" rel="noopener"' : "";
@@ -150,9 +157,6 @@ function renderNav(activePath, session) {
     const tp = isCrossSite ? ` onclick="teleportTo('${item.href}','${esc(item.label)}');return false;"` : '';
     return `<a href="${esc(item.href)}"${isActive ? ' class="active"' : ''}${tp}>${esc(item.label)}</a>`;
   }).join("");
-  const rightLink = session
-    ? `<a href="/account"${activePath === "/account" ? ' class="active"' : ""}>Account</a>`
-    : `<a href="/login"${activePath === "/login" ? ' class="active"' : ""}>Login</a>`;
   const searchBar = session ? `<div class="nav-search">
         <input type="text" class="nav-search-input" id="navSearchInput" placeholder="Search campaign..." autocomplete="off" />
         <button class="nav-search-btn" id="navSearchBtn" aria-label="Search">&#128269;</button>
@@ -163,6 +167,13 @@ function renderNav(activePath, session) {
   const mobileLinks = NAV_ITEMS.map((item) => {
     if (item.dropdown) {
       const children = item.dropdown.map(c => {
+        // Session-aware Account/Login swap
+        if (c.sessionAware) {
+          const href = session ? "/account" : "/login";
+          const label = session ? "Account" : "Login";
+          const aActive = activePath === href;
+          return `<a href="${href}" class="mobile-dropdown-child${aActive ? " active" : ""}">${label}</a>`;
+        }
         const cActive = !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)));
         const isCrossSite = c.external && c.href && c.href.includes("knoxrpg.com");
         const target = c.external && !isCrossSite ? ' target="_blank" rel="noopener"' : "";
@@ -179,9 +190,6 @@ function renderNav(activePath, session) {
     const tp = isCrossSite ? ` onclick="teleportTo('${item.href}','${esc(item.label)}');return false;"` : '';
     return `<a href="${esc(item.href)}"${tp}>${esc(item.label)}</a>`;
   }).join("");
-  const mobileRightLink = session
-    ? `<a href="/account"${activePath === "/account" ? ' class="active"' : ""}>Account</a>`
-    : `<a href="/login"${activePath === "/login" ? ' class="active"' : ""}>Login</a>`;
   const mobileSearch = session ? `<div class="nav-mobile-search"><input type="text" id="navSearchInputMobile" placeholder="Search campaign..." autocomplete="off" /></div>` : "";
 
   return `<header class="site-header">
@@ -189,13 +197,12 @@ function renderNav(activePath, session) {
       <button class="nav-hamburger" id="navHamburger" aria-label="Toggle menu">&#9776;</button>
       <a href="/" class="site-brand"><img src="/siteLogo.png" alt="Halls of the Damned" /></a>
       <div class="nav-links">${links}</div>
-      <div class="nav-right">${searchBar}${rightItems}${rightLink}</div>
+      <div class="nav-right">${searchBar}${rightItems}</div>
     </nav>
     <div class="nav-mobile-drawer" id="navMobileDrawer">
       ${mobileSearch}
       ${mobileLinks}
       ${mobileRightItems}
-      ${mobileRightLink}
     </div>
   </header>
   <script>

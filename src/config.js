@@ -35,13 +35,19 @@ function ordinal(n) {
 
 // ── Navigation Items ──────────────────────────────────────────
 const NAV_ITEMS = [
-  { label: "Home", href: "/" },
+  {
+    label: "Home", dropdown: [
+      { label: "Dashboard", href: "/" },
+      { label: "Account", href: "/account", sessionAware: true },
+    ]
+  },
   {
     label: "Game Info", dropdown: [
       { label: "Calendar", href: "/calendar" },
       { label: "History", href: "/history" },
       { label: "Art & Images", href: "/art" },
       { label: "House Rules", href: "/house-rules" },
+      { label: "DM AI", href: "/dungeon-master" },
       { label: "FoundryVTT", href: "https://hotd-foundry.knoxrpg.com", external: true },
     ]
   },
@@ -54,14 +60,12 @@ const NAV_ITEMS = [
       { label: "Artifacts", href: "/artifacts" },
       { label: "Handouts", href: "/handouts" },
       { label: "Journal", href: "/journal" },
+      { label: "Search", href: "/search" },
     ]
   },
 ];
 
-const NAV_RIGHT_ITEMS = [
-  { label: "DM AI", href: "/dungeon-master", icon: "&#129302;" },
-  { label: "KnoxRPG", href: MAIN_SITE, external: true, icon: "&#127760;" },
-];
+const NAV_RIGHT_ITEMS = [];
 
 // ── Campaign Search Index ─────────────────────────────────────
 const campaignPages = [

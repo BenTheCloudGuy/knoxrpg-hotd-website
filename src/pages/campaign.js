@@ -51,23 +51,6 @@ async function renderHomePage(session) {
   const monthName = (HARPTOS_MONTHS.find(m => m.idx === currentMonth) || {}).name || "Unknown";
 
   // Build view-only calendar grid for current month
-  let homeCalEvents = [];
-  try {
-    const r = await pgPool.query("SELECT * FROM hotd_calendar_events WHERE month_idx = $1 ORDER BY day, id", [currentMonth]);
-    homeCalEvents = r.rows;
-  } catch (_) {}
-  const homeEvByDay = {};
-  for (const ev of homeCalEvents) { if (!homeEvByDay[ev.day]) homeEvByDay[ev.day] = []; homeEvByDay[ev.day].push(ev); }
-  let homeCalGridHtml = "";
-  for (let d = 1; d <= 30; d++) {
-    const isToday = d === currentDay;
-    const dayEvs = homeEvByDay[d] || [];
-    const evsHtml = dayEvs.map(ev => `<div class="cal-event" title="${esc(ev.description || ev.title)}">${esc(ev.title)}</div>`).join("");
-    homeCalGridHtml += `<div class="cal-day${isToday ? " today" : ""}"><div class="cal-day-num">${d}</div>${evsHtml}</div>`;
-  }
-  const homeCalRem = 7 - (30 % 7);
-  if (homeCalRem < 7) for (let i = 0; i < homeCalRem; i++) homeCalGridHtml += '<div class="cal-day empty"></div>';
-
   // Fetch player characters from hotd_player_characters
   let players = [];
   try {
@@ -142,11 +125,13 @@ async function renderHomePage(session) {
             <div style="color:#888;font-size:0.85rem;margin-top:8px;">${ordinal(currentDay)} of ${esc(monthName)}, ${currentYear} DR</div>
           </div>
         </div>
-        <!-- Calendar -->
+        <!-- Map of Barovia -->
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
-          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128197; Campaign Calendar &mdash; ${esc(monthName)}</h3>
-          <p style="color:#888;font-size:0.85rem;margin-bottom:12px;">Current date: <strong style="color:#e8b923;">${ordinal(currentDay)} of ${esc(monthName)}, ${currentYear} DR</strong></p>
-          <div class="cal-grid">${homeCalGridHtml}</div>
+          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128506; Map of Barovia</h3>
+          <div id="mapContainer" style="width:100%;height:420px;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
+            <img id="baroviaMap" src="/images/main_map.jpg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;" />
+          </div>
+          <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Click and drag to pan</div>
         </div>
         <!-- The Party -->
         <div>
@@ -159,9 +144,20 @@ async function renderHomePage(session) {
       </div>
 
       <!-- RIGHT COLUMN (1/3) -->
-      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;overflow-y:auto;">
-        <h3 style="color:#e8b923;margin:0 0 8px 0;font-size:1rem;">&#128220; Last Session</h3>
-        ${lastSessionHtml}
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Search Box -->
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
+          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128269; Search Campaign</h3>
+          <div style="display:flex;gap:0;">
+            <input type="text" id="homeSearchInput" placeholder="Search campaign..." autocomplete="off" style="flex:1;padding:10px 14px;border:2px solid #333;border-radius:8px 0 0 8px;font-size:0.9rem;background:#111;color:#e0ddd5;outline:none;font-family:inherit;" />
+            <button id="homeSearchBtn" style="padding:10px 18px;border:2px solid #e8b923;border-left:none;background:#e8b923;color:#1a1a1a;font-weight:700;cursor:pointer;border-radius:0 8px 8px 0;font-size:0.85rem;text-transform:uppercase;">Search</button>
+          </div>
+        </div>
+        <!-- Last Session -->
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;overflow-y:auto;">
+          <h3 style="color:#e8b923;margin:0 0 8px 0;font-size:1rem;">&#128220; Last Session</h3>
+          ${lastSessionHtml}
+        </div>
       </div>
     </div>
   </div>
@@ -170,7 +166,58 @@ async function renderHomePage(session) {
       .home-grid { grid-template-columns: 1fr !important; }
       .home-grid > div:first-child > div:first-child { grid-template-columns: 1fr !important; }
     }
-  </style>`;
+  </style>
+  <script>
+  (function() {
+    var container = document.getElementById('mapContainer');
+    var img = document.getElementById('baroviaMap');
+    if (!container || !img) return;
+    var scale = 1, minScale = 0.2, maxScale = 5, panX = 0, panY = 0;
+    var isPanning = false, startX = 0, startY = 0;
+    function applyTransform() { img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')'; }
+    container.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      var rect = container.getBoundingClientRect();
+      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      var oldScale = scale;
+      scale *= e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      scale = Math.max(minScale, Math.min(maxScale, scale));
+      panX = mx - (mx - panX) * (scale / oldScale);
+      panY = my - (my - panY) * (scale / oldScale);
+      applyTransform();
+    }, { passive: false });
+    container.addEventListener('mousedown', function(e) { isPanning = true; startX = e.clientX - panX; startY = e.clientY - panY; container.style.cursor = 'grabbing'; });
+    window.addEventListener('mousemove', function(e) { if (!isPanning) return; panX = e.clientX - startX; panY = e.clientY - startY; applyTransform(); });
+    window.addEventListener('mouseup', function() { isPanning = false; container.style.cursor = 'grab'; });
+    var lastTouchDist = 0, lastTouchX = 0, lastTouchY = 0;
+    container.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) { isPanning = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY; }
+      if (e.touches.length === 2) { isPanning = false; lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY); lastTouchX = (e.touches[0].clientX + e.touches[1].clientX) / 2; lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2; }
+    }, { passive: false });
+    container.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (e.touches.length === 1 && isPanning) { panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; applyTransform(); }
+      if (e.touches.length === 2) {
+        var dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+        var rect = container.getBoundingClientRect();
+        var mx = lastTouchX - rect.left, my = lastTouchY - rect.top;
+        var oldScale = scale; scale *= dist / lastTouchDist;
+        scale = Math.max(minScale, Math.min(maxScale, scale));
+        panX = mx - (mx - panX) * (scale / oldScale); panY = my - (my - panY) * (scale / oldScale);
+        lastTouchDist = dist; applyTransform();
+      }
+    }, { passive: false });
+    container.addEventListener('touchend', function() { isPanning = false; });
+  })();
+  (function() {
+    var input = document.getElementById('homeSearchInput');
+    var btn = document.getElementById('homeSearchBtn');
+    if (!input || !btn) return;
+    function doSearch() { var q = input.value.trim(); if (q.length >= 2) window.location.href = '/search?q=' + encodeURIComponent(q); }
+    btn.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+  })();
+  </script>`;
   return pageShell("Halls of the Damned — KnoxRPG Campaign", "/", body, session);
 }
 
