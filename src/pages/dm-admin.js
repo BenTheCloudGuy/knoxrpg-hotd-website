@@ -1194,10 +1194,10 @@ async function renderDmAdminPage(session) {
   }
   function renderNpcs(list) {
     el('npcs-body').innerHTML = list.map(n =>
-      '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2a2a2a;" onerror="this.style.display=\'none\'" />' : '<div style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">?</div>')+'</td>'+
+      '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2a2a2a;" onerror="this.style.display=&quot;none&quot;" />' : '<div style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">?</div>')+'</td>'+
       '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
       '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
-      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',\''+esc(n.name)+'\')">Del</button></td></tr>'
+      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',&quot;'+esc(n.name)+'&quot;)">Del</button></td></tr>'
     ).join('') || '<tr><td colspan="9" class="dmc-empty">No NPCs.</td></tr>';
   }
   function filterNpcs() {
@@ -1217,7 +1217,7 @@ async function renderDmAdminPage(session) {
   function npcPreviewPortrait() {
     const url = el('npc-portrait').value.trim();
     const box = el('npc-portrait-preview');
-    if (url) box.innerHTML = '<img src="'+esc(url)+'" style="width:80px;height:80px;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<span style=\\&quot;color:#f55;font-size:0.7rem;\\&quot;>Invalid</span>\'" />';
+    if (url) box.innerHTML = '<img src="'+esc(url)+'" style="width:80px;height:80px;object-fit:cover;" onerror="this.style.display=&quot;none&quot;" />';
     else box.innerHTML = '<span style="color:#555;font-size:0.7rem;">No image</span>';
   }
   function editNpc(id) {
