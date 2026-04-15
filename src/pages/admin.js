@@ -825,6 +825,7 @@ async function renderMapAdminPage(session) {
         });
       }
       dragging = null;
+      didDrag = false;
     });
 
     // Zoom
