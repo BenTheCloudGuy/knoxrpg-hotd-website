@@ -178,6 +178,7 @@ async function renderHomePage(session) {
     var ICON_PATHS = {
       allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
       barovia: '/images/icons/baroviaShield.png',
+      dusk_elves: '/images/icons/duskElvesShield.png',
       kezk: '/images/icons/KezkShield.png',
       party: '/images/icons/partyShield.png',
       ravenkind: '/images/icons/RavenKindSheild.png',

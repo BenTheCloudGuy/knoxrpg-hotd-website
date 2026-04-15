@@ -616,6 +616,7 @@ async function renderMapAdminPage(session) {
             <option value="allied_werewolves">Allied Werewolves</option>
             <option value="battle">⚔️ Battle</option>
             <option value="barovia">Barovia</option>
+            <option value="dusk_elves">Dusk Elves</option>
             <option value="kezk">Kezk</option>
             <option value="party">Party</option>
             <option value="ravenkind">Ravenkind</option>
@@ -647,6 +648,7 @@ async function renderMapAdminPage(session) {
             <div><img src="/images/icons/AlliedWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Allied Werewolves</strong></div>
             <div>⚔️ <strong>Battle</strong> — Crossed Swords</div>
             <div><img src="/images/icons/baroviaShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Barovia</strong></div>
+            <div><img src="/images/icons/duskElvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Dusk Elves</strong></div>
             <div><img src="/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
             <div><img src="/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
             <div><img src="/images/icons/RavenKindSheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Ravenkind</strong></div>
@@ -694,6 +696,7 @@ async function renderMapAdminPage(session) {
     var ICON_PATHS = {
       allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
       barovia: '/images/icons/baroviaShield.png',
+      dusk_elves: '/images/icons/duskElvesShield.png',
       kezk: '/images/icons/KezkShield.png',
       party: '/images/icons/partyShield.png',
       ravenkind: '/images/icons/RavenKindSheild.png',
