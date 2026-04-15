@@ -57,6 +57,16 @@ function renderDungeonMasterPage(session) {
     .chat-bubble code { background: rgba(255,255,255,0.07); padding: 1px 4px; border-radius: 3px; font-size: 0.85em; }
     .chat-bubble strong { font-weight: 700; }
     .chat-bubble ul, .chat-bubble ol { margin: 4px 0 4px 20px; }
+    .chat-bubble table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    .chat-bubble th, .chat-bubble td { border: 1px solid #444; padding: 6px 10px; text-align: left; font-size: 0.85rem; }
+    .chat-bubble th { background: #333; font-weight: 700; }
+    .chat-bubble img { max-width: 200px; border-radius: 8px; margin: 8px 0; }
+    .chat-bubble a { color: #e8b923; text-decoration: none; }
+    .chat-bubble a:hover { text-decoration: underline; }
+    .chat-bubble blockquote { border-left: 3px solid #e8b923; padding-left: 12px; margin: 8px 0; color: #a09d94; }
+    .chat-bubble h1, .chat-bubble h2, .chat-bubble h3 { color: #e8b923; margin: 12px 0 6px; }
+    .chat-bubble h1 { font-size: 1.1rem; } .chat-bubble h2 { font-size: 1rem; } .chat-bubble h3 { font-size: 0.95rem; }
+    .chat-bubble hr { border: none; border-top: 1px solid #444; margin: 12px 0; }
     .typing-indicator { color: #888; font-style: italic; font-size: 0.85rem; padding: 4px 0; }
     .chat-input-row {
       display: flex; gap: 0; background: #1a1a1a;
@@ -111,6 +121,7 @@ function renderDungeonMasterPage(session) {
   </div>
   <div class="chat-disclaimer">AI responses are generated and may contain errors. Always verify rules with official source books.</div>
   ${renderFooter()}
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
   (function() {
     var msgs = document.getElementById('chatMessages');
@@ -118,18 +129,20 @@ function renderDungeonMasterPage(session) {
     var sendBtn = document.getElementById('chatSend');
     var history = [];
 
+    // Configure marked for safe rendering
+    marked.setOptions({ breaks: true, gfm: true });
+
     function addMessage(role, text) {
       var div = document.createElement('div');
       div.className = 'chat-msg ' + role;
       var avatar = role === 'user' ? 'You' : 'DM';
-      var html = text
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
-        .replace(/\\*(.+?)\\*/g, '<em>$1</em>')
-        .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
-        .replace(/\\n/g, '<br>');
-      var paragraphs = html.split(/<br>\\s*<br>/).map(function(p) { return '<p>' + p + '</p>'; }).join('');
-      div.innerHTML = '<div class="chat-avatar">' + avatar + '</div><div class="chat-bubble">' + paragraphs + '</div>';
+      var rendered;
+      if (role === 'user') {
+        rendered = '<p>' + text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+      } else {
+        rendered = marked.parse(text);
+      }
+      div.innerHTML = '<div class="chat-avatar">' + avatar + '</div><div class="chat-bubble">' + rendered + '</div>';
       msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
     }
 

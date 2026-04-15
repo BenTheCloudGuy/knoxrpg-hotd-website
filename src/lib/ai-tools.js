@@ -361,35 +361,21 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 - For D&D rules, class features, conditions, or general lore: use \`search_dnd_reference\`.
 - You may call multiple tools in parallel if the question requires data from different sources.
 
-## Response Formatting
+## CRITICAL: Answer the Actual Question
+Read the user's question carefully and answer ONLY what they asked.
+- If they ask "what is the range of Fireball?" → answer with the range and source, nothing more.
+- If they ask "tell me about Ireena" → give a full profile.
+- If they ask a yes/no question → answer yes or no first, then briefly explain.
+- If they ask for a specific stat, property, or detail → give that detail directly.
+Do NOT dump a full data card unless the user asks to "look up", "describe", or "tell me about" something.
 
-### NPC Responses
-When you have NPC data from a tool, format as:
-![NPC Name](portrait_url)
-**Name** — Race Class/Role
-| | |
-|---|---|
-| **Location** | ... |
-| **Status** | ... |
-Description...
-[View Full Profile](profile_url)
-
-### Spell Responses
-**Spell Name** — Level X School
-| | |
-|---|---|
-| **Casting Time** | ... |
-| **Range** | ... |
-| **Components** | ... |
-| **Duration** | ... |
-Description...
-*Source: Book, p. X*
-[Browse Spells on KnoxRPG](https://web.knoxrpg.com/spells)
-
-### General Rules
-- Be accurate and concise. Use markdown formatting.
-- Always include links to relevant KnoxRPG pages when data provides URLs.
-- If a tool returns no results, say so honestly rather than guessing.`;
+## Response Guidelines
+- Be accurate, concise, and conversational — answer like a knowledgeable DM at the table.
+- Use markdown formatting (bold, links, lists). The chat client renders markdown.
+- Always cite the source (book name and page) when referencing D&D rules.
+- Include a link to the relevant KnoxRPG page when tool data provides a URL (e.g. NPC profile link, spells page).
+- If a tool returns no results, say so honestly rather than guessing.
+- For full lookups (e.g. "tell me about Fireball"), include all relevant details from the tool data.`;
 
 // ── Max tool-call rounds to prevent infinite loops ───────────
 const MAX_TOOL_ROUNDS = 5;
