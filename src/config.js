@@ -39,6 +39,7 @@ const NAV_ITEMS = [
     label: "Home", dropdown: [
       { label: "Dashboard", href: "/" },
       { label: "Account", href: "/account", sessionAware: true },
+      { label: "\u2699 DM Admin", href: "/dm-admin", adminOnly: true },
     ]
   },
   {

@@ -1,0 +1,74 @@
+name: Embed Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/hotd-campaign/**'
+      - 'scripts/embed-pipeline.js'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Pipeline mode'
+        type: choice
+        options:
+          - incremental
+          - full
+          - dry-run
+        default: incremental
+      source_filter:
+        description: 'Only reindex a specific source type (leave blank for all)'
+        required: false
+        type: string
+
+env:
+  PGHOST: localhost
+  PGPORT: "30432"
+  PGUSER: cortana
+  PGDATABASE: dnd_website
+
+jobs:
+  embed:
+    name: Run Embedding Pipeline
+    runs-on: [self-hosted, linux, cortana]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm init -y --silent 2>/dev/null || true
+          npm install pg --no-save --silent
+
+      - name: Run pipeline
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'incremental' }}"
+          SOURCE="${{ github.event.inputs.source_filter || '' }}"
+          ARGS="--mode $MODE --verbose"
+          if [ -n "$SOURCE" ]; then
+            ARGS="$ARGS --source $SOURCE"
+          fi
+          echo "Running: node scripts/embed-pipeline.js $ARGS"
+          node scripts/embed-pipeline.js $ARGS
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embed-report-${{ github.run_number }}
+          path: reports/embed-report-*.json
+          retention-days: 30
+
+      - name: Print summary
+        if: always()
+        run: |
+          REPORT=$(ls -t reports/embed-report-*.json 2>/dev/null | head -1)
+          if [ -f "$REPORT" ]; then
+            echo "## Embedding Pipeline Report" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi

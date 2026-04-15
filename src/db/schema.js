@@ -227,6 +227,31 @@ async function ensureHotdTables() {
     for (const [col, typedef] of backstoryCols) {
       await pgPool.query(`ALTER TABLE hotd_player_characters ADD COLUMN IF NOT EXISTS ${col} ${typedef}`).catch(() => {});
     }
+
+    // ── Embeddings table (pgvector) ──
+    await pgPool.query(`CREATE EXTENSION IF NOT EXISTS vector`).catch(() => {});
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_embeddings (
+        id            SERIAL PRIMARY KEY,
+        source_type   TEXT NOT NULL,
+        source_id     INTEGER,
+        source_path   TEXT,
+        chunk_index   INTEGER DEFAULT 0,
+        title         TEXT DEFAULT '',
+        chunk_text    TEXT NOT NULL,
+        chunk_hash    TEXT NOT NULL,
+        metadata      JSONB DEFAULT '{}',
+        embedding     vector(1536),
+        is_dm_only    BOOLEAN DEFAULT FALSE,
+        created_at    TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        CONSTRAINT hotd_embeddings_chunk_hash_key UNIQUE (chunk_hash)
+      );
+      CREATE INDEX IF NOT EXISTS idx_embed_source ON hotd_embeddings (source_type, source_id);
+      CREATE INDEX IF NOT EXISTS idx_embed_hash ON hotd_embeddings (chunk_hash);
+      CREATE INDEX IF NOT EXISTS idx_embed_dm ON hotd_embeddings (is_dm_only);
+    `).catch(() => {});
+
     console.log("  HOTD tables: ready");
   } catch (err) {
     console.warn("  WARN: Could not ensure HOTD tables:", err.message);

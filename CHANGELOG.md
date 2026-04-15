@@ -4,6 +4,19 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-04-15
+
+### Added
+- **RAG Embedding Pipeline** — 5-stage pipeline (Extract → Chunk → Sanitize → Embed → Store) using OpenAI `text-embedding-3-small` and pgvector
+  - `scripts/embed-pipeline.js` with structured JSON reports at every stage
+  - `.github/workflows/embed.yml` — auto-triggers on campaign content changes, manual dispatch with mode selector (incremental/full/dry-run) and optional source filter
+  - Extracts from: NPCs, sessions, artifacts, handouts, calendar events, characters, journal, lore markdown, JSON data files, DM story elements
+  - Hash-based incremental indexing — skips unchanged chunks
+  - `is_dm_only` flag for player/DM content visibility firewall
+  - Orphan cleanup for deleted source records
+- `hotd_embeddings` table with pgvector `vector(1536)` column, IVFFlat index, and unique hash constraint (added to schema migration)
+- DM Admin link in Home dropdown (admin-only via `adminOnly` config flag)
+
 ## [1.9.0] - 2026-04-16
 
 ### Added

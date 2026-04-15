@@ -130,7 +130,7 @@ function renderNav(activePath, session) {
       const childActive = item.dropdown.some(c =>
         !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)))
       );
-      const ddLinks = item.dropdown.map(c => {
+      const ddLinks = item.dropdown.filter(c => !c.adminOnly || (session && session.role === "admin")).map(c => {
         // Session-aware Account/Login swap
         if (c.sessionAware) {
           const href = session ? "/account" : "/login";
@@ -162,7 +162,7 @@ function renderNav(activePath, session) {
   // Mobile drawer
   const mobileLinks = NAV_ITEMS.map((item) => {
     if (item.dropdown) {
-      const children = item.dropdown.map(c => {
+      const children = item.dropdown.filter(c => !c.adminOnly || (session && session.role === "admin")).map(c => {
         // Session-aware Account/Login swap
         if (c.sessionAware) {
           const href = session ? "/account" : "/login";
