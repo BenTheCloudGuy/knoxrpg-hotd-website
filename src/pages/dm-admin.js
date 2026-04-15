@@ -502,6 +502,8 @@ async function renderDmAdminPage(session) {
     .dmc-table th { color:#666; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px; text-align:left; padding:8px 6px; border-bottom:2px solid #c83232; background:#111; }
     .dmc-table td { padding:6px; color:#bbb; border-bottom:1px solid #1e1e1e; }
     .dmc-table tr:hover td { background:#1a1a1a; }
+    .npc-thumb { width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2a2a2a; }
+    .npc-thumb-empty { width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem; }
     .dmc-empty { text-align:center; color:#555; padding:24px; font-style:italic; }
 
     /* ── Alerts & badges ── */
@@ -1194,11 +1196,12 @@ async function renderDmAdminPage(session) {
   }
   function renderNpcs(list) {
     el('npcs-body').innerHTML = list.map(n =>
-      '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2a2a2a;" onerror="this.style.display=&quot;none&quot;" />' : '<div style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">?</div>')+'</td>'+
+      '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" class="npc-thumb" />' : '<div class="npc-thumb-empty">?</div>')+'</td>'+
       '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
       '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
-      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',&quot;'+esc(n.name)+'&quot;)">Del</button></td></tr>'
+      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+')">Del</button></td></tr>'
     ).join('') || '<tr><td colspan="9" class="dmc-empty">No NPCs.</td></tr>';
+    document.querySelectorAll('.npc-thumb').forEach(function(img) { img.onerror = function() { this.style.display = 'none'; }; });
   }
   function filterNpcs() {
     const q = el('npc-search').value.toLowerCase();
@@ -1217,8 +1220,16 @@ async function renderDmAdminPage(session) {
   function npcPreviewPortrait() {
     const url = el('npc-portrait').value.trim();
     const box = el('npc-portrait-preview');
-    if (url) box.innerHTML = '<img src="'+esc(url)+'" style="width:80px;height:80px;object-fit:cover;" onerror="this.style.display=&quot;none&quot;" />';
-    else box.innerHTML = '<span style="color:#555;font-size:0.7rem;">No image</span>';
+    if (url) {
+      box.innerHTML = '';
+      var img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'width:80px;height:80px;object-fit:cover;';
+      img.onerror = function() { box.innerHTML = '<span style="color:#f55;font-size:0.7rem;">Invalid</span>'; };
+      box.appendChild(img);
+    } else {
+      box.innerHTML = '<span style="color:#555;font-size:0.7rem;">No image</span>';
+    }
   }
   function editNpc(id) {
     const n = _npcsCache.find(x=>x.id===id);
@@ -1252,7 +1263,9 @@ async function renderDmAdminPage(session) {
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     el('npc-edit').style.display='none'; loadNpcs();
   }
-  async function deleteNpcDirect(id,name) {
+  async function deleteNpcDirect(id) {
+    var npc = _npcsCache.find(function(x){return x.id===id;});
+    var name = npc ? npc.name : 'this NPC';
     if (!confirm('Delete NPC: '+name+'?')) return;
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     loadNpcs();
