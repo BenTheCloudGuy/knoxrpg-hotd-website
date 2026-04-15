@@ -4,6 +4,13 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-15
+
+### Changed
+- Replaced emoji map markers with PNG shield icons for all factions
+- Expanded marker types to 11 factions: Allied Werewolves, Barovia, Kezk, Party, Ravenkind, Strahd Abbot, Strahd Demon Army, Strahd, Strahd Werewolves, Villaki, Vistani
+- Updated admin legend and dropdown to show all faction icons
+
 ## [1.3.0] - 2026-04-14
 
 ### Added
