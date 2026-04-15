@@ -252,6 +252,56 @@ async function ensureHotdTables() {
       CREATE INDEX IF NOT EXISTS idx_embed_dm ON hotd_embeddings (is_dm_only);
     `).catch(() => {});
 
+    // ── DM Feature Tables ──
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_generated_images (
+        id             SERIAL PRIMARY KEY,
+        prompt         TEXT NOT NULL,
+        revised_prompt TEXT,
+        image_url      TEXT NOT NULL,
+        thumbnail_url  TEXT,
+        folder         TEXT DEFAULT 'Uncategorized',
+        tags           TEXT[] DEFAULT ARRAY[]::TEXT[],
+        size           TEXT DEFAULT '1024x1024',
+        style          TEXT DEFAULT 'vivid',
+        quality        TEXT DEFAULT 'hd',
+        published_to   TEXT,
+        created_at     TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS hotd_dm_story_elements (
+        id               SERIAL PRIMARY KEY,
+        element_type     TEXT NOT NULL,
+        title            TEXT NOT NULL,
+        content          TEXT NOT NULL,
+        related_entities JSONB DEFAULT '[]',
+        status           TEXT DEFAULT 'draft',
+        created_at       TIMESTAMPTZ DEFAULT NOW(),
+        updated_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS hotd_dm_conversations (
+        id                 SERIAL PRIMARY KEY,
+        title              TEXT NOT NULL,
+        conversation_type  TEXT DEFAULT 'general',
+        messages           JSONB DEFAULT '[]',
+        context_refs       JSONB DEFAULT '[]',
+        created_at         TIMESTAMPTZ DEFAULT NOW(),
+        updated_at         TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS hotd_dm_files (
+        id           SERIAL PRIMARY KEY,
+        filename     TEXT NOT NULL,
+        file_url     TEXT,
+        file_type    TEXT DEFAULT 'text',
+        content      TEXT DEFAULT '',
+        is_indexed   BOOLEAN DEFAULT FALSE,
+        folder       TEXT DEFAULT 'General',
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+    `).catch(() => {});
+
+    // Seed DALL-E style prefix
+    await pgPool.query("INSERT INTO hotd_config (key, value) VALUES ('dalle_style_prefix', 'Dark fantasy digital painting, dramatic chiaroscuro lighting, rich earth tones and deep crimsons, medieval Forgotten Realms aesthetic, highly detailed, cinematic composition, gothic atmosphere --') ON CONFLICT (key) DO NOTHING").catch(() => {});
+
     console.log("  HOTD tables: ready");
   } catch (err) {
     console.warn("  WARN: Could not ensure HOTD tables:", err.message);

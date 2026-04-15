@@ -4,6 +4,19 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-04-16
+
+### Added
+- **DALL-E 3 Image Studio** — new tab on DM Admin for AI-powered image generation
+  - Generate images with configurable size (square/landscape/portrait), style (vivid/natural), and quality (standard/HD)
+  - Automatic style prefix from `dalle_style_prefix` config for consistent dark fantasy aesthetic
+  - Gallery view with folder-based organization and filtering
+  - Image detail modal with metadata editing (folder, tags)
+  - Publish generated images directly to the Art Gallery
+  - Delete images (removes both DB record and file from NAS)
+  - All images saved to local NAS at `generated-images/` directory
+- Image Studio API endpoints: generate, list, folders, update, delete, publish
+
 ## [1.10.0] - 2026-04-15
 
 ### Added

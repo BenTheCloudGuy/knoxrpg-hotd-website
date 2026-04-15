@@ -24,6 +24,7 @@ async function renderDmAdminPage(session) {
       <button class="dm-tab" onclick="switchDmTab('search')">Search</button>
       <button class="dm-tab" onclick="switchDmTab('campaign')">Campaign</button>
       <button class="dm-tab" onclick="switchDmTab('users')">Users</button>
+      <button class="dm-tab" onclick="switchDmTab('images')">&#127912; Image Studio</button>
     </div>
 
     <!-- ═══ CHARACTERS TAB ═══ -->
@@ -246,6 +247,98 @@ async function renderDmAdminPage(session) {
       </table>
     </div>
 
+    <!-- ═══ IMAGE STUDIO TAB ═══ -->
+    <div class="dm-panel" id="dm-images" style="display:none;">
+      <div class="dm-panel-header">
+        <h3>&#127912; DALL-E 3 Image Studio</h3>
+      </div>
+
+      <!-- Generation Form -->
+      <div class="dm-config-section">
+        <h4>Generate Image</h4>
+        <div class="dm-form-grid">
+          <label style="grid-column:1/-1;">Prompt<textarea id="img-prompt" rows="3" class="dm-textarea" placeholder="Describe what you want to generate..."></textarea></label>
+        </div>
+        <div class="dm-form-grid dm-form-grid-4">
+          <label>Size<select id="img-size">
+            <option value="1024x1024">1024x1024 (Square)</option>
+            <option value="1792x1024">1792x1024 (Landscape)</option>
+            <option value="1024x1792">1024x1792 (Portrait)</option>
+          </select></label>
+          <label>Style<select id="img-style">
+            <option value="vivid">Vivid</option>
+            <option value="natural">Natural</option>
+          </select></label>
+          <label>Quality<select id="img-quality">
+            <option value="standard">Standard</option>
+            <option value="hd">HD</option>
+          </select></label>
+          <label>Folder<input type="text" id="img-folder" placeholder="e.g. NPCs, Scenes, Items" list="img-folder-list" /><datalist id="img-folder-list"></datalist></label>
+        </div>
+        <div class="dm-form-grid">
+          <label>Tags (comma separated)<input type="text" id="img-tags" placeholder="e.g. vampire, castle, barovia" /></label>
+        </div>
+        <div class="dm-form-actions">
+          <button class="dm-btn dm-btn-primary" id="img-gen-btn" onclick="generateImage()">&#9889; Generate</button>
+          <span id="img-gen-status" style="color:#888;font-size:0.82rem;align-self:center;"></span>
+        </div>
+      </div>
+
+      <!-- Preview area for latest generation -->
+      <div id="img-preview" class="img-preview" style="display:none;">
+        <div class="img-preview-img"><img id="img-preview-src" src="" alt="Generated" /></div>
+        <div class="img-preview-info">
+          <p id="img-preview-prompt" style="color:#e8b923;font-weight:600;"></p>
+          <p id="img-preview-revised" style="color:#888;font-size:0.8rem;font-style:italic;"></p>
+          <div class="dm-form-actions">
+            <button class="dm-btn dm-btn-primary" onclick="publishPreview()">Publish to Art Gallery</button>
+            <button class="dm-btn" onclick="document.getElementById('img-preview').style.display='none'">Dismiss</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Folder filter bar -->
+      <div class="dm-config-section" style="margin-top:20px;">
+        <h4>Gallery</h4>
+        <div class="img-folder-bar" id="img-folder-bar">
+          <button class="dm-btn dm-btn-sm img-folder-btn active" onclick="filterFolder(null, this)">All</button>
+        </div>
+      </div>
+
+      <!-- Gallery grid -->
+      <div class="img-gallery" id="img-gallery">
+        <p class="dm-loading">Loading gallery...</p>
+      </div>
+
+      <!-- Image detail modal -->
+      <div class="img-modal" id="img-modal" style="display:none;" onclick="if(event.target===this)closeImgModal()">
+        <div class="img-modal-content">
+          <img id="img-modal-src" src="" alt="Image" />
+          <div class="img-modal-info">
+            <p id="img-modal-prompt" style="color:#e8b923;font-weight:600;"></p>
+            <p id="img-modal-revised" style="color:#888;font-size:0.8rem;font-style:italic;"></p>
+            <div class="img-modal-meta">
+              <span id="img-modal-size"></span>
+              <span id="img-modal-style"></span>
+              <span id="img-modal-quality"></span>
+              <span id="img-modal-folder" style="color:#e8b923;"></span>
+              <span id="img-modal-date"></span>
+            </div>
+            <div class="dm-form-grid dm-form-grid-3" style="margin-top:12px;">
+              <label>Folder<input type="text" id="img-modal-edit-folder" list="img-folder-list" /></label>
+              <label>Tags<input type="text" id="img-modal-edit-tags" /></label>
+              <label>&nbsp;<button class="dm-btn dm-btn-primary dm-btn-sm" onclick="updateImageMeta()">Update</button></label>
+            </div>
+            <div class="dm-form-actions" style="margin-top:12px;">
+              <button class="dm-btn dm-btn-primary" onclick="publishModal()">Publish to Art Gallery</button>
+              <button class="dm-btn dm-btn-danger" onclick="deleteModalImage()">Delete</button>
+              <button class="dm-btn" onclick="closeImgModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <style>
@@ -331,6 +424,36 @@ async function renderDmAdminPage(session) {
     /* ── Pre/code ── */
     .dm-pre { background:#111; border:1px solid #333; border-radius:6px; padding:12px; font-size:0.78rem; color:#aaa; overflow-x:auto; margin-top:12px; max-height:300px; overflow-y:auto; white-space:pre-wrap; }
 
+    /* ── Image Studio ── */
+    .img-preview { display:flex; gap:20px; background:#151515; border:1px solid #c83232; border-radius:8px; padding:16px; margin-top:16px; }
+    .img-preview-img { flex:0 0 300px; }
+    .img-preview-img img { width:100%; border-radius:6px; }
+    .img-preview-info { flex:1; }
+    .img-folder-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+    .img-folder-btn.active { background:#c83232; color:#fff; border-color:#c83232; }
+    .img-gallery { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+    .img-card { background:#111; border:1px solid #333; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; position:relative; }
+    .img-card:hover { border-color:#e8b923; }
+    .img-card img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+    .img-card-info { padding:8px 10px; }
+    .img-card-info p { margin:0; font-size:0.78rem; color:#aaa; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .img-card-info small { color:#666; font-size:0.7rem; }
+    .img-card .img-published { position:absolute; top:6px; right:6px; background:#16a34a; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:10px; }
+    .img-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .img-modal-content { display:flex; gap:20px; max-width:1100px; width:100%; max-height:90vh; background:#1e1e1e; border:1px solid #444; border-radius:10px; padding:20px; overflow-y:auto; }
+    .img-modal-content img { max-width:500px; max-height:70vh; border-radius:6px; object-fit:contain; }
+    .img-modal-info { flex:1; }
+    .img-modal-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .img-modal-meta span { background:#2a2a2a; padding:2px 8px; border-radius:10px; font-size:0.72rem; color:#aaa; }
+
+    @media (max-width: 700px) {
+      .img-preview { flex-direction:column; }
+      .img-preview-img { flex:none; }
+      .img-modal-content { flex-direction:column; }
+      .img-modal-content img { max-width:100%; }
+      .img-gallery { grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); }
+    }
+
     @media (max-width: 700px) {
       .dm-form-grid-6 { grid-template-columns:repeat(3, 1fr); }
       .dm-form-grid-4, .dm-form-grid-3 { grid-template-columns:repeat(2, 1fr); }
@@ -358,6 +481,7 @@ async function renderDmAdminPage(session) {
       case 'search': loadSearchConfig(); break;
       case 'campaign': loadCampaignConfig(); break;
       case 'users': loadUsers(); break;
+      case 'images': loadImageStudio(); break;
     }
   }
 
@@ -624,6 +748,154 @@ async function renderDmAdminPage(session) {
     const r = await fetch('/api/dm-admin/users/' + userId + '/' + action, { method: 'POST' });
     if (r.ok) loadUsers();
     else alert('Error: ' + (await r.json()).error);
+  }
+
+  // ═══ IMAGE STUDIO ═══
+  let _imgCurrentFolder = null;
+  let _imgCurrentId = null;
+  let _imgPreviewId = null;
+
+  async function loadImageStudio() {
+    await loadFolders();
+    await loadGallery();
+  }
+
+  async function loadFolders() {
+    try {
+      const r = await fetch('/api/dm-admin/images/folders');
+      const data = await r.json();
+      const bar = document.getElementById('img-folder-bar');
+      const dl = document.getElementById('img-folder-list');
+      bar.innerHTML = '<button class="dm-btn dm-btn-sm img-folder-btn' + (!_imgCurrentFolder ? ' active' : '') + '" onclick="filterFolder(null, this)">All</button>';
+      dl.innerHTML = '';
+      (data.folders || []).forEach(f => {
+        bar.innerHTML += '<button class="dm-btn dm-btn-sm img-folder-btn' + (_imgCurrentFolder === f ? ' active' : '') + '" onclick="filterFolder(\\''+esc(f)+'\\', this)">' + esc(f) + '</button>';
+        dl.innerHTML += '<option value="' + esc(f) + '">';
+      });
+    } catch (_) {}
+  }
+
+  function filterFolder(folder, btn) {
+    _imgCurrentFolder = folder;
+    document.querySelectorAll('.img-folder-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    loadGallery();
+  }
+
+  async function loadGallery() {
+    const gallery = document.getElementById('img-gallery');
+    gallery.innerHTML = '<p class="dm-loading">Loading...</p>';
+    let url = '/api/dm-admin/images';
+    if (_imgCurrentFolder) url += '?folder=' + encodeURIComponent(_imgCurrentFolder);
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.images || data.images.length === 0) {
+      gallery.innerHTML = '<p class="dm-loading" style="grid-column:1/-1;">No images yet. Generate your first one above!</p>';
+      return;
+    }
+    gallery.innerHTML = data.images.map(img =>
+      '<div class="img-card" onclick="openImgModal(' + img.id + ')" data-id="' + img.id + '">' +
+        (img.is_published ? '<span class="img-published">Published</span>' : '') +
+        '<img src="' + esc(img.image_url) + '" alt="' + esc(img.prompt) + '" loading="lazy" />' +
+        '<div class="img-card-info"><p>' + esc(img.prompt) + '</p>' +
+        '<small>' + (img.folder ? esc(img.folder) + ' &middot; ' : '') + img.size + ' &middot; ' + new Date(img.created_at).toLocaleDateString() + '</small></div></div>'
+    ).join('');
+    window._imgGalleryData = data.images;
+  }
+
+  async function generateImage() {
+    const prompt = document.getElementById('img-prompt').value.trim();
+    if (!prompt) { alert('Enter a prompt'); return; }
+    const btn = document.getElementById('img-gen-btn');
+    const status = document.getElementById('img-gen-status');
+    btn.disabled = true;
+    status.textContent = 'Generating with DALL-E 3... (this may take 15-30s)';
+    try {
+      const body = {
+        prompt,
+        size: document.getElementById('img-size').value,
+        style: document.getElementById('img-style').value,
+        quality: document.getElementById('img-quality').value,
+        folder: document.getElementById('img-folder').value || null,
+        tags: document.getElementById('img-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      };
+      const r = await fetch('/api/dm-admin/images/generate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Generation failed');
+      // Show preview
+      _imgPreviewId = data.image.id;
+      document.getElementById('img-preview-src').src = data.image.image_url;
+      document.getElementById('img-preview-prompt').textContent = data.image.prompt;
+      document.getElementById('img-preview-revised').textContent = data.image.revised_prompt ? 'DALL-E revised: ' + data.image.revised_prompt : '';
+      document.getElementById('img-preview').style.display = 'flex';
+      status.textContent = 'Generated successfully!';
+      setTimeout(() => { status.textContent = ''; }, 4000);
+      // Refresh gallery + folders
+      await loadFolders();
+      await loadGallery();
+    } catch (err) {
+      status.textContent = 'Error: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function openImgModal(imgId) {
+    const data = (window._imgGalleryData || []).find(i => i.id === imgId);
+    if (!data) return;
+    _imgCurrentId = imgId;
+    document.getElementById('img-modal-src').src = data.image_url;
+    document.getElementById('img-modal-prompt').textContent = data.prompt;
+    document.getElementById('img-modal-revised').textContent = data.revised_prompt ? 'DALL-E revised: ' + data.revised_prompt : '';
+    document.getElementById('img-modal-size').textContent = data.size;
+    document.getElementById('img-modal-style').textContent = data.style;
+    document.getElementById('img-modal-quality').textContent = data.quality;
+    document.getElementById('img-modal-folder').textContent = data.folder || 'Unfiled';
+    document.getElementById('img-modal-date').textContent = new Date(data.created_at).toLocaleString();
+    document.getElementById('img-modal-edit-folder').value = data.folder || '';
+    const tags = data.tags ? (typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags) : [];
+    document.getElementById('img-modal-edit-tags').value = tags.join(', ');
+    document.getElementById('img-modal').style.display = 'flex';
+  }
+
+  function closeImgModal() { document.getElementById('img-modal').style.display = 'none'; _imgCurrentId = null; }
+
+  async function updateImageMeta() {
+    if (!_imgCurrentId) return;
+    const folder = document.getElementById('img-modal-edit-folder').value || null;
+    const tags = document.getElementById('img-modal-edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+    const r = await fetch('/api/dm-admin/images/' + _imgCurrentId, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ folder, tags }) });
+    if (r.ok) { closeImgModal(); await loadFolders(); await loadGallery(); }
+    else alert('Error updating image');
+  }
+
+  async function deleteModalImage() {
+    if (!_imgCurrentId || !confirm('Delete this image permanently?')) return;
+    const r = await fetch('/api/dm-admin/images/' + _imgCurrentId, { method: 'DELETE' });
+    if (r.ok) { closeImgModal(); await loadFolders(); await loadGallery(); }
+    else alert('Error deleting image');
+  }
+
+  async function publishModal() {
+    if (!_imgCurrentId) return;
+    const data = (window._imgGalleryData || []).find(i => i.id === _imgCurrentId);
+    const title = prompt('Title for Art Gallery:', data ? data.prompt : '');
+    if (!title) return;
+    const category = prompt('Category:', data && data.folder ? data.folder : 'Generated');
+    const r = await fetch('/api/dm-admin/images/' + _imgCurrentId + '/publish', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title, category }) });
+    if (r.ok) { alert('Published to Art Gallery!'); closeImgModal(); await loadGallery(); }
+    else { const d = await r.json(); alert('Error: ' + (d.error || 'Unknown')); }
+  }
+
+  async function publishPreview() {
+    if (!_imgPreviewId) return;
+    const pr = document.getElementById('img-preview-prompt').textContent;
+    const title = prompt('Title for Art Gallery:', pr);
+    if (!title) return;
+    const category = prompt('Category:', document.getElementById('img-folder').value || 'Generated');
+    const r = await fetch('/api/dm-admin/images/' + _imgPreviewId + '/publish', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title, category }) });
+    if (r.ok) { alert('Published to Art Gallery!'); await loadGallery(); }
+    else { const d = await r.json(); alert('Error: ' + (d.error || 'Unknown')); }
   }
 
   // ═══ UTILITY ═══

@@ -6,6 +6,7 @@
 
 const { pgPool } = require("../db/pool");
 const { readBody, sendJSON } = require("../lib/utils");
+const { openaiClient, uploadBlobToStorage } = require("../lib/azure");
 
 function requireAdmin(session, res) {
   if (!session || session.role !== "admin") {
@@ -192,6 +193,161 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     } catch (err) {
       sendJSON(res, { error: err.message }, 500);
     }
+    return true;
+  }
+
+  // ── Images: list gallery ────────────────────────────────────
+  if (decoded === "/api/dm-admin/images" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const params = new URL("http://x" + req.url).searchParams;
+    const folder = params.get("folder") || null;
+    let q = "SELECT id, prompt, revised_prompt, folder, tags, size, style, quality, image_url, thumbnail_url, is_published, created_at FROM hotd_generated_images";
+    const vals = [];
+    if (folder) { q += " WHERE folder = $1"; vals.push(folder); }
+    q += " ORDER BY created_at DESC";
+    const r = await pgPool.query(q, vals);
+    sendJSON(res, { images: r.rows });
+    return true;
+  }
+
+  // ── Images: list folders ───────────────────────────────────
+  if (decoded === "/api/dm-admin/images/folders" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const r = await pgPool.query("SELECT DISTINCT folder FROM hotd_generated_images WHERE folder IS NOT NULL ORDER BY folder");
+    sendJSON(res, { folders: r.rows.map(r => r.folder) });
+    return true;
+  }
+
+  // ── Images: generate via DALL-E 3 ─────────────────────────
+  if (decoded === "/api/dm-admin/images/generate" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const body = JSON.parse(await readBody(req));
+      const prompt = (body.prompt || "").trim();
+      if (!prompt) { sendJSON(res, { error: "Prompt is required" }, 400); return true; }
+
+      // Get style prefix from config
+      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'dalle_style_prefix'");
+      const stylePrefix = cfgR.rows.length ? cfgR.rows[0].value : "";
+      const fullPrompt = stylePrefix ? `${stylePrefix} ${prompt}` : prompt;
+
+      const size = body.size || "1024x1024";
+      const style = body.style || "vivid";
+      const quality = body.quality || "standard";
+      const folder = body.folder || null;
+      const tags = body.tags || [];
+
+      // Call DALL-E 3
+      const imgResp = await openaiClient.images.generate({
+        model: "dall-e-3",
+        prompt: fullPrompt,
+        n: 1,
+        size,
+        style,
+        quality,
+        response_format: "b64_json",
+      });
+
+      const b64 = imgResp.data[0].b64_json;
+      const revisedPrompt = imgResp.data[0].revised_prompt || "";
+      const imgBuffer = Buffer.from(b64, "base64");
+
+      // Save to local storage
+      const ts = Date.now();
+      const safeName = prompt.replace(/[^a-z0-9]/gi, "_").substring(0, 40) + "_" + ts + ".png";
+      const dir = folder ? `generated-images/${folder}` : "generated-images";
+      const imageUrl = await uploadBlobToStorage(safeName, imgBuffer, "image/png", "hotd-website-content", dir);
+
+      // Insert DB record
+      const insertR = await pgPool.query(
+        `INSERT INTO hotd_generated_images (prompt, revised_prompt, folder, tags, size, style, quality, image_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at`,
+        [prompt, revisedPrompt, folder, JSON.stringify(tags), size, style, quality, imageUrl]
+      );
+
+      sendJSON(res, {
+        ok: true,
+        image: {
+          id: insertR.rows[0].id,
+          prompt,
+          revised_prompt: revisedPrompt,
+          folder,
+          tags,
+          size,
+          style,
+          quality,
+          image_url: imageUrl,
+          created_at: insertR.rows[0].created_at,
+        },
+      });
+    } catch (err) {
+      console.error("DALL-E generation error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Images: update (folder, tags) ──────────────────────────
+  const imgUpdateMatch = decoded.match(/^\/api\/dm-admin\/images\/(\d+)$/);
+  if (imgUpdateMatch && req.method === "PUT") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(imgUpdateMatch[1], 10);
+    const body = JSON.parse(await readBody(req));
+    const sets = [];
+    const vals = [];
+    let idx = 1;
+    if (body.folder !== undefined) { sets.push(`folder = $${idx++}`); vals.push(body.folder || null); }
+    if (body.tags !== undefined) { sets.push(`tags = $${idx++}`); vals.push(JSON.stringify(body.tags)); }
+    if (sets.length === 0) { sendJSON(res, { error: "Nothing to update" }, 400); return true; }
+    vals.push(id);
+    await pgPool.query(`UPDATE hotd_generated_images SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Images: delete ─────────────────────────────────────────
+  const imgDeleteMatch = decoded.match(/^\/api\/dm-admin\/images\/(\d+)$/);
+  if (imgDeleteMatch && req.method === "DELETE") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(imgDeleteMatch[1], 10);
+    // Get image URL to delete file
+    const imgR = await pgPool.query("SELECT image_url FROM hotd_generated_images WHERE id = $1", [id]);
+    if (imgR.rows.length === 0) { sendJSON(res, { error: "Image not found" }, 404); return true; }
+    // Delete from filesystem if local
+    const url = imgR.rows[0].image_url;
+    if (url.startsWith("/hotd-content/")) {
+      const { HOTD_CONTENT_DIR } = require("../config");
+      if (HOTD_CONTENT_DIR) {
+        const relPath = url.replace("/hotd-content/", "");
+        const fs = require("fs");
+        const filePath = require("path").join(HOTD_CONTENT_DIR, relPath);
+        try { fs.unlinkSync(filePath); } catch (_) { /* file may already be gone */ }
+      }
+    }
+    await pgPool.query("DELETE FROM hotd_generated_images WHERE id = $1", [id]);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Images: publish to Art Gallery ─────────────────────────
+  const imgPublishMatch = decoded.match(/^\/api\/dm-admin\/images\/(\d+)\/publish$/);
+  if (imgPublishMatch && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(imgPublishMatch[1], 10);
+    const imgR = await pgPool.query("SELECT prompt, image_url, folder FROM hotd_generated_images WHERE id = $1", [id]);
+    if (imgR.rows.length === 0) { sendJSON(res, { error: "Image not found" }, 404); return true; }
+    const img = imgR.rows[0];
+    const body = JSON.parse(await readBody(req));
+    const title = body.title || img.prompt;
+    const category = body.category || img.folder || "Generated";
+    // Insert into art gallery
+    await pgPool.query(
+      "INSERT INTO hotd_art (title, category, image_url) VALUES ($1, $2, $3)",
+      [title, category, img.image_url]
+    );
+    await pgPool.query("UPDATE hotd_generated_images SET is_published = true WHERE id = $1", [id]);
+    sendJSON(res, { ok: true, message: `Published "${title}" to Art Gallery` });
     return true;
   }
 
