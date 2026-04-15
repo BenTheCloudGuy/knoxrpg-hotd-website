@@ -4,6 +4,15 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-04-15
+
+### Added
+- Point of Interest (POI) marker type with exclamation mark icon (❗)
+- DELETE API endpoint for map markers (`DELETE /api/map-markers/:id`)
+
+### Changed
+- Placed Markers table now updates dynamically (add/delete without page reload)
+
 ## [1.4.5] - 2026-04-15
 
 ### Added

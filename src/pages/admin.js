@@ -586,20 +586,6 @@ async function renderMapAdminPage(session) {
   // Hex size: ~67px per hex on the 5025×3225 image (measured from grid)
   const HEX_SIZE = 67;
   const markerJson = JSON.stringify(markers.map(m => ({ id: m.id, type: m.marker_type, label: m.label, x: parseFloat(m.x), y: parseFloat(m.y), size: parseFloat(m.size || 54) })));
-  const markerTableRows = markers.map(m => `
-    <tr>
-      <td>${m.id}</td>
-      <td>${esc(m.marker_type)}</td>
-      <td>${esc(m.label)}</td>
-      <td>${parseFloat(m.x).toFixed(0)}, ${parseFloat(m.y).toFixed(0)}</td>
-      <td>${parseFloat(m.size || 54).toFixed(0)}</td>
-      <td>
-        <form method="POST" action="/admin/map-markers/delete" style="display:inline;">
-          <input type="hidden" name="id" value="${m.id}" />
-          <button type="submit" class="delete-btn-inline" onclick="return confirm('Delete this marker?')">Delete</button>
-        </form>
-      </td>
-    </tr>`).join("");
 
   const body = `
   <div class="content" style="width:95%;max-width:95%;margin:0 auto;">
@@ -619,6 +605,7 @@ async function renderMapAdminPage(session) {
             <option value="dusk_elves">Dusk Elves</option>
             <option value="kezk">Kezk</option>
             <option value="party">Party</option>
+            <option value="poi">❗ Point of Interest</option>
             <option value="ravenkind">Ravenkind</option>
             <option value="strahd_abbot">Strahd Abbot</option>
             <option value="strahd_demon_army">Strahd Demon Army</option>
@@ -651,6 +638,7 @@ async function renderMapAdminPage(session) {
             <div><img src="/images/icons/duskElvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Dusk Elves</strong></div>
             <div><img src="/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
             <div><img src="/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
+            <div>❗ <strong>Point of Interest</strong></div>
             <div><img src="/images/icons/RavenKindSheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Ravenkind</strong></div>
             <div><img src="/images/icons/strahdAbbotShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Abbot</strong></div>
             <div><img src="/images/icons/strahdDemonArmySheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Demon Army</strong></div>
@@ -673,8 +661,7 @@ async function renderMapAdminPage(session) {
           </div>
         </div>
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;max-height:400px;overflow-y:auto;">
-          <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Placed Markers (${markers.length})</h3>
-          ${markers.length > 0 ? `<table class="admin-table" style="width:100%;font-size:0.8rem;"><thead><tr><th>ID</th><th>Type</th><th>Label</th><th>Pos</th><th>Size</th><th></th></tr></thead><tbody>${markerTableRows}</tbody></table>` : '<p style="color:#888;font-size:0.85rem;">No markers placed yet.</p>'}
+          <div id="markersTableContainer"></div>
         </div>
       </div>
     </div>
@@ -753,6 +740,34 @@ async function renderMapAdminPage(session) {
       });
     });
 
+    function renderMarkersTable() {
+      var tc = document.getElementById('markersTableContainer');
+      if (!tc) return;
+      if (markers.length === 0) {
+        tc.innerHTML = '<h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Placed Markers (0)</h3><p style="color:#888;font-size:0.85rem;">No markers placed yet.</p>';
+        return;
+      }
+      var html = '<h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Placed Markers (' + markers.length + ')</h3>';
+      html += '<table class="admin-table" style="width:100%;font-size:0.8rem;"><thead><tr><th>ID</th><th>Type</th><th>Label</th><th>Pos</th><th>Size</th><th></th></tr></thead><tbody>';
+      markers.forEach(function(m) {
+        html += '<tr><td>' + m.id + '</td><td>' + m.type + '</td><td>' + (m.label||'').replace(/</g,'&lt;') + '</td><td>' + Math.round(m.x) + ', ' + Math.round(m.y) + '</td><td>' + Math.round(m.size||54) + '</td><td><button class="delete-btn-inline" data-delete-id="' + m.id + '">Delete</button></td></tr>';
+      });
+      html += '</tbody></table>';
+      tc.innerHTML = html;
+      tc.querySelectorAll('[data-delete-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var mid = parseInt(this.dataset.deleteId);
+          if (!confirm('Delete this marker?')) return;
+          fetch('/api/map-markers/' + mid, { method: 'DELETE' }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.error) { alert(data.error); return; }
+            markers = markers.filter(function(x) { return x.id !== mid; });
+            if (selectedId === mid) { selectedId = null; document.getElementById('selectedMarkerPanel').style.display = 'none'; }
+            renderMarkers();
+          }).catch(function(err) { alert('Error: ' + err.message); });
+        });
+      });
+    }
+
     function renderMarkers() {
       markersEl.innerHTML = '';
       markers.forEach(function(m) {
@@ -773,7 +788,7 @@ async function renderMapAdminPage(session) {
           icon.style.cssText = 'width:' + (mSize * 0.85) + 'px;height:' + (mSize * 0.85) + 'px;pointer-events:none;object-fit:contain;';
         } else {
           icon = document.createElement('span');
-          icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : '\u{1F4CD}';
+          icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : m.type === 'poi' ? '\u2757' : '\u{1F4CD}';
           icon.style.lineHeight = '1';
         }
         div.appendChild(icon);
@@ -805,6 +820,7 @@ async function renderMapAdminPage(session) {
 
         markersEl.appendChild(div);
       });
+      renderMarkersTable();
     }
     renderMarkers();
 

@@ -218,7 +218,7 @@ async function renderHomePage(session) {
             icon.style.cssText = 'width:'+(mSize*0.85)+'px;height:'+(mSize*0.85)+'px;pointer-events:none;object-fit:contain;';
           } else {
             icon = document.createElement('span');
-            icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : '\u{1F4CD}';
+            icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : m.type === 'poi' ? '\u2757' : '\u{1F4CD}';
             icon.style.lineHeight = '1';
           }
           d.appendChild(icon);

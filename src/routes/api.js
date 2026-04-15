@@ -515,7 +515,7 @@ When the user asks for rulings or advice:
     try {
       const body = await readBody(req);
       const { marker_type, label, x, y, size } = JSON.parse(body);
-      const validTypes = ["allied_werewolves", "barovia", "battle", "dusk_elves", "kezk", "party", "ravenkind", "strahd", "strahd_abbot", "strahd_demon_army", "strahd_werewolves", "villaki", "vistani"];
+      const validTypes = ["allied_werewolves", "barovia", "battle", "dusk_elves", "kezk", "party", "poi", "ravenkind", "strahd", "strahd_abbot", "strahd_demon_army", "strahd_werewolves", "villaki", "vistani"];
       if (!validTypes.includes(marker_type)) return sendJSON(res, { error: "Invalid marker type" }, 400), true;
       if (!label || typeof label !== "string") return sendJSON(res, { error: "Label is required" }, 400), true;
       const mSize = Math.max(10, Math.min(200, parseFloat(size) || 54));
@@ -539,6 +539,15 @@ When the user asks for rulings or advice:
       if (fields.length === 0) return sendJSON(res, { error: "No fields to update" }, 400), true;
       vals.push(markerId);
       await pgPool.query("UPDATE hotd_map_markers SET " + fields.join(",") + " WHERE id=$" + idx, vals);
+      return sendJSON(res, { ok: true }), true;
+    } catch (e) { return sendJSON(res, { error: e.message }, 500), true; }
+  }
+  if (decoded.startsWith("/api/map-markers/") && req.method === "DELETE") {
+    if (!session || session.role !== "admin") return sendJSON(res, { error: "Unauthorized" }, 403), true;
+    const markerId = parseInt(decoded.split("/")[3], 10);
+    if (isNaN(markerId)) return sendJSON(res, { error: "Invalid marker ID" }, 400), true;
+    try {
+      await pgPool.query("DELETE FROM hotd_map_markers WHERE id = $1", [markerId]);
       return sendJSON(res, { ok: true }), true;
     } catch (e) { return sendJSON(res, { error: e.message }, 500), true; }
   }
