@@ -515,7 +515,7 @@ When the user asks for rulings or advice:
     try {
       const body = await readBody(req);
       const { marker_type, label, x, y, size } = JSON.parse(body);
-      const validTypes = ["city", "battle", "vistani", "party"];
+      const validTypes = ["allied_werewolves", "barovia", "battle", "kezk", "party", "ravenkind", "strahd", "strahd_abbot", "strahd_demon_army", "strahd_werewolves", "villaki", "vistani"];
       if (!validTypes.includes(marker_type)) return sendJSON(res, { error: "Invalid marker type" }, 400), true;
       if (!label || typeof label !== "string") return sendJSON(res, { error: "Label is required" }, 400), true;
       const mSize = Math.max(10, Math.min(200, parseFloat(size) || 54));
