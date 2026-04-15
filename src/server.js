@@ -17,8 +17,9 @@ const { initOpenAI } = require("./lib/azure");
 
 const { handleAuthRoutes }      = require("./routes/auth");
 const { handleApiRoutes }       = require("./routes/api");
-const { handleAdminRoutes }     = require("./routes/admin");
+const { handleAdminRoutes }      = require("./routes/admin");
 const { handleAdminTestRoutes } = require("./routes/admin-test");
+const { handleDmAdminApiRoutes } = require("./routes/dm-admin-api");
 const { handlePageRoutes }      = require("./routes/pages");
 
 // ══════════════════════════════════════════════════════════════
@@ -59,6 +60,9 @@ const server = http.createServer(async (req, res) => {
 
   // ── Admin API test routes (test console + debug endpoints) ─
   if (await handleAdminTestRoutes(decoded, req, res, session, url)) return;
+
+  // ── DM Admin API routes ────────────────────────────────────
+  if (await handleDmAdminApiRoutes(decoded, req, res, session)) return;
 
   // ── Auth gate ──────────────────────────────────────────────
   const AUTH_EXEMPT = ["/siteLogo.png", "/", "/index.html"];

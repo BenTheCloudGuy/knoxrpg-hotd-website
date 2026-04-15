@@ -27,6 +27,9 @@ const { renderUserAccountPage, renderAdminAccountPage } = require("../pages/auth
 // Special pages
 const { renderDungeonMasterPage, renderSearchPage, render404Page } = require("../pages/special");
 
+// DM Management Interface
+const { renderDmAdminPage } = require("../pages/dm-admin");
+
 /**
  * Handle page routes. Returns true if the route was handled, false otherwise.
  */
@@ -63,6 +66,13 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(html);
     return true;
+  }
+
+  // ── DM Admin Interface ──────────────────────────────────────
+  if (decoded === "/dm-admin") {
+    if (!session || session.role !== "admin") { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
+    const html = await renderDmAdminPage(session);
+    if (html) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(html); return true; }
   }
 
   // ── NPC detail page ─────────────────────────────────────────

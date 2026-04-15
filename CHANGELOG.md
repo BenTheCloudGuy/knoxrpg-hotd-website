@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-04-16
+
+### Added
+- DM Management Interface at `/dm-admin` — unified tabbed admin dashboard
+  - **Characters tab**: View/edit all player characters, inline DDB sync (single or all)
+  - **NPCs tab**: Quick overview table with links to existing NPC admin
+  - **Sessions tab**: Session log overview with links to existing admin
+  - **AI Config tab**: Configure chat model, temperature, max tokens, system prompt, image generation settings
+  - **Search Config tab**: Switch search backend (DB/RAG/hybrid), set thresholds, test search inline, RAG status check
+  - **Campaign tab**: Edit game date, party location, Harptos calendar date; quick links to all existing admin pages
+  - **Users tab**: Full user management (approve/promote/demote/delete) via JSON API
+- DM Admin API (`/api/dm-admin/*`) — JSON endpoints for all dashboard operations
+- Inline D&D Beyond character sync (no child process — runs directly on API request)
+
 ## [1.8.0] - 2026-04-15
 
 ### Changed
