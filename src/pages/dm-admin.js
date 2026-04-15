@@ -497,9 +497,24 @@ async function renderDmAdminPage(session) {
     .chat-suggestions button:hover { border-color:#c83232; color:#c83232; }
     .chat-msg { margin-bottom:12px; max-width:85%; }
     .chat-msg.user { margin-left:auto; }
-    .chat-msg-bubble { padding:10px 14px; border-radius:12px; font-size:0.82rem; line-height:1.6; white-space:pre-wrap; }
-    .chat-msg.user .chat-msg-bubble { background:#c83232; color:#fff; border-bottom-right-radius:4px; }
+    .chat-msg-bubble { padding:10px 14px; border-radius:12px; font-size:0.82rem; line-height:1.6; }
+    .chat-msg.user .chat-msg-bubble { background:#c83232; color:#fff; border-bottom-right-radius:4px; white-space:pre-wrap; }
     .chat-msg.ai .chat-msg-bubble { background:#1e1e1e; color:#ccc; border-bottom-left-radius:4px; }
+    .chat-msg.ai .chat-msg-bubble h1,.chat-msg.ai .chat-msg-bubble h2,.chat-msg.ai .chat-msg-bubble h3,.chat-msg.ai .chat-msg-bubble h4 { color:#e8b923; margin:12px 0 6px; font-size:0.95rem; }
+    .chat-msg.ai .chat-msg-bubble h3 { font-size:0.88rem; } .chat-msg.ai .chat-msg-bubble h4 { font-size:0.84rem; }
+    .chat-msg.ai .chat-msg-bubble p { margin:0 0 8px; }
+    .chat-msg.ai .chat-msg-bubble ul,.chat-msg.ai .chat-msg-bubble ol { margin:0 0 8px; padding-left:20px; }
+    .chat-msg.ai .chat-msg-bubble li { margin-bottom:3px; }
+    .chat-msg.ai .chat-msg-bubble code { background:#111; padding:1px 5px; border-radius:3px; font-size:0.78rem; color:#e8b923; }
+    .chat-msg.ai .chat-msg-bubble pre { background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:10px; overflow-x:auto; margin:8px 0; }
+    .chat-msg.ai .chat-msg-bubble pre code { background:none; padding:0; color:#bbb; }
+    .chat-msg.ai .chat-msg-bubble table { border-collapse:collapse; width:100%; margin:8px 0; font-size:0.78rem; }
+    .chat-msg.ai .chat-msg-bubble th { background:#1a1a1a; color:#e8b923; padding:6px 8px; text-align:left; border:1px solid #333; }
+    .chat-msg.ai .chat-msg-bubble td { padding:5px 8px; border:1px solid #2a2a2a; }
+    .chat-msg.ai .chat-msg-bubble blockquote { border-left:3px solid #c83232; margin:8px 0; padding:4px 12px; color:#999; }
+    .chat-msg.ai .chat-msg-bubble strong { color:#fff; }
+    .chat-msg.ai .chat-msg-bubble hr { border:none; border-top:1px solid #333; margin:12px 0; }
+    .chat-msg.ai .chat-msg-bubble a { color:#60a5fa; }
     .chat-msg-time { font-size:0.65rem; color:#444; margin-top:2px; padding:0 4px; }
     .chat-input-bar { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #222; background:#0d0d0d; }
     .chat-input-bar textarea { flex:1; background:#111; border:1px solid #2a2a2a; border-radius:8px; padding:8px 12px; color:#ccc; font-size:0.82rem; resize:none; }
@@ -512,7 +527,17 @@ async function renderDmAdminPage(session) {
     .forge-result-hdr h4 { color:#c83232; margin:0; font-size:0.9rem; }
     .forge-result-meta { display:flex; gap:6px; flex-wrap:wrap; }
     .forge-result-meta span { background:#1e1e1e; padding:2px 8px; border-radius:10px; font-size:0.7rem; color:#888; }
-    .forge-result-body { background:#111; border:1px solid #222; border-radius:4px; padding:14px; color:#bbb; font-size:0.82rem; line-height:1.7; max-height:400px; overflow-y:auto; white-space:pre-wrap; }
+    .forge-result-body { background:#111; border:1px solid #222; border-radius:4px; padding:14px; color:#bbb; font-size:0.82rem; line-height:1.7; max-height:400px; overflow-y:auto; }
+    .forge-result-body h1,.forge-result-body h2,.forge-result-body h3,.forge-result-body h4 { color:#e8b923; margin:12px 0 6px; }
+    .forge-result-body p { margin:0 0 8px; } .forge-result-body ul,.forge-result-body ol { margin:0 0 8px; padding-left:20px; }
+    .forge-result-body code { background:#0a0a0a; padding:1px 5px; border-radius:3px; font-size:0.78rem; color:#e8b923; }
+    .forge-result-body pre { background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:10px; overflow-x:auto; margin:8px 0; }
+    .forge-result-body pre code { background:none; padding:0; color:#bbb; }
+    .forge-result-body table { border-collapse:collapse; width:100%; margin:8px 0; font-size:0.78rem; }
+    .forge-result-body th { background:#1a1a1a; color:#e8b923; padding:6px 8px; text-align:left; border:1px solid #333; }
+    .forge-result-body td { padding:5px 8px; border:1px solid #2a2a2a; }
+    .forge-result-body blockquote { border-left:3px solid #c83232; margin:8px 0; padding:4px 12px; color:#999; }
+    .forge-result-body strong { color:#fff; } .forge-result-body a { color:#60a5fa; }
     .forge-detail { background:#0d0d0d; border:1px solid #c83232; border-radius:8px; padding:14px; margin-top:12px; }
     .forge-lib-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#0d0d0d; border:1px solid #222; border-radius:6px; cursor:pointer; margin-bottom:6px; transition:border-color 0.15s; }
     .forge-lib-item:hover { border-color:#e8b923; }
@@ -589,9 +614,17 @@ async function renderDmAdminPage(session) {
     }
   </style>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
   <script>
   const el = id => document.getElementById(id);
   const esc = s => { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+  function renderMd(text) {
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+      try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(_) {}
+    }
+    return esc(text);
+  }
 
   // ═══ NAVIGATION ═══
   let _currentPanel = 'chat';
@@ -663,7 +696,7 @@ async function renderDmAdminPage(session) {
     }
     container.innerHTML = _chatMessages.map(m =>
       '<div class="chat-msg ' + (m.role === 'user' ? 'user' : 'ai') + '">' +
-        '<div class="chat-msg-bubble">' + esc(m.content) + '</div>' +
+        '<div class="chat-msg-bubble">' + (m.role === 'user' ? esc(m.content) : renderMd(m.content)) + '</div>' +
         '<div class="chat-msg-time">' + (m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : '') + '</div></div>'
     ).join('');
     container.scrollTop = container.scrollHeight;
@@ -755,7 +788,7 @@ async function renderDmAdminPage(session) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
       _forgeContent = d.content; _forgeTpl = tpl;
-      el('forge-result-body').textContent = d.content;
+      el('forge-result-body').innerHTML = renderMd(d.content);
       el('forge-result-meta').innerHTML = esc(tpl.replace(/_/g,' ')) + ' &middot; ' + d.ragChunks + ' RAG chunks &middot; ' + d.entityLookups + ' lookups' + (d.usage ? ' &middot; ' + d.usage.total_tokens + ' tokens' : '');
       el('forge-result').style.display = 'block';
       el('forge-status').textContent = 'Done!';
@@ -803,7 +836,8 @@ async function renderDmAdminPage(session) {
     if (!r.ok) return;
     const e = d.element;
     el('forge-det-title').textContent = e.title;
-    el('forge-det-body').textContent = e.content;
+    el('forge-det-body').innerHTML = renderMd(e.content);
+    el('forge-det-body').dataset.raw = e.content;
     const bc = e.status==='committed'?'forge-badge-committed':e.status==='archived'?'forge-badge-archived':'forge-badge-draft';
     const rel = (typeof e.related_entities==='string'?JSON.parse(e.related_entities):e.related_entities)||[];
     el('forge-det-meta').innerHTML = '<span>'+e.element_type.replace(/_/g,' ')+'</span><span class="'+bc+'">'+e.status+'</span><span>'+new Date(e.created_at).toLocaleString()+'</span>'+(rel.length?'<span>'+rel.join(', ')+'</span>':'');
@@ -811,11 +845,11 @@ async function renderDmAdminPage(session) {
     el('forge-detail').style.display = 'block';
   }
 
-  function forgeEdit() { el('forge-det-edit-ta').value = el('forge-det-body').textContent; el('forge-det-edit').style.display = 'block'; }
+  function forgeEdit() { el('forge-det-edit-ta').value = el('forge-det-body').dataset.raw || el('forge-det-body').textContent; el('forge-det-edit').style.display = 'block'; }
   async function forgeSaveEdit() {
     if(!_forgeElId) return;
     const r = await fetch('/api/dm-admin/story-elements/'+_forgeElId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({content:el('forge-det-edit-ta').value})});
-    if(r.ok) { el('forge-det-body').textContent = el('forge-det-edit-ta').value; el('forge-det-edit').style.display='none'; loadForgeLib(); }
+    if(r.ok) { const v=el('forge-det-edit-ta').value; el('forge-det-body').innerHTML=renderMd(v); el('forge-det-body').dataset.raw=v; el('forge-det-edit').style.display='none'; loadForgeLib(); }
   }
   async function forgeDel() {
     if(!_forgeElId||!confirm('Delete?')) return;
