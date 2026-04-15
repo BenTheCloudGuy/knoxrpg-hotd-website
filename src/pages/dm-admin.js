@@ -311,8 +311,8 @@ async function renderDmAdminPage(session) {
           </div>
         </div>
         <div id="npcs-status" class="dmc-alert" style="display:none;"></div>
-        <table class="dmc-table"><thead><tr><th>Name</th><th>Race</th><th>Class</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th><th>Actions</th></tr></thead>
-        <tbody id="npcs-body"><tr><td colspan="8" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <table class="dmc-table"><thead><tr><th style="width:50px;"></th><th>Name</th><th>Race</th><th>Class</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th><th>Actions</th></tr></thead>
+        <tbody id="npcs-body"><tr><td colspan="9" class="dmc-empty">Loading...</td></tr></tbody></table>
         <div id="npc-edit" class="dmc-edit" style="display:none;">
           <h4 id="npc-edit-title">Add NPC</h4>
           <form onsubmit="saveNpc(event)">
@@ -329,7 +329,12 @@ async function renderDmAdminPage(session) {
               <label>Sort Order<input type="number" id="npc-sort" value="0" /></label>
               <label>Hidden<select id="npc-hidden"><option value="false">Visible</option><option value="true">Hidden from Players</option></select></label>
             </div>
-            <label>Portrait URL<input id="npc-portrait" /></label>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div style="flex:1;"><label>Portrait URL<input id="npc-portrait" oninput="npcPreviewPortrait()" /></label></div>
+              <div id="npc-portrait-preview" style="flex-shrink:0;width:80px;height:80px;border-radius:6px;border:1px solid #2a2a2a;overflow:hidden;background:#0d0d0d;display:flex;align-items:center;justify-content:center;">
+                <span style="color:#555;font-size:0.7rem;">No image</span>
+              </div>
+            </div>
             <label>Description<textarea id="npc-desc" rows="4" class="dmc-textarea"></textarea></label>
             <div class="dmc-form-actions">
               <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
@@ -1189,10 +1194,11 @@ async function renderDmAdminPage(session) {
   }
   function renderNpcs(list) {
     el('npcs-body').innerHTML = list.map(n =>
-      '<tr><td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
+      '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2a2a2a;" onerror="this.style.display=\'none\'" />' : '<div style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">?</div>')+'</td>'+
+      '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
       '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
-      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',\\''+esc(n.name)+'\\')">Del</button></td></tr>'
-    ).join('') || '<tr><td colspan="8" class="dmc-empty">No NPCs.</td></tr>';
+      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',\''+esc(n.name)+'\')">Del</button></td></tr>'
+    ).join('') || '<tr><td colspan="9" class="dmc-empty">No NPCs.</td></tr>';
   }
   function filterNpcs() {
     const q = el('npc-search').value.toLowerCase();
@@ -1203,9 +1209,16 @@ async function renderDmAdminPage(session) {
     el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = ''; el('npc-class').value = '';
     el('npc-location').value = ''; el('npc-status').value = 'Alive'; el('npc-align').value = 'neutral';
     el('npc-sort').value = '0'; el('npc-hidden').value = 'false'; el('npc-portrait').value = ''; el('npc-desc').value = '';
+    npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Add NPC'; el('npc-del-btn').style.display = 'none';
     el('npc-edit').style.display = 'block';
     el('npc-edit').scrollIntoView({behavior:'smooth'});
+  }
+  function npcPreviewPortrait() {
+    const url = el('npc-portrait').value.trim();
+    const box = el('npc-portrait-preview');
+    if (url) box.innerHTML = '<img src="'+esc(url)+'" style="width:80px;height:80px;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<span style=\\&quot;color:#f55;font-size:0.7rem;\\&quot;>Invalid</span>\'" />';
+    else box.innerHTML = '<span style="color:#555;font-size:0.7rem;">No image</span>';
   }
   function editNpc(id) {
     const n = _npcsCache.find(x=>x.id===id);
@@ -1215,6 +1228,7 @@ async function renderDmAdminPage(session) {
     el('npc-status').value = n.status||'Unknown'; el('npc-align').value = n.alignment_tag||'neutral';
     el('npc-sort').value = n.sort_order||0; el('npc-hidden').value = n.is_hidden?'true':'false';
     el('npc-portrait').value = n.portrait_url||''; el('npc-desc').value = n.description||'';
+    npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Edit: ' + n.name; el('npc-del-btn').style.display = 'inline-block';
     el('npc-edit').style.display = 'block';
     el('npc-edit').scrollIntoView({behavior:'smooth'});
