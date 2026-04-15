@@ -4,6 +4,34 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.1] - 2026-04-15
+
+### Added
+- **Inline NPC Management** — full CRUD for NPCs directly in the DM Command Center
+  - Create, edit, and delete NPCs without leaving the dashboard
+  - Search/filter NPCs by name
+  - All NPC fields: name, race, class, location, status, alignment, portrait URL, description, sort order, hidden
+  - JSON API endpoints: POST/PUT/DELETE `/api/dm-admin/npcs`
+- **Inline Session Management** — full CRUD for Sessions directly in the DM Command Center
+  - Create, edit, and delete sessions without leaving the dashboard
+  - All session fields: session number, title, game date, play date, summary
+  - JSON API endpoints: POST/PUT/DELETE `/api/dm-admin/sessions`
+- **Markdown Rendering** — AI responses now render as formatted markdown
+  - DM Chat messages render headers, lists, tables, code blocks, bold/italic
+  - Story Forge output renders as markdown
+  - Uses marked.js v15.0.4 + DOMPurify v3.2.4 via CDN
+  - Dark theme CSS for all rendered markdown elements
+
+### Changed
+- NPCs panel no longer links to external admin page — full CRUD is inline
+- Sessions panel no longer links to external admin page — full CRUD is inline
+- Removed fixed-height scroll containers from all panels — content flows with natural page scroll
+- Removed sticky table headers
+
+### Fixed
+- **OpenAI client not initialized** — `openaiClient` getter was destructured at import time, capturing `null`. Fixed by importing module object and accessing at call-time.
+- **Image Studio JSON parse error** — same root cause as above; HTML error page was returned instead of JSON
+
 ## [1.13.0] - 2026-04-16
 
 ### Added
