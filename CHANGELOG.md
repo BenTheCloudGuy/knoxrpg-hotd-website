@@ -4,6 +4,40 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-04-16
+
+### Added
+- **DM Command Center** — full-width sidebar dashboard replacing the old tabbed DM Admin interface
+  - Persistent left sidebar navigation with collapsible sections (AI Tools, Campaign, Config)
+  - Full viewport-width layout — no max-width constraint
+  - Responsive: collapses to horizontal nav on mobile
+- **DM Chat** — AI-powered conversation interface for campaign Q&A
+  - Persistent conversations saved to database (title, messages as JSONB)
+  - RAG-grounded responses using campaign embeddings
+  - Conversation list sidebar with create/switch/delete
+  - Quick-start suggestion buttons for common queries
+- **Notes Board** — Kanban-style campaign notes management
+  - Four columns: Backlog, To Do, In Progress, Done
+  - Drag-and-drop cards between columns to update status
+  - Notes with title, content, priority (color-coded), category, and tags
+  - Create/edit/delete notes via modal dialog
+
+### Changed
+- DM Admin page completely rewritten from tabbed layout to sidebar dashboard
+- All existing panels preserved: Characters, NPCs, Sessions, AI Config, Search Config, Campaign Data, Users, Image Studio, Story Forge
+- Removed emojis from navigation labels
+- DM Chat opens as default panel on page load
+
+### Fixed
+- Image Studio: `tags` now properly stored as PostgreSQL TEXT[] array (was JSON string)
+- Image Studio: added `is_published` BOOLEAN column (was missing from schema)
+- Image Studio: `published_to` column added to SELECT queries
+
+### Database
+- Added `hotd_dm_notes` table (kanban: id, title, content, status, priority, category, tags, sort_order, timestamps)
+- Added `category` column to `hotd_art` table
+- Added `is_published` column to `hotd_generated_images` table
+
 ## [1.12.0] - 2026-04-15
 
 ### Added

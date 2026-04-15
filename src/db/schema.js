@@ -299,6 +299,26 @@ async function ensureHotdTables() {
       );
     `).catch(() => {});
 
+    // Additional column migrations
+    await pgPool.query("ALTER TABLE hotd_art ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'General'").catch(() => {});
+    await pgPool.query("ALTER TABLE hotd_generated_images ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE").catch(() => {});
+
+    // ── Campaign Notes (Kanban) table ──
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_dm_notes (
+        id          SERIAL PRIMARY KEY,
+        title       TEXT NOT NULL,
+        content     TEXT DEFAULT '',
+        status      TEXT DEFAULT 'backlog',
+        priority    TEXT DEFAULT 'medium',
+        category    TEXT DEFAULT 'General',
+        tags        TEXT[] DEFAULT ARRAY[]::TEXT[],
+        sort_order  INTEGER DEFAULT 0,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+    `).catch(() => {});
+
     // Seed DALL-E style prefix
     await pgPool.query("INSERT INTO hotd_config (key, value) VALUES ('dalle_style_prefix', 'Dark fantasy digital painting, dramatic chiaroscuro lighting, rich earth tones and deep crimsons, medieval Forgotten Realms aesthetic, highly detailed, cinematic composition, gothic atmosphere --') ON CONFLICT (key) DO NOTHING").catch(() => {});
 

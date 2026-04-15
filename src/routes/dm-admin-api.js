@@ -202,7 +202,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     if (!requireAdmin(session, res)) return true;
     const params = new URL("http://x" + req.url).searchParams;
     const folder = params.get("folder") || null;
-    let q = "SELECT id, prompt, revised_prompt, folder, tags, size, style, quality, image_url, thumbnail_url, is_published, created_at FROM hotd_generated_images";
+    let q = "SELECT id, prompt, revised_prompt, folder, tags, size, style, quality, image_url, thumbnail_url, is_published, published_to, created_at FROM hotd_generated_images";
     const vals = [];
     if (folder) { q += " WHERE folder = $1"; vals.push(folder); }
     q += " ORDER BY created_at DESC";
@@ -261,10 +261,11 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       const imageUrl = await uploadBlobToStorage(safeName, imgBuffer, "image/png", "hotd-website-content", dir);
 
       // Insert DB record
+      const tagsArr = Array.isArray(tags) ? tags : [];
       const insertR = await pgPool.query(
         `INSERT INTO hotd_generated_images (prompt, revised_prompt, folder, tags, size, style, quality, image_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at`,
-        [prompt, revisedPrompt, folder, JSON.stringify(tags), size, style, quality, imageUrl]
+         VALUES ($1, $2, $3, $4::text[], $5, $6, $7, $8) RETURNING id, created_at`,
+        [prompt, revisedPrompt, folder, tagsArr, size, style, quality, imageUrl]
       );
 
       sendJSON(res, {
@@ -299,7 +300,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     const vals = [];
     let idx = 1;
     if (body.folder !== undefined) { sets.push(`folder = $${idx++}`); vals.push(body.folder || null); }
-    if (body.tags !== undefined) { sets.push(`tags = $${idx++}`); vals.push(JSON.stringify(body.tags)); }
+    if (body.tags !== undefined) { sets.push(`tags = $${idx++}::text[]`); vals.push(Array.isArray(body.tags) ? body.tags : []); }
     if (sets.length === 0) { sendJSON(res, { error: "Nothing to update" }, 400); return true; }
     vals.push(id);
     await pgPool.query(`UPDATE hotd_generated_images SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
@@ -553,6 +554,201 @@ ${ragContext}${entityContext}`;
     } catch (err) {
       sendJSON(res, { error: err.message }, 500);
     }
+    return true;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ── DM CHAT (persistent conversations) ──────────────────────
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Chat: list conversations ───────────────────────────────
+  if (decoded === "/api/dm-admin/conversations" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const r = await pgPool.query(
+      "SELECT id, title, conversation_type, context_refs, created_at, updated_at, jsonb_array_length(messages) AS message_count FROM hotd_dm_conversations ORDER BY updated_at DESC"
+    );
+    sendJSON(res, { conversations: r.rows });
+    return true;
+  }
+
+  // ── Chat: get single conversation ──────────────────────────
+  const chatGetMatch = decoded.match(/^\/api\/dm-admin\/conversations\/(\d+)$/);
+  if (chatGetMatch && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(chatGetMatch[1], 10);
+    const r = await pgPool.query("SELECT * FROM hotd_dm_conversations WHERE id = $1", [id]);
+    if (r.rows.length === 0) { sendJSON(res, { error: "Not found" }, 404); return true; }
+    sendJSON(res, { conversation: r.rows[0] });
+    return true;
+  }
+
+  // ── Chat: create conversation ──────────────────────────────
+  if (decoded === "/api/dm-admin/conversations" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const body = JSON.parse(await readBody(req));
+    const title = body.title || "New Conversation";
+    const type = body.conversation_type || "general";
+    const r = await pgPool.query(
+      "INSERT INTO hotd_dm_conversations (title, conversation_type, messages) VALUES ($1, $2, '[]'::jsonb) RETURNING id, created_at",
+      [title, type]
+    );
+    sendJSON(res, { ok: true, id: r.rows[0].id });
+    return true;
+  }
+
+  // ── Chat: send message (append + get AI reply) ─────────────
+  const chatMsgMatch = decoded.match(/^\/api\/dm-admin\/conversations\/(\d+)\/message$/);
+  if (chatMsgMatch && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    const id = parseInt(chatMsgMatch[1], 10);
+    try {
+      const body = JSON.parse(await readBody(req));
+      const userMsg = (body.message || "").trim();
+      if (!userMsg) { sendJSON(res, { error: "Message required" }, 400); return true; }
+
+      // Get conversation
+      const convR = await pgPool.query("SELECT messages FROM hotd_dm_conversations WHERE id = $1", [id]);
+      if (convR.rows.length === 0) { sendJSON(res, { error: "Conversation not found" }, 404); return true; }
+      const messages = convR.rows[0].messages || [];
+
+      // Build RAG context from the message
+      const ragContext = await buildEmbeddingContext(openaiClient, userMsg, {
+        includeDmOnly: true, limit: 8, minScore: 0.25,
+      });
+
+      const systemPrompt = `You are the DM AI assistant for "Halls of the Damned", a D&D 5e campaign set in Barovia.
+You have access to the campaign's full knowledge base including DM-only secrets. Respond accurately using the context below.
+Use markdown formatting. Be conversational but precise.
+
+${ragContext}`;
+
+      // Build message history (last 20 messages for context window)
+      const historySlice = messages.slice(-20);
+      const chatMessages = [
+        { role: "system", content: systemPrompt },
+        ...historySlice.map(m => ({ role: m.role, content: m.content })),
+        { role: "user", content: userMsg },
+      ];
+
+      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
+      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-4o-mini";
+
+      const completion = await openaiClient.chat.completions.create({
+        model,
+        messages: chatMessages,
+        max_tokens: 4096,
+        temperature: 0.7,
+      });
+
+      const aiReply = completion.choices[0]?.message?.content || "No response.";
+      const now = new Date().toISOString();
+
+      // Append both messages
+      const newMsgs = [
+        ...messages,
+        { role: "user", content: userMsg, timestamp: now },
+        { role: "assistant", content: aiReply, timestamp: now },
+      ];
+
+      await pgPool.query(
+        "UPDATE hotd_dm_conversations SET messages = $1::jsonb, updated_at = NOW() WHERE id = $2",
+        [JSON.stringify(newMsgs), id]
+      );
+
+      sendJSON(res, {
+        ok: true,
+        reply: aiReply,
+        usage: completion.usage,
+        ragChunks: ragContext ? ragContext.split("---").length : 0,
+      });
+    } catch (err) {
+      console.error("DM Chat error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Chat: rename conversation ──────────────────────────────
+  const chatRenameMatch = decoded.match(/^\/api\/dm-admin\/conversations\/(\d+)$/);
+  if (chatRenameMatch && req.method === "PUT") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(chatRenameMatch[1], 10);
+    const body = JSON.parse(await readBody(req));
+    if (body.title) {
+      await pgPool.query("UPDATE hotd_dm_conversations SET title = $1, updated_at = NOW() WHERE id = $2", [body.title, id]);
+    }
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Chat: delete conversation ──────────────────────────────
+  const chatDeleteMatch = decoded.match(/^\/api\/dm-admin\/conversations\/(\d+)$/);
+  if (chatDeleteMatch && req.method === "DELETE") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(chatDeleteMatch[1], 10);
+    await pgPool.query("DELETE FROM hotd_dm_conversations WHERE id = $1", [id]);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ── CAMPAIGN NOTES (Kanban) ─────────────────────────────────
+  // ══════════════════════════════════════════════════════════════
+
+  // ── Notes: list ────────────────────────────────────────────
+  if (decoded === "/api/dm-admin/notes" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const r = await pgPool.query("SELECT * FROM hotd_dm_notes ORDER BY sort_order, created_at DESC");
+    sendJSON(res, { notes: r.rows });
+    return true;
+  }
+
+  // ── Notes: create ──────────────────────────────────────────
+  if (decoded === "/api/dm-admin/notes" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const body = JSON.parse(await readBody(req));
+    const { title, content, status, priority, category, tags } = body;
+    if (!title) { sendJSON(res, { error: "Title is required" }, 400); return true; }
+    const r = await pgPool.query(
+      "INSERT INTO hotd_dm_notes (title, content, status, priority, category, tags) VALUES ($1, $2, $3, $4, $5, $6::text[]) RETURNING id, created_at",
+      [title, content || "", status || "backlog", priority || "medium", category || "General", tags || []]
+    );
+    sendJSON(res, { ok: true, id: r.rows[0].id });
+    return true;
+  }
+
+  // ── Notes: update (including status change for drag-and-drop) ──
+  const noteUpdateMatch = decoded.match(/^\/api\/dm-admin\/notes\/(\d+)$/);
+  if (noteUpdateMatch && req.method === "PUT") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(noteUpdateMatch[1], 10);
+    const body = JSON.parse(await readBody(req));
+    const sets = [];
+    const vals = [];
+    let idx = 1;
+    if (body.title !== undefined) { sets.push(`title = $${idx++}`); vals.push(body.title); }
+    if (body.content !== undefined) { sets.push(`content = $${idx++}`); vals.push(body.content); }
+    if (body.status !== undefined) { sets.push(`status = $${idx++}`); vals.push(body.status); }
+    if (body.priority !== undefined) { sets.push(`priority = $${idx++}`); vals.push(body.priority); }
+    if (body.category !== undefined) { sets.push(`category = $${idx++}`); vals.push(body.category); }
+    if (body.tags !== undefined) { sets.push(`tags = $${idx++}::text[]`); vals.push(body.tags || []); }
+    if (body.sort_order !== undefined) { sets.push(`sort_order = $${idx++}`); vals.push(body.sort_order); }
+    if (sets.length === 0) { sendJSON(res, { error: "Nothing to update" }, 400); return true; }
+    sets.push("updated_at = NOW()");
+    vals.push(id);
+    await pgPool.query(`UPDATE hotd_dm_notes SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Notes: delete ──────────────────────────────────────────
+  const noteDeleteMatch = decoded.match(/^\/api\/dm-admin\/notes\/(\d+)$/);
+  if (noteDeleteMatch && req.method === "DELETE") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(noteDeleteMatch[1], 10);
+    await pgPool.query("DELETE FROM hotd_dm_notes WHERE id = $1", [id]);
+    sendJSON(res, { ok: true });
     return true;
   }
 
