@@ -22,3 +22,7 @@ npm-debug.log*
 # Helm release overrides (may contain passwords)
 helm/**/values-local.yaml
 helm/**/secrets.yaml
+
+# Block temp files
+TO-DO.md
+dm-ai-config.md
