@@ -273,10 +273,8 @@ async function renderDmAdminPage(session) {
           <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="ddbSyncAll()">Sync All from D&amp;D Beyond</button></div>
         </div>
         <div id="chars-status" class="dmc-alert" style="display:none;"></div>
-        <div class="dmc-table-wrap">
-          <table class="dmc-table"><thead><tr><th>ID</th><th>Character</th><th>Player</th><th>Lv</th><th>Race</th><th>Class</th><th>STR</th><th>DEX</th><th>CON</th><th>INT</th><th>WIS</th><th>CHA</th><th>AC</th><th>HP</th><th>Actions</th></tr></thead>
-          <tbody id="chars-body"><tr><td colspan="15" class="dmc-empty">Loading...</td></tr></tbody></table>
-        </div>
+        <table class="dmc-table"><thead><tr><th>ID</th><th>Character</th><th>Player</th><th>Lv</th><th>Race</th><th>Class</th><th>STR</th><th>DEX</th><th>CON</th><th>INT</th><th>WIS</th><th>CHA</th><th>AC</th><th>HP</th><th>Actions</th></tr></thead>
+        <tbody id="chars-body"><tr><td colspan="15" class="dmc-empty">Loading...</td></tr></tbody></table>
         <div id="char-edit" class="dmc-edit" style="display:none;">
           <h4 id="char-edit-title">Edit Character</h4>
           <form onsubmit="saveChar(event)">
@@ -307,22 +305,66 @@ async function renderDmAdminPage(session) {
       <!-- ╔══ NPCs ══╗ -->
       <section class="dmc-panel" id="dmc-npcs" style="display:none;">
         <div class="dmc-panel-bar"><h2>NPCs</h2>
-          <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-sm" onclick="window.open('/npcs/admin','_blank')">NPC Admin &#8599;</button></div>
+          <div class="dmc-bar-actions">
+            <input id="npc-search" placeholder="Filter NPCs..." oninput="filterNpcs()" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;width:180px;" />
+            <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="newNpc()">+ Add NPC</button>
+          </div>
         </div>
-        <div class="dmc-table-wrap">
-          <table class="dmc-table"><thead><tr><th>ID</th><th>Name</th><th>Race</th><th>Class</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th></tr></thead>
-          <tbody id="npcs-body"><tr><td colspan="8" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <div id="npcs-status" class="dmc-alert" style="display:none;"></div>
+        <table class="dmc-table"><thead><tr><th>Name</th><th>Race</th><th>Class</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th><th>Actions</th></tr></thead>
+        <tbody id="npcs-body"><tr><td colspan="8" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <div id="npc-edit" class="dmc-edit" style="display:none;">
+          <h4 id="npc-edit-title">Add NPC</h4>
+          <form onsubmit="saveNpc(event)">
+            <input type="hidden" id="npc-id" />
+            <div class="dmc-form-row">
+              <label>Name<input id="npc-name" required /></label>
+              <label>Race<input id="npc-race" /></label>
+              <label>Class<input id="npc-class" /></label>
+              <label>Location<input id="npc-location" /></label>
+            </div>
+            <div class="dmc-form-row">
+              <label>Status<select id="npc-status"><option value="Alive">Alive</option><option value="Dead">Dead</option><option value="Unknown">Unknown</option><option value="Missing">Missing</option></select></label>
+              <label>Alignment<select id="npc-align"><option value="neutral">Neutral</option><option value="lawful good">Lawful Good</option><option value="neutral good">Neutral Good</option><option value="chaotic good">Chaotic Good</option><option value="lawful neutral">Lawful Neutral</option><option value="chaotic neutral">Chaotic Neutral</option><option value="lawful evil">Lawful Evil</option><option value="neutral evil">Neutral Evil</option><option value="chaotic evil">Chaotic Evil</option></select></label>
+              <label>Sort Order<input type="number" id="npc-sort" value="0" /></label>
+              <label>Hidden<select id="npc-hidden"><option value="false">Visible</option><option value="true">Hidden from Players</option></select></label>
+            </div>
+            <label>Portrait URL<input id="npc-portrait" /></label>
+            <label>Description<textarea id="npc-desc" rows="4" class="dmc-textarea"></textarea></label>
+            <div class="dmc-form-actions">
+              <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
+              <button type="button" class="dmc-btn dmc-btn-danger" id="npc-del-btn" onclick="deleteNpc()" style="display:none;">Delete</button>
+              <button type="button" class="dmc-btn" onclick="el('npc-edit').style.display='none'">Cancel</button>
+            </div>
+          </form>
         </div>
       </section>
 
       <!-- ╔══ SESSIONS ══╗ -->
       <section class="dmc-panel" id="dmc-sessions" style="display:none;">
         <div class="dmc-panel-bar"><h2>Session Logs</h2>
-          <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-sm" onclick="window.open('/sessions/admin','_blank')">Sessions Admin &#8599;</button></div>
+          <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="newSession()">+ Add Session</button></div>
         </div>
-        <div class="dmc-table-wrap">
-          <table class="dmc-table"><thead><tr><th>#</th><th>Title</th><th>Game Date</th><th>Play Date</th><th>Summary</th></tr></thead>
-          <tbody id="sess-body"><tr><td colspan="5" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <div id="sess-status" class="dmc-alert" style="display:none;"></div>
+        <table class="dmc-table"><thead><tr><th>#</th><th>Title</th><th>Game Date</th><th>Play Date</th><th>Summary</th><th>Actions</th></tr></thead>
+        <tbody id="sess-body"><tr><td colspan="6" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <div id="sess-edit" class="dmc-edit" style="display:none;">
+          <h4 id="sess-edit-title">Add Session</h4>
+          <form onsubmit="saveSess(event)">
+            <input type="hidden" id="sess-id" />
+            <div class="dmc-form-row">
+              <label>Session #<input type="number" id="sess-num" required min="1" /></label>
+              <label>Title<input id="sess-title" required /></label>
+              <label>Game Date<input id="sess-gamedate" placeholder="e.g. 15 Marpenoth" /></label>
+              <label>Play Date<input type="date" id="sess-playdate" /></label>
+            </div>
+            <label>Summary<textarea id="sess-summary" rows="8" class="dmc-textarea"></textarea></label>
+            <div class="dmc-form-actions">
+              <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
+              <button type="button" class="dmc-btn dmc-btn-danger" id="sess-del-btn" onclick="deleteSess()" style="display:none;">Delete</button>
+              <button type="button" class="dmc-btn" onclick="el('sess-edit').style.display='none'">Cancel</button>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -398,10 +440,8 @@ async function renderDmAdminPage(session) {
       <!-- ╔══ USERS ══╗ -->
       <section class="dmc-panel" id="dmc-users" style="display:none;">
         <div class="dmc-panel-bar"><h2>User Management</h2></div>
-        <div class="dmc-table-wrap">
-          <table class="dmc-table"><thead><tr><th>ID</th><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Approved</th><th>Actions</th></tr></thead>
-          <tbody id="users-body"><tr><td colspan="7" class="dmc-empty">Loading...</td></tr></tbody></table>
-        </div>
+        <table class="dmc-table"><thead><tr><th>ID</th><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Approved</th><th>Actions</th></tr></thead>
+        <tbody id="users-body"><tr><td colspan="7" class="dmc-empty">Loading...</td></tr></tbody></table>
       </section>
 
     </main>
@@ -452,9 +492,9 @@ async function renderDmAdminPage(session) {
     .dmc-section-title { color:#e8b923; font-size:0.85rem; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px; }
 
     /* ── Tables ── */
-    .dmc-table-wrap { overflow-x:auto; max-height:600px; overflow-y:auto; }
+    .dmc-table-wrap { overflow-x:auto; }
     .dmc-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
-    .dmc-table th { color:#666; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px; text-align:left; padding:8px 6px; border-bottom:2px solid #c83232; position:sticky; top:0; background:#111; }
+    .dmc-table th { color:#666; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px; text-align:left; padding:8px 6px; border-bottom:2px solid #c83232; background:#111; }
     .dmc-table td { padding:6px; color:#bbb; border-bottom:1px solid #1e1e1e; }
     .dmc-table tr:hover td { background:#1a1a1a; }
     .dmc-empty { text-align:center; color:#555; padding:24px; font-style:italic; }
@@ -527,7 +567,7 @@ async function renderDmAdminPage(session) {
     .forge-result-hdr h4 { color:#c83232; margin:0; font-size:0.9rem; }
     .forge-result-meta { display:flex; gap:6px; flex-wrap:wrap; }
     .forge-result-meta span { background:#1e1e1e; padding:2px 8px; border-radius:10px; font-size:0.7rem; color:#888; }
-    .forge-result-body { background:#111; border:1px solid #222; border-radius:4px; padding:14px; color:#bbb; font-size:0.82rem; line-height:1.7; max-height:400px; overflow-y:auto; }
+    .forge-result-body { background:#111; border:1px solid #222; border-radius:4px; padding:14px; color:#bbb; font-size:0.82rem; line-height:1.7; }
     .forge-result-body h1,.forge-result-body h2,.forge-result-body h3,.forge-result-body h4 { color:#e8b923; margin:12px 0 6px; }
     .forge-result-body p { margin:0 0 8px; } .forge-result-body ul,.forge-result-body ol { margin:0 0 8px; padding-left:20px; }
     .forge-result-body code { background:#0a0a0a; padding:1px 5px; border-radius:3px; font-size:0.78rem; color:#e8b923; }
@@ -1140,23 +1180,120 @@ async function renderDmAdminPage(session) {
   function showAlert(el,msg,type) { el.style.display='block'; el.className='dmc-alert '+type; el.textContent=msg; if(type==='ok')setTimeout(()=>el.style.display='none',4000); }
 
   // ═══ NPCs ═══
+  let _npcsCache = [];
   async function loadNpcs() {
     const r = await fetch('/api/dm-admin/npcs');
     const d = await r.json();
-    el('npcs-body').innerHTML = (d.npcs||[]).map(n =>
-      '<tr><td>'+n.id+'</td><td style="color:#e8b923;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
-      '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+'</td></tr>'
+    _npcsCache = d.npcs || [];
+    renderNpcs(_npcsCache);
+  }
+  function renderNpcs(list) {
+    el('npcs-body').innerHTML = list.map(n =>
+      '<tr><td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
+      '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
+      '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+',\\''+esc(n.name)+'\\')">Del</button></td></tr>'
     ).join('') || '<tr><td colspan="8" class="dmc-empty">No NPCs.</td></tr>';
+  }
+  function filterNpcs() {
+    const q = el('npc-search').value.toLowerCase();
+    if (!q) return renderNpcs(_npcsCache);
+    renderNpcs(_npcsCache.filter(n => (n.name+' '+n.race+' '+n.location+' '+n.npc_class).toLowerCase().includes(q)));
+  }
+  function newNpc() {
+    el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = ''; el('npc-class').value = '';
+    el('npc-location').value = ''; el('npc-status').value = 'Alive'; el('npc-align').value = 'neutral';
+    el('npc-sort').value = '0'; el('npc-hidden').value = 'false'; el('npc-portrait').value = ''; el('npc-desc').value = '';
+    el('npc-edit-title').textContent = 'Add NPC'; el('npc-del-btn').style.display = 'none';
+    el('npc-edit').style.display = 'block';
+    el('npc-edit').scrollIntoView({behavior:'smooth'});
+  }
+  function editNpc(id) {
+    const n = _npcsCache.find(x=>x.id===id);
+    if (!n) return;
+    el('npc-id').value = n.id; el('npc-name').value = n.name||''; el('npc-race').value = n.race||'';
+    el('npc-class').value = n.npc_class||''; el('npc-location').value = n.location||'';
+    el('npc-status').value = n.status||'Unknown'; el('npc-align').value = n.alignment_tag||'neutral';
+    el('npc-sort').value = n.sort_order||0; el('npc-hidden').value = n.is_hidden?'true':'false';
+    el('npc-portrait').value = n.portrait_url||''; el('npc-desc').value = n.description||'';
+    el('npc-edit-title').textContent = 'Edit: ' + n.name; el('npc-del-btn').style.display = 'inline-block';
+    el('npc-edit').style.display = 'block';
+    el('npc-edit').scrollIntoView({behavior:'smooth'});
+  }
+  async function saveNpc(e) {
+    e.preventDefault();
+    const id = el('npc-id').value;
+    const body = { name:el('npc-name').value, race:el('npc-race').value, npc_class:el('npc-class').value,
+      location:el('npc-location').value, status:el('npc-status').value, alignment_tag:el('npc-align').value,
+      portrait_url:el('npc-portrait').value, description:el('npc-desc').value,
+      sort_order:+el('npc-sort').value, is_hidden:el('npc-hidden').value==='true' };
+    const url = id ? '/api/dm-admin/npcs/'+id : '/api/dm-admin/npcs';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if (r.ok) { showAlert(el('npcs-status'),id?'NPC updated.':'NPC created.','ok'); el('npc-edit').style.display='none'; loadNpcs(); }
+    else { const d=await r.json(); showAlert(el('npcs-status'),'Error: '+(d.error||''),'err'); }
+  }
+  async function deleteNpc() {
+    const id = el('npc-id').value;
+    if (!id || !confirm('Delete this NPC?')) return;
+    await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
+    el('npc-edit').style.display='none'; loadNpcs();
+  }
+  async function deleteNpcDirect(id,name) {
+    if (!confirm('Delete NPC: '+name+'?')) return;
+    await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
+    loadNpcs();
   }
 
   // ═══ SESSIONS ═══
+  let _sessCache = [];
   async function loadSessions() {
     const r = await fetch('/api/dm-admin/sessions');
     const d = await r.json();
-    el('sess-body').innerHTML = (d.sessions||[]).map(s =>
-      '<tr><td>'+s.session_number+'</td><td style="color:#e8b923;">'+esc(s.title)+'</td><td>'+esc(s.game_date||'')+'</td><td>'+esc(s.play_date||'')+'</td>'+
-      '<td style="font-size:0.72rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc((s.summary||'').substring(0,120))+'</td></tr>'
-    ).join('') || '<tr><td colspan="5" class="dmc-empty">No sessions.</td></tr>';
+    _sessCache = d.sessions || [];
+    el('sess-body').innerHTML = _sessCache.map(s =>
+      '<tr><td>'+s.session_number+'</td><td style="color:#e8b923;font-weight:600;">'+esc(s.title)+'</td><td>'+esc(s.game_date||'')+'</td><td>'+esc(s.play_date||'')+'</td>'+
+      '<td style="font-size:0.72rem;">'+esc((s.summary||'').substring(0,150))+(s.summary?.length>150?'...':'')+'</td>'+
+      '<td><button class="dmc-btn dmc-btn-sm" onclick="editSess('+s.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteSessDirect('+s.id+')">Del</button></td></tr>'
+    ).join('') || '<tr><td colspan="6" class="dmc-empty">No sessions.</td></tr>';
+  }
+  function newSession() {
+    el('sess-id').value = ''; el('sess-num').value = ''; el('sess-title').value = '';
+    el('sess-gamedate').value = ''; el('sess-playdate').value = ''; el('sess-summary').value = '';
+    el('sess-edit-title').textContent = 'Add Session'; el('sess-del-btn').style.display = 'none';
+    el('sess-edit').style.display = 'block';
+    el('sess-edit').scrollIntoView({behavior:'smooth'});
+  }
+  function editSess(id) {
+    const s = _sessCache.find(x=>x.id===id);
+    if (!s) return;
+    el('sess-id').value = s.id; el('sess-num').value = s.session_number;
+    el('sess-title').value = s.title||''; el('sess-gamedate').value = s.game_date||'';
+    el('sess-playdate').value = s.play_date||''; el('sess-summary').value = s.summary||'';
+    el('sess-edit-title').textContent = 'Edit: Session '+s.session_number; el('sess-del-btn').style.display = 'inline-block';
+    el('sess-edit').style.display = 'block';
+    el('sess-edit').scrollIntoView({behavior:'smooth'});
+  }
+  async function saveSess(e) {
+    e.preventDefault();
+    const id = el('sess-id').value;
+    const body = { session_number:+el('sess-num').value, title:el('sess-title').value,
+      summary:el('sess-summary').value, game_date:el('sess-gamedate').value, play_date:el('sess-playdate').value||null };
+    const url = id ? '/api/dm-admin/sessions/'+id : '/api/dm-admin/sessions';
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if (r.ok) { showAlert(el('sess-status'),id?'Session updated.':'Session created.','ok'); el('sess-edit').style.display='none'; loadSessions(); }
+    else { const d=await r.json(); showAlert(el('sess-status'),'Error: '+(d.error||''),'err'); }
+  }
+  async function deleteSess() {
+    const id = el('sess-id').value;
+    if (!id || !confirm('Delete this session?')) return;
+    await fetch('/api/dm-admin/sessions/'+id,{method:'DELETE'});
+    el('sess-edit').style.display='none'; loadSessions();
+  }
+  async function deleteSessDirect(id) {
+    if (!confirm('Delete this session?')) return;
+    await fetch('/api/dm-admin/sessions/'+id,{method:'DELETE'});
+    loadSessions();
   }
 
   // ═══ AI CONFIG ═══

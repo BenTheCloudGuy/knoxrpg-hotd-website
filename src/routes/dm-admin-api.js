@@ -107,8 +107,47 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   // ── NPCs: list ─────────────────────────────────────────────
   if (decoded === "/api/dm-admin/npcs" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const r = await pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, is_hidden FROM hotd_npcs ORDER BY name");
+    const r = await pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description, sort_order, is_hidden FROM hotd_npcs ORDER BY name");
     sendJSON(res, { npcs: r.rows });
+    return true;
+  }
+
+  // ── NPCs: create ──────────────────────────────────────────
+  if (decoded === "/api/dm-admin/npcs" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      const r = await pgPool.query(
+        "INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"Unknown", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", parseInt(b.sort_order)||0, b.is_hidden||false]
+      );
+      sendJSON(res, { id: r.rows[0].id });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── NPCs: update ──────────────────────────────────────────
+  const npcUpdate = decoded.match(/^\/api\/dm-admin\/npcs\/(\d+)$/);
+  if (npcUpdate && req.method === "PUT") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      await pgPool.query(
+        "UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,sort_order=$9,is_hidden=$10 WHERE id=$11",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", parseInt(b.sort_order)||0, b.is_hidden||false, npcUpdate[1]]
+      );
+      sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── NPCs: delete ──────────────────────────────────────────
+  if (npcUpdate && req.method === "DELETE") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      await pgPool.query("DELETE FROM hotd_npcs WHERE id = $1", [npcUpdate[1]]);
+      sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
@@ -117,6 +156,45 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     if (!requireAdmin(session, res)) return true;
     const r = await pgPool.query("SELECT id, session_number, title, summary, game_date, play_date FROM hotd_sessions ORDER BY session_number DESC");
     sendJSON(res, { sessions: r.rows });
+    return true;
+  }
+
+  // ── Sessions: create ──────────────────────────────────────
+  if (decoded === "/api/dm-admin/sessions" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      const r = await pgPool.query(
+        "INSERT INTO hotd_sessions (session_number,title,summary,game_date,play_date) VALUES ($1,$2,$3,$4,$5) RETURNING id",
+        [parseInt(b.session_number), b.title, b.summary||"", b.game_date||"", b.play_date||null]
+      );
+      sendJSON(res, { id: r.rows[0].id });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Sessions: update ──────────────────────────────────────
+  const sessUpdate = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)$/);
+  if (sessUpdate && req.method === "PUT") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      await pgPool.query(
+        "UPDATE hotd_sessions SET session_number=$1,title=$2,summary=$3,game_date=$4,play_date=$5 WHERE id=$6",
+        [parseInt(b.session_number), b.title, b.summary||"", b.game_date||"", b.play_date||null, sessUpdate[1]]
+      );
+      sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Sessions: delete ──────────────────────────────────────
+  if (sessUpdate && req.method === "DELETE") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      await pgPool.query("DELETE FROM hotd_sessions WHERE id = $1", [sessUpdate[1]]);
+      sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
