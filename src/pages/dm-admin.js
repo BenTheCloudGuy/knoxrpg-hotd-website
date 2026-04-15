@@ -25,6 +25,7 @@ async function renderDmAdminPage(session) {
       <button class="dm-tab" onclick="switchDmTab('campaign')">Campaign</button>
       <button class="dm-tab" onclick="switchDmTab('users')">Users</button>
       <button class="dm-tab" onclick="switchDmTab('images')">&#127912; Image Studio</button>
+      <button class="dm-tab" onclick="switchDmTab('forge')">&#9878; Story Forge</button>
     </div>
 
     <!-- ═══ CHARACTERS TAB ═══ -->
@@ -339,6 +340,146 @@ async function renderDmAdminPage(session) {
       </div>
     </div>
 
+    <!-- ═══ STORY FORGE TAB ═══ -->
+    <div class="dm-panel" id="dm-forge" style="display:none;">
+      <div class="dm-panel-header">
+        <h3>&#9878; Story Forge</h3>
+        <div class="dm-panel-actions">
+          <button class="dm-btn" onclick="showForgeSection('generate')">Generate</button>
+          <button class="dm-btn" onclick="showForgeSection('library')">Library</button>
+          <button class="dm-btn" onclick="showForgeSection('rag')">RAG Search</button>
+        </div>
+      </div>
+
+      <!-- Generation Section -->
+      <div id="forge-generate" class="forge-section">
+        <div class="dm-config-section">
+          <h4>Template</h4>
+          <div class="dm-form-grid dm-form-grid-4">
+            <label>Type<select id="forge-template" onchange="updateForgeHint()">
+              <option value="npc_backstory">NPC Backstory</option>
+              <option value="magic_item">Magic Item</option>
+              <option value="spell">Custom Spell</option>
+              <option value="session_summary">Session Summary</option>
+              <option value="session_planning">Session Planning</option>
+              <option value="scene_description">Scene Description</option>
+              <option value="quest_hook">Quest Hook</option>
+              <option value="faction_lore">Faction Lore</option>
+              <option value="freeform">Freeform</option>
+            </select></label>
+            <label style="grid-column:span 3;">Related Entities (comma separated)<input type="text" id="forge-entities" placeholder="e.g. Ireena, Vallaki, Van Richten" /></label>
+          </div>
+        </div>
+        <div class="dm-config-section">
+          <h4>Prompt</h4>
+          <p id="forge-hint" class="dm-note"></p>
+          <textarea id="forge-prompt" rows="5" class="dm-textarea" placeholder="Describe what you want to generate..."></textarea>
+        </div>
+        <div class="dm-form-actions">
+          <button class="dm-btn dm-btn-primary" id="forge-gen-btn" onclick="forgeGenerate()">&#9878; Generate</button>
+          <span id="forge-gen-status" style="color:#888;font-size:0.82rem;align-self:center;"></span>
+        </div>
+
+        <!-- Generation Result -->
+        <div id="forge-result" class="forge-result" style="display:none;">
+          <div class="forge-result-header">
+            <h4>Generated Content</h4>
+            <div class="dm-panel-actions">
+              <button class="dm-btn dm-btn-primary" onclick="forgeCommit()">&#10003; Commit to Library</button>
+              <button class="dm-btn" onclick="forgeCopy()">Copy</button>
+              <button class="dm-btn" onclick="forgeRegenerate()">Regenerate</button>
+            </div>
+          </div>
+          <div id="forge-result-meta" class="forge-result-meta"></div>
+          <div id="forge-result-content" class="forge-result-body"></div>
+        </div>
+      </div>
+
+      <!-- Library Section -->
+      <div id="forge-library" class="forge-section" style="display:none;">
+        <div class="dm-config-section">
+          <div class="dm-form-grid dm-form-grid-3">
+            <label>Filter by Type<select id="forge-lib-type" onchange="loadForgeLibrary()">
+              <option value="">All Types</option>
+              <option value="npc_backstory">NPC Backstory</option>
+              <option value="magic_item">Magic Item</option>
+              <option value="spell">Custom Spell</option>
+              <option value="session_summary">Session Summary</option>
+              <option value="session_planning">Session Planning</option>
+              <option value="scene_description">Scene Description</option>
+              <option value="quest_hook">Quest Hook</option>
+              <option value="faction_lore">Faction Lore</option>
+              <option value="freeform">Freeform</option>
+            </select></label>
+            <label>Filter by Status<select id="forge-lib-status" onchange="loadForgeLibrary()">
+              <option value="">All</option>
+              <option value="draft">Draft</option>
+              <option value="committed">Committed</option>
+              <option value="archived">Archived</option>
+            </select></label>
+          </div>
+        </div>
+        <div id="forge-lib-list" class="forge-lib-list">
+          <p class="dm-loading">Loading...</p>
+        </div>
+
+        <!-- Element Detail View -->
+        <div id="forge-detail" class="forge-detail" style="display:none;">
+          <div class="forge-result-header">
+            <h4 id="forge-detail-title"></h4>
+            <div class="dm-panel-actions">
+              <button class="dm-btn dm-btn-primary" onclick="forgeApplyToNpcs()">Apply to NPCs</button>
+              <button class="dm-btn" onclick="forgeEditElement()">Edit</button>
+              <button class="dm-btn dm-btn-danger" onclick="forgeDeleteElement()">Delete</button>
+              <button class="dm-btn" onclick="closeForgeDetail()">Close</button>
+            </div>
+          </div>
+          <div id="forge-detail-meta" class="forge-result-meta"></div>
+          <div id="forge-detail-content" class="forge-result-body"></div>
+          <div id="forge-detail-edit" style="display:none;margin-top:12px;">
+            <textarea id="forge-detail-edit-content" rows="10" class="dm-textarea"></textarea>
+            <div class="dm-form-actions" style="margin-top:8px;">
+              <button class="dm-btn dm-btn-primary" onclick="forgeSaveEdit()">Save</button>
+              <button class="dm-btn" onclick="document.getElementById('forge-detail-edit').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAG Search Section -->
+      <div id="forge-rag" class="forge-section" style="display:none;">
+        <div class="dm-config-section">
+          <h4>Semantic Search (RAG)</h4>
+          <p class="dm-note">Search your campaign&rsquo;s embedded knowledge base. Results include DM-only content.</p>
+          <div class="dm-form-grid">
+            <label style="grid-column:1/-1;">Query<input type="text" id="forge-rag-query" placeholder="e.g. What happened to Ireena at Castle Ravenloft?" onkeydown="if(event.key==='Enter')forgeRagSearch()" /></label>
+          </div>
+          <div class="dm-form-grid dm-form-grid-3">
+            <label>Source Type<select id="forge-rag-type">
+              <option value="">All Types</option>
+              <option value="npc">NPC</option>
+              <option value="session">Session</option>
+              <option value="lore">Lore</option>
+              <option value="lore_json">Lore (JSON)</option>
+              <option value="calendar">Calendar</option>
+              <option value="handout">Handout</option>
+              <option value="artifact">Artifact</option>
+              <option value="character">Character</option>
+              <option value="journal">Journal</option>
+            </select></label>
+            <label>Min Score<input type="number" id="forge-rag-min" value="0.2" min="0" max="1" step="0.05" /></label>
+            <label>Max Results<input type="number" id="forge-rag-limit" value="10" min="1" max="50" /></label>
+          </div>
+          <div class="dm-form-actions">
+            <button class="dm-btn dm-btn-primary" onclick="forgeRagSearch()">Search Embeddings</button>
+          </div>
+        </div>
+        <div id="forge-rag-results" style="display:none;">
+          <div id="forge-rag-results-list"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <style>
@@ -454,6 +595,32 @@ async function renderDmAdminPage(session) {
       .img-gallery { grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); }
     }
 
+    /* ── Story Forge ── */
+    .forge-section { }
+    .forge-result { background:#151515; border:1px solid #c83232; border-radius:8px; padding:16px; margin-top:16px; }
+    .forge-result-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .forge-result-header h4 { color:#c83232; margin:0; }
+    .forge-result-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .forge-result-meta span { background:#2a2a2a; padding:2px 8px; border-radius:10px; font-size:0.72rem; color:#aaa; }
+    .forge-result-body { background:#111; border:1px solid #333; border-radius:6px; padding:16px; color:#ccc; font-size:0.85rem; line-height:1.7; max-height:500px; overflow-y:auto; white-space:pre-wrap; }
+    .forge-lib-list { display:grid; gap:8px; }
+    .forge-lib-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#111; border:1px solid #333; border-radius:6px; cursor:pointer; transition:border-color 0.2s; }
+    .forge-lib-item:hover { border-color:#e8b923; }
+    .forge-lib-item-info h5 { margin:0; color:#e8b923; font-size:0.85rem; }
+    .forge-lib-item-info small { color:#666; font-size:0.72rem; }
+    .forge-lib-item-badges { display:flex; gap:6px; }
+    .forge-detail { background:#151515; border:1px solid #c83232; border-radius:8px; padding:16px; margin-top:16px; }
+    .forge-rag-item { background:#111; border:1px solid #333; border-radius:6px; padding:12px; margin-bottom:8px; }
+    .forge-rag-item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+    .forge-rag-item-header strong { color:#e8b923; font-size:0.82rem; }
+    .forge-rag-item-header span { font-size:0.7rem; }
+    .forge-rag-item p { color:#aaa; font-size:0.8rem; line-height:1.5; margin:0; white-space:pre-wrap; }
+    .forge-score { background:#c83232; color:#fff; padding:1px 6px; border-radius:8px; font-size:0.68rem; font-weight:600; }
+    .forge-badge-draft { background:#e8b92333; color:#e8b923; }
+    .forge-badge-committed { background:#16a34a33; color:#4ade80; }
+    .forge-badge-archived { background:#33333366; color:#888; }
+    .forge-hint { color:#888; font-size:0.8rem; font-style:italic; margin-bottom:8px; }
+
     @media (max-width: 700px) {
       .dm-form-grid-6 { grid-template-columns:repeat(3, 1fr); }
       .dm-form-grid-4, .dm-form-grid-3 { grid-template-columns:repeat(2, 1fr); }
@@ -482,6 +649,7 @@ async function renderDmAdminPage(session) {
       case 'campaign': loadCampaignConfig(); break;
       case 'users': loadUsers(); break;
       case 'images': loadImageStudio(); break;
+      case 'forge': loadStoryForge(); break;
     }
   }
 
@@ -748,6 +916,221 @@ async function renderDmAdminPage(session) {
     const r = await fetch('/api/dm-admin/users/' + userId + '/' + action, { method: 'POST' });
     if (r.ok) loadUsers();
     else alert('Error: ' + (await r.json()).error);
+  }
+
+  // ═══ STORY FORGE ═══
+  let _forgeCurrentElementId = null;
+  let _forgeLastContent = '';
+  let _forgeLastTemplate = '';
+
+  const FORGE_HINTS = {
+    npc_backstory: 'Describe the NPC and what aspects of their backstory to develop. Mention related NPCs/locations for grounding.',
+    magic_item: 'Describe the item concept, intended user/rarity, and any campaign ties.',
+    spell: 'Describe the spell concept, school, level range, and intended use.',
+    session_summary: 'Provide the session number and key events to summarize. The AI will use session logs for accuracy.',
+    session_planning: 'Describe what you want to happen next session. Mention NPCs, locations, and plot threads.',
+    scene_description: 'Describe the location, time of day, mood, and what the party should notice.',
+    quest_hook: 'Describe the quest concept, who gives it, and what makes it compelling.',
+    faction_lore: 'Name the faction and describe what aspects to develop.',
+    freeform: 'Write anything — the AI will use RAG context to stay grounded in your campaign.',
+  };
+
+  function updateForgeHint() {
+    const t = document.getElementById('forge-template').value;
+    document.getElementById('forge-hint').textContent = FORGE_HINTS[t] || '';
+  }
+
+  function showForgeSection(section) {
+    document.querySelectorAll('.forge-section').forEach(s => s.style.display = 'none');
+    document.getElementById('forge-' + section).style.display = 'block';
+    if (section === 'library') loadForgeLibrary();
+  }
+
+  function loadStoryForge() {
+    updateForgeHint();
+  }
+
+  async function forgeGenerate() {
+    const prompt = document.getElementById('forge-prompt').value.trim();
+    if (!prompt) { alert('Enter a prompt'); return; }
+    const template = document.getElementById('forge-template').value;
+    const entities = document.getElementById('forge-entities').value.split(',').map(s => s.trim()).filter(Boolean);
+    const btn = document.getElementById('forge-gen-btn');
+    const status = document.getElementById('forge-gen-status');
+    btn.disabled = true;
+    status.textContent = 'Generating with RAG context... (may take 10-30s)';
+    try {
+      const r = await fetch('/api/dm-admin/story-forge/generate', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ template, prompt, entities })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Generation failed');
+      _forgeLastContent = data.content;
+      _forgeLastTemplate = template;
+      document.getElementById('forge-result-content').textContent = data.content;
+      document.getElementById('forge-result-meta').innerHTML =
+        '<span>' + template.replace(/_/g, ' ') + '</span>' +
+        '<span>' + data.ragChunks + ' RAG chunks</span>' +
+        '<span>' + data.entityLookups + ' entity lookups</span>' +
+        (data.usage ? '<span>' + data.usage.total_tokens + ' tokens</span>' : '');
+      document.getElementById('forge-result').style.display = 'block';
+      status.textContent = 'Done!';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    } catch (err) {
+      status.textContent = 'Error: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function forgeRegenerate() {
+    forgeGenerate();
+  }
+
+  function forgeCopy() {
+    navigator.clipboard.writeText(_forgeLastContent).then(() => alert('Copied to clipboard!'));
+  }
+
+  async function forgeCommit() {
+    const title = prompt('Title for this story element:', '');
+    if (!title) return;
+    const entities = document.getElementById('forge-entities').value.split(',').map(s => s.trim()).filter(Boolean);
+    const r = await fetch('/api/dm-admin/story-elements', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        element_type: _forgeLastTemplate || 'freeform',
+        title,
+        content: _forgeLastContent,
+        related_entities: entities,
+        status: 'draft',
+      })
+    });
+    const data = await r.json();
+    if (r.ok) { alert('Committed to library (ID: ' + data.id + ')'); }
+    else { alert('Error: ' + (data.error || 'Unknown')); }
+  }
+
+  async function loadForgeLibrary() {
+    const type = document.getElementById('forge-lib-type').value;
+    const status = document.getElementById('forge-lib-status').value;
+    let url = '/api/dm-admin/story-elements?';
+    if (type) url += 'type=' + encodeURIComponent(type) + '&';
+    if (status) url += 'status=' + encodeURIComponent(status);
+    const r = await fetch(url);
+    const data = await r.json();
+    const list = document.getElementById('forge-lib-list');
+    if (!data.elements || data.elements.length === 0) {
+      list.innerHTML = '<p class="dm-loading">No story elements yet. Generate your first one!</p>';
+      return;
+    }
+    list.innerHTML = data.elements.map(el => {
+      const badgeCls = el.status === 'committed' ? 'forge-badge-committed' : el.status === 'archived' ? 'forge-badge-archived' : 'forge-badge-draft';
+      const related = el.related_entities ? (typeof el.related_entities === 'string' ? JSON.parse(el.related_entities) : el.related_entities) : [];
+      return '<div class="forge-lib-item" onclick="openForgeDetail(' + el.id + ')">' +
+        '<div class="forge-lib-item-info"><h5>' + esc(el.title) + '</h5>' +
+        '<small>' + el.element_type.replace(/_/g, ' ') + ' &middot; ' + new Date(el.updated_at).toLocaleDateString() +
+        (related.length ? ' &middot; ' + related.join(', ') : '') + '</small></div>' +
+        '<div class="forge-lib-item-badges"><span class="dm-badge ' + badgeCls + '">' + el.status + '</span></div></div>';
+    }).join('');
+  }
+
+  async function openForgeDetail(id) {
+    _forgeCurrentElementId = id;
+    const r = await fetch('/api/dm-admin/story-elements/' + id);
+    const data = await r.json();
+    if (!r.ok) { alert('Error loading element'); return; }
+    const el = data.element;
+    document.getElementById('forge-detail-title').textContent = el.title;
+    document.getElementById('forge-detail-content').textContent = el.content;
+    const related = el.related_entities ? (typeof el.related_entities === 'string' ? JSON.parse(el.related_entities) : el.related_entities) : [];
+    const badgeCls = el.status === 'committed' ? 'forge-badge-committed' : el.status === 'archived' ? 'forge-badge-archived' : 'forge-badge-draft';
+    document.getElementById('forge-detail-meta').innerHTML =
+      '<span>' + el.element_type.replace(/_/g, ' ') + '</span>' +
+      '<span class="dm-badge ' + badgeCls + '">' + el.status + '</span>' +
+      '<span>Created: ' + new Date(el.created_at).toLocaleString() + '</span>' +
+      (related.length ? '<span>Entities: ' + related.join(', ') + '</span>' : '');
+    document.getElementById('forge-detail-edit').style.display = 'none';
+    document.getElementById('forge-detail').style.display = 'block';
+  }
+
+  function closeForgeDetail() {
+    document.getElementById('forge-detail').style.display = 'none';
+    _forgeCurrentElementId = null;
+  }
+
+  function forgeEditElement() {
+    document.getElementById('forge-detail-edit-content').value = document.getElementById('forge-detail-content').textContent;
+    document.getElementById('forge-detail-edit').style.display = 'block';
+  }
+
+  async function forgeSaveEdit() {
+    if (!_forgeCurrentElementId) return;
+    const content = document.getElementById('forge-detail-edit-content').value;
+    const r = await fetch('/api/dm-admin/story-elements/' + _forgeCurrentElementId, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ content })
+    });
+    if (r.ok) {
+      document.getElementById('forge-detail-content').textContent = content;
+      document.getElementById('forge-detail-edit').style.display = 'none';
+      loadForgeLibrary();
+    } else { alert('Error saving'); }
+  }
+
+  async function forgeDeleteElement() {
+    if (!_forgeCurrentElementId || !confirm('Delete this story element?')) return;
+    const r = await fetch('/api/dm-admin/story-elements/' + _forgeCurrentElementId, { method: 'DELETE' });
+    if (r.ok) { closeForgeDetail(); loadForgeLibrary(); }
+    else alert('Error deleting');
+  }
+
+  async function forgeApplyToNpcs() {
+    if (!_forgeCurrentElementId) return;
+    const npcIdsStr = prompt('Enter NPC IDs to apply this element to (comma separated):');
+    if (!npcIdsStr) return;
+    const npc_ids = npcIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+    const r = await fetch('/api/dm-admin/story-elements/apply', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ element_id: _forgeCurrentElementId, npc_ids })
+    });
+    const data = await r.json();
+    if (r.ok) { alert('Applied to ' + data.updated + ' NPC(s). Element marked as committed.'); openForgeDetail(_forgeCurrentElementId); loadForgeLibrary(); }
+    else { alert('Error: ' + (data.error || 'Unknown')); }
+  }
+
+  async function forgeRagSearch() {
+    const query = document.getElementById('forge-rag-query').value.trim();
+    if (!query) return;
+    const sourceType = document.getElementById('forge-rag-type').value || undefined;
+    const minScore = parseFloat(document.getElementById('forge-rag-min').value) || 0.2;
+    const limit = parseInt(document.getElementById('forge-rag-limit').value) || 10;
+    const container = document.getElementById('forge-rag-results');
+    const list = document.getElementById('forge-rag-results-list');
+    container.style.display = 'block';
+    list.innerHTML = '<p class="dm-loading">Searching embeddings...</p>';
+    try {
+      const r = await fetch('/api/dm-admin/story-forge/rag-search', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ query, sourceType, minScore, limit })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Search failed');
+      if (!data.results || data.results.length === 0) {
+        list.innerHTML = '<p class="dm-loading">No results found.</p>';
+        return;
+      }
+      list.innerHTML = data.results.map(r =>
+        '<div class="forge-rag-item">' +
+          '<div class="forge-rag-item-header"><strong>' + esc(r.title) + '</strong>' +
+          '<span><span class="forge-score">' + r.score + '</span> ' + r.source_type + '</span></div>' +
+          '<p>' + esc(r.chunk_text.substring(0, 600)) + (r.chunk_text.length > 600 ? '...' : '') + '</p></div>'
+      ).join('');
+    } catch (err) {
+      list.innerHTML = '<p class="dm-loading" style="color:#f87171;">Error: ' + esc(err.message) + '</p>';
+    }
   }
 
   // ═══ IMAGE STUDIO ═══

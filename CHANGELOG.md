@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-04-15
+
+### Added
+- **Story Forge** — new tab on DM Admin for RAG-grounded campaign content generation
+  - 8 generation templates: NPC Backstory, Magic Item, Spell, Session Summary, Session Planning, Scene Description, Quest Hook, Faction Lore, plus Freeform
+  - Automatic RAG context injection — searches 213 embedded campaign vectors (DM-only included) before every generation
+  - Direct entity lookups for mentioned NPCs/locations to ground output in real campaign data
+  - Story Element Library with CRUD, filtering by type/status (draft/committed/archived)
+  - Commit workflow: generate → review → edit → commit to library
+  - Apply to NPCs: append story element content to NPC descriptions
+  - RAG Search panel — interactive semantic search with source type filter, min score, and result preview
+- Story Forge API endpoints: generate, list/get/create/update/delete story elements, apply-to-NPCs, RAG search preview
+- Wired `searchEmbeddings` and `buildEmbeddingContext` from RAG utility into Story Forge generation pipeline
+
 ## [1.11.0] - 2026-04-16
 
 ### Added
