@@ -613,10 +613,17 @@ async function renderMapAdminPage(session) {
         <div style="margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <label style="color:#ccc;font-size:0.85rem;">Type:</label>
           <select id="markerTypeSelect" style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;">
-            <option value="city">\u{1F3DB}\uFE0F City</option>
-            <option value="battle">\u2694\uFE0F Battle</option>
-            <option value="vistani">\u{1F6D2} Vistani</option>
-            <option value="party">\u{1F3AD} Party</option>
+            <option value="allied_werewolves">Allied Werewolves</option>
+            <option value="barovia">Barovia</option>
+            <option value="kezk">Kezk</option>
+            <option value="party">Party</option>
+            <option value="ravenkind">Ravenkind</option>
+            <option value="strahd_abbot">Strahd Abbot</option>
+            <option value="strahd_demon_army">Strahd Demon Army</option>
+            <option value="strahd">Strahd</option>
+            <option value="strahd_werewolves">Strahd Werewolves</option>
+            <option value="villaki">Villaki</option>
+            <option value="vistani">Vistani</option>
           </select>
           <label style="color:#ccc;font-size:0.85rem;">Label:</label>
           <input type="text" id="markerLabelInput" placeholder="Marker label..." style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;width:160px;" />
@@ -636,10 +643,17 @@ async function renderMapAdminPage(session) {
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Marker Icons</h3>
           <div style="color:#ccc;font-size:0.85rem;line-height:2;">
-            <div>\u{1F3DB}\uFE0F <strong>City</strong> \u2014 Buildings / Settlements</div>
-            <div>\u2694\uFE0F <strong>Battle</strong> \u2014 Crossed Swords</div>
-            <div>\u{1F6D2} <strong>Vistani</strong> \u2014 Wagon / Camp</div>
-            <div>\u{1F3AD} <strong>Party</strong> \u2014 Player Party Location</div>
+            <div><img src="/images/icons/AlliedWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Allied Werewolves</strong></div>
+            <div><img src="/images/icons/baroviaShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Barovia</strong></div>
+            <div><img src="/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
+            <div><img src="/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
+            <div><img src="/images/icons/RavenKindSheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Ravenkind</strong></div>
+            <div><img src="/images/icons/strahdAbbotShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Abbot</strong></div>
+            <div><img src="/images/icons/strahdDemonArmySheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Demon Army</strong></div>
+            <div><img src="/images/icons/strahdShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd</strong></div>
+            <div><img src="/images/icons/strahdWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Werewolves</strong></div>
+            <div><img src="/images/icons/VillakiShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Villaki</strong></div>
+            <div><img src="/images/icons/vistaniShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Vistani</strong></div>
           </div>
         </div>
         <div id="selectedMarkerPanel" style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;display:none;">
@@ -675,7 +689,19 @@ async function renderMapAdminPage(session) {
     var panX = (cw - IMG_W * scale) / 2, panY = (ch - IMG_H * scale) / 2;
     var isPanning = false, startX = 0, startY = 0;
 
-    var ICONS = { city: '\u{1F3DB}\uFE0F', battle: '\u2694\uFE0F', vistani: '\u{1F6D2}', party: '\u{1F3AD}' };
+    var ICON_PATHS = {
+      allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
+      barovia: '/images/icons/baroviaShield.png',
+      kezk: '/images/icons/KezkShield.png',
+      party: '/images/icons/partyShield.png',
+      ravenkind: '/images/icons/RavenKindSheild.png',
+      strahd_abbot: '/images/icons/strahdAbbotShield.png',
+      strahd_demon_army: '/images/icons/strahdDemonArmySheild.png',
+      strahd: '/images/icons/strahdShield.png',
+      strahd_werewolves: '/images/icons/strahdWerewolvesShield.png',
+      villaki: '/images/icons/VillakiShield.png',
+      vistani: '/images/icons/vistaniShield.png'
+    };
     var markers = ${markerJson};
     var dragging = null, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0, didDrag = false;
     var selectedId = null;
@@ -734,9 +760,10 @@ async function renderMapAdminPage(session) {
         div.title = m.label + ' (' + m.type + ', size:' + mSize + ')';
         div.dataset.markerId = m.id;
 
-        var icon = document.createElement('span');
-        icon.textContent = ICONS[m.type] || '\u{1F4CD}';
-        icon.style.lineHeight = '1';
+        var icon = document.createElement('img');
+        icon.src = ICON_PATHS[m.type] || '/images/icons/partyShield.png';
+        icon.alt = m.type;
+        icon.style.cssText = 'width:' + (mSize * 0.85) + 'px;height:' + (mSize * 0.85) + 'px;pointer-events:none;object-fit:contain;';
         div.appendChild(icon);
 
         if (m.label) {

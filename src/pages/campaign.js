@@ -175,7 +175,19 @@ async function renderHomePage(session) {
     var markersEl = document.getElementById('homeMapMarkers');
     if (!container || !img) return;
     var IMG_W = 5025, IMG_H = 3225;
-    var ICONS = { city: '\u{1F3DB}\uFE0F', battle: '\u2694\uFE0F', vistani: '\u{1F6D2}', party: '\u{1F3AD}' };
+    var ICON_PATHS = {
+      allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
+      barovia: '/images/icons/baroviaShield.png',
+      kezk: '/images/icons/KezkShield.png',
+      party: '/images/icons/partyShield.png',
+      ravenkind: '/images/icons/RavenKindSheild.png',
+      strahd_abbot: '/images/icons/strahdAbbotShield.png',
+      strahd_demon_army: '/images/icons/strahdDemonArmySheild.png',
+      strahd: '/images/icons/strahdShield.png',
+      strahd_werewolves: '/images/icons/strahdWerewolvesShield.png',
+      villaki: '/images/icons/VillakiShield.png',
+      vistani: '/images/icons/vistaniShield.png'
+    };
     var cw = container.clientWidth, ch = container.clientHeight;
     var scale = Math.min(cw / IMG_W, ch / IMG_H);
     var minScale = scale * 0.5, maxScale = 5;
@@ -197,9 +209,10 @@ async function renderHomePage(session) {
           d.style.left = (m.x - mSize/2) + 'px';
           d.style.top = (m.y - mSize/2) + 'px';
           d.title = m.label + ' (' + m.type + ')';
-          var icon = document.createElement('span');
-          icon.textContent = ICONS[m.type] || '\u{1F4CD}';
-          icon.style.lineHeight = '1';
+          var icon = document.createElement('img');
+          icon.src = ICON_PATHS[m.type] || '/images/icons/partyShield.png';
+          icon.alt = m.type;
+          icon.style.cssText = 'width:'+(mSize*0.85)+'px;height:'+(mSize*0.85)+'px;pointer-events:none;object-fit:contain;';
           d.appendChild(icon);
           if (m.label) {
             var lbl = document.createElement('span');
