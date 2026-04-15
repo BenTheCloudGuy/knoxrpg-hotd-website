@@ -775,7 +775,7 @@ async function renderMapAdminPage(session) {
         }
         div.appendChild(icon);
 
-        if (m.label) {
+        if (m.label && m.type === 'battle') {
           var lbl = document.createElement('span');
           lbl.textContent = m.label;
           lbl.style.cssText = 'font-size:' + Math.max(8, mSize * 0.18) + 'px;color:#fff;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:3px;white-space:nowrap;margin-top:2px;max-width:' + (mSize * 2) + 'px;overflow:hidden;text-overflow:ellipsis;';
