@@ -209,10 +209,17 @@ async function renderHomePage(session) {
           d.style.left = (m.x - mSize/2) + 'px';
           d.style.top = (m.y - mSize/2) + 'px';
           d.title = m.label + ' (' + m.type + ')';
-          var icon = document.createElement('img');
-          icon.src = ICON_PATHS[m.type] || '/images/icons/partyShield.png';
-          icon.alt = m.type;
-          icon.style.cssText = 'width:'+(mSize*0.85)+'px;height:'+(mSize*0.85)+'px;pointer-events:none;object-fit:contain;';
+          var icon;
+          if (ICON_PATHS[m.type]) {
+            icon = document.createElement('img');
+            icon.src = ICON_PATHS[m.type];
+            icon.alt = m.type;
+            icon.style.cssText = 'width:'+(mSize*0.85)+'px;height:'+(mSize*0.85)+'px;pointer-events:none;object-fit:contain;';
+          } else {
+            icon = document.createElement('span');
+            icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : '\u{1F4CD}';
+            icon.style.lineHeight = '1';
+          }
           d.appendChild(icon);
           if (m.label) {
             var lbl = document.createElement('span');

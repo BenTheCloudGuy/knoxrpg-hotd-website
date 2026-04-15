@@ -614,6 +614,7 @@ async function renderMapAdminPage(session) {
           <label style="color:#ccc;font-size:0.85rem;">Type:</label>
           <select id="markerTypeSelect" style="padding:6px 10px;background:#111;border:1px solid #444;color:#e0ddd5;border-radius:4px;font-size:0.85rem;">
             <option value="allied_werewolves">Allied Werewolves</option>
+            <option value="battle">⚔️ Battle</option>
             <option value="barovia">Barovia</option>
             <option value="kezk">Kezk</option>
             <option value="party">Party</option>
@@ -644,6 +645,7 @@ async function renderMapAdminPage(session) {
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Marker Icons</h3>
           <div style="color:#ccc;font-size:0.85rem;line-height:2;">
             <div><img src="/images/icons/AlliedWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Allied Werewolves</strong></div>
+            <div>⚔️ <strong>Battle</strong> — Crossed Swords</div>
             <div><img src="/images/icons/baroviaShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Barovia</strong></div>
             <div><img src="/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
             <div><img src="/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
@@ -760,10 +762,17 @@ async function renderMapAdminPage(session) {
         div.title = m.label + ' (' + m.type + ', size:' + mSize + ')';
         div.dataset.markerId = m.id;
 
-        var icon = document.createElement('img');
-        icon.src = ICON_PATHS[m.type] || '/images/icons/partyShield.png';
-        icon.alt = m.type;
-        icon.style.cssText = 'width:' + (mSize * 0.85) + 'px;height:' + (mSize * 0.85) + 'px;pointer-events:none;object-fit:contain;';
+        var icon;
+        if (ICON_PATHS[m.type]) {
+          icon = document.createElement('img');
+          icon.src = ICON_PATHS[m.type];
+          icon.alt = m.type;
+          icon.style.cssText = 'width:' + (mSize * 0.85) + 'px;height:' + (mSize * 0.85) + 'px;pointer-events:none;object-fit:contain;';
+        } else {
+          icon = document.createElement('span');
+          icon.textContent = m.type === 'battle' ? '\u2694\uFE0F' : '\u{1F4CD}';
+          icon.style.lineHeight = '1';
+        }
         div.appendChild(icon);
 
         if (m.label) {
