@@ -6,7 +6,8 @@
 
 const { pgPool } = require("../db/pool");
 const { readBody, sendJSON } = require("../lib/utils");
-const { openaiClient, uploadBlobToStorage } = require("../lib/azure");
+const azure = require("../lib/azure");
+const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
 
 function requireAdmin(session, res) {
@@ -222,7 +223,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   // ── Images: generate via DALL-E 3 ─────────────────────────
   if (decoded === "/api/dm-admin/images/generate" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     try {
       const body = JSON.parse(await readBody(req));
       const prompt = (body.prompt || "").trim();
@@ -240,7 +241,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       const tags = body.tags || [];
 
       // Call DALL-E 3
-      const imgResp = await openaiClient.images.generate({
+      const imgResp = await azure.openaiClient.images.generate({
         model: "dall-e-3",
         prompt: fullPrompt,
         n: 1,
@@ -360,7 +361,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   // ── Story Forge: generate content ──────────────────────────
   if (decoded === "/api/dm-admin/story-forge/generate" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     try {
       const body = JSON.parse(await readBody(req));
       const { template, prompt, entities } = body;
@@ -368,7 +369,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
 
       // Build RAG context from the prompt + entity names
       const searchTerms = [prompt, ...(entities || [])].join(" ");
-      const ragContext = await buildEmbeddingContext(openaiClient, searchTerms, {
+      const ragContext = await buildEmbeddingContext(azure.openaiClient, searchTerms, {
         includeDmOnly: true, limit: 12, minScore: 0.25,
       });
 
@@ -410,7 +411,7 @@ ${ragContext}${entityContext}`;
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
       const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-4o-mini";
 
-      const completion = await openaiClient.chat.completions.create({
+      const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: [
           { role: "system", content: systemPrompt },
@@ -543,10 +544,10 @@ ${ragContext}${entityContext}`;
   // ── Story Forge: RAG search preview ────────────────────────
   if (decoded === "/api/dm-admin/story-forge/rag-search" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     try {
       const body = JSON.parse(await readBody(req));
-      const results = await searchEmbeddings(openaiClient, body.query || "", {
+      const results = await searchEmbeddings(azure.openaiClient, body.query || "", {
         includeDmOnly: true, limit: body.limit || 10, minScore: body.minScore || 0.2,
         sourceType: body.sourceType || undefined,
       });
@@ -600,7 +601,7 @@ ${ragContext}${entityContext}`;
   const chatMsgMatch = decoded.match(/^\/api\/dm-admin\/conversations\/(\d+)\/message$/);
   if (chatMsgMatch && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    if (!openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     const id = parseInt(chatMsgMatch[1], 10);
     try {
       const body = JSON.parse(await readBody(req));
@@ -613,7 +614,7 @@ ${ragContext}${entityContext}`;
       const messages = convR.rows[0].messages || [];
 
       // Build RAG context from the message
-      const ragContext = await buildEmbeddingContext(openaiClient, userMsg, {
+      const ragContext = await buildEmbeddingContext(azure.openaiClient, userMsg, {
         includeDmOnly: true, limit: 8, minScore: 0.25,
       });
 
@@ -634,7 +635,7 @@ ${ragContext}`;
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
       const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-4o-mini";
 
-      const completion = await openaiClient.chat.completions.create({
+      const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: chatMessages,
         max_tokens: 4096,
