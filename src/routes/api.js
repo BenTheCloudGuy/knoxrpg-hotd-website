@@ -7,6 +7,7 @@ const { pgPool } = require("../db/pool");
 const { readBody, parseForm, sendJSON } = require("../lib/utils");
 const { searchCampaign, buildRagContext } = require("../lib/search");
 const azure = require("../lib/azure");
+const { chatWithTools } = require("../lib/ai-tools");
 
 /**
  * Handle API routes. Returns true if the route was handled, false otherwise.
@@ -23,150 +24,7 @@ async function handleApiRoutes(decoded, req, res, session, url) {
         role: m.role === "assistant" ? "assistant" : "user", content: String(m.content).slice(0, 2000),
       }));
 
-      // ── Build campaign context from DB ───────────────────
-      let campaignContext = "";
-      try {
-        const [pcRes, npcRes, sessRes, artRes, handRes] = await Promise.all([
-          pgPool.query("SELECT character_name, player_name, race, class_summary, subclass, level, alignment, backstory, personality_traits, ideals, bonds, flaws FROM hotd_player_characters ORDER BY character_name"),
-          pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, description, portrait_url FROM hotd_npcs ORDER BY sort_order, name"),
-          pgPool.query("SELECT session_number, title, summary, game_date FROM hotd_sessions ORDER BY session_number"),
-          pgPool.query("SELECT name, rarity, description, lore, is_legendary, owner FROM hotd_artifacts ORDER BY name"),
-          pgPool.query("SELECT name, description, about FROM hotd_handouts ORDER BY name"),
-        ]);
-
-        const parts = [];
-
-        if (pcRes.rows.length > 0) {
-          parts.push("## Player Characters\n" + pcRes.rows.map(c => {
-            let entry = `- **${c.character_name}** (${c.race} ${c.class_summary}${c.subclass ? "/" + c.subclass : ""}, Level ${c.level})`;
-            if (c.player_name) entry += ` — played by ${c.player_name}`;
-            if (c.alignment) entry += ` [${c.alignment}]`;
-            if (c.backstory) entry += `\n  Backstory: ${c.backstory.slice(0, 300)}`;
-            return entry;
-          }).join("\n"));
-        }
-
-        if (npcRes.rows.length > 0) {
-          parts.push("## Notable NPCs\n" + npcRes.rows.map(n => {
-            let entry = `- **${n.name}** (ID: ${n.id})`;
-            if (n.race) entry += ` (${n.race}${n.npc_class ? " " + n.npc_class : ""})`;
-            if (n.location) entry += ` — ${n.location}`;
-            if (n.status && n.status !== "Unknown") entry += ` [${n.status}]`;
-            if (n.portrait_url) entry += `\n  Portrait: ${n.portrait_url}`;
-            if (n.description) entry += `\n  ${n.description.slice(0, 200)}`;
-            entry += `\n  Profile: https://hotd.knoxrpg.com/npcs/${n.id}`;
-            return entry;
-          }).join("\n"));
-        }
-
-        if (sessRes.rows.length > 0) {
-          parts.push("## Session Logs\n" + sessRes.rows.map(s => {
-            let entry = `- **Session ${s.session_number}: ${s.title}**`;
-            if (s.game_date) entry += ` (${s.game_date})`;
-            if (s.summary) entry += `\n  ${s.summary.slice(0, 400)}`;
-            return entry;
-          }).join("\n"));
-        }
-
-        if (artRes.rows.length > 0) {
-          parts.push("## Artifacts & Items\n" + artRes.rows.map(a => {
-            let entry = `- **${a.name}** [${a.rarity}${a.is_legendary ? ", Legendary" : ""}]`;
-            if (a.owner) entry += ` — owned by ${a.owner}`;
-            if (a.description) entry += `\n  ${a.description.slice(0, 200)}`;
-            if (a.lore) entry += `\n  Lore: ${a.lore.slice(0, 200)}`;
-            return entry;
-          }).join("\n"));
-        }
-
-        if (handRes.rows.length > 0) {
-          parts.push("## Handouts\n" + handRes.rows.map(h => {
-            let entry = `- **${h.name}**`;
-            if (h.description) entry += `: ${h.description.slice(0, 200)}`;
-            if (h.about) entry += `\n  ${h.about.slice(0, 200)}`;
-            return entry;
-          }).join("\n"));
-        }
-
-        if (parts.length > 0) campaignContext = "\n\n# Campaign Data\n" + parts.join("\n\n");
-      } catch (ctxErr) {
-        console.warn("Campaign context fetch failed:", ctxErr.message);
-      }
-
-      const systemPrompt = `You are the DM AI for "Halls of the Damned", a D&D 5th Edition campaign hosted on KnoxRPG.
-
-Your primary knowledge comes from the campaign data and reference material below. When answering questions about characters, NPCs, sessions, artifacts, handouts, or campaign events, always use the Campaign Data first. For D&D rules, spells, monsters, items, and lore, use the Reference Material. You may link to relevant pages on the site using markdown links to https://hotd.knoxrpg.com/<path>.
-
-Be accurate, concise, and in-character as a knowledgeable Dungeon Master. If unsure about campaign-specific details, say so rather than guessing. Format using markdown.${campaignContext}`;
-
-      // ── Fetch RAG context for the latest user message ──────
-      let ragContext = "";
-      const lastUserMsg = userMessages.filter(m => m.role === "user").pop();
-      if (lastUserMsg) {
-        ragContext = await buildRagContext(lastUserMsg.content);
-      }
-
-      const chatMessages = [{ role: "system", content: systemPrompt }];
-      if (ragContext) {
-        chatMessages.push({ role: "system", content: `# Reference Material (from D&D books, rules, and indexed content)\n\n${ragContext}` });
-      }
-
-      // ── Response format rules (placed last for maximum LLM attention) ──
-      chatMessages.push({ role: "system", content: `# MANDATORY Response Formatting
-
-You MUST follow these formatting rules exactly based on what the user is asking about.
-
-## SPELL Queries
-When the user asks about ANY spell, format your response EXACTLY like this example:
-
-**Fireball** — Level 3 Evocation
-
-| | |
-|---|---|
-| **Casting Time** | 1 action |
-| **Range** | 150 feet (20-ft sphere) |
-| **Components** | V, S, M (a tiny ball of bat guano and sulfur) |
-| **Duration** | Instantaneous |
-
-A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame...
-
-*Source: Player's Handbook, p. 241*
-
-[Browse Spells on KnoxRPG](https://web.knoxrpg.com/spells)
-
-RULES: Include ALL spell fields from the Reference Material. The source book and page number MUST appear. The LAST line MUST be a link to the spell browse page: \`https://web.knoxrpg.com/spells\`.
-
-## NPC Queries
-When the user asks about ANY NPC, format your response EXACTLY like this example:
-
-![Ireena Kolyana](https://hotd.knoxrpg.com/images/ireena-kolyana.png)
-
-**Ireena Kolyana** — Human Noble / Fighter
-
-| | |
-|---|---|
-| **Location** | Village of Barovia |
-| **Status** | Alive |
-
-Ireena Kolyana is the adopted daughter of the late Burgomaster Kolyan Indirovich...
-
-[View Ireena Kolyana's Full Profile](https://hotd.knoxrpg.com/npcs/42)
-
-RULES: The portrait image MUST be the first line (use the Portrait URL from Campaign Data). Include Name, Race, Class/Role, Location, Status. Draw from NPC page, books, AND campaign session summaries. The LAST line MUST link to the NPC's detail page: \`https://hotd.knoxrpg.com/npcs/<npc_id>\` using the NPC's ID from Campaign Data.
-
-## Advice / Rules Queries
-When the user asks for rulings or advice:
-1. Cite **Sage Advice** first if an official ruling exists
-2. Then cite the **rulebook** with page number
-3. If neither covers it, give your DM interpretation and clearly label it as such` });
-
-      chatMessages.push(...userMessages);
-
-      const completion = await azure.openaiClient.chat.completions.create({
-        model: azure.aiModel,
-        messages: chatMessages,
-        max_tokens: 2048, temperature: 0.7,
-      });
-      const reply = completion.choices[0]?.message?.content || "I don't have a response for that.";
+      const { reply } = await chatWithTools(azure.openaiClient, azure.aiModel, userMessages);
       sendJSON(res, { reply });
       return true;
     } catch (err) {
