@@ -21,6 +21,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
   - Story Forge output renders as markdown
   - Uses marked.js v15.0.4 + DOMPurify v3.2.4 via CDN
   - Dark theme CSS for all rendered markdown elements
+- **NPC Portrait Thumbnails** — circular portrait images shown in NPC table list
+  - Live portrait preview (80×80) in the NPC edit form, updates as URL is typed
+  - Placeholder icon for NPCs without a portrait
 
 ### Changed
 - NPCs panel no longer links to external admin page — full CRUD is inline
@@ -31,6 +34,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 ### Fixed
 - **OpenAI client not initialized** — `openaiClient` getter was destructured at import time, capturing `null`. Fixed by importing module object and accessing at call-time.
 - **Image Studio JSON parse error** — same root cause as above; HTML error page was returned instead of JSON
+- **Broken Campaign sidebar links** — escaped quotes in NPC portrait `onerror` handlers broke JS parsing inside template literal, disabling all panel navigation
 
 ## [1.13.0] - 2026-04-16
 
