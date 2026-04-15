@@ -4,6 +4,18 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-04-15
+
+### Changed
+- Replaced bulk context injection with OpenAI function calling for DM AI chat
+- System prompt reduced from ~39K chars to ~1.5K chars (tools fetch data on demand)
+- Both `/api/chat` and `/api/admin/test-chat` now use function-calling tool loop
+
+### Added
+- `src/lib/ai-tools.js` — 11 function-calling tool definitions: `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`, `lookup_magic_item`, `lookup_artifact`, `get_player_character`, `get_handout`, `get_calendar`, `search_dnd_reference`
+- `chatWithTools()` multi-round tool-call loop (max 5 rounds) with parallel tool execution
+- Debug output now includes per-tool call details (name, args, latency, result size)
+
 ## [1.6.0] - 2026-04-15
 
 ### Added

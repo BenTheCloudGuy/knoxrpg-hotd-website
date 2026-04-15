@@ -68,6 +68,7 @@ jobs:
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${{ needs.version.outputs.version }} \
             --set postgres.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --set openai.apiKey="${{ secrets.OPENAI_API_KEY }}" \
             --set createNamespace=false
 
       - name: Wait for rollout
