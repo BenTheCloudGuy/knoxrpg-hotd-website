@@ -15,10 +15,11 @@ const { serveFile, serveStaticFile, sendJSON, mimeType } = require("./lib/utils"
 const { getSession } = require("./lib/auth");
 const { initOpenAI } = require("./lib/azure");
 
-const { handleAuthRoutes }  = require("./routes/auth");
-const { handleApiRoutes }   = require("./routes/api");
-const { handleAdminRoutes } = require("./routes/admin");
-const { handlePageRoutes }  = require("./routes/pages");
+const { handleAuthRoutes }      = require("./routes/auth");
+const { handleApiRoutes }       = require("./routes/api");
+const { handleAdminRoutes }     = require("./routes/admin");
+const { handleAdminTestRoutes } = require("./routes/admin-test");
+const { handlePageRoutes }      = require("./routes/pages");
 
 // ══════════════════════════════════════════════════════════════
 // ── HTTP SERVER ───────────────────────────────────────────────
@@ -55,6 +56,9 @@ const server = http.createServer(async (req, res) => {
 
   // ── API routes ─────────────────────────────────────────────
   if (await handleApiRoutes(decoded, req, res, session, url)) return;
+
+  // ── Admin API test routes (test console + debug endpoints) ─
+  if (await handleAdminTestRoutes(decoded, req, res, session, url)) return;
 
   // ── Auth gate ──────────────────────────────────────────────
   const AUTH_EXEMPT = ["/siteLogo.png", "/", "/index.html"];
