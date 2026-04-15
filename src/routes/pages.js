@@ -8,7 +8,7 @@ const { readBody, parseForm } = require("../lib/utils");
 // Campaign pages
 const {
   renderHouseRulesPage, renderHomePage, renderCalendarPage, renderMapsPage,
-  renderNpcsPage, renderNpcDetailPage, renderSessionsPage, renderCharactersPage, renderCharacterDetailPage,
+  renderNpcsPage, renderNpcDetailPage, renderSessionsPage, renderCharactersPage,
   renderHistoryPage, renderArtifactsPage, renderHandoutsPage, renderArtGalleryPage,
   renderArtifactDetailPage, renderHandoutDetailPage, renderJournalPage,
 } = require("../pages/campaign");
@@ -76,14 +76,11 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     return true;
   }
 
-  // ── Character detail page ──────────────────────────────────
+  // ── Character detail page → redirect to single page ────────
   if (decoded.startsWith("/characters/") && decoded !== "/characters") {
     const charId = parseInt(decoded.split("/")[2], 10);
-    if (!isNaN(charId)) {
-      const detailHtml = await renderCharacterDetailPage(charId, session);
-      if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
-    }
-    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
+    const anchor = !isNaN(charId) ? `#character-${charId}` : "";
+    res.writeHead(302, { Location: `/characters${anchor}` }); res.end();
     return true;
   }
 

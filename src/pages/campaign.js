@@ -569,123 +569,31 @@ async function renderSessionsPage(session) {
   return pageShell("Sessions — Halls of the Damned", "/sessions", body, session);
 }
 
-// ── Characters Page (player character cards) ──────────────────
+// ── Characters Page (2024 stat block cards — single page) ────
 async function renderCharactersPage(session) {
   let chars = [];
   try { const r = await pgPool.query("SELECT * FROM hotd_player_characters ORDER BY character_name"); chars = r.rows; } catch (_) {}
 
-  const charCards = chars.length > 0 ? chars.map(c => {
+  const mod = v => { const m = Math.floor((v - 10) / 2); return (m >= 0 ? "+" : "") + m; };
+
+  const charBlocks = chars.length > 0 ? chars.map(c => {
     const classesDetail = safeJson(c.classes_detail);
     const classParts = classesDetail.map(cl => cl.subclass ? `${cl.name} / ${cl.subclass}` : cl.name).join(" · ");
-    return `
-    <a class="char-card" href="/characters/${c.id}" style="display:flex;gap:16px;align-items:center;background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:16px;text-decoration:none;transition:border-color 0.2s,transform 0.2s;">
-      <div style="width:80px;height:80px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#2a2a2a;display:flex;align-items:center;justify-content:center;">
-        ${c.avatar_url ? `<img src="${esc(c.avatar_url)}" alt="${esc(c.character_name)}" style="width:100%;height:100%;object-fit:cover;" />` : '<span style="font-size:2rem;color:#666;">&#9876;</span>'}
-      </div>
-      <div>
-        <div style="color:#e8b923;font-weight:700;font-size:1.1rem;">${esc(c.character_name)}</div>
-        <div style="color:#aaa;font-size:0.85rem;margin-top:4px;">Lvl ${c.level} | ${esc(c.race || "Unknown")} | ${esc(classParts || c.class_summary || "Unknown")}</div>
-        <div style="color:#666;font-size:0.8rem;margin-top:4px;">Player: ${esc(c.player_name || "Unknown")}</div>
-      </div>
-    </a>`;
-  }).join("") : `<p style="color:#888;">No player characters yet. Run the extraction script to import from D&amp;D Beyond.</p>`;
-
-  const body = `
-  <div class="content">
-    <h2 class="section-title">&#9876; Player Characters</h2>
-    <p style="color:#888;margin-bottom:24px;">The heroes of the Halls of the Damned campaign. Click a character for their full sheet.</p>
-    <div style="display:flex;flex-direction:column;gap:12px;">${charCards}</div>
-  </div>
-  <style>
-    .char-card:hover { border-color:#e8b923 !important; transform:translateY(-2px); }
-  </style>`;
-  return pageShell("Characters — Halls of the Damned", "/characters", body, session);
-}
-
-// ── Character Detail Page (2024 5e Stat Block style) ──────────
-async function renderCharacterDetailPage(charId, session) {
-  try {
-    const result = await pgPool.query("SELECT * FROM hotd_player_characters WHERE id = $1", [charId]);
-    if (result.rows.length === 0) return null;
-    const c = result.rows[0];
-
-    const skills = safeJson(c.skills);
-    const equipment = safeJson(c.equipment);
-    const spells = safeJson(c.spells);
-    const features = safeJson(c.features);
-    const classesDetail = safeJson(c.classes_detail);
     const savingThrows = safeJson(c.saving_throws);
+    const skills = safeJson(c.skills);
     const attacks = safeJson(c.attacks);
 
-    const classParts = classesDetail.map(cl => cl.subclass ? `${cl.name} ${cl.level} / ${cl.subclass}` : `${cl.name} ${cl.level}`).join(" · ");
-    const mod = v => { const m = Math.floor((v - 10) / 2); return (m >= 0 ? "+" : "") + m; };
-
-    // ── Check user access for this character ──
-    let canUpdateDdb = false;
-    let canAddJournal = false;
-    const isAdmin = session && session.role === "admin";
-    if (isAdmin) { canUpdateDdb = true; canAddJournal = true; }
-    else if (session) {
-      try {
-        const accessRow = await pgPool.query("SELECT can_update_ddb, can_add_journal FROM hotd_character_access WHERE character_id = $1 AND user_id = $2", [charId, session.userId]);
-        if (accessRow.rows.length > 0) {
-          canUpdateDdb = accessRow.rows[0].can_update_ddb;
-          canAddJournal = accessRow.rows[0].can_add_journal;
-        }
-      } catch (_) {}
-    }
-
-    // ── Fetch journal entries ──
-    let journalEntries = [];
-    try {
-      const jr = await pgPool.query(`
-        SELECT j.*, a.username AS author_name
-        FROM hotd_character_journal j
-        JOIN account_info a ON a.id = j.user_id
-        WHERE j.character_id = $1
-        ORDER BY j.created_at DESC
-      `, [charId]);
-      journalEntries = jr.rows;
-    } catch (_) {}
-
-    // ── Fetch access list (admin only) ──
-    let accessList = [];
-    let allUsers = [];
-    if (isAdmin) {
-      try {
-        const ar = await pgPool.query(`
-          SELECT ca.*, a.username
-          FROM hotd_character_access ca
-          JOIN account_info a ON a.id = ca.user_id
-          WHERE ca.character_id = $1
-          ORDER BY a.username
-        `, [charId]);
-        accessList = ar.rows;
-        const ur = await pgPool.query("SELECT id, username FROM account_info WHERE is_approved = true ORDER BY username");
-        allUsers = ur.rows;
-      } catch (_) {}
-    }
-
-    // ── Ability scores ──
     const abilities = [
       { label: "STR", value: c.strength }, { label: "DEX", value: c.dexterity },
       { label: "CON", value: c.constitution }, { label: "INT", value: c.intelligence },
       { label: "WIS", value: c.wisdom }, { label: "CHA", value: c.charisma },
     ];
-    const abilityHtml = abilities.map(a => `
-      <div class="sb-ability">
-        <div class="sb-ability-mod">${mod(a.value)}</div>
-        <div class="sb-ability-label">${a.label}</div>
-        <div class="sb-ability-score">${a.value}</div>
-      </div>`).join("");
 
-    // ── Saving throws line ──
     const stLine = savingThrows.filter(st => st.proficient).map(st => {
       const sign = st.modifier >= 0 ? "+" : "";
       return `${st.name.charAt(0).toUpperCase() + st.name.slice(1)} ${sign}${st.modifier}`;
     }).join(", ") || "None";
 
-    // ── Skills (proficient/expert only) ──
     const profSkills = skills.filter(sk => sk.proficient || sk.expertise);
     const skillLine = profSkills.map(sk => {
       const sign = sk.modifier >= 0 ? "+" : "";
@@ -693,387 +601,115 @@ async function renderCharacterDetailPage(charId, session) {
       return `${esc(sk.name)} ${sign}${sk.modifier}${tag}`;
     }).join(", ") || "None";
 
-    // ── All skills list for expandable section ──
-    const allSkillsHtml = skills.map(sk => {
-      const sign = sk.modifier >= 0 ? "+" : "";
-      const cls = sk.expertise ? "expert" : (sk.proficient ? "prof" : "");
-      return `<div class="sb-skill-row"><span class="sb-dot${cls ? " " + cls : ""}"></span><span class="sb-skill-val">${sign}${sk.modifier}</span><span class="sb-skill-name">${esc(sk.name)}</span><span class="sb-skill-stat">${esc(sk.stat.slice(0, 3).toUpperCase())}</span></div>`;
-    }).join("");
-
-    // ── Attacks / Actions ──
-    const actionsHtml = attacks.length > 0 ? attacks.map(a => `
-      <div class="sb-action">
-        <span class="sb-action-name">${esc(a.name)}</span>${a.equipped ? '<span class="sb-eq-tag">EQ</span>' : ""}
-        <span class="sb-action-detail">${esc(a.range)} · Hit: <strong>${esc(a.hit)}</strong> · ${esc(a.damage)} ${esc(a.damageType || "")}</span>
-        ${a.notes ? `<span class="sb-action-notes">${esc(a.notes)}</span>` : ""}
-      </div>`).join("") : '<div class="sb-empty">No attacks.</div>';
-
-    // ── Spells (grouped by level) ──
-    let spellsHtml = "";
-    if (spells.length > 0) {
-      const byLevel = {};
-      for (const sp of spells) { const lv = sp.level || 0; if (!byLevel[lv]) byLevel[lv] = []; byLevel[lv].push(sp); }
-      for (const [lv, sps] of Object.entries(byLevel).sort((a, b) => a[0] - b[0])) {
-        const lvLabel = lv === "0" ? "Cantrips" : `Level ${lv}`;
-        spellsHtml += `<div class="sb-spell-level">${lvLabel}</div>`;
-        spellsHtml += `<div class="sb-spell-list">${sps.map(sp => `<span class="sb-spell">${esc(sp.name)}${sp.prepared ? '<sup class="sb-prep">P</sup>' : ""}</span>`).join(", ")}</div>`;
-      }
-    }
-
-    // ── Equipment ──
-    const equippedItems = equipment.filter(e => e.equipped);
-    const otherItems = equipment.filter(e => !e.equipped);
-    let equipmentHtml = "";
-    if (equippedItems.length > 0) {
-      equipmentHtml += '<div class="sb-equip-heading">Equipped</div>';
-      equipmentHtml += equippedItems.map(e => `<div class="sb-equip-row"><span>${esc(e.name)}</span>${e.quantity > 1 ? `<span class="sb-qty">×${e.quantity}</span>` : ""}</div>`).join("");
-    }
-    if (otherItems.length > 0) {
-      equipmentHtml += '<div class="sb-equip-heading">Inventory</div>';
-      equipmentHtml += otherItems.map(e => `<div class="sb-equip-row sb-unequipped"><span>${esc(e.name)}</span>${e.quantity > 1 ? `<span class="sb-qty">×${e.quantity}</span>` : ""}</div>`).join("");
-    }
-
-    // ── Features ──
-    const featuresHtml = features.length > 0 ? features.map(f => `
-      <div class="sb-feature">
-        <span class="sb-feature-name">${esc(f.name)}</span>
-        <span class="sb-feature-src">${esc(f.source)}</span>
-      </div>`).join("") : '<div class="sb-empty">No features.</div>';
-
-    // ── Backstory section ──
-    const backstorySection = (c.backstory || c.personality_traits || c.ideals || c.bonds || c.flaws || c.notes) ? `
-      <div class="sb-divider"></div>
-      <div class="sb-section-title">Backstory &amp; Personality</div>
-      ${c.personality_traits ? `<div class="sb-trait"><span class="sb-trait-label">Personality Traits.</span> ${esc(c.personality_traits)}</div>` : ""}
-      ${c.ideals ? `<div class="sb-trait"><span class="sb-trait-label">Ideals.</span> ${esc(c.ideals)}</div>` : ""}
-      ${c.bonds ? `<div class="sb-trait"><span class="sb-trait-label">Bonds.</span> ${esc(c.bonds)}</div>` : ""}
-      ${c.flaws ? `<div class="sb-trait"><span class="sb-trait-label">Flaws.</span> ${esc(c.flaws)}</div>` : ""}
-      ${c.backstory ? `<div class="sb-backstory">${esc(c.backstory).replace(/\n/g, "<br/>")}</div>` : ""}
-      ${c.notes ? `<div class="sb-trait"><span class="sb-trait-label">Notes.</span> ${esc(c.notes).replace(/\n/g, "<br/>")}</div>` : ""}
-    ` : "";
-
-    // ── Journal entries ──
-    const journalHtml = journalEntries.length > 0 ? journalEntries.map(j => `
-      <div class="sb-journal-entry">
-        <div class="sb-journal-header">
-          <span class="sb-journal-title">${esc(j.title)}</span>
-          <span class="sb-journal-meta">${esc(j.author_name)} · ${new Date(j.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-          ${(isAdmin || (session && session.userId === j.user_id)) ? `<form method="POST" action="/api/character-journal/delete" style="display:inline;margin-left:8px;"><input type="hidden" name="journalId" value="${j.id}"><input type="hidden" name="characterId" value="${charId}"><button class="sb-journal-del" title="Delete">&times;</button></form>` : ""}
-        </div>
-        <div class="sb-journal-body">${esc(j.body).replace(/\n/g, "<br/>")}</div>
-      </div>`).join("") : '<div class="sb-empty">No journal entries yet.</div>';
-
-    // ── Add journal form ──
-    const addJournalForm = canAddJournal ? `
-      <form method="POST" action="/api/character-journal/add" class="sb-journal-form">
-        <input type="hidden" name="characterId" value="${charId}">
-        <input type="text" name="title" placeholder="Entry title…" required class="sb-journal-input" />
-        <textarea name="body" placeholder="Write your journal entry…" required rows="4" class="sb-journal-textarea"></textarea>
-        <button type="submit" class="sb-btn">Add Journal Entry</button>
-      </form>` : (session ? '<div class="sb-access-note">You don\'t have permission to add journal entries for this character. Ask an admin for access.</div>' : '<div class="sb-access-note"><a href="/login" style="color:#c83232;">Log in</a> to add journal entries.</div>');
-
-    // ── Admin: Access control panel ──
-    let accessPanel = "";
-    if (isAdmin) {
-      const existingIds = new Set(accessList.map(a => a.user_id));
-      const availableUsers = allUsers.filter(u => !existingIds.has(u.id));
-      accessPanel = `
-      <div class="sb-divider"></div>
-      <div class="sb-section-title">&#128274; Character Access Control</div>
-      <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">Manage who can force-update from D&amp;D Beyond and add journal entries for this character.</p>
-      ${accessList.length > 0 ? `<table class="sb-access-table">
-        <thead><tr><th>User</th><th>Update DDB</th><th>Add Journal</th><th></th></tr></thead>
-        <tbody>${accessList.map(a => `<tr>
-          <td>${esc(a.username)}</td>
-          <td style="text-align:center;">${a.can_update_ddb ? "&#9989;" : "&#10060;"}</td>
-          <td style="text-align:center;">${a.can_add_journal ? "&#9989;" : "&#10060;"}</td>
-          <td>
-            <form method="POST" action="/api/character-access/toggle" style="display:inline;">
-              <input type="hidden" name="characterId" value="${charId}">
-              <input type="hidden" name="userId" value="${a.user_id}">
-              <input type="hidden" name="field" value="can_update_ddb">
-              <input type="hidden" name="current" value="${a.can_update_ddb}">
-              <button class="sb-access-btn" title="Toggle DDB access">DDB</button>
-            </form>
-            <form method="POST" action="/api/character-access/toggle" style="display:inline;">
-              <input type="hidden" name="characterId" value="${charId}">
-              <input type="hidden" name="userId" value="${a.user_id}">
-              <input type="hidden" name="field" value="can_add_journal">
-              <input type="hidden" name="current" value="${a.can_add_journal}">
-              <button class="sb-access-btn" title="Toggle journal access">Journal</button>
-            </form>
-            <form method="POST" action="/api/character-access/remove" style="display:inline;">
-              <input type="hidden" name="characterId" value="${charId}">
-              <input type="hidden" name="userId" value="${a.user_id}">
-              <button class="sb-access-btn sb-danger" title="Remove access">&times;</button>
-            </form>
-          </td>
-        </tr>`).join("")}</tbody>
-      </table>` : '<p style="color:#666;font-size:0.85rem;">No user access grants yet.</p>'}
-      ${availableUsers.length > 0 ? `
-      <form method="POST" action="/api/character-access/add" class="sb-access-form">
-        <input type="hidden" name="characterId" value="${charId}">
-        <select name="userId" class="sb-journal-input" style="flex:1;" required>
-          <option value="">Select user…</option>
-          ${availableUsers.map(u => `<option value="${u.id}">${esc(u.username)}</option>`).join("")}
-        </select>
-        <label style="color:#aaa;font-size:0.8rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" name="can_update_ddb" value="true"> DDB Update</label>
-        <label style="color:#aaa;font-size:0.8rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" name="can_add_journal" value="true" checked> Journal</label>
-        <button type="submit" class="sb-btn">Grant Access</button>
-      </form>` : ""}`;
-    }
-
-    // ── Force Update from DDB button ──
-    const updateBtn = canUpdateDdb && c.ddb_character_id ? `
-      <form method="POST" action="/api/character/refresh-ddb" style="display:inline;">
-        <input type="hidden" name="characterId" value="${charId}">
-        <button class="sb-btn sb-btn-refresh" title="Pull latest data from D&amp;D Beyond">&#8635; Refresh from D&amp;D Beyond</button>
-      </form>` : "";
-
     const initSign = c.initiative >= 0 ? "+" : "";
 
-    const body = `
-    <div class="content sb-page">
-      <!-- ═══ TOP BORDER ═══ -->
-      <div class="sb-border-top"></div>
+    const equippedAttacks = attacks.filter(a => a.equipped);
+    const displayAttacks = equippedAttacks.length > 0 ? equippedAttacks : attacks.slice(0, 3);
+    const actionsHtml = displayAttacks.length > 0 ? displayAttacks.map(a => `
+      <div class="sb-action">
+        <span class="sb-action-name">${esc(a.name)}</span>
+        <span class="sb-action-detail">${esc(a.range)} · Hit: <strong>${esc(a.hit)}</strong> · ${esc(a.damage)} ${esc(a.damageType || "")}</span>
+      </div>`).join("") : '<div class="sb-empty">No actions.</div>';
 
-      <!-- ═══ HEADER ═══ -->
-      <div class="sb-header">
-        <div class="sb-avatar-wrap">
-          ${c.avatar_url ? `<img src="${esc(c.avatar_url)}" alt="${esc(c.character_name)}" />` : '<span class="sb-avatar-ph">&#9876;</span>'}
-        </div>
-        <div class="sb-header-info">
-          <h1 class="sb-name">${esc(c.character_name)}</h1>
-          <div class="sb-tagline">${esc(c.race || "Unknown")} · ${esc(classParts || c.class_summary || "Unknown")}</div>
-          <div class="sb-tagline-sub">${esc(c.background || "")}${c.alignment ? " · " + esc(c.alignment) : ""}${c.faith ? " · " + esc(c.faith) : ""}</div>
-          <div class="sb-player">Player: ${esc(c.player_name || "Unknown")} ${updateBtn}</div>
-        </div>
+    return `
+    <div class="sb-card" id="character-${c.id}">
+      <div class="sb-card-img">
+        ${c.avatar_url ? `<img src="${esc(c.avatar_url)}" alt="${esc(c.character_name)}" />` : '<span class="sb-avatar-ph">&#9876;</span>'}
       </div>
-
-      <div class="sb-divider"></div>
-
-      <!-- ═══ CORE STATS ═══ -->
-      <div class="sb-core-stats">
-        <div class="sb-core"><span class="sb-core-label">Armor Class</span><span class="sb-core-val sb-shield">${c.armor_class}</span></div>
-        <div class="sb-core"><span class="sb-core-label">Hit Points</span><span class="sb-core-val">${c.hit_points} / ${c.max_hit_points}</span></div>
-        <div class="sb-core"><span class="sb-core-label">Speed</span><span class="sb-core-val">${c.speed} ft</span></div>
-        <div class="sb-core"><span class="sb-core-label">Initiative</span><span class="sb-core-val">${initSign}${c.initiative}</span></div>
-        <div class="sb-core"><span class="sb-core-label">Proficiency</span><span class="sb-core-val">+${c.proficiency_bonus}</span></div>
-      </div>
-
-      <div class="sb-divider"></div>
-
-      <!-- ═══ ABILITY SCORES ═══ -->
-      <div class="sb-ability-row">${abilityHtml}</div>
-
-      <div class="sb-divider"></div>
-
-      <!-- ═══ STAT BLOCK BODY ═══ -->
-      <div class="sb-property"><span class="sb-prop-label">Saving Throws</span> ${esc(stLine)}</div>
-      <div class="sb-property"><span class="sb-prop-label">Skills</span> ${esc(skillLine)}</div>
-      ${c.senses ? `<div class="sb-property"><span class="sb-prop-label">Senses</span> ${esc(c.senses)}</div>` : ""}
-      ${c.languages ? `<div class="sb-property"><span class="sb-prop-label">Languages</span> ${esc(c.languages)}</div>` : ""}
-      ${c.defenses ? `<div class="sb-property"><span class="sb-prop-label">Defenses</span> ${esc(c.defenses)}</div>` : ""}
-      <div class="sb-property"><span class="sb-prop-label">Passive Perception</span> ${c.passive_perception}</div>
-      ${c.armor_proficiencies ? `<div class="sb-property"><span class="sb-prop-label">Armor</span> ${esc(c.armor_proficiencies)}</div>` : ""}
-      ${c.weapon_proficiencies ? `<div class="sb-property"><span class="sb-prop-label">Weapons</span> ${esc(c.weapon_proficiencies)}</div>` : ""}
-      ${c.tool_proficiencies ? `<div class="sb-property"><span class="sb-prop-label">Tools</span> ${esc(c.tool_proficiencies)}</div>` : ""}
-
-      <!-- ═══ FULL SKILLS (Expandable) ═══ -->
-      <div class="sb-divider"></div>
-      <details class="sb-details">
-        <summary class="sb-section-title sb-toggle">All Skills</summary>
-        <div class="sb-skills-grid">${allSkillsHtml}</div>
-      </details>
-
-      <!-- ═══ TABS: Actions / Spells / Equipment / Features ═══ -->
-      <div class="sb-divider"></div>
-      <div class="sb-tabs-wrap">
-        <div class="sb-tabs">
-          <button class="sb-tab active" onclick="switchSBTab(this,'actions')">Actions</button>
-          <button class="sb-tab" onclick="switchSBTab(this,'spells')">Spells</button>
-          <button class="sb-tab" onclick="switchSBTab(this,'equipment')">Equipment</button>
-          <button class="sb-tab" onclick="switchSBTab(this,'features')">Features</button>
+      <div class="sb-card-block">
+        <div class="sb-border-top"></div>
+        <h2 class="sb-name">${esc(c.character_name)}</h2>
+        <div class="sb-tagline">${esc(c.race || "Unknown")} · ${esc(classParts || c.class_summary || "Unknown")}</div>
+        <div class="sb-tagline-sub">${esc(c.background || "")}${c.alignment ? " · " + esc(c.alignment) : ""}</div>
+        <div class="sb-player">Player: ${esc(c.player_name || "Unknown")}</div>
+        <div class="sb-divider"></div>
+        <div class="sb-core-stats">
+          <div class="sb-core"><span class="sb-core-label">AC</span><span class="sb-core-val sb-shield">${c.armor_class}</span></div>
+          <div class="sb-core"><span class="sb-core-label">HP</span><span class="sb-core-val">${c.hit_points}/${c.max_hit_points}</span></div>
+          <div class="sb-core"><span class="sb-core-label">Speed</span><span class="sb-core-val">${c.speed} ft</span></div>
+          <div class="sb-core"><span class="sb-core-label">Init</span><span class="sb-core-val">${initSign}${c.initiative}</span></div>
+          <div class="sb-core"><span class="sb-core-label">Prof</span><span class="sb-core-val">+${c.proficiency_bonus}</span></div>
         </div>
-        <div class="sb-tab-content" id="sb-tab-actions">${actionsHtml}</div>
-        <div class="sb-tab-content" id="sb-tab-spells" style="display:none;">${spellsHtml || '<div class="sb-empty">No spells.</div>'}</div>
-        <div class="sb-tab-content" id="sb-tab-equipment" style="display:none;">${equipmentHtml || '<div class="sb-empty">No items.</div>'}</div>
-        <div class="sb-tab-content" id="sb-tab-features" style="display:none;">${featuresHtml}</div>
+        <div class="sb-divider"></div>
+        <div class="sb-ability-row">
+          ${abilities.map(a => `<div class="sb-ability"><div class="sb-ability-mod">${mod(a.value)}</div><div class="sb-ability-label">${a.label}</div><div class="sb-ability-score">${a.value}</div></div>`).join("")}
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-property"><span class="sb-prop-label">Saving Throws</span> ${esc(stLine)}</div>
+        <div class="sb-property"><span class="sb-prop-label">Skills</span> ${esc(skillLine)}</div>
+        ${c.senses ? `<div class="sb-property"><span class="sb-prop-label">Senses</span> ${esc(c.senses)}</div>` : ""}
+        ${c.languages ? `<div class="sb-property"><span class="sb-prop-label">Languages</span> ${esc(c.languages)}</div>` : ""}
+        ${c.defenses ? `<div class="sb-property"><span class="sb-prop-label">Defenses</span> ${esc(c.defenses)}</div>` : ""}
+        <div class="sb-divider"></div>
+        <div class="sb-section-title">Actions</div>
+        ${actionsHtml}
+        <div class="sb-border-bottom"></div>
       </div>
+    </div>`;
+  }).join("") : '<p style="color:#888;">No player characters yet.</p>';
 
-      <!-- ═══ BACKSTORY ═══ -->
-      ${backstorySection}
+  const body = `
+  <div class="content">
+    <h2 class="section-title">&#9876; Player Characters</h2>
+    <p style="color:#888;margin-bottom:24px;">The heroes of the Halls of the Damned campaign.</p>
+    <div class="sb-list">${charBlocks}</div>
+  </div>
+  <style>
+    /* ═══ 2024 Stat Block Cards ═══ */
+    .sb-list { display:flex; flex-direction:column; gap:32px; }
+    .sb-card { display:flex; gap:24px; background:#1e1e1e; border:1px solid #333; border-radius:12px; padding:24px; }
+    .sb-card-img { width:200px; flex-shrink:0; display:flex; align-items:flex-start; justify-content:center; }
+    .sb-card-img img { width:200px; height:200px; object-fit:cover; border-radius:10px; border:3px solid #c83232; box-shadow:0 0 12px rgba(200,50,50,0.25); }
+    .sb-card-block { flex:1; min-width:0; }
+    .sb-avatar-ph { font-size:4rem; color:#666; }
 
-      <!-- ═══ JOURNAL ═══ -->
-      <div class="sb-divider"></div>
-      <div class="sb-section-title">&#128214; Campaign Journal</div>
-      <p style="color:#888;font-size:0.8rem;margin-bottom:12px;">Player notes and campaign log entries. Journal entries are tracked only on this site and are not synced to D&amp;D Beyond.</p>
-      ${journalHtml}
-      ${addJournalForm}
+    /* ── Ornamental borders ── */
+    .sb-border-top, .sb-border-bottom { height:4px; background:linear-gradient(90deg, transparent, #c83232, transparent); border-radius:2px; margin-bottom:12px; }
+    .sb-border-bottom { margin-top:12px; margin-bottom:0; }
+    .sb-divider { height:2px; background:linear-gradient(90deg, transparent 0%, #c83232 20%, #c83232 80%, transparent 100%); margin:10px 0; opacity:0.6; }
 
-      <!-- ═══ ACCESS CONTROL (Admin only) ═══ -->
-      ${accessPanel}
+    /* ── Header ── */
+    .sb-name { color:#c83232; margin:0 0 4px; font-size:1.5rem; font-weight:700; font-variant:small-caps; letter-spacing:1px; }
+    .sb-tagline { color:#ccc; font-size:0.9rem; font-style:italic; }
+    .sb-tagline-sub { color:#888; font-size:0.8rem; margin-top:2px; }
+    .sb-player { color:#666; font-size:0.75rem; margin-top:4px; }
 
-      <div class="sb-divider"></div>
-      <div class="sb-border-bottom"></div>
-      <div style="margin-top:24px;text-align:center;"><a href="/characters" style="color:#c83232;text-decoration:none;font-weight:600;">&larr; Back to All Characters</a></div>
-    </div>
+    /* ── Core stat boxes ── */
+    .sb-core-stats { display:flex; gap:8px; flex-wrap:wrap; }
+    .sb-core { display:flex; flex-direction:column; align-items:center; min-width:70px; background:#111; border:1px solid #333; border-radius:6px; padding:6px 10px; }
+    .sb-core-label { color:#888; font-size:0.6rem; text-transform:uppercase; letter-spacing:1px; }
+    .sb-core-val { color:#e8e8e8; font-size:1.1rem; font-weight:700; margin-top:2px; }
+    .sb-shield { color:#c83232; }
 
-    <script>
-    function switchSBTab(btn, tabId) {
-      btn.closest('.sb-tabs-wrap').querySelectorAll('.sb-tab-content').forEach(tc => tc.style.display = 'none');
-      btn.closest('.sb-tabs').querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('sb-tab-' + tabId).style.display = 'block';
+    /* ── Ability scores ── */
+    .sb-ability-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .sb-ability { width:60px; text-align:center; background:#111; border:2px solid #c83232; border-radius:8px; padding:6px 0; }
+    .sb-ability-mod { color:#fff; font-size:1.2rem; font-weight:700; }
+    .sb-ability-label { color:#c83232; font-size:0.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-top:1px; }
+    .sb-ability-score { color:#666; font-size:0.65rem; margin-top:1px; }
+
+    /* ── Properties ── */
+    .sb-property { font-size:0.82rem; color:#ccc; padding:2px 0; line-height:1.4; }
+    .sb-prop-label { color:#c83232; font-weight:700; font-style:italic; }
+    .sb-prop-label::after { content:" "; }
+
+    /* ── Actions ── */
+    .sb-section-title { color:#c83232; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+    .sb-action { padding:4px 0; border-bottom:1px solid #222; }
+    .sb-action-name { color:#c83232; font-weight:700; font-style:italic; font-size:0.82rem; }
+    .sb-action-detail { color:#aaa; font-size:0.78rem; display:block; margin-top:1px; }
+    .sb-action-detail strong { color:#ccc; }
+    .sb-empty { color:#666; font-size:0.82rem; font-style:italic; }
+
+    @media (max-width: 700px) {
+      .sb-card { flex-direction:column; align-items:center; text-align:center; }
+      .sb-card-img { width:150px; }
+      .sb-card-img img { width:150px; height:150px; }
+      .sb-ability-row, .sb-core-stats { justify-content:center; }
+      .sb-property, .sb-action { text-align:left; }
     }
-    </script>
-    <style>
-      /* ═══ 2024 5e Stat Block — Dark Mode ═══ */
-      .sb-page { max-width:800px; margin:0 auto; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; }
-
-      /* ── Red ornamental borders (5e style) ── */
-      .sb-border-top, .sb-border-bottom {
-        height:5px; background:linear-gradient(90deg, transparent, #c83232, transparent);
-        border-radius:2px; margin-bottom:16px;
-      }
-      .sb-border-bottom { margin-top:16px; margin-bottom:0; }
-      .sb-divider {
-        height:2px; background:linear-gradient(90deg, transparent 0%, #c83232 20%, #c83232 80%, transparent 100%);
-        margin:16px 0; opacity:0.6;
-      }
-
-      /* ── Header ── */
-      .sb-header { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
-      .sb-avatar-wrap {
-        width:120px; height:120px; border-radius:50%; overflow:hidden; flex-shrink:0;
-        background:#2a2a2a; display:flex; align-items:center; justify-content:center;
-        border:3px solid #c83232; box-shadow:0 0 12px rgba(200,50,50,0.25);
-      }
-      .sb-avatar-wrap img { width:100%; height:100%; object-fit:cover; }
-      .sb-avatar-ph { font-size:3rem; color:#666; }
-      .sb-name { color:#c83232; margin:0; font-size:2rem; font-weight:700; font-variant:small-caps; letter-spacing:1px; }
-      .sb-tagline { color:#ccc; font-size:1rem; margin-top:4px; font-style:italic; }
-      .sb-tagline-sub { color:#888; font-size:0.85rem; margin-top:2px; }
-      .sb-player { color:#666; font-size:0.8rem; margin-top:6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-
-      /* ── Core stat boxes ── */
-      .sb-core-stats { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-      .sb-core {
-        display:flex; flex-direction:column; align-items:center; min-width:100px;
-        background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px 16px;
-      }
-      .sb-core-label { color:#888; font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; }
-      .sb-core-val { color:#e8e8e8; font-size:1.3rem; font-weight:700; margin-top:4px; }
-      .sb-shield { color:#c83232; }
-
-      /* ── Ability scores ── */
-      .sb-ability-row { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
-      .sb-ability {
-        width:80px; text-align:center; background:#1a1a1a; border:2px solid #c83232;
-        border-radius:10px; padding:10px 0; position:relative;
-      }
-      .sb-ability-mod { color:#fff; font-size:1.6rem; font-weight:700; }
-      .sb-ability-label { color:#c83232; font-size:0.7rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; }
-      .sb-ability-score { color:#666; font-size:0.75rem; margin-top:2px; }
-
-      /* ── Properties (inline label+value, 5e style) ── */
-      .sb-property { font-size:0.88rem; color:#ccc; padding:3px 0; line-height:1.5; }
-      .sb-prop-label { color:#c83232; font-weight:700; font-style:italic; }
-      .sb-prop-label::after { content:" "; }
-
-      /* ── Skills grid ── */
-      .sb-details { margin-top:-8px; }
-      .sb-toggle { cursor:pointer; user-select:none; }
-      .sb-toggle::marker { color:#c83232; }
-      .sb-skills-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 24px; margin-top:8px; }
-      .sb-skill-row { display:flex; align-items:center; gap:5px; font-size:0.82rem; padding:2px 0; }
-      .sb-dot { width:7px; height:7px; border-radius:50%; border:1.5px solid #555; flex-shrink:0; }
-      .sb-dot.prof { background:#c83232; border-color:#c83232; }
-      .sb-dot.expert { background:#c83232; border-color:#c83232; box-shadow:0 0 4px #c83232; }
-      .sb-skill-val { color:#aaa; width:26px; text-align:right; font-variant-numeric:tabular-nums; }
-      .sb-skill-name { color:#ccc; }
-      .sb-skill-stat { color:#555; font-size:0.6rem; margin-left:auto; }
-
-      /* ── Tabs ── */
-      .sb-tabs-wrap { }
-      .sb-tabs { display:flex; gap:0; border-bottom:2px solid #c83232; margin-bottom:12px; }
-      .sb-tab { background:none; border:none; color:#888; font-size:0.8rem; font-weight:600; padding:8px 16px; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid transparent; margin-bottom:-2px; }
-      .sb-tab:hover { color:#ccc; }
-      .sb-tab.active { color:#c83232; border-bottom-color:#c83232; }
-      .sb-tab-content { padding:4px 0; }
-
-      /* ── Actions ── */
-      .sb-action { padding:6px 0; border-bottom:1px solid #222; }
-      .sb-action-name { color:#c83232; font-weight:700; font-style:italic; font-size:0.9rem; }
-      .sb-eq-tag { background:#16a34a22; color:#4ade80; font-size:0.6rem; padding:1px 5px; border-radius:3px; font-weight:700; margin-left:6px; vertical-align:middle; }
-      .sb-action-detail { color:#aaa; font-size:0.82rem; display:block; margin-top:2px; }
-      .sb-action-detail strong { color:#ccc; }
-      .sb-action-notes { color:#666; font-size:0.75rem; display:block; margin-top:2px; font-style:italic; }
-
-      /* ── Spells ── */
-      .sb-spell-level { color:#c83232; font-weight:700; font-style:italic; font-size:0.85rem; margin:10px 0 4px; }
-      .sb-spell-list { color:#ccc; font-size:0.85rem; line-height:1.6; }
-      .sb-spell { white-space:nowrap; }
-      .sb-prep { color:#4ade80; font-size:0.6rem; }
-
-      /* ── Equipment ── */
-      .sb-equip-heading { color:#c83232; font-weight:700; font-style:italic; font-size:0.82rem; margin:10px 0 4px; }
-      .sb-equip-row { display:flex; justify-content:space-between; font-size:0.85rem; padding:3px 0; border-bottom:1px solid #222; color:#ccc; }
-      .sb-equip-row.sb-unequipped { color:#888; }
-      .sb-qty { color:#666; }
-
-      /* ── Features ── */
-      .sb-feature { padding:4px 0; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:baseline; }
-      .sb-feature-name { color:#c83232; font-weight:700; font-style:italic; font-size:0.88rem; }
-      .sb-feature-src { color:#666; font-size:0.72rem; }
-
-      /* ── Backstory ── */
-      .sb-section-title { color:#c83232; font-size:0.9rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-      .sb-trait { font-size:0.88rem; color:#ccc; margin-bottom:8px; line-height:1.5; }
-      .sb-trait-label { font-weight:700; font-style:italic; color:#c83232; }
-      .sb-backstory { font-size:0.88rem; color:#aaa; line-height:1.6; margin-top:8px; padding:10px; background:#1a1a1a; border-radius:6px; border-left:3px solid #c83232; }
-
-      /* ── Journal ── */
-      .sb-journal-entry { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:8px; padding:12px 16px; margin-bottom:10px; }
-      .sb-journal-header { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
-      .sb-journal-title { color:#c83232; font-weight:700; font-size:0.95rem; }
-      .sb-journal-meta { color:#666; font-size:0.75rem; margin-left:auto; }
-      .sb-journal-del { background:none; border:none; color:#666; cursor:pointer; font-size:1rem; padding:0 4px; }
-      .sb-journal-del:hover { color:#f44; }
-      .sb-journal-body { color:#ccc; font-size:0.85rem; line-height:1.5; }
-      .sb-journal-form { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-      .sb-journal-input { background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:8px 12px; color:#ccc; font-size:0.85rem; }
-      .sb-journal-input:focus, .sb-journal-textarea:focus { border-color:#c83232; outline:none; }
-      .sb-journal-textarea { background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:8px 12px; color:#ccc; font-size:0.85rem; resize:vertical; font-family:inherit; }
-      .sb-btn { background:#c83232; color:#fff; border:none; border-radius:6px; padding:8px 18px; font-size:0.82rem; font-weight:600; cursor:pointer; align-self:flex-start; }
-      .sb-btn:hover { background:#a82828; }
-      .sb-btn-refresh { background:#2a2a2a; color:#c83232; border:1px solid #c83232; font-size:0.75rem; padding:5px 12px; }
-      .sb-btn-refresh:hover { background:#c83232; color:#fff; }
-      .sb-access-note { color:#888; font-size:0.82rem; margin-top:8px; font-style:italic; }
-
-      /* ── Access control ── */
-      .sb-access-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-bottom:12px; }
-      .sb-access-table th { color:#888; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px; text-align:left; padding:6px 8px; border-bottom:1px solid #333; }
-      .sb-access-table td { padding:6px 8px; color:#ccc; border-bottom:1px solid #222; }
-      .sb-access-btn { background:#2a2a2a; color:#aaa; border:1px solid #444; border-radius:4px; padding:2px 8px; font-size:0.7rem; cursor:pointer; margin-right:4px; }
-      .sb-access-btn:hover { color:#c83232; border-color:#c83232; }
-      .sb-access-btn.sb-danger:hover { color:#f44; border-color:#f44; }
-      .sb-access-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
-
-      .sb-empty { color:#666; font-size:0.85rem; font-style:italic; padding:8px 0; }
-
-      @media (max-width: 600px) {
-        .sb-header { flex-direction:column; text-align:center; }
-        .sb-player { justify-content:center; }
-        .sb-skills-grid { grid-template-columns:1fr; }
-        .sb-core-stats { gap:8px; }
-        .sb-core { min-width:80px; padding:8px 10px; }
-        .sb-ability { width:65px; }
-        .sb-access-form { flex-direction:column; align-items:flex-start; }
-      }
-    </style>`;
-    return pageShell(c.character_name + " — Characters — Halls of the Damned", "/characters", body, session);
-  } catch (err) { console.error("Character detail error:", err); return null; }
+  </style>`;
+  return pageShell("Characters — Halls of the Damned", "/characters", body, session);
 }
 
 // ── History Page (rendered from markdown) ─────────────────────
@@ -1785,7 +1421,6 @@ module.exports = {
   renderNpcDetailPage,
   renderSessionsPage,
   renderCharactersPage,
-  renderCharacterDetailPage,
   renderHistoryPage,
   renderArtifactsPage,
   renderHandoutsPage,

@@ -4,6 +4,14 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-04-15
+
+### Changed
+- Characters page redesigned as a single-page view with 2024-style stat block cards (image + stat block side-by-side)
+- Removed individual character detail pages — `/characters/:id` now redirects to `/characters`
+- Player names now show real names instead of D&D Beyond handles
+- Dropped character journal and access control features (will be re-added later)
+
 ## [1.7.1] - 2026-04-15
 
 ### Changed
