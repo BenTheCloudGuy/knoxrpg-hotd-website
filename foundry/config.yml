@@ -1,0 +1,98 @@
+# ═══════════════════════════════════════════════════════════════
+# FoundryVTT v13 — Dev Container Configuration
+# ═══════════════════════════════════════════════════════════════
+# This file drives automated setup of FoundryVTT inside the
+# devcontainer.  The setup script (.devcontainer/scripts/setup-foundry.sh)
+# reads this YAML to install modules, apply settings, etc.
+#
+# To add your FoundryVTT license key, set the environment variable
+#   FOUNDRY_LICENSE_KEY  (or add it to .devcontainer/.env)
+# ═══════════════════════════════════════════════════════════════
+
+foundry:
+  # FoundryVTT version to install
+  version: "13"
+
+  # Paths inside the container
+  installDir: /home/node/foundryvtt
+  dataDir: /home/node/foundrydata
+
+  # Network
+  port: 30000
+  # routePrefix: null
+
+  # ── World (auto-created for dev/testing) ─────────────────────
+  world:
+    name: hotd-dev
+    title: "Halls of the Damned — Dev World"
+    system: dnd5e
+
+  # ── Required Game System ─────────────────────────────────────
+  system:
+    id: dnd5e
+    # Leave version blank to pull latest compatible release
+    version: ""
+
+  # ── Required Modules ─────────────────────────────────────────
+  # These are auto-installed by the setup script.
+  # Add any module your HotD integration depends on.
+  modules:
+    # ── Core utility / developer modules ───────────────────────
+    - id: _dev-mode
+      version: ""
+      description: "Developer Mode — enables debug flags & hot-reload helpers"
+
+    - id: lib-wrapper
+      version: ""
+      description: "libWrapper — safe monkey-patching library used by many modules"
+
+    - id: socketlib
+      version: ""
+      description: "socketlib — simplified cross-client socket communication"
+
+    # ── UI / UX ────────────────────────────────────────────────
+    - id: tidy5e-sheet
+      version: ""
+      description: "Tidy5e Sheet — enhanced D&D 5e character/NPC sheets"
+
+    - id: monk-active-tiles
+      version: ""
+      description: "Monk's Active Tile Triggers — event-driven tile automation"
+
+    # ── Journal / Lore ─────────────────────────────────────────
+    - id: monks-enhanced-journal
+      version: ""
+      description: "Monk's Enhanced Journal — rich journal entries & encounters"
+
+    # ── Maps & Scenes ──────────────────────────────────────────
+    - id: smalltime
+      version: ""
+      description: "SmallTime — in-game clock & calendar widget"
+
+    # ── Combat ─────────────────────────────────────────────────
+    - id: midi-qol
+      version: ""
+      description: "Midi QOL — automated attack/damage/save workflows"
+
+    - id: dfreds-convenient-effects
+      version: ""
+      description: "DFreds Convenient Effects — one-click status effect library"
+
+  # ── FoundryVTT Settings Overrides ────────────────────────────
+  # Applied to the dev world on first launch.
+  # Keys use the Foundry settings format: <module>.<key>
+  settings:
+    core.animateRollTable: false
+    core.chatBubblesPan: false
+    core.noCanvas: false
+    # Developer-friendly defaults
+    _dev-mode.enableAutoHotReload: true
+    _dev-mode.enablePackageDebugging: true
+
+  # ── Local HotD Module (your in-development module) ───────────
+  # Symlinked into the Foundry modules directory automatically.
+  localModule:
+    # Path relative to workspace root
+    srcPath: foundry/hotd-module
+    # Module ID (must match module.json → id)
+    id: hotd-website-integration

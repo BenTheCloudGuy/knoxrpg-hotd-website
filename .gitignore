@@ -23,6 +23,9 @@ npm-debug.log*
 helm/**/values-local.yaml
 helm/**/secrets.yaml
 
+# FoundryVTT runtime (proprietary — never commit)
+.foundry/
+
 # Block temp files
 TO-DO.md
 dm-ai-config.md

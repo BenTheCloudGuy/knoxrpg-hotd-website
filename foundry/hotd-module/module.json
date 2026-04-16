@@ -1,0 +1,49 @@
+{
+  "id": "hotd-website-integration",
+  "title": "Halls of the Damned — Website Integration",
+  "description": "Integrates the KnoxRPG HotD campaign website with FoundryVTT, syncing session data, NPCs, maps, and campaign lore.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "BenTheCloudGuy",
+      "url": "https://github.com/BenTheCloudGuy"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {}
+      }
+    ],
+    "requires": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "compatibility": {}
+      },
+      {
+        "id": "socketlib",
+        "type": "module",
+        "compatibility": {}
+      }
+    ]
+  },
+  "esmodules": ["scripts/hotd-integration.mjs"],
+  "styles": ["styles/hotd-integration.css"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "url": "https://github.com/BenTheCloudGuy/knoxrpg-hotd-website",
+  "manifest": "",
+  "download": ""
+}

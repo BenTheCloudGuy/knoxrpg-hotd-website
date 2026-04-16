@@ -1,0 +1,6 @@
+{
+  "HOTD.Settings.WebsiteUrl": "HotD Website URL",
+  "HOTD.Settings.WebsiteUrlHint": "Base URL of the Halls of the Damned campaign website",
+  "HOTD.Settings.SyncEnabled": "Enable Sync",
+  "HOTD.Settings.SyncEnabledHint": "Automatically sync session data between FoundryVTT and the website"
+}
