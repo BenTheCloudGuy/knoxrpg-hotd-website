@@ -85,7 +85,7 @@ async function handleAdminRoutes(decoded, req, res, session) {
     } else { const body = await readBody(req); form = parseForm(body); }
     if (!portraitUrl && form.portrait_url) portraitUrl = form.portrait_url;
     const isHiddenAdd = form.is_hidden !== "false";
-    try { await pgPool.query("INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", [form.name, form.race||"", form.npc_class||"", form.location||"", form.status||"Unknown", form.alignment_tag||"neutral", portraitUrl, form.description||"", parseInt(form.sort_order)||0, isHiddenAdd]); } catch (e) { console.error("Add NPC:", e.message); }
+    try { await pgPool.query("INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,dm_notes,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)", [form.name, form.race||"", form.npc_class||"", form.location||"", form.status||"Unknown", form.alignment_tag||"neutral", portraitUrl, form.description||"", form.dm_notes||"", parseInt(form.sort_order)||0, isHiddenAdd]); } catch (e) { console.error("Add NPC:", e.message); }
     res.writeHead(302, { Location: "/npcs/admin" }); res.end(); return true;
   }
   if (decoded === "/admin/npcs/delete") {
@@ -106,7 +106,7 @@ async function handleAdminRoutes(decoded, req, res, session) {
     } else { const body = await readBody(req); form = parseForm(body); }
     if (!portraitUrl && form.portrait_url) portraitUrl = form.portrait_url;
     const isHiddenUpd = form.is_hidden !== "false";
-    try { await pgPool.query("UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,sort_order=$9,is_hidden=$10 WHERE id=$11", [form.name, form.race||"", form.npc_class||"", form.location||"", form.status||"", form.alignment_tag||"neutral", portraitUrl, form.description||"", parseInt(form.sort_order)||0, isHiddenUpd, form.id]); } catch (e) { console.error("Update NPC:", e.message); }
+    try { await pgPool.query("UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,dm_notes=$9,sort_order=$10,is_hidden=$11 WHERE id=$12", [form.name, form.race||"", form.npc_class||"", form.location||"", form.status||"", form.alignment_tag||"neutral", portraitUrl, form.description||"", form.dm_notes||"", parseInt(form.sort_order)||0, isHiddenUpd, form.id]); } catch (e) { console.error("Update NPC:", e.message); }
     res.writeHead(302, { Location: "/npcs/admin" }); res.end(); return true;
   }
 

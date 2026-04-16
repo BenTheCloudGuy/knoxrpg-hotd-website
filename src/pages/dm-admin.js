@@ -307,12 +307,13 @@ async function renderDmAdminPage(session) {
         <div class="dmc-panel-bar"><h2>NPCs</h2>
           <div class="dmc-bar-actions">
             <input id="npc-search" placeholder="Filter NPCs..." oninput="filterNpcs()" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;width:180px;" />
+            <button class="dmc-btn dmc-btn-sm" onclick="splitNpcDescriptions()" title="Use AI to split existing descriptions into Player/DM fields" style="background:#2a1a3a;color:#c084fc;border:1px solid #7c3aed44;">AI Split Descriptions</button>
             <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="newNpc()">+ Add NPC</button>
           </div>
         </div>
         <div id="npcs-status" class="dmc-alert" style="display:none;"></div>
-        <table class="dmc-table"><thead><tr><th style="width:50px;"></th><th>Name</th><th>Race</th><th>Class</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th><th>Actions</th></tr></thead>
-        <tbody id="npcs-body"><tr><td colspan="9" class="dmc-empty">Loading...</td></tr></tbody></table>
+        <table class="dmc-table"><thead><tr><th style="width:50px;"></th><th>Name</th><th>Race</th><th>Location</th><th>Status</th><th>Alignment</th><th>Hidden</th><th>Actions</th></tr></thead>
+        <tbody id="npcs-body"><tr><td colspan="8" class="dmc-empty">Loading...</td></tr></tbody></table>
         <div id="npc-edit" class="dmc-edit" style="display:none;">
           <h4 id="npc-edit-title">Add NPC</h4>
           <form onsubmit="saveNpc(event)">
@@ -320,7 +321,6 @@ async function renderDmAdminPage(session) {
             <div class="dmc-form-row">
               <label>Name<input id="npc-name" required /></label>
               <label>Race<input id="npc-race" /></label>
-              <label>Class<input id="npc-class" /></label>
               <label>Location<input id="npc-location" /></label>
             </div>
             <div class="dmc-form-row">
@@ -335,7 +335,8 @@ async function renderDmAdminPage(session) {
                 <span style="color:#555;font-size:0.7rem;">No image</span>
               </div>
             </div>
-            <label>Description<textarea id="npc-desc" rows="4" class="dmc-textarea"></textarea></label>
+            <label>Player Description <span style="color:#555;font-size:0.7rem;">(visible to players)</span><textarea id="npc-desc" rows="4" class="dmc-textarea"></textarea></label>
+            <label>DM Notes <span style="color:#c83232;font-size:0.7rem;">(DM only — motives, alliances, secrets)</span><textarea id="npc-dm-notes" rows="4" class="dmc-textarea" style="border-color:#c8323244;"></textarea></label>
             <div class="dmc-form-actions">
               <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
               <button type="button" class="dmc-btn dmc-btn-danger" id="npc-del-btn" onclick="deleteNpc()" style="display:none;">Delete</button>
@@ -1197,10 +1198,10 @@ async function renderDmAdminPage(session) {
   function renderNpcs(list) {
     el('npcs-body').innerHTML = list.map(n =>
       '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" class="npc-thumb" />' : '<div class="npc-thumb-empty">?</div>')+'</td>'+
-      '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td><td>'+esc(n.npc_class||'')+'</td>'+
+      '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td>'+
       '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
       '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+')">Del</button></td></tr>'
-    ).join('') || '<tr><td colspan="9" class="dmc-empty">No NPCs.</td></tr>';
+    ).join('') || '<tr><td colspan="8" class="dmc-empty">No NPCs.</td></tr>';
     document.querySelectorAll('.npc-thumb').forEach(function(img) { img.onerror = function() { this.style.display = 'none'; }; });
   }
   function filterNpcs() {
@@ -1209,9 +1210,9 @@ async function renderDmAdminPage(session) {
     renderNpcs(_npcsCache.filter(n => (n.name+' '+n.race+' '+n.location+' '+n.npc_class).toLowerCase().includes(q)));
   }
   function newNpc() {
-    el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = ''; el('npc-class').value = '';
+    el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = '';
     el('npc-location').value = ''; el('npc-status').value = 'Alive'; el('npc-align').value = 'neutral';
-    el('npc-sort').value = '0'; el('npc-hidden').value = 'false'; el('npc-portrait').value = ''; el('npc-desc').value = '';
+    el('npc-sort').value = '0'; el('npc-hidden').value = 'false'; el('npc-portrait').value = ''; el('npc-desc').value = ''; el('npc-dm-notes').value = '';
     npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Add NPC'; el('npc-del-btn').style.display = 'none';
     el('npc-edit').style.display = 'block';
@@ -1235,10 +1236,10 @@ async function renderDmAdminPage(session) {
     const n = _npcsCache.find(x=>x.id===id);
     if (!n) return;
     el('npc-id').value = n.id; el('npc-name').value = n.name||''; el('npc-race').value = n.race||'';
-    el('npc-class').value = n.npc_class||''; el('npc-location').value = n.location||'';
+    el('npc-location').value = n.location||'';
     el('npc-status').value = n.status||'Unknown'; el('npc-align').value = n.alignment_tag||'neutral';
     el('npc-sort').value = n.sort_order||0; el('npc-hidden').value = n.is_hidden?'true':'false';
-    el('npc-portrait').value = n.portrait_url||''; el('npc-desc').value = n.description||'';
+    el('npc-portrait').value = n.portrait_url||''; el('npc-desc').value = n.description||''; el('npc-dm-notes').value = n.dm_notes||'';
     npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Edit: ' + n.name; el('npc-del-btn').style.display = 'inline-block';
     el('npc-edit').style.display = 'block';
@@ -1247,9 +1248,9 @@ async function renderDmAdminPage(session) {
   async function saveNpc(e) {
     e.preventDefault();
     const id = el('npc-id').value;
-    const body = { name:el('npc-name').value, race:el('npc-race').value, npc_class:el('npc-class').value,
+    const body = { name:el('npc-name').value, race:el('npc-race').value, npc_class:'',
       location:el('npc-location').value, status:el('npc-status').value, alignment_tag:el('npc-align').value,
-      portrait_url:el('npc-portrait').value, description:el('npc-desc').value,
+      portrait_url:el('npc-portrait').value, description:el('npc-desc').value, dm_notes:el('npc-dm-notes').value,
       sort_order:+el('npc-sort').value, is_hidden:el('npc-hidden').value==='true' };
     const url = id ? '/api/dm-admin/npcs/'+id : '/api/dm-admin/npcs';
     const method = id ? 'PUT' : 'POST';
@@ -1269,6 +1270,19 @@ async function renderDmAdminPage(session) {
     if (!confirm('Delete NPC: '+name+'?')) return;
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     loadNpcs();
+  }
+  async function splitNpcDescriptions() {
+    if (!confirm('This will use AI to split all NPC descriptions (that don\\'t already have DM Notes) into Player-safe and DM-only fields. Continue?')) return;
+    showAlert(el('npcs-status'), 'AI is processing NPC descriptions... this may take a minute.', 'ok');
+    try {
+      const r = await fetch('/api/dm-admin/npcs/split-descriptions', {method:'POST'});
+      const d = await r.json();
+      if (d.error) { showAlert(el('npcs-status'), 'Error: '+d.error, 'err'); return; }
+      var ok = d.results ? d.results.filter(function(x){return x.status==='ok';}).length : 0;
+      var fail = d.results ? d.results.filter(function(x){return x.status==='error';}).length : 0;
+      showAlert(el('npcs-status'), 'Done! '+ok+' NPCs split successfully'+(fail?' ('+fail+' errors)':'')+'.', ok?'ok':'err');
+      loadNpcs();
+    } catch(e) { showAlert(el('npcs-status'), 'Error: '+e.message, 'err'); }
   }
 
   // ═══ SESSIONS ═══

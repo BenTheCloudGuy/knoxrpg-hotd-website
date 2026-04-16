@@ -107,7 +107,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   // ── NPCs: list ─────────────────────────────────────────────
   if (decoded === "/api/dm-admin/npcs" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const r = await pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description, sort_order, is_hidden FROM hotd_npcs ORDER BY name");
+    const r = await pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description, dm_notes, sort_order, is_hidden FROM hotd_npcs ORDER BY name");
     sendJSON(res, { npcs: r.rows });
     return true;
   }
@@ -118,8 +118,8 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       const b = JSON.parse(await readBody(req));
       const r = await pgPool.query(
-        "INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
-        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"Unknown", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", parseInt(b.sort_order)||0, b.is_hidden||false]
+        "INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,dm_notes,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"Unknown", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", parseInt(b.sort_order)||0, b.is_hidden||false]
       );
       sendJSON(res, { id: r.rows[0].id });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
@@ -133,8 +133,8 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       const b = JSON.parse(await readBody(req));
       await pgPool.query(
-        "UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,sort_order=$9,is_hidden=$10 WHERE id=$11",
-        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", parseInt(b.sort_order)||0, b.is_hidden||false, npcUpdate[1]]
+        "UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,dm_notes=$9,sort_order=$10,is_hidden=$11 WHERE id=$12",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", parseInt(b.sort_order)||0, b.is_hidden||false, npcUpdate[1]]
       );
       sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
@@ -147,6 +147,38 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       await pgPool.query("DELETE FROM hotd_npcs WHERE id = $1", [npcUpdate[1]]);
       sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── NPCs: AI split descriptions ───────────────────────────
+  if (decoded === "/api/dm-admin/npcs/split-descriptions" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const npcs = (await pgPool.query("SELECT id, name, description, dm_notes FROM hotd_npcs WHERE description != '' AND (dm_notes IS NULL OR dm_notes = '') ORDER BY name")).rows;
+      if (!npcs.length) { sendJSON(res, { message: "No NPCs to process — all already have dm_notes or no description.", processed: 0 }); return true; }
+      const client = azure.openaiClient;
+      if (!client) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+      const results = [];
+      for (const npc of npcs) {
+        try {
+          const resp = await client.chat.completions.create({
+            model: azure.aiModel,
+            temperature: 0.2,
+            messages: [
+              { role: "system", content: "You are a D&D campaign assistant. Given an NPC description, split it into two parts:\\n1. **player_description**: Safe for players to see. Include appearance, known history, public role, and general personality. Remove any mention of secret motives, hidden alliances, secret associations, betrayals, or DM-only plot hooks.\\n2. **dm_notes**: DM-only content. Include secret motives, hidden alliances, associations, plot hooks, and anything players should not know.\\n\\nRespond ONLY with valid JSON: {\"player_description\": \"...\", \"dm_notes\": \"...\"}\\nIf there is nothing secret/DM-only, set dm_notes to empty string. Preserve the original writing style and detail level." },
+              { role: "user", content: "NPC: " + npc.name + "\\n\\nFull Description:\\n" + npc.description }
+            ]
+          });
+          const content = resp.choices[0].message.content.trim();
+          const parsed = JSON.parse(content.replace(/```json\n?/g, "").replace(/```\n?/g, ""));
+          await pgPool.query("UPDATE hotd_npcs SET description = $1, dm_notes = $2 WHERE id = $3", [parsed.player_description || npc.description, parsed.dm_notes || "", npc.id]);
+          results.push({ id: npc.id, name: npc.name, status: "ok" });
+        } catch (err) {
+          results.push({ id: npc.id, name: npc.name, status: "error", error: err.message });
+        }
+      }
+      sendJSON(res, { processed: results.length, results });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }

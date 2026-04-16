@@ -302,6 +302,7 @@ async function ensureHotdTables() {
     // Additional column migrations
     await pgPool.query("ALTER TABLE hotd_art ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'General'").catch(() => {});
     await pgPool.query("ALTER TABLE hotd_generated_images ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE").catch(() => {});
+    await pgPool.query("ALTER TABLE hotd_npcs ADD COLUMN IF NOT EXISTS dm_notes TEXT DEFAULT ''").catch(() => {});
 
     // ── Campaign Notes (Kanban) table ──
     await pgPool.query(`
