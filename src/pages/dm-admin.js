@@ -251,7 +251,7 @@ async function renderDmAdminPage(session) {
               <h3 style="color:#e8b923;">&#128214; Campaign Notebook</h3>
               <p style="color:#888;margin:8px 0;">A Trilium-inspired knowledge base for your campaign.<br/>Select a note from the tree or create a new one.</p>
               <div style="color:#555;font-size:0.75rem;max-width:360px;text-align:left;line-height:1.7;">
-                <div>&#128196; <strong>Markdown files</strong> stored in <code>src/hotd-campaign/</code></div>
+                <div>&#128196; <strong>Markdown files</strong> stored in <code>src/hotd-campaign/notebook/</code></div>
                 <div>&#9998; <strong>Rich editing</strong> &mdash; headings, bold, italic, lists, tables, code</div>
                 <div>&#128247; <strong>Paste images</strong> directly into the editor (Ctrl+V)</div>
                 <div>&#128190; <strong>Auto-save</strong> after 5 seconds of inactivity</div>
@@ -664,7 +664,8 @@ async function renderDmAdminPage(session) {
     .img-modal-info { flex:1; }
 
     /* ═══ CAMPAIGN NOTEBOOK ═══ */
-    .notebook-layout { display:flex; height:calc(100vh - 120px); border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
+    #dmc-notes { padding:0 !important; overflow:hidden; }
+    .notebook-layout { display:flex; height:calc(100vh - 60px); border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
     .nb-search-wrap { padding:6px 10px; border-bottom:1px solid #1a1a1a; }
@@ -1630,7 +1631,9 @@ async function renderDmAdminPage(session) {
     el('nb-save-status').textContent = 'Uploading image...';
     var fd = new FormData();
     fd.append('image', file, file.name);
-    var r = await fetch('/api/dm-admin/notebook/upload-image', { method:'POST', body:fd });
+    var uploadUrl = '/api/dm-admin/notebook/upload-image';
+    if (_nbCurrentPath) uploadUrl += '?notePath=' + encodeURIComponent(_nbCurrentPath);
+    var r = await fetch(uploadUrl, { method:'POST', body:fd });
     var d = await r.json();
     if (r.ok && d.url) {
       var cursor = cm.getCursor();

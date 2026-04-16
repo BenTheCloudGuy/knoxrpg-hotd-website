@@ -777,7 +777,8 @@ ${ragContext}`;
   // ── CAMPAIGN NOTEBOOK (file-based markdown) ─────────────────
   // ══════════════════════════════════════════════════════════════
 
-  const NOTEBOOK_ROOT = require("path").resolve(require("../config").STATIC_ROOT);
+  const STATIC_ROOT_ABS = require("path").resolve(require("../config").STATIC_ROOT);
+  const NOTEBOOK_ROOT = notebookPath.join(STATIC_ROOT_ABS, "notebook");
 
   function walkDir(dir, prefix) {
     const entries = [];
@@ -887,11 +888,13 @@ ${ragContext}`;
       if (!ct.includes("multipart/form-data")) { sendJSON(res, { error: "multipart required" }, 400); return true; }
       const parsed = await parseMultipart(req, ct);
       if (!parsed.file || !parsed.file.data.length) { sendJSON(res, { error: "no file" }, 400); return true; }
-      const imgDir = notebookPath.join(NOTEBOOK_ROOT, "images", "notes");
+      const noteParam = new URL(req.url, "http://x").searchParams.get("notePath") || "";
+      const pageName = notebookPath.basename(noteParam, ".md").replace(/[^a-zA-Z0-9_-]/g, "_") || "general";
+      const imgDir = notebookPath.join(STATIC_ROOT_ABS, "images", "notebook", pageName);
       fs.mkdirSync(imgDir, { recursive: true });
       const safeName = Date.now() + "_" + parsed.file.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       fs.writeFileSync(notebookPath.join(imgDir, safeName), parsed.file.data);
-      sendJSON(res, { url: "/images/notes/" + safeName });
+      sendJSON(res, { url: "/images/notebook/" + pageName + "/" + safeName });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
