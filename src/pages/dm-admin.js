@@ -1198,7 +1198,7 @@ async function renderDmAdminPage(session) {
   function renderNpcs(list) {
     el('npcs-body').innerHTML = list.map(n =>
       '<tr><td style="width:50px;padding:4px;">'+( n.portrait_url ? '<img src="'+esc(n.portrait_url)+'" class="npc-thumb" />' : '<div class="npc-thumb-empty">?</div>')+'</td>'+
-      '<td style="color:#e8b923;font-weight:600;">'+esc(n.name)+'</td><td>'+esc(n.race||'')+'</td>'+
+      '<td><a href="/npcs/'+n.id+'" target="_blank" style="color:#e8b923;font-weight:600;text-decoration:none;">'+esc(n.name)+'</a></td><td>'+esc(n.race||'')+'</td>'+
       '<td>'+esc(n.location||'')+'</td><td>'+esc(n.status||'')+'</td><td>'+esc(n.alignment_tag||'')+'</td><td>'+(n.is_hidden?'&#128065;':'')+
       '</td><td><button class="dmc-btn dmc-btn-sm" onclick="editNpc('+n.id+')">Edit</button> <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="deleteNpcDirect('+n.id+')">Del</button></td></tr>'
     ).join('') || '<tr><td colspan="8" class="dmc-empty">No NPCs.</td></tr>';
