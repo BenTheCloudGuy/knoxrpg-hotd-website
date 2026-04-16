@@ -5,10 +5,12 @@
 // ══════════════════════════════════════════════════════════════
 
 const { pgPool } = require("../db/pool");
-const { readBody, sendJSON } = require("../lib/utils");
+const { readBody, sendJSON, parseMultipart } = require("../lib/utils");
 const azure = require("../lib/azure");
 const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
+const fs = require("fs");
+const notebookPath = require("path");
 
 function requireAdmin(session, res) {
   if (!session || session.role !== "admin") {
@@ -772,62 +774,243 @@ ${ragContext}`;
   }
 
   // ══════════════════════════════════════════════════════════════
-  // ── CAMPAIGN NOTES (Kanban) ─────────────────────────────────
+  // ── CAMPAIGN NOTEBOOK (file-based markdown) ─────────────────
   // ══════════════════════════════════════════════════════════════
 
-  // ── Notes: list ────────────────────────────────────────────
-  if (decoded === "/api/dm-admin/notes" && req.method === "GET") {
+  const NOTEBOOK_ROOT = require("path").resolve(require("../config").STATIC_ROOT);
+
+  function walkDir(dir, prefix) {
+    const entries = [];
+    if (!fs.existsSync(dir)) return entries;
+    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+      const rel = prefix ? prefix + "/" + item.name : item.name;
+      if (item.name.startsWith(".")) continue;
+      if (item.isDirectory()) {
+        if (item.name === "node_modules") continue;
+        entries.push({ name: item.name, path: rel, type: "folder", children: walkDir(notebookPath.join(dir, item.name), rel) });
+      } else if (item.name.endsWith(".md")) {
+        entries.push({ name: item.name, path: rel, type: "file" });
+      }
+    }
+    entries.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    return entries;
+  }
+
+  // ── Notebook: file tree ────────────────────────────────────
+  if (decoded === "/api/dm-admin/notebook/tree" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const r = await pgPool.query("SELECT * FROM hotd_dm_notes ORDER BY sort_order, created_at DESC");
-    sendJSON(res, { notes: r.rows });
+    sendJSON(res, { tree: walkDir(NOTEBOOK_ROOT, "") });
     return true;
   }
 
-  // ── Notes: create ──────────────────────────────────────────
-  if (decoded === "/api/dm-admin/notes" && req.method === "POST") {
+  // ── Notebook: read file ────────────────────────────────────
+  if (decoded.startsWith("/api/dm-admin/notebook/read") && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const body = JSON.parse(await readBody(req));
-    const { title, content, status, priority, category, tags } = body;
-    if (!title) { sendJSON(res, { error: "Title is required" }, 400); return true; }
-    const r = await pgPool.query(
-      "INSERT INTO hotd_dm_notes (title, content, status, priority, category, tags) VALUES ($1, $2, $3, $4, $5, $6::text[]) RETURNING id, created_at",
-      [title, content || "", status || "backlog", priority || "medium", category || "General", tags || []]
-    );
-    sendJSON(res, { ok: true, id: r.rows[0].id });
+    const filePath = new URL(req.url, "http://x").searchParams.get("path");
+    if (!filePath) { sendJSON(res, { error: "path required" }, 400); return true; }
+    const full = notebookPath.resolve(NOTEBOOK_ROOT, filePath);
+    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
+    if (!fs.existsSync(full)) { sendJSON(res, { error: "not found" }, 404); return true; }
+    sendJSON(res, { path: filePath, content: fs.readFileSync(full, "utf8") });
     return true;
   }
 
-  // ── Notes: update (including status change for drag-and-drop) ──
-  const noteUpdateMatch = decoded.match(/^\/api\/dm-admin\/notes\/(\d+)$/);
-  if (noteUpdateMatch && req.method === "PUT") {
+  // ── Notebook: write file ───────────────────────────────────
+  if (decoded === "/api/dm-admin/notebook/write" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    const id = parseInt(noteUpdateMatch[1], 10);
-    const body = JSON.parse(await readBody(req));
-    const sets = [];
-    const vals = [];
-    let idx = 1;
-    if (body.title !== undefined) { sets.push(`title = $${idx++}`); vals.push(body.title); }
-    if (body.content !== undefined) { sets.push(`content = $${idx++}`); vals.push(body.content); }
-    if (body.status !== undefined) { sets.push(`status = $${idx++}`); vals.push(body.status); }
-    if (body.priority !== undefined) { sets.push(`priority = $${idx++}`); vals.push(body.priority); }
-    if (body.category !== undefined) { sets.push(`category = $${idx++}`); vals.push(body.category); }
-    if (body.tags !== undefined) { sets.push(`tags = $${idx++}::text[]`); vals.push(body.tags || []); }
-    if (body.sort_order !== undefined) { sets.push(`sort_order = $${idx++}`); vals.push(body.sort_order); }
-    if (sets.length === 0) { sendJSON(res, { error: "Nothing to update" }, 400); return true; }
-    sets.push("updated_at = NOW()");
-    vals.push(id);
-    await pgPool.query(`UPDATE hotd_dm_notes SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
+    const b = JSON.parse(await readBody(req));
+    if (!b.path || b.content === undefined) { sendJSON(res, { error: "path and content required" }, 400); return true; }
+    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
+    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
+    fs.mkdirSync(notebookPath.dirname(full), { recursive: true });
+    fs.writeFileSync(full, b.content, "utf8");
     sendJSON(res, { ok: true });
     return true;
   }
 
-  // ── Notes: delete ──────────────────────────────────────────
-  const noteDeleteMatch = decoded.match(/^\/api\/dm-admin\/notes\/(\d+)$/);
-  if (noteDeleteMatch && req.method === "DELETE") {
+  // ── Notebook: create file/folder ───────────────────────────
+  if (decoded === "/api/dm-admin/notebook/create" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
-    const id = parseInt(noteDeleteMatch[1], 10);
-    await pgPool.query("DELETE FROM hotd_dm_notes WHERE id = $1", [id]);
+    const b = JSON.parse(await readBody(req));
+    if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
+    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
+    if (b.type === "folder") {
+      fs.mkdirSync(full, { recursive: true });
+    } else {
+      if (fs.existsSync(full)) { sendJSON(res, { error: "file already exists" }, 409); return true; }
+      fs.mkdirSync(notebookPath.dirname(full), { recursive: true });
+      fs.writeFileSync(full, b.content || "# " + notebookPath.basename(full, ".md") + "\n\n", "utf8");
+    }
     sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Notebook: delete file ──────────────────────────────────
+  if (decoded === "/api/dm-admin/notebook/delete" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const b = JSON.parse(await readBody(req));
+    if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
+    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
+    if (!fs.existsSync(full)) { sendJSON(res, { error: "not found" }, 404); return true; }
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) fs.rmSync(full, { recursive: true, force: true });
+    else fs.unlinkSync(full);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Notebook: rename/move ──────────────────────────────────
+  if (decoded === "/api/dm-admin/notebook/rename" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const b = JSON.parse(await readBody(req));
+    if (!b.oldPath || !b.newPath) { sendJSON(res, { error: "oldPath and newPath required" }, 400); return true; }
+    const fullOld = notebookPath.resolve(NOTEBOOK_ROOT, b.oldPath);
+    const fullNew = notebookPath.resolve(NOTEBOOK_ROOT, b.newPath);
+    if (!fullOld.startsWith(NOTEBOOK_ROOT) || !fullNew.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
+    if (!fs.existsSync(fullOld)) { sendJSON(res, { error: "not found" }, 404); return true; }
+    fs.mkdirSync(notebookPath.dirname(fullNew), { recursive: true });
+    fs.renameSync(fullOld, fullNew);
+    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Notebook: image upload (paste/drop) ────────────────────
+  if (decoded === "/api/dm-admin/notebook/upload-image" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const ct = req.headers["content-type"] || "";
+      if (!ct.includes("multipart/form-data")) { sendJSON(res, { error: "multipart required" }, 400); return true; }
+      const parsed = await parseMultipart(req, ct);
+      if (!parsed.file || !parsed.file.data.length) { sendJSON(res, { error: "no file" }, 400); return true; }
+      const imgDir = notebookPath.join(NOTEBOOK_ROOT, "images", "notes");
+      fs.mkdirSync(imgDir, { recursive: true });
+      const safeName = Date.now() + "_" + parsed.file.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+      fs.writeFileSync(notebookPath.join(imgDir, safeName), parsed.file.data);
+      sendJSON(res, { url: "/images/notes/" + safeName });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: backlinks for a note ─────────────────────────
+  // Scans all .md files for [[wiki links]] that reference the given note.
+  if (decoded.startsWith("/api/dm-admin/notebook/backlinks") && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const filePath = new URL(req.url, "http://x").searchParams.get("path");
+    if (!filePath) { sendJSON(res, { error: "path required" }, 400); return true; }
+    const targetName = notebookPath.basename(filePath, ".md").toLowerCase();
+    const backlinks = [];
+    function scanForLinks(dir, prefix) {
+      if (!fs.existsSync(dir)) return;
+      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (item.name.startsWith(".")) continue;
+        const rel = prefix ? prefix + "/" + item.name : item.name;
+        if (item.isDirectory()) {
+          if (item.name === "node_modules") continue;
+          scanForLinks(notebookPath.join(dir, item.name), rel);
+        } else if (item.name.endsWith(".md") && rel !== filePath) {
+          try {
+            const content = fs.readFileSync(notebookPath.join(dir, item.name), "utf8");
+            const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+            let match;
+            while ((match = wikiLinkRegex.exec(content)) !== null) {
+              if (match[1].toLowerCase() === targetName || match[1].toLowerCase() === filePath.replace(/\.md$/i, "").toLowerCase()) {
+                const lineNum = content.substring(0, match.index).split("\n").length;
+                const lines = content.split("\n");
+                backlinks.push({ path: rel, name: item.name.replace(/\.md$/i, ""), line: lineNum, context: (lines[lineNum - 1] || "").trim().substring(0, 100) });
+                break; // one backlink per file
+              }
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    scanForLinks(NOTEBOOK_ROOT, "");
+    sendJSON(res, { backlinks });
+    return true;
+  }
+
+  // ── Notebook: link map (all wiki-links between notes) ──────
+  // Returns nodes (all .md files) and edges (wiki-link references).
+  if (decoded === "/api/dm-admin/notebook/link-map" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const nodes = [];
+    const edges = [];
+    const fileIndex = {}; // name -> path mapping
+    function indexFiles(dir, prefix) {
+      if (!fs.existsSync(dir)) return;
+      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (item.name.startsWith(".")) continue;
+        const rel = prefix ? prefix + "/" + item.name : item.name;
+        if (item.isDirectory()) {
+          if (item.name === "node_modules") continue;
+          indexFiles(notebookPath.join(dir, item.name), rel);
+        } else if (item.name.endsWith(".md")) {
+          const label = item.name.replace(/\.md$/i, "");
+          nodes.push({ id: rel, label: label, folder: prefix || "(root)" });
+          fileIndex[label.toLowerCase()] = rel;
+          fileIndex[rel.replace(/\.md$/i, "").toLowerCase()] = rel;
+        }
+      }
+    }
+    indexFiles(NOTEBOOK_ROOT, "");
+    // Second pass: extract [[wiki links]] and build edges
+    for (const node of nodes) {
+      try {
+        const content = fs.readFileSync(notebookPath.join(NOTEBOOK_ROOT, node.id), "utf8");
+        const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+        let match;
+        const seen = new Set();
+        while ((match = wikiLinkRegex.exec(content)) !== null) {
+          const target = fileIndex[match[1].toLowerCase()];
+          if (target && target !== node.id && !seen.has(target)) {
+            edges.push({ source: node.id, target: target });
+            seen.add(target);
+          }
+        }
+      } catch (_) {}
+    }
+    sendJSON(res, { nodes, edges });
+    return true;
+  }
+
+  // ── Notebook: full-text search across all notes ────────────
+  if (decoded.startsWith("/api/dm-admin/notebook/search") && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const query = (new URL(req.url, "http://x").searchParams.get("q") || "").toLowerCase().trim();
+    if (!query) { sendJSON(res, { results: [] }); return true; }
+    const results = [];
+    function searchFiles(dir, prefix) {
+      if (!fs.existsSync(dir)) return;
+      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (item.name.startsWith(".")) continue;
+        const rel = prefix ? prefix + "/" + item.name : item.name;
+        if (item.isDirectory()) {
+          if (item.name === "node_modules") continue;
+          searchFiles(notebookPath.join(dir, item.name), rel);
+        } else if (item.name.endsWith(".md")) {
+          try {
+            const content = fs.readFileSync(notebookPath.join(dir, item.name), "utf8");
+            const lowerContent = content.toLowerCase();
+            const idx = lowerContent.indexOf(query);
+            const nameMatch = item.name.toLowerCase().includes(query);
+            if (idx !== -1 || nameMatch) {
+              const lineNum = idx !== -1 ? content.substring(0, idx).split("\n").length : 0;
+              const lines = content.split("\n");
+              const context = idx !== -1 ? (lines[lineNum - 1] || "").trim().substring(0, 120) : "";
+              results.push({ path: rel, name: item.name.replace(/\.md$/i, ""), line: lineNum, context: context, nameMatch: nameMatch });
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    searchFiles(NOTEBOOK_ROOT, "");
+    results.sort((a, b) => (b.nameMatch ? 1 : 0) - (a.nameMatch ? 1 : 0));
+    sendJSON(res, { results: results.slice(0, 50) });
     return true;
   }
 

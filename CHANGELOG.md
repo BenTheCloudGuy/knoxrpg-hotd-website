@@ -4,6 +4,27 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-04-15
+
+### Added
+- **Trilium-inspired Campaign Notebook** — replaced Notes Board kanban with a full markdown notebook
+  - File-based notes stored as `.md` files under `src/hotd-campaign/`
+  - EasyMDE rich markdown editor with auto-save (5s debounce), image paste/drop
+  - File tree sidebar with folders, expand/collapse all, search/filter
+  - **Wiki-links** — `[[note name]]` syntax rendered as clickable links in preview; navigates to matching note
+  - **Backlinks panel** — right sidebar shows all notes that link to the current note
+  - **Note info panel** — word count, line count, wiki-link count, image count, file path
+  - **Link Map** — force-directed graph visualization of all notes and their wiki-link connections (canvas-based)
+  - **Breadcrumb navigation** — clickable path segments in the editor bar
+  - **Editable title** — rename files directly from the title input on save
+  - **Context menu** — right-click tree items for open, new child note/folder, rename, delete
+  - **Drag-and-drop** — reorder notes by dragging between folders in the tree
+  - **Full-text search API** — search across all notes with name-match priority
+  - Image uploads stored in `images/notes/` under the campaign directory
+
+### Fixed
+- Missing `parseMultipart` import in DM Admin API (broke notebook image uploads)
+
 ## [1.14.0] - 2026-04-15
 
 ### Added

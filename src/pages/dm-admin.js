@@ -27,7 +27,7 @@ async function renderDmAdminPage(session) {
         </div>
         <div class="dmc-nav-section">
           <div class="dmc-nav-label">Campaign</div>
-          <button class="dmc-nav-btn" onclick="dmc('notes')">Notes Board</button>
+          <button class="dmc-nav-btn" onclick="dmc('notes')">Notebook</button>
           <button class="dmc-nav-btn" onclick="dmc('characters')">Characters</button>
           <button class="dmc-nav-btn" onclick="dmc('npcs')">NPCs</button>
           <button class="dmc-nav-btn" onclick="dmc('sessions')">Sessions</button>
@@ -228,41 +228,85 @@ async function renderDmAdminPage(session) {
         </div>
       </section>
 
-      <!-- ╔══ NOTES BOARD ══╗ -->
+      <!-- ╔══ CAMPAIGN NOTEBOOK ══╗ -->
       <section class="dmc-panel" id="dmc-notes" style="display:none;">
-        <div class="dmc-panel-bar"><h2>Notes Board</h2>
-          <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="newNote()">+ New Note</button></div>
-        </div>
-        <div class="kanban" id="kanban">
-          <div class="kanban-col" data-status="backlog"><div class="kanban-col-hdr">Backlog</div><div class="kanban-cards" id="kanban-backlog"></div></div>
-          <div class="kanban-col" data-status="todo"><div class="kanban-col-hdr">To Do</div><div class="kanban-cards" id="kanban-todo"></div></div>
-          <div class="kanban-col" data-status="in_progress"><div class="kanban-col-hdr">In Progress</div><div class="kanban-cards" id="kanban-in_progress"></div></div>
-          <div class="kanban-col" data-status="done"><div class="kanban-col-hdr">Done</div><div class="kanban-cards" id="kanban-done"></div></div>
-        </div>
-        <div id="note-modal" class="note-modal" style="display:none;" onclick="if(event.target===this)closeNoteModal()">
-          <div class="note-modal-inner">
-            <h3 id="note-modal-title">New Note</h3>
-            <form onsubmit="saveNote(event)">
-              <input type="hidden" id="note-id" />
-              <label>Title<input id="note-title" required /></label>
-              <label>Content<textarea id="note-content" rows="6" class="dmc-textarea"></textarea></label>
-              <div class="dmc-form-row">
-                <label>Status<select id="note-status">
-                  <option value="backlog">Backlog</option><option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option><option value="done">Done</option>
-                </select></label>
-                <label>Priority<select id="note-priority">
-                  <option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option>
-                </select></label>
-                <label>Category<input id="note-category" value="General" /></label>
+        <div class="notebook-layout">
+          <div class="nb-sidebar" id="nb-sidebar">
+            <div class="nb-sidebar-hdr">
+              <span style="font-weight:700;color:#c83232;font-size:0.82rem;">Campaign Notes</span>
+              <div style="display:flex;gap:4px;">
+                <button class="dmc-btn dmc-btn-sm" onclick="nbNewFile()" title="New File">&#128196; +</button>
+                <button class="dmc-btn dmc-btn-sm" onclick="nbNewFolder()" title="New Folder">&#128193; +</button>
+                <button class="dmc-btn dmc-btn-sm" onclick="nbExpandAll()" title="Expand All" style="font-size:0.65rem;">&#9662;&#9662;</button>
+                <button class="dmc-btn dmc-btn-sm" onclick="nbCollapseAll()" title="Collapse All" style="font-size:0.65rem;">&#9656;&#9656;</button>
               </div>
-              <label>Tags (comma separated)<input id="note-tags" /></label>
-              <div class="dmc-form-actions">
-                <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
-                <button type="button" class="dmc-btn dmc-btn-danger" onclick="deleteNote()">Delete</button>
-                <button type="button" class="dmc-btn" onclick="closeNoteModal()">Cancel</button>
+            </div>
+            <div class="nb-search-wrap">
+              <input type="text" id="nb-search" class="nb-search" placeholder="Search notes..." oninput="nbFilterTree(this.value)" />
+            </div>
+            <div class="nb-tree" id="nb-tree"><div class="dmc-empty" style="padding:12px;">Loading...</div></div>
+          </div>
+          <div class="nb-main" id="nb-main">
+            <div id="nb-welcome" class="nb-welcome">
+              <h3 style="color:#e8b923;">&#128214; Campaign Notebook</h3>
+              <p style="color:#888;margin:8px 0;">A Trilium-inspired knowledge base for your campaign.<br/>Select a note from the tree or create a new one.</p>
+              <div style="color:#555;font-size:0.75rem;max-width:360px;text-align:left;line-height:1.7;">
+                <div>&#128196; <strong>Markdown files</strong> stored in <code>src/hotd-campaign/</code></div>
+                <div>&#9998; <strong>Rich editing</strong> &mdash; headings, bold, italic, lists, tables, code</div>
+                <div>&#128247; <strong>Paste images</strong> directly into the editor (Ctrl+V)</div>
+                <div>&#128190; <strong>Auto-save</strong> after 5 seconds of inactivity</div>
+                <div>&#128269; <strong>Search</strong> notes by name in the sidebar</div>
               </div>
-            </form>
+            </div>
+            <div id="nb-editor-wrap" style="display:none;">
+              <div class="nb-editor-bar">
+                <div class="nb-breadcrumb" id="nb-breadcrumb"></div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span id="nb-save-status" style="color:#555;font-size:0.72rem;"></span>
+                  <button class="dmc-btn dmc-btn-sm" onclick="nbToggleInfo()" title="Note Info &amp; Backlinks">&#9432;</button>
+                  <button class="dmc-btn dmc-btn-sm" onclick="nbShowLinkMap()" title="Link Map">&#128279;</button>
+                  <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="nbSave()">&#128190; Save</button>
+                  <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="nbDeleteCurrent()" title="Delete this file">&#128465;</button>
+                </div>
+              </div>
+              <div class="nb-title-wrap">
+                <input type="text" id="nb-note-title" class="nb-note-title" placeholder="Note title..." />
+              </div>
+              <div class="nb-editor-body">
+                <div class="nb-editor-area">
+                  <textarea id="nb-editor"></textarea>
+                </div>
+                <div class="nb-right-panel" id="nb-right-panel" style="display:none;">
+                  <div class="nb-rp-section">
+                    <div class="nb-rp-hdr">&#128279; Backlinks</div>
+                    <div id="nb-backlinks" class="nb-rp-body"><span class="nb-rp-empty">No backlinks</span></div>
+                  </div>
+                  <div class="nb-rp-section">
+                    <div class="nb-rp-hdr">&#128196; Note Info</div>
+                    <div id="nb-note-info" class="nb-rp-body"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right-click context menu -->
+        <div id="nb-ctx-menu" class="nb-ctx-menu" style="display:none;">
+          <div class="nb-ctx-item" data-action="open">&#128196; Open</div>
+          <div class="nb-ctx-item" data-action="new-child">&#128196; New Note Here</div>
+          <div class="nb-ctx-item" data-action="new-folder-child">&#128193; New Folder Here</div>
+          <div class="nb-ctx-sep"></div>
+          <div class="nb-ctx-item" data-action="rename">&#9998; Rename</div>
+          <div class="nb-ctx-item nb-ctx-danger" data-action="delete">&#128465; Delete</div>
+        </div>
+        <!-- Link Map overlay -->
+        <div id="nb-linkmap-overlay" class="nb-linkmap-overlay" style="display:none;">
+          <div class="nb-linkmap-inner">
+            <div class="nb-linkmap-hdr">
+              <span style="color:#e8b923;font-weight:700;">&#128279; Note Link Map</span>
+              <button class="dmc-btn dmc-btn-sm" onclick="nbCloseLinkMap()">Close</button>
+            </div>
+            <canvas id="nb-linkmap-canvas" width="900" height="600"></canvas>
           </div>
         </div>
       </section>
@@ -619,26 +663,96 @@ async function renderDmAdminPage(session) {
     .img-modal-inner img { max-width:450px; max-height:70vh; border-radius:6px; object-fit:contain; }
     .img-modal-info { flex:1; }
 
-    /* ═══ KANBAN (Notes Board) ═══ */
-    .kanban { display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; min-height:400px; }
-    .kanban-col { flex:1; min-width:220px; background:#0d0d0d; border:1px solid #222; border-radius:8px; display:flex; flex-direction:column; }
-    .kanban-col-hdr { color:#c83232; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:10px 12px; border-bottom:1px solid #222; }
-    .kanban-cards { flex:1; padding:8px; overflow-y:auto; min-height:100px; }
-    .kanban-card { background:#111; border:1px solid #2a2a2a; border-radius:6px; padding:10px; margin-bottom:8px; cursor:pointer; transition:border-color 0.15s; }
-    .kanban-card:hover { border-color:#e8b923; }
-    .kanban-card h5 { color:#ccc; margin:0 0 4px; font-size:0.8rem; }
-    .kanban-card small { color:#555; font-size:0.68rem; }
-    .kanban-card .priority-high { color:#f44; }
-    .kanban-card .priority-medium { color:#e8b923; }
-    .kanban-card .priority-low { color:#4ade80; }
-
-    /* ── Note modal ── */
-    .note-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px; }
-    .note-modal-inner { background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:20px; width:100%; max-width:500px; }
-    .note-modal-inner h3 { color:#c83232; margin:0 0 12px; }
-    .note-modal-inner label { display:flex; flex-direction:column; gap:4px; color:#777; font-size:0.72rem; text-transform:uppercase; margin-bottom:10px; }
-    .note-modal-inner input, .note-modal-inner select { background:#0d0d0d; border:1px solid #2a2a2a; border-radius:4px; padding:7px 8px; color:#ccc; font-size:0.82rem; }
-    .note-modal-inner input:focus, .note-modal-inner select:focus { border-color:#c83232; outline:none; }
+    /* ═══ CAMPAIGN NOTEBOOK ═══ */
+    .notebook-layout { display:flex; height:calc(100vh - 120px); border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
+    .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
+    .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
+    .nb-search-wrap { padding:6px 10px; border-bottom:1px solid #1a1a1a; }
+    .nb-search { width:100%; background:#111; border:1px solid #2a2a2a; border-radius:4px; padding:5px 8px; color:#ccc; font-size:0.75rem; outline:none; }
+    .nb-search:focus { border-color:#c83232; }
+    .nb-tree { flex:1; overflow-y:auto; padding:4px 0; font-size:0.78rem; }
+    .nb-tree-item { display:flex; align-items:center; padding:4px 8px 4px calc(8px + var(--depth,0) * 18px); cursor:pointer; color:#aaa; transition:background 0.1s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-left:2px solid transparent; }
+    .nb-tree-item:hover { background:#151515; color:#ccc; }
+    .nb-tree-item.active { background:#1a1512; color:#e8b923; border-left-color:#c83232; }
+    .nb-tree-item.nb-drag-over { background:#1a1a0a; border-left-color:#e8b923; }
+    .nb-tree-item.nb-dragging { opacity:0.4; }
+    .nb-drop-bar { height:2px; background:#e8b923; margin:0 8px; border-radius:2px; pointer-events:none; }
+    .nb-tree-item .nb-icon { margin-right:6px; font-size:0.72rem; flex-shrink:0; }
+    .nb-folder-toggle { cursor:pointer; user-select:none; margin-right:2px; font-size:0.58rem; flex-shrink:0; width:10px; text-align:center; }
+    .nb-tree-actions { margin-left:auto; display:none; gap:3px; flex-shrink:0; padding-left:6px; }
+    .nb-tree-item:hover .nb-tree-actions { display:flex; }
+    .nb-tree-actions button { background:none; border:none; color:#555; cursor:pointer; font-size:0.65rem; padding:1px 3px; border-radius:3px; }
+    .nb-tree-actions button:hover { color:#e8b923; background:#222; }
+    .nb-folder-children { }
+    .nb-tree-item.nb-hidden { display:none; }
+    .nb-folder-children.nb-hidden { display:none; }
+    .nb-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; text-align:center; padding:32px; }
+    .nb-welcome h3 { margin:0 0 8px; font-size:1.1rem; }
+    .nb-welcome code { background:#1a1a1a; padding:2px 6px; border-radius:4px; font-size:0.72rem; color:#aaa; }
+    .nb-editor-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid #222; min-height:36px; background:#0a0a0a; }
+    .nb-breadcrumb { display:flex; align-items:center; gap:4px; font-size:0.72rem; color:#666; overflow:hidden; }
+    .nb-breadcrumb span { cursor:pointer; color:#888; }
+    .nb-breadcrumb span:hover { color:#e8b923; text-decoration:underline; }
+    .nb-breadcrumb .nb-bc-sep { color:#333; cursor:default; }
+    .nb-breadcrumb .nb-bc-sep:hover { color:#333; text-decoration:none; }
+    .nb-breadcrumb .nb-bc-current { color:#e8b923; cursor:default; }
+    .nb-breadcrumb .nb-bc-current:hover { text-decoration:none; }
+    .nb-title-wrap { padding:8px 14px 4px; border-bottom:1px solid #1a1a1a; }
+    .nb-note-title { width:100%; background:transparent; border:none; color:#e8b923; font-size:1.2rem; font-weight:700; outline:none; padding:0; font-family:inherit; }
+    .nb-note-title::placeholder { color:#333; }
+    #nb-editor-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    #nb-editor-wrap .EasyMDEContainer { flex:1; display:flex; flex-direction:column; }
+    #nb-editor-wrap .EasyMDEContainer .CodeMirror { flex:1; background:#111; color:#ccc; border:none; font-size:0.85rem; }
+    #nb-editor-wrap .editor-toolbar { background:#0d0d0d; border-bottom:1px solid #222; }
+    #nb-editor-wrap .editor-toolbar button { color:#999 !important; }
+    #nb-editor-wrap .editor-toolbar button:hover { background:#1a1a1a !important; }
+    #nb-editor-wrap .editor-toolbar button.active { background:#222 !important; color:#e8b923 !important; }
+    #nb-editor-wrap .editor-preview { background:#111; color:#ccc; padding:16px; }
+    #nb-editor-wrap .editor-preview h1,
+    #nb-editor-wrap .editor-preview h2,
+    #nb-editor-wrap .editor-preview h3 { color:#e8b923; }
+    #nb-editor-wrap .editor-preview code { background:#1a1a1a; padding:2px 5px; border-radius:3px; }
+    #nb-editor-wrap .editor-preview pre { background:#0d0d0d; border:1px solid #222; padding:12px; border-radius:6px; overflow-x:auto; }
+    #nb-editor-wrap .editor-preview table { border-collapse:collapse; width:100%; margin:8px 0; }
+    #nb-editor-wrap .editor-preview th,
+    #nb-editor-wrap .editor-preview td { border:1px solid #333; padding:6px 10px; text-align:left; }
+    #nb-editor-wrap .editor-preview th { background:#1a1a1a; color:#e8b923; }
+    #nb-editor-wrap .editor-preview blockquote { border-left:3px solid #c83232; margin:8px 0; padding:4px 12px; color:#888; }
+    #nb-editor-wrap .editor-preview img { max-width:100%; border-radius:6px; }
+    #nb-editor-wrap .editor-statusbar { background:#0a0a0a; border-top:1px solid #222; color:#555; }
+    /* ── Context menu ── */
+    .nb-ctx-menu { position:fixed; z-index:9999; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:4px 0; min-width:180px; box-shadow:0 4px 16px rgba(0,0,0,0.5); }
+    .nb-ctx-item { padding:6px 14px; font-size:0.78rem; color:#ccc; cursor:pointer; }
+    .nb-ctx-item:hover { background:#222; color:#e8b923; }
+    .nb-ctx-danger { color:#f44; }
+    .nb-ctx-danger:hover { background:#2a1515; color:#f66; }
+    .nb-ctx-sep { border-top:1px solid #2a2a2a; margin:3px 0; }
+    /* ── Editor body (editor + right panel) ── */
+    .nb-editor-body { flex:1; display:flex; overflow:hidden; }
+    .nb-editor-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-editor-area .EasyMDEContainer { flex:1; display:flex; flex-direction:column; }
+    .nb-editor-area .EasyMDEContainer .CodeMirror { flex:1; }
+    /* ── Right info panel ── */
+    .nb-right-panel { width:240px; min-width:180px; border-left:1px solid #222; background:#0a0a0a; overflow-y:auto; font-size:0.75rem; }
+    .nb-rp-section { border-bottom:1px solid #1a1a1a; }
+    .nb-rp-hdr { padding:8px 10px; color:#c83232; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+    .nb-rp-body { padding:4px 10px 10px; color:#888; }
+    .nb-rp-empty { color:#444; font-style:italic; }
+    .nb-backlink-item { padding:4px 0; cursor:pointer; color:#888; border-bottom:1px solid #111; }
+    .nb-backlink-item:hover { color:#e8b923; }
+    .nb-backlink-item .nb-bl-name { color:#ccc; font-weight:600; }
+    .nb-backlink-item .nb-bl-ctx { color:#555; font-size:0.68rem; display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .nb-info-row { display:flex; justify-content:space-between; padding:3px 0; color:#666; }
+    .nb-info-row span:last-child { color:#aaa; }
+    /* ── Wiki link in preview ── */
+    #nb-editor-wrap .editor-preview .wiki-link { color:#e8b923; cursor:pointer; text-decoration:underline dotted; border-bottom:none; }
+    #nb-editor-wrap .editor-preview .wiki-link:hover { color:#fff; text-decoration:underline; }
+    /* ── Link Map overlay ── */
+    .nb-linkmap-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; }
+    .nb-linkmap-inner { background:#111; border:1px solid #333; border-radius:10px; width:92vw; max-width:1100px; height:75vh; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-linkmap-hdr { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid #222; }
+    #nb-linkmap-canvas { flex:1; width:100%; cursor:grab; }
 
     /* ── Responsive ── */
     @media (max-width:768px) {
@@ -653,7 +767,8 @@ async function renderDmAdminPage(session) {
       .chat-layout { height:calc(100vh - 200px); }
       .chat-convlist { width:100%; min-width:100%; max-height:200px; border-right:none; border-bottom:1px solid #222; }
       .chat-layout { flex-direction:column; }
-      .kanban { flex-direction:column; }
+      .notebook-layout { flex-direction:column; height:auto; min-height:70vh; }
+      .nb-sidebar { width:100% !important; max-width:100%; min-width:100%; max-height:200px; border-right:none; border-bottom:1px solid #222; resize:none; }
       .img-preview { flex-direction:column; }
       .img-preview img { width:100%; }
       .img-modal-inner { flex-direction:column; }
@@ -661,6 +776,8 @@ async function renderDmAdminPage(session) {
     }
   </style>
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
   <script>
@@ -1026,98 +1143,605 @@ async function renderDmAdminPage(session) {
     if(r.ok) { alert('Published!'); await loadImgGallery(); }
   }
 
-  // ═══ NOTES (KANBAN) ═══
-  let _notesData = [];
+  // ═══ CAMPAIGN NOTEBOOK ═══
+  let _nbTree = [];
+  let _nbCurrentPath = null;
+  let _nbEditor = null;
+  let _nbDirty = false;
+  let _nbSaveTimer = null;
+  let _nbInfoOpen = false;
+  let _nbCtxPath = null;
+  let _nbCtxType = null;
+  let _nbAllFiles = []; // flat list for wiki-link autocomplete
 
   async function loadNotes() {
-    const r = await fetch('/api/dm-admin/notes');
-    const d = await r.json();
-    _notesData = d.notes || [];
-    renderKanban();
+    var r = await fetch('/api/dm-admin/notebook/tree');
+    var d = await r.json();
+    _nbTree = d.tree || [];
+    _nbAllFiles = [];
+    flattenTree(_nbTree, _nbAllFiles);
+    renderNbTree();
+    if (_nbCurrentPath) {
+      var exists = findNode(_nbTree, _nbCurrentPath);
+      if (!exists) { _nbCurrentPath = null; showNbWelcome(); }
+    }
   }
 
-  function renderKanban() {
-    ['backlog','todo','in_progress','done'].forEach(status => {
-      const container = el('kanban-' + status);
-      const cards = _notesData.filter(n => n.status === status);
-      container.innerHTML = cards.map(n => {
-        const pCls = n.priority === 'high' ? 'priority-high' : n.priority === 'medium' ? 'priority-medium' : 'priority-low';
-        return '<div class="kanban-card" draggable="true" data-id="'+n.id+'" ondragstart="noteDragStart(event)" onclick="editNote('+n.id+')">' +
-          '<h5>'+esc(n.title)+'</h5><small><span class="'+pCls+'">&#9679;</span> '+esc(n.category)+(n.tags?.length?' &middot; '+n.tags.join(', '):'')+
-          '</small></div>';
-      }).join('');
-    });
-
-    // Setup drop targets
-    document.querySelectorAll('.kanban-cards').forEach(zone => {
-      zone.ondragover = e => { e.preventDefault(); zone.style.background = '#1a1a1a'; };
-      zone.ondragleave = () => { zone.style.background = ''; };
-      zone.ondrop = async e => {
-        e.preventDefault();
-        zone.style.background = '';
-        const id = e.dataTransfer.getData('text/plain');
-        const newStatus = zone.id.replace('kanban-', '');
-        await fetch('/api/dm-admin/notes/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:newStatus})});
-        loadNotes();
-      };
-    });
+  function flattenTree(nodes, out) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].type === 'file') out.push(nodes[i]);
+      if (nodes[i].children) flattenTree(nodes[i].children, out);
+    }
   }
 
-  function noteDragStart(e) {
-    e.dataTransfer.setData('text/plain', e.target.dataset.id);
+  function findNode(nodes, path) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].path === path) return nodes[i];
+      if (nodes[i].children) { var f = findNode(nodes[i].children, path); if (f) return f; }
+    }
+    return null;
   }
 
-  function newNote() {
-    el('note-id').value = '';
-    el('note-title').value = '';
-    el('note-content').value = '';
-    el('note-status').value = 'backlog';
-    el('note-priority').value = 'medium';
-    el('note-category').value = 'General';
-    el('note-tags').value = '';
-    el('note-modal-title').textContent = 'New Note';
-    el('note-modal').style.display = 'flex';
-  }
-
-  function editNote(id) {
-    const n = _notesData.find(x => x.id === id);
-    if (!n) return;
-    el('note-id').value = n.id;
-    el('note-title').value = n.title;
-    el('note-content').value = n.content || '';
-    el('note-status').value = n.status;
-    el('note-priority').value = n.priority;
-    el('note-category').value = n.category || 'General';
-    el('note-tags').value = (n.tags||[]).join(', ');
-    el('note-modal-title').textContent = 'Edit: ' + n.title;
-    el('note-modal').style.display = 'flex';
-  }
-
-  function closeNoteModal() { el('note-modal').style.display = 'none'; }
-
-  async function saveNote(e) {
-    e.preventDefault();
-    const id = el('note-id').value;
-    const body = {
-      title: el('note-title').value,
-      content: el('note-content').value,
-      status: el('note-status').value,
-      priority: el('note-priority').value,
-      category: el('note-category').value,
-      tags: el('note-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+  // ── Tree rendering with event delegation ──
+  function renderNbTree() {
+    var container = el('nb-tree');
+    container.innerHTML = renderTreeLevel(_nbTree, 0);
+    container.onclick = function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (btn) {
+        e.stopPropagation();
+        var item = btn.closest('.nb-tree-item');
+        var p = item ? item.dataset.path : '';
+        if (btn.dataset.action === 'rename') nbRenameItem(p);
+        else if (btn.dataset.action === 'delete') nbDeleteItem(p);
+        else if (btn.dataset.action === 'new-child') nbNewFileIn(p);
+        return;
+      }
+      var row = e.target.closest('.nb-tree-item');
+      if (!row) return;
+      if (row.dataset.type === 'folder') nbToggleFolder(row.dataset.path);
+      else nbOpenFile(row.dataset.path);
     };
-    const url = id ? '/api/dm-admin/notes/' + id : '/api/dm-admin/notes';
-    const method = id ? 'PUT' : 'POST';
-    const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-    if (r.ok) { closeNoteModal(); loadNotes(); }
-    else { const d = await r.json(); alert('Error: ' + (d.error||'')); }
+    // Right-click context menu
+    container.oncontextmenu = function(e) {
+      var row = e.target.closest('.nb-tree-item');
+      if (!row) return;
+      e.preventDefault();
+      _nbCtxPath = row.dataset.path;
+      _nbCtxType = row.dataset.type;
+      var menu = el('nb-ctx-menu');
+      menu.style.display = 'block';
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+    };
+
+    // ── Drag-and-drop reordering ──
+    var _dragPath = null;
+    container.addEventListener('dragstart', function(e) {
+      var row = e.target.closest('.nb-tree-item');
+      if (!row) return;
+      _dragPath = row.dataset.path;
+      row.classList.add('nb-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', row.dataset.path);
+    });
+    container.addEventListener('dragend', function(e) {
+      _dragPath = null;
+      container.querySelectorAll('.nb-dragging').forEach(function(el) { el.classList.remove('nb-dragging'); });
+      container.querySelectorAll('.nb-drag-over').forEach(function(el) { el.classList.remove('nb-drag-over'); });
+    });
+    container.addEventListener('dragover', function(e) {
+      if (!_dragPath) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.querySelectorAll('.nb-drag-over').forEach(function(el) { el.classList.remove('nb-drag-over'); });
+      var row = e.target.closest('.nb-tree-item');
+      if (row && row.dataset.path !== _dragPath) row.classList.add('nb-drag-over');
+    });
+    container.addEventListener('dragleave', function(e) {
+      var row = e.target.closest('.nb-tree-item');
+      if (row) row.classList.remove('nb-drag-over');
+    });
+    container.addEventListener('drop', function(e) {
+      e.preventDefault();
+      container.querySelectorAll('.nb-drag-over').forEach(function(el) { el.classList.remove('nb-drag-over'); });
+      if (!_dragPath) return;
+      var row = e.target.closest('.nb-tree-item');
+      if (!row || row.dataset.path === _dragPath) return;
+      var targetPath = row.dataset.path;
+      var targetType = row.dataset.type;
+      nbMoveItem(_dragPath, targetPath, targetType);
+      _dragPath = null;
+    });
   }
 
-  async function deleteNote() {
-    const id = el('note-id').value;
-    if (!id || !confirm('Delete this note?')) return;
-    await fetch('/api/dm-admin/notes/' + id, { method:'DELETE' });
-    closeNoteModal(); loadNotes();
+  // Context menu handler
+  document.addEventListener('click', function() { el('nb-ctx-menu').style.display = 'none'; });
+  el('nb-ctx-menu').onclick = function(e) {
+    var item = e.target.closest('.nb-ctx-item');
+    if (!item || !_nbCtxPath) return;
+    var action = item.dataset.action;
+    if (action === 'open' && _nbCtxType === 'file') nbOpenFile(_nbCtxPath);
+    else if (action === 'new-child') nbNewFileIn(_nbCtxType === 'folder' ? _nbCtxPath : '');
+    else if (action === 'new-folder-child') nbNewFolderIn(_nbCtxType === 'folder' ? _nbCtxPath : '');
+    else if (action === 'rename') nbRenameItem(_nbCtxPath);
+    else if (action === 'delete') nbDeleteItem(_nbCtxPath);
+    el('nb-ctx-menu').style.display = 'none';
+  };
+
+  function renderTreeLevel(nodes, depth) {
+    return nodes.map(function(n) {
+      if (n.type === 'folder') {
+        var isOpen = n._open !== false;
+        var arrow = isOpen ? '&#9662;' : '&#9656;';
+        return '<div class="nb-tree-item" draggable="true" style="--depth:'+depth+'" data-path="'+esc(n.path)+'" data-type="folder">' +
+          '<span class="nb-folder-toggle">'+arrow+'</span>' +
+          '<span class="nb-icon">&#128193;</span>' +
+          '<span>'+esc(n.name)+'</span>' +
+          '<span class="nb-tree-actions">' +
+            '<button data-action="new-child" title="New note in folder">+</button>' +
+            '<button data-action="rename" title="Rename">&#9998;</button>' +
+            '<button data-action="delete" title="Delete">&#128465;</button>' +
+          '</span>' +
+        '</div>' +
+        (isOpen ? '<div class="nb-folder-children" data-folder="'+esc(n.path)+'">'+renderTreeLevel(n.children||[], depth+1)+'</div>' : '');
+      } else {
+        var active = n.path === _nbCurrentPath ? ' active' : '';
+        var name = n.name.replace(/\\.md$/i, '');
+        return '<div class="nb-tree-item'+active+'" draggable="true" style="--depth:'+depth+'" data-path="'+esc(n.path)+'" data-type="file">' +
+          '<span class="nb-icon">&#128196;</span>' +
+          '<span>'+esc(name)+'</span>' +
+          '<span class="nb-tree-actions">' +
+            '<button data-action="rename" title="Rename">&#9998;</button>' +
+            '<button data-action="delete" title="Delete">&#128465;</button>' +
+          '</span>' +
+        '</div>';
+      }
+    }).join('');
+  }
+
+  function nbToggleFolder(path) {
+    var node = findNode(_nbTree, path);
+    if (node) { node._open = node._open === false ? true : false; renderNbTree(); }
+  }
+
+  function nbExpandAll() { setAllOpen(_nbTree, true); renderNbTree(); }
+  function nbCollapseAll() { setAllOpen(_nbTree, false); renderNbTree(); }
+  function setAllOpen(nodes, open) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].type === 'folder') { nodes[i]._open = open; if (nodes[i].children) setAllOpen(nodes[i].children, open); }
+    }
+  }
+
+  // ── Search / filter tree ──
+  function nbFilterTree(query) {
+    var q = query.toLowerCase().trim();
+    var items = el('nb-tree').querySelectorAll('.nb-tree-item');
+    var folders = el('nb-tree').querySelectorAll('.nb-folder-children');
+    if (!q) {
+      items.forEach(function(el) { el.classList.remove('nb-hidden'); });
+      folders.forEach(function(el) { el.classList.remove('nb-hidden'); });
+      return;
+    }
+    // Show files matching, hide others; always show folders that contain matches
+    items.forEach(function(el) {
+      if (el.dataset.type === 'file') {
+        var name = (el.dataset.path || '').toLowerCase();
+        el.classList.toggle('nb-hidden', name.indexOf(q) === -1);
+      }
+    });
+    // Show parent folders of visible files
+    folders.forEach(function(el) {
+      var hasVisible = el.querySelector('.nb-tree-item:not(.nb-hidden)[data-type="file"]');
+      el.classList.toggle('nb-hidden', !hasVisible);
+    });
+    items.forEach(function(el) {
+      if (el.dataset.type === 'folder') {
+        var next = el.nextElementSibling;
+        el.classList.toggle('nb-hidden', next && next.classList.contains('nb-hidden'));
+      }
+    });
+  }
+
+  // ── Breadcrumb ──
+  function renderBreadcrumb(path) {
+    var parts = path.split('/');
+    var bc = el('nb-breadcrumb');
+    var html = '<span class="nb-bc-sep">&#128214;</span>';
+    var cumulative = '';
+    for (var i = 0; i < parts.length; i++) {
+      if (i > 0) cumulative += '/';
+      cumulative += parts[i];
+      var label = parts[i].replace(/\\.md$/i, '');
+      if (i < parts.length - 1) {
+        html += ' <span class="nb-bc-sep">/</span> <span data-path="'+esc(cumulative)+'">'+esc(label)+'</span>';
+      } else {
+        html += ' <span class="nb-bc-sep">/</span> <span class="nb-bc-current">'+esc(label)+'</span>';
+      }
+    }
+    bc.innerHTML = html;
+    bc.onclick = function(e) {
+      var sp = e.target.closest('[data-path]');
+      if (sp) {
+        var node = findNode(_nbTree, sp.dataset.path);
+        if (node && node.type === 'file') nbOpenFile(sp.dataset.path);
+      }
+    };
+  }
+
+  // ── Open file (with title, breadcrumb, backlinks) ──
+  async function nbOpenFile(path) {
+    if (_nbDirty && _nbCurrentPath) {
+      await nbSave(true);
+    }
+    _nbCurrentPath = path;
+    el('nb-welcome').style.display = 'none';
+    el('nb-editor-wrap').style.display = 'flex';
+    el('nb-save-status').textContent = 'Loading...';
+    renderBreadcrumb(path);
+
+    // Set title from filename
+    var titleName = path.split('/').pop().replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
+    el('nb-note-title').value = titleName;
+
+    var r = await fetch('/api/dm-admin/notebook/read?path=' + encodeURIComponent(path));
+    var d = await r.json();
+    if (!r.ok) { el('nb-save-status').textContent = 'Error: ' + (d.error||''); return; }
+
+    if (!_nbEditor) {
+      _nbEditor = new EasyMDE({
+        element: document.getElementById('nb-editor'),
+        spellChecker: false,
+        autofocus: true,
+        status: ['lines', 'words', 'cursor'],
+        toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','image','table','horizontal-rule','|','preview','side-by-side','fullscreen','|','guide'],
+        previewRender: function(text) {
+          // Render [[wiki links]] as clickable spans
+          var processed = text.replace(/\\[\\[([^\\]]+)\\]\\]/g, function(m, name) {
+            return '<span class="wiki-link" data-note="'+name+'">'+name+'</span>';
+          });
+          return DOMPurify.sanitize(marked.parse(processed));
+        },
+        sideBySideFullscreen: false,
+        minHeight: '200px',
+      });
+      _nbEditor.codemirror.on('change', function() {
+        _nbDirty = true;
+        el('nb-save-status').textContent = 'Unsaved changes';
+        el('nb-save-status').style.color = '#e8b923';
+        clearTimeout(_nbSaveTimer);
+        _nbSaveTimer = setTimeout(function() { nbSave(true); }, 5000);
+      });
+      // Image paste handler
+      _nbEditor.codemirror.on('paste', function(cm, e) {
+        var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            e.preventDefault();
+            var file = items[i].getAsFile();
+            nbUploadImage(file, cm);
+            return;
+          }
+        }
+      });
+      // Image drop handler
+      _nbEditor.codemirror.on('drop', function(cm, e) {
+        var files = e.dataTransfer.files;
+        for (var i = 0; i < files.length; i++) {
+          if (files[i].type.indexOf('image') !== -1) {
+            e.preventDefault();
+            nbUploadImage(files[i], cm);
+            return;
+          }
+        }
+      });
+      // Wiki-link click in preview
+      document.querySelector('.editor-preview')?.addEventListener('click', function(e) {
+        var wl = e.target.closest('.wiki-link');
+        if (!wl) return;
+        var noteName = wl.dataset.note;
+        var target = _nbAllFiles.find(function(f) {
+          return f.name.replace(/\\.md$/i, '').toLowerCase() === noteName.toLowerCase();
+        });
+        if (target) nbOpenFile(target.path);
+        else alert('Note not found: ' + noteName);
+      });
+    }
+
+    _nbEditor.value(d.content || '');
+    _nbDirty = false;
+    el('nb-save-status').textContent = 'Saved';
+    el('nb-save-status').style.color = '#555';
+    renderNbTree();
+
+    // Load backlinks and note info
+    nbLoadBacklinks(path);
+    nbLoadNoteInfo(d.content || '');
+  }
+
+  // ── Backlinks ──
+  async function nbLoadBacklinks(path) {
+    var bl = el('nb-backlinks');
+    bl.innerHTML = '<span class="nb-rp-empty">Loading...</span>';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/backlinks?path=' + encodeURIComponent(path));
+      var d = await r.json();
+      if (!d.backlinks || !d.backlinks.length) {
+        bl.innerHTML = '<span class="nb-rp-empty">No other notes link here</span>';
+        return;
+      }
+      bl.innerHTML = d.backlinks.map(function(b) {
+        return '<div class="nb-backlink-item" data-path="'+esc(b.path)+'">' +
+          '<span class="nb-bl-name">'+esc(b.name)+'</span>' +
+          '<span class="nb-bl-ctx">'+esc(b.context)+'</span>' +
+        '</div>';
+      }).join('');
+      bl.onclick = function(e) {
+        var item = e.target.closest('.nb-backlink-item');
+        if (item) nbOpenFile(item.dataset.path);
+      };
+    } catch (_) {
+      bl.innerHTML = '<span class="nb-rp-empty">Error loading backlinks</span>';
+    }
+  }
+
+  // ── Note info ──
+  function nbLoadNoteInfo(content) {
+    var words = content.trim() ? content.trim().split(/\\s+/).length : 0;
+    var lines = content.split('\\n').length;
+    var links = (content.match(/\\[\\[([^\\]]+)\\]\\]/g) || []).length;
+    var images = (content.match(/!\\[/g) || []).length;
+    el('nb-note-info').innerHTML =
+      '<div class="nb-info-row"><span>Words</span><span>'+words+'</span></div>' +
+      '<div class="nb-info-row"><span>Lines</span><span>'+lines+'</span></div>' +
+      '<div class="nb-info-row"><span>Wiki Links</span><span>'+links+'</span></div>' +
+      '<div class="nb-info-row"><span>Images</span><span>'+images+'</span></div>' +
+      '<div class="nb-info-row"><span>Path</span><span style="font-size:0.65rem;">'+esc(_nbCurrentPath)+'</span></div>';
+  }
+
+  function nbToggleInfo() {
+    _nbInfoOpen = !_nbInfoOpen;
+    el('nb-right-panel').style.display = _nbInfoOpen ? 'block' : 'none';
+  }
+
+  // ── Link Map (force-directed graph) ──
+  var _nbLinkMapData = null;
+  async function nbShowLinkMap() {
+    el('nb-linkmap-overlay').style.display = 'flex';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/link-map');
+      _nbLinkMapData = await r.json();
+      nbDrawLinkMap();
+    } catch (_) {}
+  }
+  function nbCloseLinkMap() {
+    el('nb-linkmap-overlay').style.display = 'none';
+  }
+  function nbDrawLinkMap() {
+    var data = _nbLinkMapData;
+    if (!data) return;
+    var canvas = el('nb-linkmap-canvas');
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height - 50;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    var nodes = data.nodes.map(function(n, i) {
+      return { id: n.id, label: n.label, x: W/2 + (Math.random()-0.5)*W*0.6, y: H/2 + (Math.random()-0.5)*H*0.6, vx: 0, vy: 0, active: n.id === _nbCurrentPath };
+    });
+    var nodeMap = {};
+    nodes.forEach(function(n) { nodeMap[n.id] = n; });
+    var edges = data.edges.filter(function(e) { return nodeMap[e.source] && nodeMap[e.target]; });
+
+    // Simple force simulation (60 iterations)
+    for (var iter = 0; iter < 80; iter++) {
+      // Repulsion between all nodes
+      for (var i = 0; i < nodes.length; i++) {
+        for (var j = i+1; j < nodes.length; j++) {
+          var dx = nodes[j].x - nodes[i].x;
+          var dy = nodes[j].y - nodes[i].y;
+          var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          var force = 5000 / (dist * dist);
+          nodes[i].vx -= dx/dist * force;
+          nodes[i].vy -= dy/dist * force;
+          nodes[j].vx += dx/dist * force;
+          nodes[j].vy += dy/dist * force;
+        }
+      }
+      // Attraction along edges
+      for (var e = 0; e < edges.length; e++) {
+        var s = nodeMap[edges[e].source], t = nodeMap[edges[e].target];
+        if (!s || !t) continue;
+        var dx = t.x - s.x, dy = t.y - s.y;
+        var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        var force = (dist - 120) * 0.02;
+        s.vx += dx/dist * force;
+        s.vy += dy/dist * force;
+        t.vx -= dx/dist * force;
+        t.vy -= dy/dist * force;
+      }
+      // Center gravity
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].vx += (W/2 - nodes[i].x) * 0.005;
+        nodes[i].vy += (H/2 - nodes[i].y) * 0.005;
+        nodes[i].vx *= 0.85;
+        nodes[i].vy *= 0.85;
+        nodes[i].x += nodes[i].vx;
+        nodes[i].y += nodes[i].vy;
+        nodes[i].x = Math.max(40, Math.min(W-40, nodes[i].x));
+        nodes[i].y = Math.max(30, Math.min(H-30, nodes[i].y));
+      }
+    }
+
+    // Draw
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, W, H);
+    // Edges
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    for (var e = 0; e < edges.length; e++) {
+      var s = nodeMap[edges[e].source], t = nodeMap[edges[e].target];
+      if (!s || !t) continue;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+      // Arrow
+      var angle = Math.atan2(t.y - s.y, t.x - s.x);
+      var ax = t.x - Math.cos(angle)*14, ay = t.y - Math.sin(angle)*14;
+      ctx.fillStyle = '#555';
+      ctx.beginPath();
+      ctx.moveTo(ax + Math.cos(angle)*8, ay + Math.sin(angle)*8);
+      ctx.lineTo(ax + Math.cos(angle+2.5)*6, ay + Math.sin(angle+2.5)*6);
+      ctx.lineTo(ax + Math.cos(angle-2.5)*6, ay + Math.sin(angle-2.5)*6);
+      ctx.fill();
+    }
+    // Nodes
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      ctx.fillStyle = n.active ? '#c83232' : '#1a1a1a';
+      ctx.strokeStyle = n.active ? '#e8b923' : '#444';
+      ctx.lineWidth = n.active ? 2 : 1;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 10, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = n.active ? '#e8b923' : '#aaa';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.label, n.x, n.y + 22);
+    }
+    // Click to navigate
+    canvas.onclick = function(e) {
+      var cr = canvas.getBoundingClientRect();
+      var mx = e.clientX - cr.left, my = e.clientY - cr.top;
+      for (var i = 0; i < nodes.length; i++) {
+        var dx = mx - nodes[i].x, dy = my - nodes[i].y;
+        if (dx*dx + dy*dy < 200) {
+          nbCloseLinkMap();
+          nbOpenFile(nodes[i].id);
+          return;
+        }
+      }
+    };
+  }
+
+  async function nbUploadImage(file, cm) {
+    el('nb-save-status').textContent = 'Uploading image...';
+    var fd = new FormData();
+    fd.append('image', file, file.name);
+    var r = await fetch('/api/dm-admin/notebook/upload-image', { method:'POST', body:fd });
+    var d = await r.json();
+    if (r.ok && d.url) {
+      var cursor = cm.getCursor();
+      cm.replaceRange('![image](' + d.url + ')\\n', cursor);
+      el('nb-save-status').textContent = 'Image inserted';
+    } else {
+      el('nb-save-status').textContent = 'Upload failed';
+    }
+  }
+
+  function showNbWelcome() {
+    el('nb-welcome').style.display = 'flex';
+    el('nb-editor-wrap').style.display = 'none';
+  }
+
+  function nbDeleteCurrent() {
+    if (_nbCurrentPath) nbDeleteItem(_nbCurrentPath);
+  }
+
+  async function nbSave(silent) {
+    if (!_nbCurrentPath || !_nbEditor) return;
+    var content = _nbEditor.value();
+    // Check if title changed (rename the file)
+    var currentName = _nbCurrentPath.split('/').pop().replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
+    var newTitle = el('nb-note-title').value.trim();
+    if (newTitle && newTitle !== currentName) {
+      var dir = _nbCurrentPath.substring(0, _nbCurrentPath.lastIndexOf('/'));
+      var newFileName = newTitle.replace(/\\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') + '.md';
+      var newPath = dir ? dir + '/' + newFileName : newFileName;
+      if (newPath !== _nbCurrentPath) {
+        var rr = await fetch('/api/dm-admin/notebook/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({oldPath:_nbCurrentPath, newPath:newPath}) });
+        if (rr.ok) {
+          _nbCurrentPath = newPath;
+          renderBreadcrumb(newPath);
+          await loadNotes();
+        }
+      }
+    }
+    el('nb-save-status').textContent = 'Saving...';
+    el('nb-save-status').style.color = '#888';
+    var r = await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:_nbCurrentPath, content:content}) });
+    if (r.ok) {
+      _nbDirty = false;
+      el('nb-save-status').textContent = 'Saved';
+      el('nb-save-status').style.color = '#4ade80';
+      setTimeout(function() { el('nb-save-status').style.color = '#555'; el('nb-save-status').textContent = 'Saved'; }, 2000);
+    } else {
+      var d = await r.json();
+      el('nb-save-status').textContent = 'Save failed: ' + (d.error||'');
+      el('nb-save-status').style.color = '#f44';
+    }
+  }
+
+  async function nbNewFile() { nbNewFileIn(''); }
+  async function nbNewFileIn(folder) {
+    var name = prompt('New note name (e.g. session-12):');
+    if (!name) return;
+    if (!name.endsWith('.md')) name += '.md';
+    var fullPath = folder ? folder + '/' + name : name;
+    var title = name.replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:fullPath, type:'file', content:'# ' + title + '\\n\\n'}) });
+    if (r.ok) { await loadNotes(); nbOpenFile(fullPath); }
+    else { var d = await r.json(); alert('Error: '+(d.error||'')); }
+  }
+
+  async function nbNewFolder() { nbNewFolderIn(''); }
+  async function nbNewFolderIn(parentFolder) {
+    var name = prompt('Folder name:');
+    if (!name) return;
+    var fullPath = parentFolder ? parentFolder + '/' + name : name;
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:fullPath, type:'folder'}) });
+    if (r.ok) { await loadNotes(); }
+    else { var d = await r.json(); alert('Error: '+(d.error||'')); }
+  }
+
+  async function nbDeleteItem(path) {
+    if (!confirm('Delete ' + path + '?')) return;
+    var r = await fetch('/api/dm-admin/notebook/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path}) });
+    if (r.ok) {
+      if (_nbCurrentPath === path) { _nbCurrentPath = null; _nbDirty = false; showNbWelcome(); }
+      await loadNotes();
+    } else { var d = await r.json(); alert('Error: '+(d.error||'')); }
+  }
+
+  async function nbRenameItem(path) {
+    var newName = prompt('New name:', path);
+    if (!newName || newName === path) return;
+    var r = await fetch('/api/dm-admin/notebook/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({oldPath:path, newPath:newName}) });
+    if (r.ok) {
+      if (_nbCurrentPath === path) { _nbCurrentPath = newName; renderBreadcrumb(newName); }
+      await loadNotes();
+    } else { var d = await r.json(); alert('Error: '+(d.error||'')); }
+  }
+
+  async function nbMoveItem(srcPath, targetPath, targetType) {
+    // Determine destination: if target is a folder, move into it; if file, move to same folder
+    var fileName = srcPath.split('/').pop();
+    var destFolder = targetType === 'folder' ? targetPath : targetPath.substring(0, targetPath.lastIndexOf('/'));
+    var newPath = destFolder ? destFolder + '/' + fileName : fileName;
+    if (newPath === srcPath) return;
+    // Prevent moving a folder into itself
+    if (newPath.startsWith(srcPath + '/')) return;
+    var r = await fetch('/api/dm-admin/notebook/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldPath: srcPath, newPath: newPath })
+    });
+    if (r.ok) {
+      if (_nbCurrentPath === srcPath) { _nbCurrentPath = newPath; renderBreadcrumb(newPath); }
+      await loadNotes();
+    } else { var d = await r.json(); alert('Move failed: ' + (d.error || '')); }
   }
 
   // ═══ CHARACTERS ═══
