@@ -307,7 +307,6 @@ async function renderDmAdminPage(session) {
         <div class="dmc-panel-bar"><h2>NPCs</h2>
           <div class="dmc-bar-actions">
             <input id="npc-search" placeholder="Filter NPCs..." oninput="filterNpcs()" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;width:180px;" />
-            <button class="dmc-btn dmc-btn-sm" onclick="splitNpcDescriptions()" title="Use AI to split existing descriptions into Player/DM fields" style="background:#2a1a3a;color:#c084fc;border:1px solid #7c3aed44;">AI Split Descriptions</button>
             <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="newNpc()">+ Add NPC</button>
           </div>
         </div>
@@ -1270,19 +1269,6 @@ async function renderDmAdminPage(session) {
     if (!confirm('Delete NPC: '+name+'?')) return;
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     loadNpcs();
-  }
-  async function splitNpcDescriptions() {
-    if (!confirm('This will use AI to split all NPC descriptions (that don\\'t already have DM Notes) into Player-safe and DM-only fields. Continue?')) return;
-    showAlert(el('npcs-status'), 'AI is processing NPC descriptions... this may take a minute.', 'ok');
-    try {
-      const r = await fetch('/api/dm-admin/npcs/split-descriptions', {method:'POST'});
-      const d = await r.json();
-      if (d.error) { showAlert(el('npcs-status'), 'Error: '+d.error, 'err'); return; }
-      var ok = d.results ? d.results.filter(function(x){return x.status==='ok';}).length : 0;
-      var fail = d.results ? d.results.filter(function(x){return x.status==='error';}).length : 0;
-      showAlert(el('npcs-status'), 'Done! '+ok+' NPCs split successfully'+(fail?' ('+fail+' errors)':'')+'.', ok?'ok':'err');
-      loadNpcs();
-    } catch(e) { showAlert(el('npcs-status'), 'Error: '+e.message, 'err'); }
   }
 
   // ═══ SESSIONS ═══
