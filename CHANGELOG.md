@@ -4,6 +4,14 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.2] - 2026-04-15
+
+### Fixed
+- **Notebook scrollbar (final)** — locked outer page viewport so only the note editor/preview scrolls; top navbar and sidebar remain static
+  - `html` overflow locked on DM Admin page, `.dmc` uses strict `height` instead of `min-height`
+  - Notebook layout uses `height:100%` parent chain instead of viewport calc
+  - Markdown preview pane now scrolls internally
+
 ## [1.15.1] - 2026-04-15
 
 ### Fixed
