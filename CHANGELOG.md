@@ -21,6 +21,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 - Removed **Class** column from NPC table and edit form (DM will add manually during gameplay)
 - DM AI chat container widened to 80% of viewport (was 800px max-width)
 - DM AI chat height now fills available viewport (removed 520px max-height cap)
+- NPC names in DM Admin table now link to the NPC detail page (opens in new tab)
 
 ## [1.13.1] - 2026-04-15
 
