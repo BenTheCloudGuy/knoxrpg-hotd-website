@@ -320,6 +320,23 @@ async function ensureHotdTables() {
       );
     `).catch(() => {});
 
+    // ── Campaign Notebook (PostgreSQL-backed markdown pages) ──
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_notebook_pages (
+        id          SERIAL PRIMARY KEY,
+        path        TEXT NOT NULL UNIQUE,
+        parent_path TEXT DEFAULT '',
+        name        TEXT NOT NULL,
+        type        TEXT NOT NULL DEFAULT 'file',
+        content     TEXT DEFAULT '',
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_notebook_path ON hotd_notebook_pages (path);
+      CREATE INDEX IF NOT EXISTS idx_notebook_parent ON hotd_notebook_pages (parent_path);
+      CREATE INDEX IF NOT EXISTS idx_notebook_type ON hotd_notebook_pages (type);
+    `).catch(() => {});
+
     // Seed DALL-E style prefix
     await pgPool.query("INSERT INTO hotd_config (key, value) VALUES ('dalle_style_prefix', 'Dark fantasy digital painting, dramatic chiaroscuro lighting, rich earth tones and deep crimsons, medieval Forgotten Realms aesthetic, highly detailed, cinematic composition, gothic atmosphere --') ON CONFLICT (key) DO NOTHING").catch(() => {});
 

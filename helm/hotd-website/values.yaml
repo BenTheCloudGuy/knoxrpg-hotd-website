@@ -32,6 +32,12 @@ postgres:
 nas:
   hotdContent: /mnt/nas/Gaming/ASSETS/DDB_CONTENT/hotd-website-content
 
+# -- Notebook Images (PVC) ----------------------------------------------------
+notebookImages:
+  size: 2Gi
+  storageClass: microk8s-hostpath
+  mountPath: /app/hotd-campaign/images/notebook
+
 # -- OpenAI -------------------------------------------------------------------
 openai:
   apiKey: ""                 # REQUIRED — set via --set or a secrets file

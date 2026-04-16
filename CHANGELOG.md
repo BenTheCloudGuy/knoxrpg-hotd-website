@@ -4,6 +4,24 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2026-04-15
+
+### Changed
+- **Campaign Notebook: PostgreSQL backend** — migrated from filesystem to `hotd_notebook_pages` table
+  - Notes persist across pod restarts/redeploys (no more ephemeral container FS)
+  - Tree, CRUD, rename/move, backlinks, link map, and search all use SQL queries
+  - Parent folders auto-created on nested note/folder creation
+  - Folder deletes cascade to all children
+  - Renames update child paths and RAG embeddings
+
+### Added
+- **Notebook RAG integration** — every note save auto-embeds content into `hotd_embeddings` (source_type=`notebook`, is_dm_only=TRUE)
+  - Chunks content at ~1500 chars, generates OpenAI `text-embedding-3-small` vectors
+  - DM AI chat automatically picks up notebook context via existing semantic search
+  - Embeddings cleaned up on delete, paths updated on rename
+- **PersistentVolumeClaim for notebook images** — `hotd-notebook-images` PVC (2Gi) mounted at `/app/hotd-campaign/images/notebook`
+  - Images survive pod restarts; per-page subdirectories preserved
+
 ## [1.15.2] - 2026-04-15
 
 ### Fixed

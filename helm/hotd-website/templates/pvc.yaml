@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hotd-notebook-images
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hotd-website.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.notebookImages.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.notebookImages.size }}

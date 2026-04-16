@@ -774,36 +774,103 @@ ${ragContext}`;
   }
 
   // ══════════════════════════════════════════════════════════════
-  // ── CAMPAIGN NOTEBOOK (file-based markdown) ─────────────────
+  // ── CAMPAIGN NOTEBOOK (PostgreSQL-backed markdown pages) ────
   // ══════════════════════════════════════════════════════════════
 
-  const STATIC_ROOT_ABS = require("path").resolve(require("../config").STATIC_ROOT);
-  const NOTEBOOK_ROOT = notebookPath.join(STATIC_ROOT_ABS, "notebook");
+  const NOTEBOOK_IMG_DIR = notebookPath.join(
+    require("path").resolve(require("../config").STATIC_ROOT),
+    "images", "notebook"
+  );
 
-  function walkDir(dir, prefix) {
-    const entries = [];
-    if (!fs.existsSync(dir)) return entries;
-    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
-      const rel = prefix ? prefix + "/" + item.name : item.name;
-      if (item.name.startsWith(".")) continue;
-      if (item.isDirectory()) {
-        if (item.name === "node_modules") continue;
-        entries.push({ name: item.name, path: rel, type: "folder", children: walkDir(notebookPath.join(dir, item.name), rel) });
-      } else if (item.name.endsWith(".md")) {
-        entries.push({ name: item.name, path: rel, type: "file" });
-      }
-    }
-    entries.sort((a, b) => {
+  // ── Helper: build tree from flat rows ──
+  function buildTree(rows) {
+    const byPath = {};
+    const roots = [];
+    // Sort so folders come first, then alphabetical
+    rows.sort((a, b) => {
       if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
-    return entries;
+    for (const r of rows) {
+      const node = { name: r.name, path: r.path, type: r.type };
+      if (r.type === "folder") node.children = [];
+      byPath[r.path] = node;
+    }
+    for (const r of rows) {
+      if (r.parent_path && byPath[r.parent_path]) {
+        byPath[r.parent_path].children.push(byPath[r.path]);
+      } else {
+        roots.push(byPath[r.path]);
+      }
+    }
+    // Sort children within each folder
+    for (const key in byPath) {
+      if (byPath[key].children) {
+        byPath[key].children.sort((a, b) => {
+          if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+      }
+    }
+    return roots;
+  }
+
+  // ── Helper: embed notebook page content into RAG ──
+  async function embedNotebookPage(path, name, content) {
+    try {
+      const { openaiClient } = require("../lib/azure");
+      const openai = openaiClient;
+      if (!openai || !content.trim()) return;
+      const { embedQuery } = require("../lib/rag");
+      const crypto = require("crypto");
+
+      // Chunk content (~1500 chars per chunk)
+      const chunks = [];
+      const lines = content.split("\n");
+      let current = "";
+      for (const line of lines) {
+        if (current.length + line.length > 1500 && current.length > 200) {
+          chunks.push(current);
+          current = "";
+        }
+        current += line + "\n";
+      }
+      if (current.trim()) chunks.push(current);
+
+      // Delete old embeddings for this notebook page
+      await pgPool.query(
+        "DELETE FROM hotd_embeddings WHERE source_type = 'notebook' AND source_path = $1",
+        [path]
+      );
+
+      // Insert new embeddings
+      for (let i = 0; i < chunks.length; i++) {
+        const chunkText = chunks[i].trim();
+        if (!chunkText) continue;
+        const chunkHash = crypto.createHash("sha256").update(path + ":" + i + ":" + chunkText).digest("hex");
+        const vector = await embedQuery(openai, chunkText);
+        const vectorStr = "[" + vector.join(",") + "]";
+        await pgPool.query(
+          `INSERT INTO hotd_embeddings (source_type, source_path, chunk_index, title, chunk_text, chunk_hash, embedding, is_dm_only, metadata)
+           VALUES ('notebook', $1, $2, $3, $4, $5, $6::vector, TRUE, $7)
+           ON CONFLICT (chunk_hash) DO UPDATE SET chunk_text = $4, embedding = $6::vector, title = $3, updated_at = NOW()`,
+          [path, i, name.replace(/\.md$/i, ""), chunkText, chunkHash, vectorStr, JSON.stringify({ notebook_path: path })]
+        );
+      }
+    } catch (e) {
+      console.warn("  WARN: notebook RAG embed failed for", path, e.message);
+    }
   }
 
   // ── Notebook: file tree ────────────────────────────────────
   if (decoded === "/api/dm-admin/notebook/tree" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    sendJSON(res, { tree: walkDir(NOTEBOOK_ROOT, "") });
+    try {
+      const { rows } = await pgPool.query(
+        "SELECT path, parent_path, name, type FROM hotd_notebook_pages ORDER BY type, name"
+      );
+      sendJSON(res, { tree: buildTree(rows) });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
@@ -812,24 +879,30 @@ ${ragContext}`;
     if (!requireAdmin(session, res)) return true;
     const filePath = new URL(req.url, "http://x").searchParams.get("path");
     if (!filePath) { sendJSON(res, { error: "path required" }, 400); return true; }
-    const full = notebookPath.resolve(NOTEBOOK_ROOT, filePath);
-    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
-    if (!fs.existsSync(full)) { sendJSON(res, { error: "not found" }, 404); return true; }
-    sendJSON(res, { path: filePath, content: fs.readFileSync(full, "utf8") });
+    try {
+      const { rows } = await pgPool.query(
+        "SELECT path, content FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [filePath]
+      );
+      if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      sendJSON(res, { path: rows[0].path, content: rows[0].content });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
-  // ── Notebook: write file ───────────────────────────────────
+  // ── Notebook: write file (+ RAG embed) ─────────────────────
   if (decoded === "/api/dm-admin/notebook/write" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
-    const b = JSON.parse(await readBody(req));
-    if (!b.path || b.content === undefined) { sendJSON(res, { error: "path and content required" }, 400); return true; }
-    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
-    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
-    fs.mkdirSync(notebookPath.dirname(full), { recursive: true });
-    fs.writeFileSync(full, b.content, "utf8");
-    sendJSON(res, { ok: true });
+      const b = JSON.parse(await readBody(req));
+      if (!b.path || b.content === undefined) { sendJSON(res, { error: "path and content required" }, 400); return true; }
+      const { rows } = await pgPool.query(
+        "UPDATE hotd_notebook_pages SET content = $1, updated_at = NOW() WHERE path = $2 AND type = 'file' RETURNING name",
+        [b.content, b.path]
+      );
+      if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      sendJSON(res, { ok: true });
+      // Async RAG embedding (don't block the response)
+      embedNotebookPage(b.path, rows[0].name, b.content).catch(() => {});
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -838,35 +911,61 @@ ${ragContext}`;
   if (decoded === "/api/dm-admin/notebook/create" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
-    const b = JSON.parse(await readBody(req));
-    if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
-    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
-    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
-    if (b.type === "folder") {
-      fs.mkdirSync(full, { recursive: true });
-    } else {
-      if (fs.existsSync(full)) { sendJSON(res, { error: "file already exists" }, 409); return true; }
-      fs.mkdirSync(notebookPath.dirname(full), { recursive: true });
-      fs.writeFileSync(full, b.content || "# " + notebookPath.basename(full, ".md") + "\n\n", "utf8");
+      const b = JSON.parse(await readBody(req));
+      if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+      const parts = b.path.split("/");
+      const name = parts.pop();
+      const parentPath = parts.join("/");
+      const type = b.type === "folder" ? "folder" : "file";
+      const content = type === "file" ? (b.content || "# " + name.replace(/\.md$/i, "").replace(/[-_]/g, " ") + "\n\n") : "";
+
+      // Ensure parent folders exist
+      if (parentPath) {
+        const segments = parentPath.split("/");
+        let cumulative = "";
+        for (const seg of segments) {
+          cumulative = cumulative ? cumulative + "/" + seg : seg;
+          await pgPool.query(
+            `INSERT INTO hotd_notebook_pages (path, parent_path, name, type, content)
+             VALUES ($1, $2, $3, 'folder', '') ON CONFLICT (path) DO NOTHING`,
+            [cumulative, cumulative.includes("/") ? cumulative.substring(0, cumulative.lastIndexOf("/")) : "", seg]
+          );
+        }
+      }
+
+      await pgPool.query(
+        `INSERT INTO hotd_notebook_pages (path, parent_path, name, type, content) VALUES ($1, $2, $3, $4, $5)`,
+        [b.path, parentPath, name, type, content]
+      );
+      sendJSON(res, { ok: true });
+      // Embed new file content
+      if (type === "file" && content.trim()) {
+        embedNotebookPage(b.path, name, content).catch(() => {});
+      }
+    } catch (e) {
+      if (e.code === "23505") { sendJSON(res, { error: "already exists" }, 409); }
+      else { sendJSON(res, { error: e.message }, 500); }
     }
-    sendJSON(res, { ok: true });
-    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
-  // ── Notebook: delete file ──────────────────────────────────
+  // ── Notebook: delete file/folder ───────────────────────────
   if (decoded === "/api/dm-admin/notebook/delete" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
-    const b = JSON.parse(await readBody(req));
-    if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
-    const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
-    if (!full.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
-    if (!fs.existsSync(full)) { sendJSON(res, { error: "not found" }, 404); return true; }
-    const stat = fs.statSync(full);
-    if (stat.isDirectory()) fs.rmSync(full, { recursive: true, force: true });
-    else fs.unlinkSync(full);
-    sendJSON(res, { ok: true });
+      const b = JSON.parse(await readBody(req));
+      if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+      // Delete the item and any children (for folders)
+      await pgPool.query(
+        "DELETE FROM hotd_notebook_pages WHERE path = $1 OR path LIKE $2",
+        [b.path, b.path + "/%"]
+      );
+      // Remove RAG embeddings too
+      await pgPool.query(
+        "DELETE FROM hotd_embeddings WHERE source_type = 'notebook' AND (source_path = $1 OR source_path LIKE $2)",
+        [b.path, b.path + "/%"]
+      );
+      sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -875,15 +974,51 @@ ${ragContext}`;
   if (decoded === "/api/dm-admin/notebook/rename" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
-    const b = JSON.parse(await readBody(req));
-    if (!b.oldPath || !b.newPath) { sendJSON(res, { error: "oldPath and newPath required" }, 400); return true; }
-    const fullOld = notebookPath.resolve(NOTEBOOK_ROOT, b.oldPath);
-    const fullNew = notebookPath.resolve(NOTEBOOK_ROOT, b.newPath);
-    if (!fullOld.startsWith(NOTEBOOK_ROOT) || !fullNew.startsWith(NOTEBOOK_ROOT)) { sendJSON(res, { error: "forbidden" }, 403); return true; }
-    if (!fs.existsSync(fullOld)) { sendJSON(res, { error: "not found" }, 404); return true; }
-    fs.mkdirSync(notebookPath.dirname(fullNew), { recursive: true });
-    fs.renameSync(fullOld, fullNew);
-    sendJSON(res, { ok: true });
+      const b = JSON.parse(await readBody(req));
+      if (!b.oldPath || !b.newPath) { sendJSON(res, { error: "oldPath and newPath required" }, 400); return true; }
+      const newParts = b.newPath.split("/");
+      const newName = newParts.pop();
+      const newParent = newParts.join("/");
+
+      // Ensure new parent folders exist
+      if (newParent) {
+        const segments = newParent.split("/");
+        let cumulative = "";
+        for (const seg of segments) {
+          cumulative = cumulative ? cumulative + "/" + seg : seg;
+          await pgPool.query(
+            `INSERT INTO hotd_notebook_pages (path, parent_path, name, type, content)
+             VALUES ($1, $2, $3, 'folder', '') ON CONFLICT (path) DO NOTHING`,
+            [cumulative, cumulative.includes("/") ? cumulative.substring(0, cumulative.lastIndexOf("/")) : "", seg]
+          );
+        }
+      }
+
+      // Rename the item itself
+      await pgPool.query(
+        "UPDATE hotd_notebook_pages SET path = $1, parent_path = $2, name = $3, updated_at = NOW() WHERE path = $4",
+        [b.newPath, newParent, newName, b.oldPath]
+      );
+      // Rename children (for folder moves)
+      const { rows: children } = await pgPool.query(
+        "SELECT id, path FROM hotd_notebook_pages WHERE path LIKE $1",
+        [b.oldPath + "/%"]
+      );
+      for (const child of children) {
+        const newChildPath = b.newPath + child.path.slice(b.oldPath.length);
+        const childParts = newChildPath.split("/");
+        childParts.pop();
+        await pgPool.query(
+          "UPDATE hotd_notebook_pages SET path = $1, parent_path = $2, updated_at = NOW() WHERE id = $3",
+          [newChildPath, childParts.join("/"), child.id]
+        );
+      }
+      // Update RAG embedding paths
+      await pgPool.query(
+        "UPDATE hotd_embeddings SET source_path = $1 WHERE source_type = 'notebook' AND source_path = $2",
+        [b.newPath, b.oldPath]
+      );
+      sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -898,7 +1033,7 @@ ${ragContext}`;
       if (!parsed.file || !parsed.file.data.length) { sendJSON(res, { error: "no file" }, 400); return true; }
       const noteParam = new URL(req.url, "http://x").searchParams.get("notePath") || "";
       const pageName = notebookPath.basename(noteParam, ".md").replace(/[^a-zA-Z0-9_-]/g, "_") || "general";
-      const imgDir = notebookPath.join(STATIC_ROOT_ABS, "images", "notebook", pageName);
+      const imgDir = notebookPath.join(NOTEBOOK_IMG_DIR, pageName);
       fs.mkdirSync(imgDir, { recursive: true });
       const safeName = Date.now() + "_" + parsed.file.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       fs.writeFileSync(notebookPath.join(imgDir, safeName), parsed.file.data);
@@ -908,120 +1043,93 @@ ${ragContext}`;
   }
 
   // ── Notebook: backlinks for a note ─────────────────────────
-  // Scans all .md files for [[wiki links]] that reference the given note.
   if (decoded.startsWith("/api/dm-admin/notebook/backlinks") && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
     const filePath = new URL(req.url, "http://x").searchParams.get("path");
     if (!filePath) { sendJSON(res, { error: "path required" }, 400); return true; }
-    const targetName = notebookPath.basename(filePath, ".md").toLowerCase();
-    const backlinks = [];
-    function scanForLinks(dir, prefix) {
-      if (!fs.existsSync(dir)) return;
-      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (item.name.startsWith(".")) continue;
-        const rel = prefix ? prefix + "/" + item.name : item.name;
-        if (item.isDirectory()) {
-          if (item.name === "node_modules") continue;
-          scanForLinks(notebookPath.join(dir, item.name), rel);
-        } else if (item.name.endsWith(".md") && rel !== filePath) {
-          try {
-            const content = fs.readFileSync(notebookPath.join(dir, item.name), "utf8");
-            const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
-            let match;
-            while ((match = wikiLinkRegex.exec(content)) !== null) {
-              if (match[1].toLowerCase() === targetName || match[1].toLowerCase() === filePath.replace(/\.md$/i, "").toLowerCase()) {
-                const lineNum = content.substring(0, match.index).split("\n").length;
-                const lines = content.split("\n");
-                backlinks.push({ path: rel, name: item.name.replace(/\.md$/i, ""), line: lineNum, context: (lines[lineNum - 1] || "").trim().substring(0, 100) });
-                break; // one backlink per file
-              }
-            }
-          } catch (_) {}
+    try {
+      const targetName = notebookPath.basename(filePath, ".md").toLowerCase();
+      const targetPathNoExt = filePath.replace(/\.md$/i, "").toLowerCase();
+      const { rows } = await pgPool.query(
+        "SELECT path, name, content FROM hotd_notebook_pages WHERE type = 'file' AND path != $1",
+        [filePath]
+      );
+      const backlinks = [];
+      for (const r of rows) {
+        const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+        let match;
+        while ((match = wikiLinkRegex.exec(r.content)) !== null) {
+          if (match[1].toLowerCase() === targetName || match[1].toLowerCase() === targetPathNoExt) {
+            const lineNum = r.content.substring(0, match.index).split("\n").length;
+            const lines = r.content.split("\n");
+            backlinks.push({ path: r.path, name: r.name.replace(/\.md$/i, ""), line: lineNum, context: (lines[lineNum - 1] || "").trim().substring(0, 100) });
+            break;
+          }
         }
       }
-    }
-    scanForLinks(NOTEBOOK_ROOT, "");
-    sendJSON(res, { backlinks });
+      sendJSON(res, { backlinks });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
-  // ── Notebook: link map (all wiki-links between notes) ──────
-  // Returns nodes (all .md files) and edges (wiki-link references).
+  // ── Notebook: link map ─────────────────────────────────────
   if (decoded === "/api/dm-admin/notebook/link-map" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const nodes = [];
-    const edges = [];
-    const fileIndex = {}; // name -> path mapping
-    function indexFiles(dir, prefix) {
-      if (!fs.existsSync(dir)) return;
-      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (item.name.startsWith(".")) continue;
-        const rel = prefix ? prefix + "/" + item.name : item.name;
-        if (item.isDirectory()) {
-          if (item.name === "node_modules") continue;
-          indexFiles(notebookPath.join(dir, item.name), rel);
-        } else if (item.name.endsWith(".md")) {
-          const label = item.name.replace(/\.md$/i, "");
-          nodes.push({ id: rel, label: label, folder: prefix || "(root)" });
-          fileIndex[label.toLowerCase()] = rel;
-          fileIndex[rel.replace(/\.md$/i, "").toLowerCase()] = rel;
-        }
+    try {
+      const { rows } = await pgPool.query(
+        "SELECT path, name, parent_path, content FROM hotd_notebook_pages WHERE type = 'file'"
+      );
+      const nodes = [];
+      const edges = [];
+      const fileIndex = {};
+      for (const r of rows) {
+        const label = r.name.replace(/\.md$/i, "");
+        nodes.push({ id: r.path, label, folder: r.parent_path || "(root)" });
+        fileIndex[label.toLowerCase()] = r.path;
+        fileIndex[r.path.replace(/\.md$/i, "").toLowerCase()] = r.path;
       }
-    }
-    indexFiles(NOTEBOOK_ROOT, "");
-    // Second pass: extract [[wiki links]] and build edges
-    for (const node of nodes) {
-      try {
-        const content = fs.readFileSync(notebookPath.join(NOTEBOOK_ROOT, node.id), "utf8");
+      for (const r of rows) {
         const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
         let match;
         const seen = new Set();
-        while ((match = wikiLinkRegex.exec(content)) !== null) {
+        while ((match = wikiLinkRegex.exec(r.content)) !== null) {
           const target = fileIndex[match[1].toLowerCase()];
-          if (target && target !== node.id && !seen.has(target)) {
-            edges.push({ source: node.id, target: target });
+          if (target && target !== r.path && !seen.has(target)) {
+            edges.push({ source: r.path, target });
             seen.add(target);
           }
         }
-      } catch (_) {}
-    }
-    sendJSON(res, { nodes, edges });
+      }
+      sendJSON(res, { nodes, edges });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
-  // ── Notebook: full-text search across all notes ────────────
+  // ── Notebook: full-text search ─────────────────────────────
   if (decoded.startsWith("/api/dm-admin/notebook/search") && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const query = (new URL(req.url, "http://x").searchParams.get("q") || "").toLowerCase().trim();
+    const query = (new URL(req.url, "http://x").searchParams.get("q") || "").trim();
     if (!query) { sendJSON(res, { results: [] }); return true; }
-    const results = [];
-    function searchFiles(dir, prefix) {
-      if (!fs.existsSync(dir)) return;
-      for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (item.name.startsWith(".")) continue;
-        const rel = prefix ? prefix + "/" + item.name : item.name;
-        if (item.isDirectory()) {
-          if (item.name === "node_modules") continue;
-          searchFiles(notebookPath.join(dir, item.name), rel);
-        } else if (item.name.endsWith(".md")) {
-          try {
-            const content = fs.readFileSync(notebookPath.join(dir, item.name), "utf8");
-            const lowerContent = content.toLowerCase();
-            const idx = lowerContent.indexOf(query);
-            const nameMatch = item.name.toLowerCase().includes(query);
-            if (idx !== -1 || nameMatch) {
-              const lineNum = idx !== -1 ? content.substring(0, idx).split("\n").length : 0;
-              const lines = content.split("\n");
-              const context = idx !== -1 ? (lines[lineNum - 1] || "").trim().substring(0, 120) : "";
-              results.push({ path: rel, name: item.name.replace(/\.md$/i, ""), line: lineNum, context: context, nameMatch: nameMatch });
-            }
-          } catch (_) {}
-        }
-      }
-    }
-    searchFiles(NOTEBOOK_ROOT, "");
-    results.sort((a, b) => (b.nameMatch ? 1 : 0) - (a.nameMatch ? 1 : 0));
-    sendJSON(res, { results: results.slice(0, 50) });
+    try {
+      const pattern = "%" + query.toLowerCase() + "%";
+      const { rows } = await pgPool.query(
+        `SELECT path, name, content FROM hotd_notebook_pages
+         WHERE type = 'file' AND (LOWER(name) LIKE $1 OR LOWER(content) LIKE $1)
+         ORDER BY CASE WHEN LOWER(name) LIKE $1 THEN 0 ELSE 1 END, name
+         LIMIT 50`,
+        [pattern]
+      );
+      const results = rows.map(r => {
+        const lc = r.content.toLowerCase();
+        const idx = lc.indexOf(query.toLowerCase());
+        const nameMatch = r.name.toLowerCase().includes(query.toLowerCase());
+        const lineNum = idx !== -1 ? r.content.substring(0, idx).split("\n").length : 0;
+        const lines = r.content.split("\n");
+        const context = idx !== -1 ? (lines[lineNum - 1] || "").trim().substring(0, 120) : "";
+        return { path: r.path, name: r.name.replace(/\.md$/i, ""), line: lineNum, context, nameMatch };
+      });
+      sendJSON(res, { results });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 

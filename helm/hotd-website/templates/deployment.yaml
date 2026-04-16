@@ -55,6 +55,8 @@ spec:
             - name: hotd-content
               mountPath: /data/hotd-content
               readOnly: true
+            - name: notebook-images
+              mountPath: {{ .Values.notebookImages.mountPath }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           readinessProbe:
@@ -66,4 +68,6 @@ spec:
           hostPath:
             path: {{ .Values.nas.hotdContent }}
             type: Directory
-            type: Directory
+        - name: notebook-images
+          persistentVolumeClaim:
+            claimName: hotd-notebook-images
