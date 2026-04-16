@@ -4,6 +4,13 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.1] - 2026-04-15
+
+### Fixed
+- **Notebook scrollbar** — editor panel now scrolls internally instead of pushing the outer page shell
+- **Notebook root path** — markdown files now stored under `src/hotd-campaign/notebook/` (was `src/hotd-campaign/`)
+- **Image storage per page** — pasted/dropped images stored in `images/notebook/<pagename>/` instead of a single flat folder
+
 ## [1.15.0] - 2026-04-15
 
 ### Added
