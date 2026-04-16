@@ -498,7 +498,8 @@ async function renderDmAdminPage(session) {
 
   <style>
     /* ═══ DM COMMAND CENTER LAYOUT ═══ */
-    .dmc { display:flex; min-height:calc(100vh - 60px); background:#111; }
+    html:has(.dmc) { overflow:hidden; }
+    .dmc { display:flex; height:calc(100vh - 60px); background:#111; overflow:hidden; }
 
     /* ── Sidebar ── */
     .dmc-side { width:220px; min-width:220px; background:#0d0d0d; border-right:1px solid #222; display:flex; flex-direction:column; transition:width 0.2s,min-width 0.2s; overflow:hidden; }
@@ -664,8 +665,8 @@ async function renderDmAdminPage(session) {
     .img-modal-info { flex:1; }
 
     /* ═══ CAMPAIGN NOTEBOOK ═══ */
-    #dmc-notes { padding:0 !important; overflow:hidden; }
-    .notebook-layout { display:flex; height:calc(100vh - 60px); border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
+    #dmc-notes { padding:0 !important; height:100%; overflow:hidden; }
+    .notebook-layout { display:flex; height:100%; border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
     .nb-search-wrap { padding:6px 10px; border-bottom:1px solid #1a1a1a; }
@@ -709,7 +710,7 @@ async function renderDmAdminPage(session) {
     #nb-editor-wrap .editor-toolbar button { color:#999 !important; }
     #nb-editor-wrap .editor-toolbar button:hover { background:#1a1a1a !important; }
     #nb-editor-wrap .editor-toolbar button.active { background:#222 !important; color:#e8b923 !important; }
-    #nb-editor-wrap .editor-preview { background:#111; color:#ccc; padding:16px; }
+    #nb-editor-wrap .editor-preview { background:#111; color:#ccc; padding:16px; overflow-y:auto; }
     #nb-editor-wrap .editor-preview h1,
     #nb-editor-wrap .editor-preview h2,
     #nb-editor-wrap .editor-preview h3 { color:#e8b923; }
