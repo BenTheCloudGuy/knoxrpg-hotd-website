@@ -4,6 +4,24 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-04-15
+
+### Added
+- **NPC DM Notes** — separate DM-only notes field for secret motives, alliances, and plot hooks
+  - New `dm_notes` column on `hotd_npcs` table
+  - Player Description (visible to players) and DM Notes (DM only) as distinct textareas in the edit form
+  - DM Notes textarea has red-tinted border to visually distinguish from player content
+- **AI Description Splitter** — one-click button to use AI to split existing NPC descriptions
+  - Processes all NPCs with descriptions but no DM notes
+  - Strips motives, alliances, and secrets into DM Notes; leaves player-safe content in Description
+  - Uses gpt-4o-mini with structured JSON output
+  - POST `/api/dm-admin/npcs/split-descriptions`
+
+### Changed
+- Removed **Class** column from NPC table and edit form (DM will add manually during gameplay)
+- DM AI chat container widened to 80% of viewport (was 800px max-width)
+- DM AI chat height now fills available viewport (removed 520px max-height cap)
+
 ## [1.13.1] - 2026-04-15
 
 ### Added
