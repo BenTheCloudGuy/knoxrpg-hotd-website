@@ -822,6 +822,7 @@ ${ragContext}`;
   // ── Notebook: write file ───────────────────────────────────
   if (decoded === "/api/dm-admin/notebook/write" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
+    try {
     const b = JSON.parse(await readBody(req));
     if (!b.path || b.content === undefined) { sendJSON(res, { error: "path and content required" }, 400); return true; }
     const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
@@ -829,12 +830,14 @@ ${ragContext}`;
     fs.mkdirSync(notebookPath.dirname(full), { recursive: true });
     fs.writeFileSync(full, b.content, "utf8");
     sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
   // ── Notebook: create file/folder ───────────────────────────
   if (decoded === "/api/dm-admin/notebook/create" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
+    try {
     const b = JSON.parse(await readBody(req));
     if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
     const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
@@ -847,12 +850,14 @@ ${ragContext}`;
       fs.writeFileSync(full, b.content || "# " + notebookPath.basename(full, ".md") + "\n\n", "utf8");
     }
     sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
   // ── Notebook: delete file ──────────────────────────────────
   if (decoded === "/api/dm-admin/notebook/delete" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
+    try {
     const b = JSON.parse(await readBody(req));
     if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
     const full = notebookPath.resolve(NOTEBOOK_ROOT, b.path);
@@ -862,12 +867,14 @@ ${ragContext}`;
     if (stat.isDirectory()) fs.rmSync(full, { recursive: true, force: true });
     else fs.unlinkSync(full);
     sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
   // ── Notebook: rename/move ──────────────────────────────────
   if (decoded === "/api/dm-admin/notebook/rename" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
+    try {
     const b = JSON.parse(await readBody(req));
     if (!b.oldPath || !b.newPath) { sendJSON(res, { error: "oldPath and newPath required" }, 400); return true; }
     const fullOld = notebookPath.resolve(NOTEBOOK_ROOT, b.oldPath);
@@ -877,6 +884,7 @@ ${ragContext}`;
     fs.mkdirSync(notebookPath.dirname(fullNew), { recursive: true });
     fs.renameSync(fullOld, fullNew);
     sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
