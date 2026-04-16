@@ -24,12 +24,12 @@ function renderDungeonMasterPage(session) {
     }
     ${navCss()}
     .dm-hero {
-      max-width: 1200px; margin: 0 auto; padding: 48px 32px 24px; text-align: center;
+      width: 80%; margin: 0 auto; padding: 48px 32px 24px; text-align: center;
     }
     .dm-hero h1 { font-size: 2.2rem; font-weight: 900; color: #e8b923; margin-bottom: 8px; }
     .dm-hero p { color: #a09d94; font-size: 1.05rem; line-height: 1.5; margin-bottom: 32px; }
     .chat-container {
-      max-width: 1200px; width: 100%; margin: 0 auto; padding: 0 32px 48px;
+      width: 80%; margin: 0 auto; padding: 0 0 48px;
       flex: 1; display: flex; flex-direction: column;
     }
     .chat-messages {
@@ -87,7 +87,7 @@ function renderDungeonMasterPage(session) {
     .chat-send:hover { background: #f0c83d; }
     .chat-send:disabled { background: #555; color: #888; cursor: not-allowed; }
     .chat-disclaimer {
-      max-width: 1200px; margin: 0 auto; padding: 8px 32px 32px;
+      width: 80%; margin: 0 auto; padding: 8px 0 32px;
       font-size: 0.75rem; color: #555; text-align: center;
     }
     .site-footer { text-align: center; padding: 24px; color: #555; border-top: 1px solid #222; font-size: 0.8rem; }
