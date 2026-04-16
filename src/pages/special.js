@@ -33,7 +33,7 @@ function renderDungeonMasterPage(session) {
       flex: 1; display: flex; flex-direction: column;
     }
     .chat-messages {
-      flex: 1; min-height: 320px; max-height: 520px; overflow-y: auto;
+      flex: 1; overflow-y: auto;
       background: #1a1a1a; border: 2px solid #333; border-radius: 12px 12px 0 0;
       padding: 20px; display: flex; flex-direction: column; gap: 16px;
     }
@@ -96,7 +96,6 @@ function renderDungeonMasterPage(session) {
     @media (max-width: 600px) {
       .dm-hero { padding: 24px 16px 16px; }
       .chat-container { padding: 0 16px 32px; }
-      .chat-messages { min-height: 240px; max-height: 400px; }
     }
   </style>
 </head>
