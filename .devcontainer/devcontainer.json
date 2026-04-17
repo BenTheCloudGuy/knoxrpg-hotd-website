@@ -1,6 +1,10 @@
 {
   "name": "KnoxRPG HotD Development",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  // Use docker-compose so PostgreSQL (pgvector) runs alongside the dev container
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/knoxrpg-hotd-website",
 
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
@@ -8,25 +12,32 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  // Publish FoundryVTT port so it binds to 0.0.0.0 (reachable from network)
-  "appPort": ["30000:30000"],
-
-  "forwardPorts": [3000, 3001, 30000],
+  "forwardPorts": [3000, 3001, 5432, 30000],
   "portsAttributes": {
-    "3000":  { "label": "HotD Website",  "onAutoForward": "notify" },
-    "3001":  { "label": "HotD Website (dev)", "onAutoForward": "silent" },
-    "30000": { "label": "FoundryVTT",    "onAutoForward": "notify", "visibility": "public" }
+    "3000": { "label": "HotD Website", "onAutoForward": "notify" },
+    "3001": { "label": "HotD Website (dev)", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
+    "30000": {
+      "label": "FoundryVTT",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
   },
 
   // Codespaces Secrets are injected automatically.
   // For local Docker, set these as host environment variables.
+  // PG vars + Azure SP vars are set by docker-compose.yml.
   "remoteEnv": {
-    "FOUNDRY_USERNAME":       "${localEnv:FOUNDRY_USERNAME}",
-    "FOUNDRY_PASSWORD":       "${localEnv:FOUNDRY_PASSWORD}",
+    "FOUNDRY_USERNAME": "${localEnv:FOUNDRY_USERNAME}",
+    "FOUNDRY_PASSWORD": "${localEnv:FOUNDRY_PASSWORD}",
     "FOUNDRY_ADMIN_PASSWORD": "${localEnv:FOUNDRY_ADMIN_PASSWORD}",
-    "FOUNDRY_LICENSE_KEY":    "${localEnv:FOUNDRY_LICENSE_KEY}",
-    "FOUNDRY_BUILD":          "${localEnv:FOUNDRY_BUILD}",
-    "OPENAI_API_KEY":         "${localEnv:OPENAI_API_KEY}"
+    "FOUNDRY_LICENSE_KEY": "${localEnv:FOUNDRY_LICENSE_KEY}",
+    "FOUNDRY_BUILD": "${localEnv:FOUNDRY_BUILD}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "AZURE_TENANT": "${localEnv:AZURE_TENANT}",
+    "AZURE_CLIENT_ID": "${localEnv:AZURE_CLIENT_ID}",
+    "AZURE_SECRET": "${localEnv:AZURE_SECRET}",
+    "AZURE_SUBSCRIPTION_ID": "${localEnv:AZURE_SUBSCRIPTION_ID}"
   },
 
   "customizations": {
@@ -85,8 +96,8 @@
     }
   },
 
-  // Install Node deps for both the website and the configure-world script
-  "postCreateCommand": "cd src && npm install && cd /workspaces/knoxrpg-hotd-website/.devcontainer && npm install --no-save classic-level",
+  // Install PostgreSQL client tools, Node deps, and make scripts executable
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y postgresql-client && cd src && npm install && cd /workspaces/knoxrpg-hotd-website/.devcontainer && npm install --no-save classic-level && chmod +x scripts/*.sh",
 
   // Download/install FoundryVTT + start both servers on every container start
   "postStartCommand": "bash .devcontainer/setup-foundry.sh && bash .devcontainer/scripts/start-dev.sh",

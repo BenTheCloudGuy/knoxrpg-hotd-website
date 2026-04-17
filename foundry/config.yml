@@ -38,10 +38,6 @@ foundry:
   # Add any module your HotD integration depends on.
   modules:
     # ── Core utility / developer modules ───────────────────────
-    - id: _dev-mode
-      version: ""
-      description: "Developer Mode — enables debug flags & hot-reload helpers"
-
     - id: lib-wrapper
       version: ""
       description: "libWrapper — safe monkey-patching library used by many modules"
@@ -86,8 +82,6 @@ foundry:
     core.chatBubblesPan: false
     core.noCanvas: false
     # Developer-friendly defaults
-    _dev-mode.enableAutoHotReload: true
-    _dev-mode.enablePackageDebugging: true
 
   # ── Local HotD Module (your in-development module) ───────────
   # Symlinked into the Foundry modules directory automatically.

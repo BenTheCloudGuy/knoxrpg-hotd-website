@@ -202,10 +202,11 @@ curl -sS -o /dev/null -c "$ADMIN_COOKIE" \
 # ── Install D&D 5e system ───────────────────────────────────────────────────
 if [ ! -d "$DATA_DIR/Data/systems/$SYSTEM_ID" ]; then
   echo "── Installing D&D 5e system ──"
+  SYSTEM_MANIFEST="https://raw.githubusercontent.com/foundryvtt/dnd5e/master/system.json"
   curl -sS -b "$ADMIN_COOKIE" \
     -X POST http://localhost:30000/setup \
     -H "Content-Type: application/json" \
-    -d "{\"action\":\"installPackage\",\"type\":\"system\",\"id\":\"${SYSTEM_ID}\"}"
+    -d "{\"action\":\"installPackage\",\"type\":\"system\",\"id\":\"${SYSTEM_ID}\",\"manifest\":\"${SYSTEM_MANIFEST}\"}"
 
   for i in $(seq 1 60); do
     [ -f "$DATA_DIR/Data/systems/$SYSTEM_ID/system.json" ] && break
@@ -220,17 +221,30 @@ fi
 echo "── Installing required modules ──"
 
 # Module IDs from foundry/config.yml
-MODULES=("_dev-mode" "lib-wrapper" "socketlib" "tidy5e-sheet" "monk-active-tiles" "monks-enhanced-journal" "smalltime" "midi-qol" "dfreds-convenient-effects")
+# Foundry v13 requires a manifest URL for installPackage.
+# The official package registry provides manifests at this URL pattern.
+declare -A MODULE_MANIFESTS=(
+  ["lib-wrapper"]="https://raw.githubusercontent.com/ruipin/fvtt-lib-wrapper/master/module.json"
+  ["socketlib"]="https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/master/module.json"
+  ["tidy5e-sheet"]="https://github.com/kgar/foundry-vtt-tidy-5e-sheets/releases/latest/download/module.json"
+  ["monk-active-tiles"]="https://raw.githubusercontent.com/ironmonk88/monks-active-tiles/main/module.json"
+  ["monks-enhanced-journal"]="https://raw.githubusercontent.com/ironmonk88/monks-enhanced-journal/main/module.json"
+  ["smalltime"]="https://raw.githubusercontent.com/unsoluble/smalltime/main/module.json"
+  ["midi-qol"]="https://gitlab.com/tposney/midi-qol/-/releases/permalink/latest/downloads/module.json"
+  ["dfreds-convenient-effects"]="https://github.com/DFreds/dfreds-convenient-effects/releases/latest/download/module.json"
+)
+MODULES=("${!MODULE_MANIFESTS[@]}")
 
 for mod in "${MODULES[@]}"; do
   if [ -d "$DATA_DIR/Data/modules/$mod" ]; then
     echo "  ✔  $mod already installed"
   else
     echo "  ── Installing $mod ──"
+    MANIFEST="${MODULE_MANIFESTS[$mod]}"
     curl -sS -b "$ADMIN_COOKIE" \
       -X POST http://localhost:30000/setup \
       -H "Content-Type: application/json" \
-      -d "{\"action\":\"installPackage\",\"type\":\"module\",\"id\":\"${mod}\"}"
+      -d "{\"action\":\"installPackage\",\"type\":\"module\",\"id\":\"${mod}\",\"manifest\":\"${MANIFEST}\"}"
     # Wait for install
     for i in $(seq 1 30); do
       [ -d "$DATA_DIR/Data/modules/$mod" ] && break

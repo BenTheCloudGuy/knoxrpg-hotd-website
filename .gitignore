@@ -26,6 +26,9 @@ helm/**/secrets.yaml
 # FoundryVTT runtime (proprietary — never commit)
 .foundry/
 
+# Database backups (may contain user data)
+.devcontainer/db/backups/
+
 # Block temp files
 TO-DO.md
 dm-ai-config.md
