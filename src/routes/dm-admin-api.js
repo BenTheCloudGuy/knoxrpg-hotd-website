@@ -109,7 +109,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   // ── NPCs: list ─────────────────────────────────────────────
   if (decoded === "/api/dm-admin/npcs" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const r = await pgPool.query("SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description, dm_notes, sort_order, is_hidden FROM hotd_npcs ORDER BY name");
+    const r = await pgPool.query("SELECT id, npcid, name, race, npc_class, location, status, alignment_tag, portrait_url, description, dm_notes, associations, sort_order, is_hidden FROM hotd_npcs ORDER BY sort_order, name");
     sendJSON(res, { npcs: r.rows });
     return true;
   }
@@ -120,8 +120,8 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       const b = JSON.parse(await readBody(req));
       const r = await pgPool.query(
-        "INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,dm_notes,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id",
-        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"Unknown", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", parseInt(b.sort_order)||0, b.is_hidden||false]
+        "INSERT INTO hotd_npcs (name,race,npc_class,location,status,alignment_tag,portrait_url,description,dm_notes,associations,sort_order,is_hidden) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"Unknown", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", JSON.stringify(b.associations||[]), parseInt(b.sort_order)||0, b.is_hidden||false]
       );
       sendJSON(res, { id: r.rows[0].id });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
@@ -135,8 +135,8 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       const b = JSON.parse(await readBody(req));
       await pgPool.query(
-        "UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,dm_notes=$9,sort_order=$10,is_hidden=$11 WHERE id=$12",
-        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", parseInt(b.sort_order)||0, b.is_hidden||false, npcUpdate[1]]
+        "UPDATE hotd_npcs SET name=$1,race=$2,npc_class=$3,location=$4,status=$5,alignment_tag=$6,portrait_url=$7,description=$8,dm_notes=$9,associations=$10,sort_order=$11,is_hidden=$12 WHERE id=$13",
+        [b.name, b.race||"", b.npc_class||"", b.location||"", b.status||"", b.alignment_tag||"neutral", b.portrait_url||"", b.description||"", b.dm_notes||"", JSON.stringify(b.associations||[]), parseInt(b.sort_order)||0, b.is_hidden||false, npcUpdate[1]]
       );
       sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }

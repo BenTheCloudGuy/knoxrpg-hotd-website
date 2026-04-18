@@ -4,6 +4,23 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-07-03
+
+### Added
+- **NPC Associations** — NPC detail pages now display linked NPCs with relationship descriptions
+- **DM Notes on NPC pages** — admin users see a DM Notes section (motives, secrets, plot hooks) below the public description
+- **Associations editor in DM Admin** — add/remove NPC associations with name, ID, and relationship fields
+- **NPC Class/Role field in DM Admin** — new editable field (fixes prior hardcoded empty string bug)
+- **`npcid` and `associations` columns** — added to `hotd_npcs` schema and all API queries (SELECT, INSERT, UPDATE)
+
+### Changed
+- **npcs.json data overhaul** — 66 NPCs with separated player-facing descriptions and DM-only notes; added Bella & Offalia Wormwiggle (hag coven); all entries have `npcid`, `associations` JSONB, and `dm_notes`
+- **DM Admin NPC form** — restructured layout with Class/Role, expanded Status options (Undead, Imprisoned, Active, Corrupted), simplified Alignment to Ally/Enemy/Neutral
+- **NPC list sort order** — API now returns NPCs sorted by `sort_order, name` instead of just `name`
+
+### Fixed
+- **`saveNpc()` npc_class bug** — DM Admin was always saving `npc_class` as empty string; now reads from form field
+
 ## [1.16.0] - 2026-04-15
 
 ### Changed

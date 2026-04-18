@@ -1,17 +1,78 @@
 [
   {
+    "npcid": 1,
+    "associations": [
+      {
+        "id": 2,
+        "name": "Ireena Kolyana",
+        "relationship": "Strahd's obsession and primary target for his affections. Strahd has bitten her twice and views her as the latest reincarnation of Tatyana.",
+        "type": "npc"
+      },
+      {
+        "id": 7,
+        "name": "Rahadin",
+        "relationship": "Strahd's loyal chamberlain and right hand. Rahadin has served the Von Zarovich family for centuriess and is utterly devoted to Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 8,
+        "name": "Baba Lysaga",
+        "relationship": "Baba Lysaga considers herself Strahd's true mother and has extended her life through dark magic to watch over him.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Strahd's ally and one of the Stormraven siblings. Elandra was a fierce warrior and head of Strahd's Personal Guard.",
+        "type": "npc"
+      },
+      {
+        "id": 15,
+        "name": "Doru",
+        "relationship": "Strahd turned Doru into a vampire spawn as a cruel joke after Doru stormed Castle Ravenloft.",
+        "type": "npc"
+      },
+      {
+        "id": 29,
+        "name": "Gertruda",
+        "relationship": "Gertruda naively came to Castle Ravenloft believing she could appeal to Strahd's better nature. She is now his captive guest.",
+        "type": "npc"
+      }
+    ],
     "name": "Strahd Von Zarovich",
     "race": "Vampire (formerly Human)",
-    "npc_class": "Wizard / Warrior",
+    "npc_class": "Wizard (14)/ Fighter (15)",
     "location": "Castle Ravenloft, Barovia",
-    "status": "Undead",
+    "status": "Active",
     "alignment_tag": "enemy",
     "portrait_url": "/images/strahd-von-zarovich.jpg",
-    "description": "Count Strahd Von Zarovich is the ancient vampire lord and undisputed ruler of Barovia. Once a powerful conquering warlord of the Von Zarovich dynasty, Strahd made a dark pact to gain immortality after becoming consumed by jealousy over his brother Sergei's betrothal to Tatyana. He murdered Sergei at their wedding and pursued Tatyana, who threw herself from the walls of Castle Ravenloft rather than submit to him. The Dark Powers of the Shadowfell sealed Barovia in mist as his eternal prison. Strahd is a brilliant tactician, a skilled wizard, and a predator who toys with those trapped in his domain. He views the party as potential entertainment — or threats to be crushed.",
+    "description": "Count Strahd Von Zarovich is the ancient vampire lord and undisputed ruler of Barovia.",
+    "dm_notes": "Once a powerful conquering warlord of the Von Zarovich dynasty, Strahd made a dark pact with Shorthagot to gain immortality after becoming consumed by jealousy over his brother Sergei's betrothal to Tatyana. He murdered Sergei at their wedding and pursued Tatyana, who threw herself from the walls of Castle Ravenloft rather than submit to him. The Dark Powers of the Shadowfell sealed Barovia in mist as his eternal prison. Strahd is a brilliant tactician, a skilled wizard, and a predator who toys with those trapped in his domain. He views the party as potential entertainment — or threats to be crushed. \n\n Over the Centuries he has slowly gotten more and more cruel, to the point even his most Loyal servants are starting to fear him.. ",
     "sort_order": 1,
-    "is_hidden": true
+    "is_hidden": false
   },
   {
+    "npcid": 2,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Strahd's obsession and primary target for his affections. Strahd has bitten her twice and views her as the latest reincarnation of Tatyana.",
+        "type": "npc"
+      },
+      {
+        "id": 3,
+        "name": "Ismark Kolyanovich",
+        "relationship": "Ireena's adoptive brother and protector. Ismark seeks allies to help escort Ireena to safety from Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 12,
+        "name": "Izek Strazni",
+        "relationship": "Izek is secretly Ireena's biological brother, separated in childhood. He is obsessed with her likeness without understanding why.",
+        "type": "npc"
+      }
+    ],
     "name": "Ireena Kolyana",
     "race": "Human",
     "npc_class": "Noble / Fighter",
@@ -19,11 +80,27 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/ireena-kolyana.png",
-    "description": "Ireena Kolyana is the adopted daughter of the late Burgomaster Kolyan Indirovich and the sister of Ismark. Unknown to her, she is the latest reincarnation of Tatyana, the woman Strahd loved and lost centuries ago. Strahd has bitten her twice, and she bears the marks on her neck. Ireena is brave, compassionate, and determined not to become Strahd's prisoner. She is skilled with a sword and refuses to be treated as a helpless victim. The party's efforts to protect her from Strahd are central to the campaign.",
+    "description": "Ireena Kolyana is the adopted daughter of the late Burgomaster Kolyan Indirovich and the sister of Ismark.",
+    "dm_notes": "Unknown to her, she is the latest reincarnation of Tatyana, the woman Strahd loved and lost centuries ago. Strahd has bitten her twice, and she bears the marks on her neck, though she makes sure to have them covered with a scarf at all times. Ireena is brave, compassionate, and determined not to become Strahd's prisoner. She is skilled with a sword and refuses to be treated as a helpless victim.\n\nIreena's true origins: She was born to a Barovian family living near the Svalich Woods. As a young child, a dire wolf attack scattered her family — she was separated from her biological brother Izek during the chaos. The young Ireena was found wandering alone at the edge of the woods by Burgomaster Kolyan Indirovich, who took her in and raised her as his own daughter alongside his biological son Ismark. She has no memory of her life before Kolyan's home and does not know she is adopted.\n\nHer biological brother Izek Strazni survived the same attack but lost part of his arm to the wolves. He was eventually taken in by the Vallakovich household in Vallaki and grew into Baron Vallakovich's brutal enforcer. Izek is obsessed with Ireena's likeness — commissioning dolls from Blinsky that resemble her — but does not consciously understand why. Neither sibling knows the truth of their connection.\n\nIreena's name 'Kolyana' is a Barovian patronymic meaning 'daughter of Kolyan,' reflecting her adoptive father rather than any biological family surname.\n\nThe party's efforts to protect her from Strahd are central to the campaign.",
     "sort_order": 2,
-    "is_hidden": true
+    "is_hidden": false
   },
   {
+    "npcid": 3,
+    "associations": [
+      {
+        "id": 2,
+        "name": "Ireena Kolyana",
+        "relationship": "Ismark's adoptive sister. He is desperate to protect her from Strahd and find her a safe haven.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Ismark opposes Strahd and seeks allies to help protect his sister from the vampire lord.",
+        "type": "npc"
+      }
+    ],
     "name": "Ismark Kolyanovich",
     "race": "Human",
     "npc_class": "Fighter / Noble",
@@ -31,35 +108,95 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/ismark-kolyanovich.png",
-    "description": "Ismark the Lesser, as the villagers call him, is the son of the late Burgomaster Kolyan Indirovich and Ireena's brother. He carries the weight of his father's death and the responsibility of protecting his sister from Strahd. Although he bears the unflattering nickname due to his perceived inability to live up to his ancestor Ismark the Great, he is a capable warrior and a man of honor. He desperately seeks allies to help escort Ireena to safety.",
+    "description": "Ismark Kolyanovich, known unkindly by the villagers as 'Ismark the Lesser,' is the son of the late Burgomaster Kolyan Indirovich and Ireena's brother. A capable warrior and a man of honor, Ismark bears the weight of his father's death and the responsibility of protecting his sister. He desperately seeks allies who might help keep Ireena safe from Strahd.",
+    "dm_notes": "Ismark carries the unflattering nickname due to the villagers' perception that he cannot live up to his ancestor Ismark the Great. In an effort to protect Ireena, he and many of the able-bodied fighters joined Mordenkainen in an assault on Castle Ravenloft. The attack ended with Strahd being wounded, but not before Mordenkainen was thrown from the Castle walls and the remaining villagers were slaughtered. Only Ismark, Doru, and a handful of others managed to escape, and most of them were badly wounded.\n\nIsmark would not hesitate to join the party in fighting Strahd.",
     "sort_order": 3,
-    "is_hidden": true
+    "is_hidden": false
   },
   {
+    "npcid": 4,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Madam Eva harbors deep secrets about her connection to Barovia's dark lord and appears to work toward his downfall.",
+        "type": "npc"
+      },
+      {
+        "id": 26,
+        "name": "Luvash",
+        "relationship": "Luvash is a Vistani leader of the Tser Hill Vistani and is under Madam Eva's broader spiritual authority.",
+        "type": "npc"
+      },
+      {
+        "id": 27,
+        "name": "Arrigal",
+        "relationship": "Arrigal is a Vistani who serves as one of Strahd's spies, operating within the Vistani community Madam Eva leads. Madam Eva was suspicious of Arrigal's loyalties.",
+        "type": "npc"
+      }
+    ],
     "name": "Madam Eva",
     "race": "Human (Vistani)",
     "npc_class": "Seer / Oracle",
     "location": "Tser Pool Encampment",
-    "status": "Alive",
+    "status": "Dead",
     "alignment_tag": "neutral",
     "portrait_url": "",
-    "description": "Madam Eva is the ancient leader of the Vistani encampment at Tser Pool and one of the most powerful seers in all the realms. She uses her Tarokka deck to divine the locations of powerful artifacts that can aid in the fight against Strahd. Despite her connections to the Vistani — who traditionally serve Strahd — Madam Eva appears to work toward his downfall for reasons of her own. Her readings are cryptic but always prove true. She is far older than she appears and harbors deep secrets about her connection to Barovia's dark lord.",
+    "description": "Madam Eva is the ancient leader of the Vistani encampment at Tser Pool and one of the most powerful seers in all the realms. She uses her Tarokka deck to divine the future and guide those who seek her counsel. Her readings are cryptic but always prove true. She is far older than she appears.",
+    "dm_notes": "Madam Eva harbors deep secrets about her connection to Barovia's dark lord. Despite the Vistani's traditional service to Strahd, she appears to work toward his downfall for reasons of her own. Her Tarokka readings guided the party to the locations of powerful artifacts that can aid in the fight against Strahd.",
     "sort_order": 4,
-    "is_hidden": true
+    "is_hidden": false
   },
   {
+    "npcid": 5,
+    "associations": [
+      {
+        "id": 6,
+        "name": "Ezmerelda d'Avenir",
+        "relationship": "Ezmerelda is Van Richten's former student. They parted ways due to a disagreement but she came to Barovia searching for him.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Van Richten is utterly dedicated to destroying Strahd and operates in disguise to avoid detection.",
+        "type": "npc"
+      },
+      {
+        "id": 34,
+        "name": "Rudolph d'Avernir",
+        "relationship": "Van Richten's alias used at the Wizard Tower. The party met him under this identity in Session 20.",
+        "type": "npc"
+      }
+    ],
     "name": "Rudolph Van Richten",
     "race": "Human",
-    "npc_class": "Monster Hunter / Scholar",
+    "npc_class": "Monster Hunter / Ranger",
     "location": "Vallaki (disguised as Rictavio)",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/rictavio-van-richten.png",
-    "description": "Dr. Rudolph Van Richten is the legendary vampire hunter who has spent decades tracking and destroying undead across the multiverse. He operates in Barovia under the disguise of Rictavio, a flamboyant carnival ringmaster, to avoid detection by Strahd's spies. Van Richten is methodical, experienced, and utterly dedicated to destroying Strahd, though he carries deep guilt over the Vistani curse placed on him after a tragic incident involving his son, Erasmus. The party met him at the Wizard Tower in Session 20 as Rudolph d'Avernir.",
+    "description": "Dr. Rudolph Van Richten is the legendary vampire hunter who has spent decades tracking and destroying undead across the multiverse. He operates in Barovia under the disguise of Rictavio, a flamboyant carnival ringmaster, to avoid detection by Strahd's spies. Van Richten is methodical, experienced, and utterly dedicated to destroying Strahd.",
+    "dm_notes": "Van Richten carries deep guilt over the Vistani curse placed on him after a tragic incident involving his son, Erasmus. The party met him at the Wizard Tower in Session 20 under the name Rudolph d'Avernir.\n\nHe knows Mordenkainen from his previous adventures and considers him one of his oldest and closest friends. He thinks of Ezmerelda as a daughter and vowed to destroy Strahd and the Stormraven Sisters to avenge the death of her family. His true identity as a monster hunter is a closely guarded secret — he goes to great lengths to maintain the Rictavio persona in public. He is a valuable ally, providing knowledge, resources, and combat prowess.",
     "sort_order": 5,
-    "is_hidden": true
+    "is_hidden": false
   },
   {
+    "npcid": 6,
+    "associations": [
+      {
+        "id": 5,
+        "name": "Rudolph Van Richten",
+        "relationship": "Ezmerelda's mentor and teacher. She came to Barovia searching for him after they parted ways.",
+        "type": "npc"
+      },
+      {
+        "id": 40,
+        "name": "Velinka d'Avenir",
+        "relationship": "A member of the d'Avenir family connected to the monster hunting legacy.",
+        "type": "npc"
+      }
+    ],
     "name": "Ezmerelda d'Avenir",
     "race": "Human (Vistani heritage)",
     "npc_class": "Monster Hunter / Ranger",
@@ -67,11 +204,27 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/ezmerelda-davenir.png",
-    "description": "Ezmerelda d'Avenir is a young Vistani monster hunter and former student of Rudolph Van Richten. She came to Barovia searching for her mentor after they parted ways due to a disagreement. Ezmerelda is resourceful, fearless, and carries an arsenal of monster-hunting equipment. She lost her right leg below the knee to a werewolf and wears a prosthetic. Despite her youth, she is one of the most capable hunters in Barovia and a valuable ally against Strahd.",
+    "description": "Ezmerelda d'Avenir is a young Vistani monster hunter who came to Barovia searching for her mentor. She is resourceful, fearless, and carries an arsenal of monster-hunting equipment. She lost her right leg below the knee to a werewolf and wears a prosthetic. Despite her youth, she is one of the most capable hunters in Barovia.",
+    "dm_notes": "Ezmerelda is the former student of Rudolph Van Richten. They parted ways due to a disagreement, but she came to Barovia searching for him after learning he had entered the domain. Her connection to Van Richten and her Vistani heritage give her unique insights into both the supernatural threats and the political landscape of Barovia.",
     "sort_order": 6,
     "is_hidden": true
   },
   {
+    "npcid": 7,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Rahadin is Strahd's loyal chamberlain and right hand, utterly devoted to the vampire lord.",
+        "type": "npc"
+      },
+      {
+        "id": 9,
+        "name": "Kasimir Velikov",
+        "relationship": "Rahadin cut off Kasimir's ears as punishment and orchestrated the genocide of the female dusk elves on Strahd's orders.",
+        "type": "npc"
+      }
+    ],
     "name": "Rahadin",
     "race": "Dusk Elf",
     "npc_class": "Fighter / Assassin",
@@ -79,11 +232,21 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/rahadin.png",
-    "description": "Rahadin is Strahd's loyal chamberlain and right hand, a dusk elf who betrayed his own people to serve the Von Zarovich family. He orchestrated the genocide of the female dusk elves on Strahd's orders, earning the eternal hatred of the surviving dusk elf community. Rahadin is surrounded by a deathly aura — the screaming phantoms of his countless victims that follow him everywhere. He is an exceptionally skilled warrior, utterly devoted to Strahd, and considers himself the count's most faithful servant.",
+    "description": "Rahadin is Strahd's loyal chamberlain and right hand, a dusk elf who serves the Von Zarovich family with absolute devotion. He is surrounded by a deathly aura — the screaming phantoms of his countless victims follow him everywhere. Rahadin is an exceptionally skilled warrior and considers himself the count's most faithful servant.",
+    "dm_notes": "Rahadin betrayed his own people to serve Strahd and orchestrated the genocide of the female dusk elves on Strahd's orders, earning the eternal hatred of the surviving dusk elf community. He personally mutilated Kasimir Velikov by cutting off his ears as punishment for protesting. Rahadin has served the Von Zarovich family for centuries and views any threat to Strahd as a personal affront.",
     "sort_order": 7,
     "is_hidden": true
   },
   {
+    "npcid": 8,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Baba Lysaga is obsessed with Strahd, believing herself to be his true mother. She has extended her life to watch over him.",
+        "type": "npc"
+      }
+    ],
     "name": "Baba Lysaga",
     "race": "Human (Hag-like)",
     "npc_class": "Witch / Druid",
@@ -91,11 +254,27 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/baba-lysaga.png",
-    "description": "Baba Lysaga is an ancient, powerful witch who dwells in the ruins of Berez in a creeping hut perched on an enormous tree stump. She is obsessed with Strahd, believing herself to be his true mother, and has extended her life through dark magic for centuries to watch over him. Lysaga commands swarms of insects and scarecrows, and her magic rivals that of the most powerful spellcasters. She destroyed the village of Berez long ago in retaliation for the villagers' actions against one of Tatyana's reincarnations.",
+    "description": "Baba Lysaga is an ancient, powerful witch who dwells in the ruins of Berez in a creeping hut perched on an enormous tree stump. She commands swarms of insects and scarecrows, and her magic rivals that of the most powerful spellcasters. Lysaga has lived for centuries, extending her life through dark magic.",
+    "dm_notes": "Baba Lysaga is obsessed with Strahd, believing herself to be his true mother. She has extended her life through dark magic for centuries to watch over him. She destroyed the village of Berez long ago in retaliation for the villagers' actions against one of Tatyana's reincarnations. Her devotion to Strahd is absolute and she will destroy anyone she perceives as a threat to him.",
     "sort_order": 8,
     "is_hidden": true
   },
   {
+    "npcid": 9,
+    "associations": [
+      {
+        "id": 7,
+        "name": "Rahadin",
+        "relationship": "Rahadin mutilated Kasimir by cutting off his ears as punishment for protesting against Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Kasimir's sister Patrina agreed to become Strahd's bride, leading to tragedy for the dusk elf community.",
+        "type": "npc"
+      }
+    ],
     "name": "Kasimir Velikov",
     "race": "Dusk Elf",
     "npc_class": "Wizard",
@@ -103,11 +282,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "",
-    "description": "Kasimir Velikov is the leader of the dusk elves who live alongside the Vistani near Vallaki. He bears terrible scars — his ears were cut off by Rahadin as punishment for protesting against Strahd. Kasimir is haunted by visions sent by his dead sister Patrina, an elf who was stoned to death by her own people when she agreed to become Strahd's bride. He seeks the Amber Temple to find the means to resurrect her, unaware that Patrina's spirit has been corrupted by dark powers.",
+    "description": "Kasimir Velikov is the leader of the dusk elves who live alongside the Vistani near Vallaki. He bears terrible scars — his ears were cut off as punishment for an act of defiance. Kasimir is haunted by visions and carries a deep, quiet grief for the losses his people have suffered.",
+    "dm_notes": "Kasimir's ears were cut off by Rahadin on Strahd's orders. He is haunted by visions sent by his dead sister Patrina, a dusk elf who was stoned to death by her own people when she agreed to become Strahd's bride. Kasimir seeks the Amber Temple to find the means to resurrect Patrina, unaware that her spirit has been corrupted by dark powers. His quest to the Amber Temple can serve as a major plot hook.",
     "sort_order": 9,
     "is_hidden": true
   },
   {
+    "npcid": 10,
+    "associations": [
+      {
+        "id": 12,
+        "name": "Izek Strazni",
+        "relationship": "Izek is the Baron's brutal enforcer and captain of the guard, carrying out his tyrannical orders.",
+        "type": "npc"
+      },
+      {
+        "id": 11,
+        "name": "Lady Fiona Wachter",
+        "relationship": "Fiona Wachter plots to overthrow Baron Vallakovich and seize control of Vallaki.",
+        "type": "npc"
+      }
+    ],
     "name": "Baron Vargas Vallakovich",
     "race": "Human",
     "npc_class": "Noble / Politician",
@@ -115,11 +310,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/baron-vallakovich.png",
-    "description": "Baron Vargas Vallakovich is the burgomaster of Vallaki and a tyrannical leader who believes that weekly festivals of forced merriment will keep Strahd's evil at bay. His motto is 'All will be well!' and he punishes anyone who displays unhappiness with imprisonment in the stocks or worse. Despite his delusions, the Baron genuinely believes his festivals protect Vallaki. He rules through fear and his brutish enforcer, Izek Strazni. His wife, Baroness Lydia, dutifully supports his madness.",
+    "description": "Baron Vargas Vallakovich is the burgomaster of Vallaki and a tyrannical leader who believes that weekly festivals of forced merriment will keep Strahd's evil at bay. His motto is 'All will be well!' and he punishes anyone who displays unhappiness with imprisonment in the stocks or worse. He rules through fear and his brutish enforcer, Izek Strazni.",
+    "dm_notes": "Despite his delusions, the Baron genuinely believes his festivals protect Vallaki — he is delusional rather than malicious, though the result is tyranny all the same. His wife, Baroness Lydia, dutifully supports his madness. Lady Fiona Wachter plots to overthrow him, and Izek is the only thing keeping order. The citizens of Vallaki are growing resentful of the endless forced celebrations.",
     "sort_order": 10,
     "is_hidden": true
   },
   {
+    "npcid": 11,
+    "associations": [
+      {
+        "id": 10,
+        "name": "Baron Vargas Vallakovich",
+        "relationship": "Fiona secretly plots to overthrow Baron Vallakovich and seize power in Vallaki.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Fiona maintains contact with Strahd and views him as Barovia's rightful ruler.",
+        "type": "npc"
+      }
+    ],
     "name": "Lady Fiona Wachter",
     "race": "Human",
     "npc_class": "Noble / Warlock",
@@ -127,11 +338,33 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/fiona-wachter.png",
-    "description": "Lady Fiona Wachter is a Vallakian noblewoman who secretly worships devils and plots to overthrow Baron Vallakovich. She leads a cult of devil worshippers that meets in her home and maintains contact with Strahd, whom she views as Barovia's rightful ruler. Fiona keeps the preserved corpse of her dead husband in her bedroom and has two sons loyal to her cause. She is politically cunning and will use any means — including the adventurers — to seize power in Vallaki.",
+    "description": "Lady Fiona Wachter is a Vallakian noblewoman and a powerful political figure who openly opposes Baron Vallakovich's rule. She presents herself as a reasonable alternative to the Baron's tyranny, promising a return to normalcy for the people of Vallaki. Fiona is politically cunning, charming when she needs to be, and commands the loyalty of a growing number of Vallakians.",
+    "dm_notes": "Lady Fiona secretly worships devils and leads a cult of devil worshippers that meets in her home. She maintains contact with Strahd, whom she views as Barovia's rightful ruler, and will use any means — including the adventurers — to seize power in Vallaki. She keeps the preserved corpse of her dead husband in her bedroom and has two sons loyal to her cause. Her ambitions are entirely self-serving, cloaked in the guise of civic concern.",
     "sort_order": 11,
     "is_hidden": true
   },
   {
+    "npcid": 12,
+    "associations": [
+      {
+        "id": 10,
+        "name": "Baron Vargas Vallakovich",
+        "relationship": "Izek serves as the Baron's brutal enforcer and captain of the guard in Vallaki.",
+        "type": "npc"
+      },
+      {
+        "id": 2,
+        "name": "Ireena Kolyana",
+        "relationship": "Izek is secretly Ireena's biological brother, separated in childhood. He obsessively commissions dolls in her likeness.",
+        "type": "npc"
+      },
+      {
+        "id": 13,
+        "name": "Gadof Blinsky",
+        "relationship": "Izek commissions Blinsky to craft dolls resembling Ireena, though he can't explain his obsession.",
+        "type": "npc"
+      }
+    ],
     "name": "Izek Strazni",
     "race": "Human (mutated)",
     "npc_class": "Fighter / Berserker",
@@ -139,11 +372,27 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/izek-strazni.png",
-    "description": "Izek Strazni is Baron Vallakovich's brutal enforcer and captain of the guard in Vallaki. He has a monstrous, oversized arm wreathed in barbs that can conjure fire — the result of a mysterious transformation during childhood. Izek is a sadistic bully who terrorizes the townspeople and delights in violence. He is secretly obsessed with Ireena Kolyana, commissioning the toymaker Blinsky to craft dolls in her likeness, though he doesn't understand why he feels drawn to her. Izek is Ireena's biological brother, separated in childhood.",
+    "description": "Izek Strazni is Baron Vallakovich's brutal enforcer and captain of the guard in Vallaki. He has a monstrous, oversized arm wreathed in barbs that can conjure fire — the result of a mysterious transformation during childhood. Izek is a sadistic bully who terrorizes the townspeople and delights in violence.",
+    "dm_notes": "Izek is secretly obsessed with Ireena Kolyana, commissioning the toymaker Blinsky to craft dolls in her likeness, though he doesn't understand why he feels drawn to her. Izek is Ireena's biological brother, separated in childhood.\n\nIzek's true origins: He and Ireena were born to a Barovian family living near the Svalich Woods. As young children, a dire wolf attack devastated their family. During the chaos, Izek lost part of his arm to the wolves and was separated from his younger sister. Ireena was found by Burgomaster Kolyan Indirovich and raised in the Village of Barovia, while Izek wandered alone until he was eventually taken in by the Vallakovich household in Vallaki.\n\nIzek's monstrous arm — an oversized, barbed limb capable of conjuring fire — grew back through unknown means, possibly connected to a dark gift or fiendish pact. The transformation happened during his youth in Vallaki and cemented his role as the Baron's enforcer, since no one dared challenge someone with such terrifying power.\n\nIzek is obsessed with a face he sees in his dreams — Ireena's face — though he has no conscious memory of his sister. He commissions the toymaker Gadof Blinsky to craft dolls in her likeness, filling his room with dozens of them. If Izek ever encounters Ireena, he will become fixated on her and may try to take her by force, believing she belongs with him. He does not understand the familial bond driving his obsession.\n\nIzek's surname 'Strazni' is not a patronymic — it may have been given to him by the Vallakovich household or adopted from another source, further severing his connection to his biological family.\n\nIzek is violent, unstable, and deeply dangerous. He delights in burning people who displease the Baron and has terrorized Vallaki for years. Despite his cruelty, his obsession with the dolls reveals a broken, deeply human need for connection to the family he lost.",
     "sort_order": 12,
     "is_hidden": true
   },
   {
+    "npcid": 13,
+    "associations": [
+      {
+        "id": 12,
+        "name": "Izek Strazni",
+        "relationship": "Izek secretly commissions Blinsky to create dolls that look like Ireena.",
+        "type": "npc"
+      },
+      {
+        "id": 5,
+        "name": "Rudolph Van Richten",
+        "relationship": "Blinsky received his pet monkey Piccolo as a gift from Rictavio (Van Richten's disguise).",
+        "type": "npc"
+      }
+    ],
     "name": "Gadof Blinsky",
     "race": "Human",
     "npc_class": "Artisan / Toymaker",
@@ -151,11 +400,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/gadof-blinsky.png",
-    "description": "Gadof Blinsky is Vallaki's eccentric toymaker whose motto is 'Is no fun, is no Blinsky!' Despite the grim nature of Barovia, Blinsky remains relentlessly cheerful and creates toys that are invariably creepy and macabre — headless dolls, coffin-shaped music boxes, and worse. He is accompanied by his pet monkey, Piccolo, a gift from Rictavio. Blinsky has been secretly commissioned by Izek Strazni to create dolls that look like Ireena, though the toymaker doesn't understand the reason for the requests.",
+    "description": "Gadof Blinsky is Vallaki's eccentric toymaker whose motto is 'Is no fun, is no Blinsky!' Despite the grim nature of Barovia, Blinsky remains relentlessly cheerful and creates toys that are invariably creepy and macabre — headless dolls, coffin-shaped music boxes, and worse. He is accompanied by his pet monkey, Piccolo, a gift from Rictavio.",
+    "dm_notes": "Blinsky has been secretly commissioned by Izek Strazni to create dolls that look like Ireena Kolyana, though the toymaker doesn't understand the reason behind the requests. Blinsky is innocent in the arrangement — he simply fills the orders and accepts payment. The dolls are a key clue to the connection between Izek and Ireena.",
     "sort_order": 13,
     "is_hidden": true
   },
   {
+    "npcid": 14,
+    "associations": [
+      {
+        "id": 15,
+        "name": "Doru",
+        "relationship": "Doru is Father Donavich's son, turned into a vampire spawn and locked in the church undercroft.",
+        "type": "npc"
+      }
+    ],
     "name": "Father Donavich",
     "race": "Human",
     "npc_class": "Cleric (fallen)",
@@ -163,11 +422,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/father-donavich.png",
-    "description": "Father Donavich is the broken priest of the church in the Village of Barovia. His faith has been shattered since his son Doru returned from an assault on Castle Ravenloft as a vampire spawn. Donavich has kept Doru locked in the church undercroft, praying desperately for divine intervention that never comes. The constant screaming of his son, begging for blood, has driven the priest to the edge of madness. He refuses to leave the church or abandon his son, despite the danger Doru poses.",
+    "description": "Father Donavich is the broken priest of the church in the Village of Barovia. Once a man of strong faith, Donavich is now a haggard, sleepless wreck who mutters prayers endlessly and refuses to leave the church. He is deeply troubled by something in the building's undercroft but will not speak of it willingly.",
+    "dm_notes": "Donavich's faith has been shattered since his son Doru returned from an assault on Castle Ravenloft as a vampire spawn. He has kept Doru locked in the church undercroft, praying desperately for divine intervention that never comes. The constant screaming of his son, begging for blood, has driven the priest to the edge of madness. He refuses to abandon Doru despite the danger the vampire spawn poses.",
     "sort_order": 14,
     "is_hidden": true
   },
   {
+    "npcid": 15,
+    "associations": [
+      {
+        "id": 14,
+        "name": "Father Donavich",
+        "relationship": "Doru's father, who keeps him locked in the church undercroft and prays for his salvation.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Strahd turned Doru into a vampire spawn as a cruel joke after Doru joined the assault on Castle Ravenloft.",
+        "type": "npc"
+      }
+    ],
     "name": "Doru",
     "race": "Vampire Spawn (formerly Human)",
     "npc_class": "Commoner (turned)",
@@ -175,23 +450,67 @@
     "status": "Undead",
     "alignment_tag": "enemy",
     "portrait_url": "/images/doru.png",
-    "description": "Doru is the vampiric son of Father Donavich, transformed into a vampire spawn after foolishly joining a group of villagers who stormed Castle Ravenloft. Strahd slaughtered the attackers but turned Doru as a cruel joke, sending him home to torment his father. Doru is emaciated and desperate for blood, chained in the church undercroft. Moments of his former personality still surface through the bloodlust, making his situation all the more tragic.",
+    "description": "Doru is Father Donavich's son, locked away in the undercroft of the Village of Barovia's church. His desperate cries can sometimes be heard echoing from below the floorboards. Something terrible has happened to the young man, and his father guards the secret with broken, frantic devotion.",
+    "dm_notes": "Doru was transformed into a vampire spawn after foolishly joining a group of villagers who stormed Castle Ravenloft. Strahd slaughtered the attackers but turned Doru as a cruel joke, sending him home to torment his father. Doru is emaciated and desperate for blood, chained in the church undercroft. Moments of his former personality still surface through the bloodlust, making his situation all the more tragic.",
     "sort_order": 15,
     "is_hidden": true
   },
   {
-    "name": "Morgantha",
+    "npcid": 16,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Morgantha and her coven operate within Strahd's domain, preying on the desperate people of Barovia.",
+        "type": "npc"
+      },
+      {
+        "id": 64,
+        "name": "Luvush",
+        "relationship": "Morgantha's coven kidnapped Luvush's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder.",
+        "type": "npc"
+      },
+      {
+        "id": 65,
+        "name": "Bella Wormwiggle",
+        "relationship": "Morgantha's daughter. Bella handles the grinding and preparation of the dream pastries at Old Bonegrinder.",
+        "type": "npc"
+      },
+      {
+        "id": 66,
+        "name": "Offalia Wormwiggle",
+        "relationship": "Morgantha's granddaughter. The youngest and most sadistic member of the coven.",
+        "type": "npc"
+      }
+    ],
+    "name": "Morgantha Wormwiggle",
     "race": "Night Hag",
     "npc_class": "Hag",
     "location": "Old Bonegrinder",
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/morgantha.png",
-    "description": "Morgantha is a night hag who, along with her daughters Bella Sunbane and Offalia Wormwiggle, operates out of the Old Bonegrinder windmill. The three hags disguise themselves as old women and sell 'dream pastries' to the desperate people of Barovia — addictive treats made from the life force of kidnapped children. The pastries grant vivid, happy dreams that provide temporary escape from Barovia's misery, but the cost is horrific. The party encountered the hags at Old Bonegrinder in Sessions 17-18.",
+    "description": "Morgantha appears as an old woman who travels the roads near the Village of Barovia, selling sweet-smelling 'dream pastries' from a cart. The pastries are wildly popular among the desperate people of Barovia, granting vivid, happy dreams that provide temporary escape from the domain's misery. She operates out of the Old Bonegrinder windmill with her daughter and granddaughter.",
+    "dm_notes": "Morgantha is a night hag and the matriarch of the Bonegrinder coven. Her daughter Bella Wormwiggle and granddaughter Offalia Wormwiggle complete the hag coven. The dream pastries are made from the life force of kidnapped children — a horrific cost hidden behind the addictive treats. The coven disguises themselves as old women to move freely among the villagers.\n\nMorgantha's coven kidnapped Luvus's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder during Sessions 17-18.",
     "sort_order": 16,
     "is_hidden": true
   },
   {
+    "npcid": 17,
+    "associations": [
+      {
+        "id": 18,
+        "name": "Sir Godfrey Gwilym",
+        "relationship": "Godfrey serves under Vladimir's command but disagrees with his refusal to allow Strahd's destruction.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Vladimir's burning hatred for Strahd keeps him trapped as a revenant. He ironically opposes Strahd's destruction, wanting him to suffer eternally.",
+        "type": "npc"
+      }
+    ],
     "name": "Vladimir Horngaard",
     "race": "Revenant (formerly Human)",
     "npc_class": "Paladin / Death Knight",
@@ -199,11 +518,21 @@
     "status": "Undead",
     "alignment_tag": "neutral",
     "portrait_url": "/images/vladimir-horngaard.png",
-    "description": "Vladimir Horngaard is the former commander of the Order of the Silver Dragon, now a revenant consumed by hatred. He and his knights once fought against Strahd but were defeated. Rather than finding peace, Vladimir's burning hatred keeps him and his fellow knights trapped as revenants in the ruined mansion of Argynvostholt. Ironically, Vladimir now opposes anyone who would destroy Strahd — believing the vampire deserves to suffer eternally in his prison of Barovia rather than finding release through death. The party visited Argynvostholt in Sessions 22-23.",
+    "description": "Vladimir Horngaard is the former commander of the Order of the Silver Dragon, now a revenant consumed by hatred. He and his knights once fought against Strahd but were defeated. Rather than finding peace, Vladimir's burning hatred keeps him and his fellow knights trapped as revenants in the ruined mansion of Argynvostholt.",
+    "dm_notes": "Ironically, Vladimir now opposes anyone who would destroy Strahd — believing the vampire deserves to suffer eternally in his prison of Barovia rather than finding release through death. This makes him an obstacle rather than an ally for the party, despite his hatred for Strahd.\n\nThe party visited Argynvostholt in Sessions 22-23.",
     "sort_order": 17,
     "is_hidden": true
   },
   {
+    "npcid": 18,
+    "associations": [
+      {
+        "id": 17,
+        "name": "Vladimir Horngaard",
+        "relationship": "Godfrey's commander at Argynvostholt. Godfrey disagrees with Vladimir's desire to let Strahd suffer eternally.",
+        "type": "npc"
+      }
+    ],
     "name": "Sir Godfrey Gwilym",
     "race": "Revenant (formerly Human)",
     "npc_class": "Paladin",
@@ -211,11 +540,21 @@
     "status": "Undead",
     "alignment_tag": "ally",
     "portrait_url": "/images/sir-godfrey-gwilym.png",
-    "description": "Sir Godfrey Gwilym is a revenant and former knight of the Order of the Silver Dragon at Argynvostholt. Unlike his commander Vladimir Horngaard, Godfrey retains his honor and desire to see Strahd destroyed. He is willing to help the adventurers if they can find the skull of Argynvost, the silver dragon whose spirit still protects the mansion. Godfrey's loyalty to the order's true purpose — protecting the innocent from Strahd — makes him a potential ally despite his undead state.",
+    "description": "Sir Godfrey Gwilym is a revenant and former knight of the Order of the Silver Dragon at Argynvostholt. Unlike his commander Vladimir Horngaard, Godfrey retains his honor and desire to see Strahd destroyed. He is a noble spirit trapped in undeath, still dedicated to the order's original purpose of protecting the innocent.",
+    "dm_notes": "Godfrey is willing to help the adventurers if they can find the skull of Argynvost, the silver dragon whose spirit still protects the mansion. His loyalty to the order's true purpose — defeating Strahd and ending the curse — puts him at odds with Vladimir. He is a potential ally despite his undead state.",
     "sort_order": 18,
     "is_hidden": true
   },
   {
+    "npcid": 19,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Davian and the Keepers of the Feather secretly work to undermine Strahd's control over Barovia.",
+        "type": "npc"
+      }
+    ],
     "name": "Davian Martikov",
     "race": "Human (Wereraven)",
     "npc_class": "Druid / Ranger",
@@ -223,11 +562,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/davian-martikov.png",
-    "description": "Davian Martikov is the patriarch of the Martikov family and the secret leader of the Keepers of the Feather, a network of wereravens who operate as spies against Strahd throughout Barovia. The Martikovs run the Wizard of Wines winery, which produces the only wine in Barovia — a vital commodity. Davian is gruff, practical, and deeply committed to undermining Strahd's control. He and his family can shapeshift into ravens and often gather intelligence for those who oppose the dark lord.",
+    "description": "Davian Martikov is the patriarch of the Martikov family who runs the Wizard of Wines winery, which produces the only wine in Barovia — a vital commodity. Davian is gruff, practical, and deeply committed to the well-being of Barovia's people. He and his family have an unusually keen awareness of events throughout the land.",
+    "dm_notes": "Davian is the secret leader of the Keepers of the Feather, a network of wereravens who operate as spies against Strahd throughout Barovia. The Martikovs can shapeshift into ravens, allowing them to gather intelligence across the domain. Their wereraven nature is a closely guarded secret — even most of Barovia's residents don't know the truth about the Martikov family.",
     "sort_order": 19,
     "is_hidden": true
   },
   {
+    "npcid": 20,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Pidlwick II wanders Castle Ravenloft, a relic of the court's past entertainment.",
+        "type": "npc"
+      }
+    ],
     "name": "Pidlwick II",
     "race": "Construct",
     "npc_class": "None (clockwork effigy)",
@@ -235,11 +584,33 @@
     "status": "Active",
     "alignment_tag": "neutral",
     "portrait_url": "/images/pidlwick-ii.png",
-    "description": "Pidlwick II is a small clockwork effigy built to resemble Pidlwick, a court jester who once entertained the lords of Castle Ravenloft. The original Pidlwick was beloved by Duchess Dorfniya but grew jealous when a second fool was brought to court. Pidlwick II murdered the original jester and now wanders the castle, performing its programmed routines. It appears harmless and even endearing, but is capable of pushing creatures off ledges and other 'accidental' violence. It may follow the party if they show it kindness.",
+    "description": "Pidlwick II is a small clockwork effigy that wanders Castle Ravenloft, performing odd routines and pantomimes. It appears harmless and even endearing — a curious relic of the castle's past. It may follow the party if they show it kindness.",
+    "dm_notes": "Pidlwick II was built to resemble the original Pidlwick, a court jester beloved by Duchess Dorfniya. When a second fool was brought to court, the original Pidlwick grew jealous — and Pidlwick II murdered the original jester. The construct now wanders the castle performing its programmed routines, but is capable of 'accidentally' pushing creatures off ledges and other subtle violence. It is more dangerous than it appears.",
     "sort_order": 20,
     "is_hidden": true
   },
   {
+    "npcid": 21,
+    "associations": [
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Kiril imprisoned Emil and seized control of the werewolf pack.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Kiril is completely loyal to Strahd, who granted the werewolves hunting rights throughout Barovia.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Elandra allied with the werewolf pack and was encountered alongside Kiril at the Werewolf Den.",
+        "type": "npc"
+      }
+    ],
     "name": "Kiril Stoyanovich",
     "race": "Werewolf (Human)",
     "npc_class": "Barbarian / Pack Leader",
@@ -247,11 +618,33 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/kiril-stoyanovich.png",
-    "description": "Kiril Stoyanovich is the alpha werewolf who seized control of the Barovian werewolf pack after imprisoning the former leader, Emil Toranescu. Kiril is brutal, savage, and completely loyal to Strahd, who granted the werewolves hunting rights throughout Barovia. He leads raids on villages and kidnaps children to be turned into new pack members. The party fought through the Werewolf Den in Session 21.",
+    "description": "Kiril Stoyanovich is the alpha werewolf who leads the Barovian werewolf pack from their den in the mountains. He is brutal, savage, and utterly loyal to Strahd. Kiril leads raids on villages and kidnaps children to be turned into new pack members.",
+    "dm_notes": "Kiril seized control of the pack after imprisoning the former leader, Emil Toranescu. Strahd granted the werewolves hunting rights throughout Barovia in exchange for their loyalty. The party fought through the Werewolf Den in Session 21.",
     "sort_order": 21,
     "is_hidden": true
   },
   {
+    "npcid": 22,
+    "associations": [
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Zuleika is Emil's devoted mate who desperately seeks his release from Castle Ravenloft.",
+        "type": "npc"
+      },
+      {
+        "id": 21,
+        "name": "Kiril Stoyanovich",
+        "relationship": "Kiril seized control of the pack after Emil was imprisoned by Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Strahd imprisoned Emil in Castle Ravenloft's dungeon after Emil questioned his authority.",
+        "type": "npc"
+      }
+    ],
     "name": "Emil Toranescu",
     "race": "Werewolf (Human)",
     "npc_class": "Fighter / Pack Leader",
@@ -259,11 +652,27 @@
     "status": "Imprisoned",
     "alignment_tag": "neutral",
     "portrait_url": "/images/emil-toranescu.png",
-    "description": "Emil Toranescu is the former leader of the Barovian werewolf pack, imprisoned in Castle Ravenloft's dungeon by Strahd after Emil questioned the vampire's authority. His imprisonment allowed the more savage Kiril Stoyanovich to take control of the pack. Emil's mate, Zuleika, desperately seeks his release and may ally with the party to rescue him. Emil is more reasonable than Kiril and could potentially be convinced to turn the pack against Strahd.",
+    "description": "Emil Toranescu is the former leader of the Barovian werewolf pack, now imprisoned in Castle Ravenloft's dungeon. He is more reasonable and measured than the current pack alpha, Kiril Stoyanovich.",
+    "dm_notes": "Emil was imprisoned by Strahd after questioning the vampire's authority. His imprisonment allowed the more savage Kiril to take control of the pack. Emil's mate, Zuleika, desperately seeks his release and may ally with the party to rescue him. Emil could potentially be convinced to turn the pack against Strahd if freed — making his rescue a valuable objective.",
     "sort_order": 22,
     "is_hidden": true
   },
   {
+    "npcid": 23,
+    "associations": [
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Zuleika's imprisoned mate. She prays constantly for his safe return.",
+        "type": "npc"
+      },
+      {
+        "id": 21,
+        "name": "Kiril Stoyanovich",
+        "relationship": "Zuleika secretly opposes Kiril's brutal leadership of the werewolf pack.",
+        "type": "npc"
+      }
+    ],
     "name": "Zuleika Toranescu",
     "race": "Werewolf (Human)",
     "npc_class": "Cleric / Pack Member",
@@ -271,11 +680,21 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/zuleika-toranescu.png",
-    "description": "Zuleika Toranescu is a werewolf and the devoted mate of the imprisoned Emil Toranescu. She tends the shrine to Mother Night within the werewolf den and secretly opposes Kiril's brutal leadership. Zuleika prays constantly for Emil's safe return and is willing to help anyone who promises to free her husband from Castle Ravenloft's dungeons. She represents the more civilized faction within the werewolf pack.",
+    "description": "Zuleika Toranescu is a werewolf and a member of the Barovian pack who tends the shrine to Mother Night within the werewolf den. She is more composed and thoughtful than most of the pack, carrying herself with quiet dignity.",
+    "dm_notes": "Zuleika is the devoted mate of the imprisoned Emil Toranescu. She secretly opposes Kiril's brutal leadership and prays constantly for Emil's safe return. She is willing to help anyone who promises to free her husband from Castle Ravenloft's dungeons. She represents the more civilized faction within the werewolf pack and can serve as an unexpected ally.",
     "sort_order": 23,
     "is_hidden": true
   },
   {
+    "npcid": 24,
+    "associations": [
+      {
+        "id": 25,
+        "name": "The Abbot",
+        "relationship": "The Abbot resides at the Abbey of Saint Markovia above Krezk. Baron Krezkov tolerates his presence.",
+        "type": "npc"
+      }
+    ],
     "name": "Baron Krezkov",
     "race": "Human",
     "npc_class": "Noble / Warrior",
@@ -283,11 +702,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/baron-krezkov.png",
-    "description": "Baron Dmitri Krezkov is the burgomaster of Krezk, a walled village at the base of the Abbey of Saint Markovia. He is a cautious, protective leader who keeps Krezk's gates closed to outsiders. Krezkov's greatest sorrow is the recent death of his young son Ilya, which has left both him and his wife Anna devastated. He grudgingly allows outsiders in only if they can prove themselves useful to the village's survival. The party visited his domain in Sessions 22-23 while recovering the Amulet of Ravenkind from the Abbey.",
+    "description": "Baron Dmitri Krezkov is the burgomaster of Krezk, a walled village at the base of the Abbey of Saint Markovia. He is a cautious, protective leader who keeps Krezk's gates closed to outsiders. He grudgingly allows strangers in only if they can prove themselves useful to the village's survival.",
+    "dm_notes": "Krezkov's greatest sorrow is the recent death of his young son Ilya, which has left both him and his wife Anna devastated. This grief may make him susceptible to desperate bargains — particularly any offer that promises to restore his son.\n\nThe party visited Krezk in Sessions 22-23 while recovering the Amulet of Ravenkind from the Abbey.",
     "sort_order": 24,
     "is_hidden": true
   },
   {
+    "npcid": 25,
+    "associations": [
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "The Abbot is building a flesh golem bride for Strahd, believing this will end Barovia's curse.",
+        "type": "npc"
+      },
+      {
+        "id": 24,
+        "name": "Baron Krezkov",
+        "relationship": "The Abbot resides in the Abbey above Krezk, which Baron Krezkov governs.",
+        "type": "npc"
+      }
+    ],
     "name": "The Abbot",
     "race": "Deva (in human disguise)",
     "npc_class": "Cleric / Celestial",
@@ -295,11 +730,27 @@
     "status": "Corrupted",
     "alignment_tag": "neutral",
     "portrait_url": "",
-    "description": "The Abbot is a deva — an angelic being — who descended to Barovia centuries ago to bring hope to its people. He restored the Abbey of Saint Markovia and healed the sick, but centuries of exposure to Barovia's corruption and the Dark Powers twisted his mind. He now creates grotesque mongrelfolk from body parts, trying to build a perfect bride for Strahd, believing this will end the curse. His 'bride,' Vasilka, is a flesh golem he considers his masterwork. The Abbot's fall from grace is one of Barovia's greatest tragedies.",
+    "description": "The Abbot is the enigmatic master of the Abbey of Saint Markovia above Krezk. He appears as a serene, handsome man who heals the sick and tends to the abbey's inhabitants — a collection of strange, misshapen creatures called mongrelfolk. The Abbot radiates an otherworldly calm and speaks of ending Barovia's curse with unsettling certainty.",
+    "dm_notes": "The Abbot is a deva — an angelic being who descended to Barovia centuries ago to bring hope to its people. He restored the Abbey and healed the sick, but centuries of exposure to Barovia's corruption and the Dark Powers twisted his mind. He now creates grotesque mongrelfolk from body parts and is building a 'perfect bride' for Strahd — a flesh golem named Vasilka — believing this will end the curse. The Abbot's fall from grace is one of Barovia's greatest tragedies.",
     "sort_order": 25,
     "is_hidden": true
   },
   {
+    "npcid": 26,
+    "associations": [
+      {
+        "id": 27,
+        "name": "Arrigal",
+        "relationship": "Arrigal is Luvash's brother. While Luvash focuses on family, Arrigal secretly serves Strahd as a spy.",
+        "type": "npc"
+      },
+      {
+        "id": 4,
+        "name": "Madam Eva",
+        "relationship": "Madam Eva is the spiritual leader of the Vistani, including Luvash's encampment.",
+        "type": "npc"
+      }
+    ],
     "name": "Luvash",
     "race": "Human (Vistani)",
     "npc_class": "Fighter / Chieftain",
@@ -307,11 +758,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/luvash.png",
-    "description": "Luvash is one of the leaders of the Vistani encampment outside Vallaki. He is a large, boisterous man consumed with worry over his missing daughter, Arabelle, who was kidnapped from the camp. Luvash will reward anyone who brings his daughter back safely. While the Vistani traditionally serve Strahd, Luvash's primary loyalty is to his family and his people.",
+    "description": "Luvash is one of the leaders of the Vistani encampment outside Vallaki. He is a large, boisterous man consumed with worry over his missing daughter, Arabelle, who was kidnapped from the camp.",
+    "dm_notes": "Luvash will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvash's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
     "sort_order": 26,
     "is_hidden": true
   },
   {
+    "npcid": 27,
+    "associations": [
+      {
+        "id": 26,
+        "name": "Luvash",
+        "relationship": "Arrigal's brother. While Luvash is focused on family, Arrigal secretly serves Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Arrigal is one of Strahd's most trusted spies among the Vistani, reporting everything he learns.",
+        "type": "npc"
+      }
+    ],
     "name": "Arrigal",
     "race": "Human (Vistani)",
     "npc_class": "Rogue / Spy",
@@ -319,11 +786,21 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/arrigal.png",
-    "description": "Arrigal is Luvash's brother and one of Strahd's most trusted spies among the Vistani. While appearing friendly and helpful to outsiders, Arrigal reports everything he learns directly to Strahd. He delivered the false letter from the Burgomaster that lured the adventurers to Barovia. Arrigal is charming, clever, and deadly with a blade — everything a good spy should be.",
+    "description": "Arrigal is Luvash's brother, a charming and clever Vistani who frequents the encampment outside Vallaki. He is quick with a smile, an offer of wine, and friendly conversation — always eager to learn about newcomers and their plans. Arrigal is deadly with a blade and carries himself with the easy confidence of someone who knows more than he lets on.",
+    "dm_notes": "Arrigal is one of Strahd's most trusted spies among the Vistani. While appearing friendly and helpful to outsiders, he reports everything he learns directly to Strahd. He delivered the false letter from the Burgomaster that lured the adventurers to Barovia. His spy role is unknown to his brother Luvash, whose genuine concern for family Arrigal exploits as cover.",
     "sort_order": 27,
     "is_hidden": true
   },
   {
+    "npcid": 28,
+    "associations": [
+      {
+        "id": 29,
+        "name": "Gertruda",
+        "relationship": "Gertruda is Mad Mary's daughter who left to find Castle Ravenloft, driving Mary to madness with grief.",
+        "type": "npc"
+      }
+    ],
     "name": "Mad Mary",
     "race": "Human",
     "npc_class": "Commoner",
@@ -331,11 +808,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/mad-mary.png",
-    "description": "Mad Mary is a grief-stricken woman in the Village of Barovia whose daughter Gertruda went missing. She can be heard wailing from her boarded-up townhouse, inconsolable and half-mad with worry. Mary's screams echo through the empty streets, adding to the village's oppressive atmosphere. Gertruda actually left to find Castle Ravenloft, naively believing she could persuade Strahd to be kind.",
+    "description": "Mad Mary is a grief-stricken woman in the Village of Barovia whose daughter went missing. She can be heard wailing from her boarded-up townhouse, inconsolable and half-mad with worry. Mary's screams echo through the empty streets, adding to the village's oppressive atmosphere.",
+    "dm_notes": "Mary's daughter Gertruda left to find Castle Ravenloft, naively believing she could persuade Strahd to be kind. Mary doesn't know where Gertruda went — only that she is gone. The sound of her wailing is often the first thing the party hears when entering the Village of Barovia.",
     "sort_order": 28,
     "is_hidden": true
   },
   {
+    "npcid": 29,
+    "associations": [
+      {
+        "id": 28,
+        "name": "Mad Mary",
+        "relationship": "Gertruda's grief-stricken mother, driven half-mad by her daughter's disappearance.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Gertruda naively came to Castle Ravenloft believing she could appeal to Strahd's better nature.",
+        "type": "npc"
+      }
+    ],
     "name": "Gertruda",
     "race": "Human",
     "npc_class": "Commoner",
@@ -343,23 +836,55 @@
     "status": "Alive (captive)",
     "alignment_tag": "neutral",
     "portrait_url": "/images/gertruda.png",
-    "description": "Gertruda is Mad Mary's naive young daughter who left the Village of Barovia to seek out Castle Ravenloft, believing she could appeal to Strahd's better nature. Sheltered her entire life by her overprotective mother, Gertruda is dangerously innocent about the true nature of Barovia's lord. She now resides in the castle as Strahd's 'guest,' unaware of the mortal danger she is in.",
+    "description": "Gertruda is Mad Mary's daughter, a sheltered young woman who vanished from the Village of Barovia. She has lived her entire life under her overprotective mother's care and is dangerously innocent about the true nature of the world outside her door.",
+    "dm_notes": "Gertruda left the village to seek out Castle Ravenloft, believing she could appeal to Strahd's better nature. She now resides in the castle as Strahd's 'guest,' unaware of the mortal danger she is in. Her naivety is both tragic and dangerous — she genuinely believes Strahd is a misunderstood nobleman rather than a predatory vampire.",
     "sort_order": 29,
     "is_hidden": true
   },
   {
+    "npcid": 30,
+    "associations": [
+      {
+        "id": 31,
+        "name": "Seraphine Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      }
+    ],
     "name": "Kaelin Stormraven",
     "race": "Half-Elf",
     "npc_class": "Warlock / Dark Knight",
-    "location": "Frosthaven Coast (Defeated)",
+    "location": "Pelavir River (Defeated)",
     "status": "Dead",
     "alignment_tag": "enemy",
     "portrait_url": "/images/Kaelin_Stormraven.jpg",
-    "description": "Kaelin Stormraven was a dark servant encountered by the party early in their journey. A member of the Stormraven bloodline, she wielded dark powers in service to malevolent forces. The party defeated Kaelin during Sessions 3-4 on the 27th day of Tarsakh. She was encountered initially in a church setting, appearing first as a lost girl before revealing her true nature. Her defeat was one of the party's first major victories.",
+    "description": "Kaelin Stormraven was a member of the Stormraven bloodline who wielded dark powers in service to malevolent forces. She was encountered by the party early in their journey, initially appearing as a lost girl before revealing her true nature.",
+    "dm_notes": "The party defeated Kaelin during Sessions 3-4 on the 27th day of Tarsakh. She was encountered in a church setting along the Pelavir River. Her defeat was one of the party's first major victories and their first encounter with the Stormraven siblings.",
     "sort_order": 30,
     "is_hidden": true
   },
   {
+    "npcid": 31,
+    "associations": [
+      {
+        "id": 30,
+        "name": "Kaelin Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      }
+    ],
     "name": "Seraphine Stormraven",
     "race": "Half-Elf",
     "npc_class": "Sorceress / Dark Priestess",
@@ -367,11 +892,39 @@
     "status": "Dead",
     "alignment_tag": "enemy",
     "portrait_url": "/images/Seraphine_Stormraven.jpg",
-    "description": "Seraphine Stormraven was a powerful member of the Stormraven bloodline who ambushed the party at Tser Pool. The Battle of Tser Pool during Sessions 15-16 on the 11th day of Kythorn was one of the campaign's most intense conflicts. Seraphine wielded devastating magical abilities and nearly overwhelmed the party before being defeated. Her death further weakened the Stormraven family's grip on the region.",
+    "description": "Seraphine Stormraven was a powerful member of the Stormraven bloodline who wielded devastating magical abilities. She was the second Stormraven sibling encountered by the party.",
+    "dm_notes": "Seraphine ambushed the party at Tser Pool. The Battle of Tser Pool during Sessions 15-16 on the 11th day of Kythorn was one of the campaign's most intense conflicts. Seraphine nearly overwhelmed the party before being defeated. Her death further weakened the Stormraven family's grip on the region.",
     "sort_order": 31,
     "is_hidden": true
   },
   {
+    "npcid": 32,
+    "associations": [
+      {
+        "id": 30,
+        "name": "Kaelin Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      },
+      {
+        "id": 31,
+        "name": "Seraphine Stormraven",
+        "relationship": "Sibling. The Stormraven siblings served dark forces throughout the campaign.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Elandra was Strahd's ally and head of his Personal Guard.",
+        "type": "npc"
+      },
+      {
+        "id": 21,
+        "name": "Kiril Stoyanovich",
+        "relationship": "Elandra allied with the werewolf pack led by Kiril at the Werewolf Den.",
+        "type": "npc"
+      }
+    ],
     "name": "Elandra Stormraven",
     "race": "Half-Elf",
     "npc_class": "Druid / Werewolf Alpha",
@@ -379,23 +932,43 @@
     "status": "Dead",
     "alignment_tag": "enemy",
     "portrait_url": "/images/elandra-stormraven.jpg",
-    "description": "Elandra Stormraven was the third and most savage of the Stormraven siblings encountered by the party. She had allied with the werewolf pack and was encountered at the Werewolf Den on the 18th day of Kythorn during Session 21. Elandra combined dark druidic magic with lycanthropic ferocity. Her defeat by the party eliminated the last of the active Stormraven threats.",
+    "description": "Elandra Stormraven was the third and most savage of the Stormraven siblings. She combined dark druidic magic with lycanthropic ferocity, making her one of the most dangerous foes the party faced.",
+    "dm_notes": "Elandra had allied with the werewolf pack led by Kiril Stoyanovich and served as head of Strahd's Personal Guard. She was encountered at the Werewolf Den on the 18th day of Kythorn during Session 21. Her defeat eliminated the last of the active Stormraven threats.",
     "sort_order": 32,
     "is_hidden": true
   },
   {
-    "name": "Mistress Allyson",
+    "npcid": 33,
+    "associations": [
+      {
+        "id": 38,
+        "name": "Shorthagot, Harbinger of Ruin",
+        "relationship": "The Order of the Yellow Rose guards one of the Keys of Shorthagot and the planar gateway connected to the entity.",
+        "type": "npc"
+      }
+    ],
+    "name": "Mistress Clarissa Allyson",
     "race": "Human",
     "npc_class": "Monk / Mystic",
     "location": "Valls (Order of the Yellow Rose)",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "",
-    "description": "Mistress Allyson is a senior member of the Order of the Yellow Rose, a monastic order that guards one of the Keys of Shorthagot and the planar gateway beneath their citadel in Valls. She was rescued by the party during Sessions 6-7 when they arrived in Valls on the 30th day of Tarsakh. Mistress Allyson possesses deep knowledge of the Shadowfell gateways and the ancient threat of Shorthagot. She serves as a key information source about the campaign's overarching cosmic conflict.",
+    "description": "Mistress Clarissa Allyson is a senior member of the Order of the Yellow Rose, a monastic order based in Valls. She is a disciplined and knowledgeable monk who possesses deep understanding of the ancient threats facing Damara.",
+    "dm_notes": "The Order of the Yellow Rose guards one of the Keys of Shorthagot and the planar gateway beneath their citadel in Valls. Mistress Allyson was rescued by the party during Sessions 6-7 when they arrived in Valls on the 30th day of Tarsakh. She possesses deep knowledge of the Shadowfell gateways and the ancient threat of Shorthagot. She serves as a key information source about the campaign's overarching cosmic conflict.",
     "sort_order": 33,
     "is_hidden": true
   },
   {
+    "npcid": 34,
+    "associations": [
+      {
+        "id": 5,
+        "name": "Rudolph Van Richten",
+        "relationship": "Rudolph d'Avernir is an alias used by Van Richten at the Wizard Tower.",
+        "type": "npc"
+      }
+    ],
     "name": "Rudolph d'Avernir",
     "race": "Human",
     "npc_class": "Wizard / Scholar",
@@ -403,11 +976,27 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/rictavio-van-richten.png",
-    "description": "The party encountered Rudolph d'Avernir at the Wizard Tower during Session 20 on the 17th day of Kythorn. A knowledgeable scholar of the arcane and the planes, Rudolph provided the party with crucial information about the magical forces at work in Barovia and the broader conflict involving Shorthagot and the Shadowfell. His tower contains a library of rare texts and magical artifacts. (Note: Rudolph's true identity may be connected to the legendary Van Richten family of monster hunters.)",
+    "description": "Rudolph d'Avernir is a knowledgeable scholar of the arcane and the planes who resides in a Wizard Tower in Barovia. His tower contains a library of rare texts and magical artifacts.",
+    "dm_notes": "The party encountered Rudolph d'Avernir at the Wizard Tower during Session 20 on the 17th day of Kythorn. He provided crucial information about the magical forces at work in Barovia and the broader conflict involving Shorthagot and the Shadowfell.\n\nRudolph d'Avernir is an alias used by Rudolph Van Richten. His true identity as the legendary monster hunter is concealed behind the persona of an eccentric scholar.",
     "sort_order": 34,
     "is_hidden": true
   },
   {
+    "npcid": 35,
+    "associations": [
+      {
+        "id": 36,
+        "name": "Prince Ian Frostmantle",
+        "relationship": "Prince Ian is the heir to the Frostmantle dynasty that Lord Geoffrey governs.",
+        "type": "npc"
+      },
+      {
+        "id": 41,
+        "name": "Bragus Orentide",
+        "relationship": "Bragus serves as a guard captain and military advisor in service to the Frostmantle dynasty.",
+        "type": "npc"
+      }
+    ],
     "name": "Lord Geoffrey Frostmantle",
     "race": "Human",
     "npc_class": "Fighter / Noble",
@@ -415,11 +1004,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/lordGeoffreyFrostmantle.jpg",
-    "description": "Lord Geoffrey Frostmantle is a nobleman of the Frostmantle dynasty that has ruled Damara since the great reunification in 1285 DR. The Frostmantles are considered fair and just rulers who restored order after centuries of conflict. Lord Geoffrey is a capable warrior and diplomat who oversees the defense of Damara's borders. He maintains the ancient alliance with the Order of the Yellow Rose and takes the threat of the Shadowfell gateways seriously.",
+    "description": "Lord Geoffrey Frostmantle is a nobleman of the Frostmantle dynasty that has ruled Damara since the great reunification in 1285 DR. He is a capable warrior and diplomat who oversees the defense of Damara's borders.",
+    "dm_notes": "The Frostmantles are considered fair and just rulers who restored order after centuries of conflict. Lord Geoffrey maintains the ancient alliance with the Order of the Yellow Rose and takes the threat of the Shadowfell gateways seriously. He commands the loyalty of soldiers like Bragus Orentide and oversees the kingdom's military defense.",
     "sort_order": 35,
     "is_hidden": true
   },
   {
+    "npcid": 36,
+    "associations": [
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "Prince Ian is the heir to Lord Geoffrey's Frostmantle dynasty.",
+        "type": "npc"
+      }
+    ],
     "name": "Prince Ian Frostmantle",
     "race": "Human",
     "npc_class": "Paladin / Noble",
@@ -427,11 +1026,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/princeIanFrostmantle.jpg",
-    "description": "Prince Ian Frostmantle is the heir to the Frostmantle dynasty of Damara. A young paladin trained in the martial and divine traditions, Ian represents the next generation of Damaran leadership. He is deeply concerned about the supernatural threats emanating from Barovia and the Shadowfell gateways. Prince Ian has been instrumental in rallying support for the party's mission and maintains close ties with the Order of the Yellow Rose.",
+    "description": "Prince Ian Frostmantle is the heir to the Frostmantle dynasty of Damara. A young paladin trained in the martial and divine traditions, he represents the next generation of Damaran leadership.",
+    "dm_notes": "Prince Ian is deeply concerned about the supernatural threats emanating from Barovia and the Shadowfell gateways. He has been instrumental in rallying support for the party's mission and maintains close ties with the Order of the Yellow Rose. He was aboard the Sea Spray and was wounded during the Night Screamer attack in Session 02. The crew took him and his uncle to White Bridge for safety.",
     "sort_order": 36,
     "is_hidden": true
   },
   {
+    "npcid": 37,
+    "associations": [
+      {
+        "id": 38,
+        "name": "Shorthagot, Harbinger of Ruin",
+        "relationship": "Lady Williams' machinations served to breach the Shadowfell gateway, furthering Shorthagot's influence.",
+        "type": "npc"
+      }
+    ],
     "name": "Lady Elysra Nivariel Williams",
     "race": "Succubus (disguised as Human)",
     "npc_class": "Fiend / Manipulator",
@@ -439,11 +1048,27 @@
     "status": "Active",
     "alignment_tag": "enemy",
     "portrait_url": "/images/ladyWilliams.jpg",
-    "description": "Lady Elysra Nivariel Williams is a succubus who infiltrated Damaran society by marrying Lord Edmund Williams, a nobleman of Valls. By 1496 DR, she orchestrated the catastrophic Fall of Valls, breaching the Shadowfell gateway beneath the Order of the Yellow Rose's citadel. Her machinations unleashed dark forces that threatened all of Damara. Lady Elysra is a master manipulator who uses charm, seduction, and political intrigue to achieve her goals. Her true demonic nature is revealed in her transformed state.",
+    "description": "Lady Elysra Nivariel Williams is a noblewoman of Valls who married Lord Edmund Williams. By 1496 DR, she was at the center of the catastrophic events known as the Fall of Valls. She is beautiful, charming, and politically astute — a masterful manipulator who uses intrigue to achieve her goals.",
+    "dm_notes": "Lady Williams is a succubus who infiltrated Damaran society through her marriage to Lord Edmund Williams. She orchestrated the Fall of Valls, breaching the Shadowfell gateway beneath the Order of the Yellow Rose's citadel. Her machinations unleashed dark forces that threatened all of Damara. Her true demonic nature is revealed only in her transformed state — in human guise she is indistinguishable from a mortal noblewoman.",
     "sort_order": 37,
     "is_hidden": true
   },
   {
+    "npcid": 38,
+    "associations": [
+      {
+        "id": 55,
+        "name": "Tharizdun, The Chained God",
+        "relationship": "Shorthagot is an ancient avatar and harbinger of Tharizdun, working to free the Chained God.",
+        "type": "npc"
+      },
+      {
+        "id": 37,
+        "name": "Lady Elysra Nivariel Williams",
+        "relationship": "Lady Williams orchestrated the Fall of Valls, breaching a Shadowfell gateway connected to Shorthagot's prison.",
+        "type": "npc"
+      }
+    ],
     "name": "Shorthagot, Harbinger of Ruin",
     "race": "Aberration / Avatar",
     "npc_class": "Elder Entity",
@@ -451,11 +1076,14 @@
     "status": "Imprisoned",
     "alignment_tag": "enemy",
     "portrait_url": "/images/Shothragot.jpg",
-    "description": "Shorthagot is an ancient avatar of Tharizdun, the Chained God — one of the most terrifying entities in all existence. The Netherese Empire accidentally contacted Shorthagot through their Great Machine at Thul Avenar, and the entity was eventually imprisoned in the Shadowfell after the Time of Troubles. Its binding was split into four Keys scattered across Damara. Shorthagot's influence seeps through the weakened barriers between planes, corrupting everything it touches. It is the ultimate threat behind the campaign's events.",
+    "description": "Shorthagot, Harbinger of Ruin, is an ancient entity imprisoned in the Shadowfell. Its influence seeps through the weakened barriers between planes, corrupting everything it touches. It is the ultimate threat behind many of the campaign's events.",
+    "dm_notes": "Shorthagot is an ancient avatar of Tharizdun, the Chained God — one of the most terrifying entities in all existence. The Netherese Empire accidentally contacted Shorthagot through their Great Machine at Thul Avenar, and the entity was eventually imprisoned in the Shadowfell after the Time of Troubles. Its binding was split into four Keys scattered across Damara.\n\nLady Williams orchestrated the Fall of Valls to breach a Shadowfell gateway connected to Shorthagot's prison. The Order of the Yellow Rose guards one of the Keys.",
     "sort_order": 38,
     "is_hidden": true
   },
   {
+    "npcid": 39,
+    "associations": [],
     "name": "Father Alric",
     "race": "Human",
     "npc_class": "Cleric",
@@ -463,11 +1091,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/Father_Alric.png",
-    "description": "Father Alric is a priest who has accompanied or aided the party during their journey. A man of deep faith, he provides spiritual guidance and healing magic to those in need. His dedication to combating the undead and fiendish forces of Barovia makes him a steadfast ally in the fight against Strahd and the greater darkness threatening the region.",
+    "description": "Father Alric is a priest who has accompanied the party during their journey. A man of deep faith, he provides spiritual guidance and healing magic to those in need.",
+    "dm_notes": "Father Alric's dedication to combating the undead and fiendish forces of Barovia makes him a steadfast ally in the fight against Strahd and the greater darkness threatening the region. His healing abilities have proven invaluable during the party's travels.",
     "sort_order": 39,
     "is_hidden": true
   },
   {
+    "npcid": 40,
+    "associations": [
+      {
+        "id": 6,
+        "name": "Ezmerelda d'Avenir",
+        "relationship": "Velinka is connected to the d'Avenir family of monster hunters.",
+        "type": "npc"
+      }
+    ],
     "name": "Velinka d'Avenir",
     "race": "Human (Vistani heritage)",
     "npc_class": "Rogue / Scout",
@@ -475,11 +1113,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/Velinka d'Avenir.png",
-    "description": "Velinka d'Avenir is a Vistani woman connected to the d'Avenir family of monster hunters. Resourceful and street-smart, she serves as a guide and source of information about the Vistani people and their complex relationship with Strahd. Velinka walks a careful line between the Vistani traditions of serving Barovia's lord and her own moral compass.",
+    "description": "Velinka d'Avenir is a Vistani woman who serves as a guide and source of information about the Vistani people. Resourceful and street-smart, she walks a careful line between the Vistani traditions and her own moral compass.",
+    "dm_notes": "Velinka is connected to the d'Avenir family of monster hunters. Her Vistani heritage and knowledge of the complex relationship between the Vistani and Strahd make her a valuable source of information for those navigating Barovia.",
     "sort_order": 40,
     "is_hidden": true
   },
   {
+    "npcid": 41,
+    "associations": [
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "Bragus serves as a guard captain and military advisor in service to the Frostmantle dynasty.",
+        "type": "npc"
+      }
+    ],
     "name": "Bragus Orentide",
     "race": "Human",
     "npc_class": "Fighter / Guard Captain",
@@ -487,11 +1135,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/BragusOrentide.jpg",
-    "description": "Bragus Orentide is a seasoned warrior and guard captain in the service of the Frostmantle dynasty. A veteran of numerous conflicts, Bragus is known for his unwavering loyalty and tactical acumen. He serves as a protector and military advisor, often found at the front lines whenever Damara faces threats from the encroaching darkness of the Shadowfell.",
+    "description": "Bragus Orentide is a seasoned warrior and guard captain in the service of the Frostmantle dynasty. He is known for his unwavering loyalty and tactical acumen.",
+    "dm_notes": "A veteran of numerous conflicts, Bragus serves as a protector and military advisor, often found at the front lines whenever Damara faces threats from the encroaching darkness of the Shadowfell.",
     "sort_order": 41,
     "is_hidden": true
   },
   {
+    "npcid": 42,
+    "associations": [
+      {
+        "id": 38,
+        "name": "Shorthagot, Harbinger of Ruin",
+        "relationship": "Edic's research into the Netheril Empire's Great Machine and the Keys of Shorthagot is central to understanding the cosmic threat.",
+        "type": "npc"
+      }
+    ],
     "name": "Edic Tholomen",
     "race": "Human",
     "npc_class": "Wizard / Sage",
@@ -499,35 +1157,70 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/EdicTholomen.jpg",
-    "description": "Edic Tholomen is a scholar and wizard who studies the ancient Netherese ruins and the magical forces that permeate the region around Damara. His research into the Netheril Empire's Great Machine and the Keys of Shorthagot has provided crucial intelligence about the nature of the cosmic threat facing the world. Edic is soft-spoken but brilliant, often lost in thought about arcane theories.",
+    "description": "Edic Tholomen is a scholar and wizard who studies the ancient Netherese ruins and the magical forces that permeate the region around Damara. Edic is soft-spoken but brilliant, often lost in thought about arcane theories.",
+    "dm_notes": "His research into the Netheril Empire's Great Machine and the Keys of Shorthagot has provided crucial intelligence about the nature of the cosmic threat facing the world.",
     "sort_order": 42,
     "is_hidden": true
   },
   {
+    "npcid": 43,
+    "associations": [
+      {
+        "id": 44,
+        "name": "Gorak Broken Tusk",
+        "relationship": "Fellow Sea Spray crew member. Garrick joined not long after Gorak and the two became close through their shared loyalty to the crew.",
+        "type": "npc"
+      },
+      {
+        "id": 49,
+        "name": "Selene Brightwater",
+        "relationship": "Fellow Sea Spray crew member. Part of the tight-knit family Garrick found aboard the ship.",
+        "type": "npc"
+      }
+    ],
     "name": "Garrick Ironbrow",
     "race": "Dwarf",
-    "npc_class": "Fighter / Blacksmith",
-    "location": "Damara",
+    "npc_class": "Fighter",
+    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/GarrickIronbrow.jpg",
-    "description": "Garrick Ironbrow is a stout dwarven blacksmith and warrior who forges weapons and armor for those who fight against the darkness. His craftsmanship is renowned throughout Damara, and his weapons carry enchantments that are particularly effective against undead and fiends. Garrick is gruff but kindhearted, always willing to help those who stand against Strahd's evil.",
+    "description": "Garrick Ironbrow is a dwarven fighter and the shipwright of the Sea Spray. Stoic and immensely strong, Garrick originally boarded the ship years ago as a hired guard for a single voyage. He found himself unexpectedly drawn to the strange company of a Tabaxi captain and her orc first mate — their camaraderie was unlike anything he had known. He signed on permanently not long after Gorak joined, and has been part of the crew ever since. Garrick keeps the Sea Spray seaworthy and swings a hammer with equal skill whether he's driving nails or cracking skulls.",
+    "dm_notes": "Garrick has a tragic backstory involving pirates and revenge that drove him from his former life as a blacksmith to the sea. He doesn't talk about it, and the crew knows better than to ask. What matters to Garrick is the present — the ship, the crew, and the work.\n\nHe joined the Sea Spray not long after Gorak, initially hired as a guard for a single voyage. The unlikely friendship between a Tabaxi swashbuckler, a full-blooded orc, and a dwarven blacksmith was something Garrick never expected, but it became the closest thing to family he'd had since losing his old life. He stayed aboard and took on the role of shipwright, keeping the vessel in fighting shape.\n\nThe Sea Spray set out from Frosthaven in Vasa, carrying the party as hired protection due to rumors of fighting along the Pelavir River — King Frostmantle's wars with Narfell had made the route dangerous. During Session 02, the Night Screamer attacked. Garrick survived the fight and helped rescue Prince Ian Frostmantle from the wreckage. While the party left to find Mistress Clarissa Allyson, Garrick returned to White Bridge with the Captain and First Officer, escorting the wounded Prince and his uncle to safety from the growing reach of the Mist.",
     "sort_order": 43,
     "is_hidden": true
   },
   {
+    "npcid": 44,
+    "associations": [
+      {
+        "id": 49,
+        "name": "Selene Brightwater",
+        "relationship": "Fellow Sea Spray crew member. Gorak sees Selene and the rest of the crew as the family he never had.",
+        "type": "npc"
+      },
+      {
+        "id": 43,
+        "name": "Garrick Ironbrow",
+        "relationship": "Fellow Sea Spray crew member and shipwright. Part of the family Gorak found aboard the Sea Spray.",
+        "type": "npc"
+      }
+    ],
     "name": "Gorak Broken Tusk",
-    "race": "Half-Orc",
-    "npc_class": "Barbarian / Mercenary",
-    "location": "Traveling",
+    "race": "Orc",
+    "npc_class": "Fighter (Sailor)",
+    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
     "status": "Alive",
-    "alignment_tag": "neutral",
+    "alignment_tag": "ally",
     "portrait_url": "/images/GorakBrokenTusk.jpg",
-    "description": "Gorak Broken Tusk is a half-orc mercenary with a fearsome reputation. Named for his signature broken tusk, Gorak has survived countless battles through a combination of brute strength and surprising cunning. He works for whoever pays well but has a personal code of honor that prevents him from harming innocents. His allegiances in the current conflict remain fluid.",
+    "description": "Gorak Broken Tusk is the First Mate of the Sea Spray and a towering mountain of muscle wrapped in a Blue Seaman's coat that would never button. A full-blooded orc with piercing yellow eyes and countless battle scars, Gorak wields a ship's anchor as his weapon of choice. He is disciplined despite his fearsome appearance, commanding respect through strength and unwavering loyalty. Captain Reaven was the only captain who would give him a chance and let him serve aboard her ship — a debt of trust that Gorak repays with absolute devotion. The crew of the Sea Spray became the family he never had.",
+    "dm_notes": "The Sea Spray set out from Frosthaven in Vasa, carrying the party as hired protection — King Frostmantle's wars with Narfell had made the Pelavir River route dangerous. Gorak survived the Night Screamer attack during Session 02 but took a huge bloody gash in the fight, swinging his anchor with deadly force against the creatures. After the Sea Spray was wrecked on the shore of the Pelavir River just past Bloodstone Pass, Gorak stayed behind with Captain Reaven to tend to the wounded Prince Ian Frostmantle and salvage what they could from the wreck. The party left to find Mistress Clarissa Allyson, while Gorak and the crew escorted the Prince and his uncle to White Bridge and safety from the growing reach of the Mist.\n\nGorak's loyalty to Emerald Eyes is absolute — she gave him something no one else would: a chance. As an orc, he was turned away from every crew and company he approached. Reaven judged him by his strength and character, not his race, and that earned her his undying loyalty. Over time, the crew — Reaven, Selene, Garrick — became the only family he has ever known.",
     "sort_order": 44,
     "is_hidden": true
   },
   {
+    "npcid": 45,
+    "associations": [],
     "name": "Haldor Stonehand",
     "race": "Dwarf",
     "npc_class": "Cleric / Artificer",
@@ -535,11 +1228,14 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/HaldorStonehand.jpg",
-    "description": "Haldor Stonehand is a dwarven cleric and craftsman who combines divine magic with exceptional skill in stonework and metalcraft. He serves as a spiritual leader among the dwarven communities of Damara and has dedicated his life to creating holy artifacts capable of combating the undead plague spreading from Barovia. His stone hand, the result of a petrification curse he only partially reversed, has become his namesake.",
+    "description": "Haldor Stonehand is a dwarven cleric and craftsman who combines divine magic with exceptional skill in stonework and metalcraft. His stone hand, the result of a petrification curse he only partially reversed, has become his namesake.",
+    "dm_notes": "He serves as a spiritual leader among the dwarven communities of Damara and has dedicated his life to creating holy artifacts capable of combating the undead plague spreading from Barovia.",
     "sort_order": 45,
     "is_hidden": true
   },
   {
+    "npcid": 46,
+    "associations": [],
     "name": "Mira Fleetfoot",
     "race": "Halfling",
     "npc_class": "Rogue / Scout",
@@ -547,11 +1243,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/MiraFleetfoot.jpg",
-    "description": "Mira Fleetfoot is a halfling scout and spy who specializes in navigating the dangerous borderlands between Damara and Barovia. Quick-witted and light on her feet, Mira has an uncanny ability to slip past danger unseen. She serves as a courier and intelligence gatherer for the forces opposing Strahd, carrying messages between allied groups scattered throughout the region.",
+    "description": "Mira Fleetfoot is a halfling scout who specializes in navigating the dangerous borderlands between Damara and Barovia. Quick-witted and light on her feet, Mira has an uncanny ability to slip past danger unseen.",
+    "dm_notes": "She serves as a courier and intelligence gatherer for the forces opposing Strahd, carrying messages between allied groups scattered throughout the region.",
     "sort_order": 46,
     "is_hidden": true
   },
   {
+    "npcid": 47,
+    "associations": [
+      {
+        "id": 38,
+        "name": "Shorthagot, Harbinger of Ruin",
+        "relationship": "Olaera's expertise in planar magic is invaluable in understanding the weakening boundaries that allow Shorthagot's influence to spread.",
+        "type": "npc"
+      }
+    ],
     "name": "Olaera Moonsilver",
     "race": "Elf",
     "npc_class": "Wizard / Enchantress",
@@ -559,11 +1265,21 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/OlaeraMoonSilver.jpg",
-    "description": "Olaera Moonsilver is an elven enchantress who has studied the mystical barriers between the Material Plane and the Shadowfell for centuries. Her expertise in planar magic makes her invaluable in understanding the Mists of Ravenloft and the weakening boundaries that allow Shorthagot's influence to spread. Olaera is graceful, ancient, and carries the weight of seeing civilizations rise and fall.",
+    "description": "Olaera Moonsilver is an elven enchantress who has studied the mystical barriers between the Material Plane and the Shadowfell for centuries. Olaera is graceful, ancient, and carries the weight of seeing civilizations rise and fall.",
+    "dm_notes": "Her expertise in planar magic makes her invaluable in understanding the Mists of Ravenloft and the weakening boundaries that allow Shorthagot's influence to spread.",
     "sort_order": 47,
     "is_hidden": true
   },
   {
+    "npcid": 48,
+    "associations": [
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "Rurik serves as a soldier in the Frostmantle dynasty's forces.",
+        "type": "npc"
+      }
+    ],
     "name": "Rurik",
     "race": "Human",
     "npc_class": "Fighter / Soldier",
@@ -571,23 +1287,42 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/Rurik.jpg",
-    "description": "Rurik is a stalwart soldier in service to the Frostmantle dynasty. A man of few words but decisive action, Rurik has proven himself in numerous engagements against the dark forces threatening Damara. He is respected by his fellow soldiers for his bravery and reliability, always the first to volunteer for dangerous missions.",
+    "description": "Rurik is a stalwart soldier in service to the Frostmantle dynasty. A man of few words but decisive action, he is respected by his fellow soldiers for his bravery and reliability.",
+    "dm_notes": "Rurik has proven himself in numerous engagements against the dark forces threatening Damara. He is always the first to volunteer for dangerous missions.",
     "sort_order": 48,
     "is_hidden": true
   },
   {
+    "npcid": 49,
+    "associations": [
+      {
+        "id": 44,
+        "name": "Gorak Broken Tusk",
+        "relationship": "Gorak is fiercely protective of Selene, treating her like a younger sister. He was one of the first crew members to accept her after Captain Reaven took her in.",
+        "type": "npc"
+      },
+      {
+        "id": 43,
+        "name": "Garrick Ironbrow",
+        "relationship": "Garrick watches over Selene with gruff, paternal concern. He carved her first wand handle and pretends not to worry when her wild magic surges.",
+        "type": "npc"
+      }
+    ],
     "name": "Selene Brightwater",
     "race": "Half-Elf",
-    "npc_class": "Bard / Diplomat",
-    "location": "Damara",
+    "npc_class": "Sorcerer (Wild Magic)",
+    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/SeleneBrightwater.jpg",
-    "description": "Selene Brightwater is a half-elven bard and diplomat who serves as a mediator between the various factions opposing Strahd. Her silver tongue and magical music have defused tensions, rallied allies, and lifted spirits in even the darkest hours. Selene travels between settlements, spreading news, hope, and sometimes dire warnings about the growing darkness.",
+    "description": "Selene Brightwater is the youngest member of the Sea Spray's crew — a young half-elf who looks more human than elf, with dark hair, pale skin, and striking violet eyes. Selene ran away from a cruel family that had taken her in as little more than a servant. She discovered her wild magic as a child, and the uncontrollable surges only made her captors treat her worse. When she fled, she stowed away aboard the Sea Spray. Captain Reaven was furious when she found the girl — but the more she listened to Selene's story, the softer she became. The crew adopted Selene as their own, and she has been fiercely protected by them ever since.",
+    "dm_notes": "Selene is emotionally volatile, which mirrors her wild magic — her spells surge unpredictably when she is frightened or upset. She is deeply loyal to Captain Reaven and sees the crew as the only real family she has ever known. Gorak, Garrick, and Reaven are all fiercely protective of their young ward, and anyone who threatens Selene will answer to the entire crew.\n\nSelene is quiet and reserved around strangers but opens up quickly once she feels safe. She has a habit of tucking her hands into the sleeves of her cloak when nervous. Despite her youth and her difficult past, she is brave — she just doesn't always know it yet.\n\nThe Sea Spray set out from Frosthaven in Vasa with the party aboard as hired protection — the Pelavir River was dangerous due to King Frostmantle's wars with Narfell. Selene survived the Night Screamer attack during Session 02 and stayed behind with the rest of the crew at the wreckage on the shore of the Pelavir River. While the party left to find Mistress Clarissa Allyson, the crew escorted the wounded Prince Frostmantle and his uncle to White Bridge and safety from the growing reach of the Mist.",
     "sort_order": 49,
     "is_hidden": true
   },
   {
+    "npcid": 50,
+    "associations": [],
     "name": "Ser Brennor Cale",
     "race": "Human",
     "npc_class": "Paladin / Knight",
@@ -595,11 +1330,14 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/SerBrennorCale.png",
-    "description": "Ser Brennor Cale is a paladin and knight sworn to protect Damara from the supernatural threats emerging from the Shadowfell. A man of unwavering faith and courage, Brennor has dedicated his life to the eradication of evil. He wears gleaming plate armor bearing the crest of his order and wields a blessed longsword. Brennor is among the foremost champions standing against the advance of darkness.",
+    "description": "Ser Brennor Cale is a paladin and knight sworn to protect Damara. A man of unwavering faith and courage, he wears gleaming plate armor bearing the crest of his order and wields a blessed longsword.",
+    "dm_notes": "Brennor has dedicated his life to the eradication of evil and the defense of Damara from the supernatural threats emerging from the Shadowfell. He is among the foremost champions standing against the advance of darkness.",
     "sort_order": 50,
     "is_hidden": true
   },
   {
+    "npcid": 51,
+    "associations": [],
     "name": "Thalin Emberbrew",
     "race": "Dwarf",
     "npc_class": "Ranger / Brewer",
@@ -607,11 +1345,14 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/ThalinEmberbrew.jpg",
-    "description": "Thalin Emberbrew is a dwarven ranger and master brewer whose fiery concoctions are as potent in combat as they are at the tavern table. Thalin knows the mountains and forests of Damara like no other and serves as a guide through the treacherous wilderness. His 'Emberbrew' — a dwarf-strength spirit — is legendary for its ability to warm even the coldest spirits and, rumor has it, can burn through a troll's regeneration.",
+    "description": "Thalin Emberbrew is a dwarven ranger and master brewer who knows the mountains and forests of Damara like no other. His 'Emberbrew' — a dwarf-strength spirit — is legendary.",
+    "dm_notes": "Thalin serves as a guide through the treacherous wilderness. His fiery concoctions are as potent in combat as they are at the tavern table. Rumor has it, his Emberbrew can burn through a troll's regeneration.",
     "sort_order": 51,
     "is_hidden": true
   },
   {
+    "npcid": 52,
+    "associations": [],
     "name": "Vera Thorn",
     "race": "Human",
     "npc_class": "Warlock / Herbalist",
@@ -619,11 +1360,27 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/VeraThorn.jpg",
-    "description": "Vera Thorn is a mysterious herbalist and hedge witch who lives on the borderlands between Damara and the Mists. She possesses knowledge of rare plants and potions, some of which can protect against the effects of Barovia's curse. Vera's patron and true allegiances are unclear — she helps those who seek her out but always at a price. Her thorny temperament matches her namesake.",
+    "description": "Vera Thorn is a mysterious herbalist and hedge witch who lives on the borderlands between Damara and the Mists. She possesses knowledge of rare plants and potions. Her thorny temperament matches her namesake.",
+    "dm_notes": "Some of Vera's potions can protect against the effects of Barovia's curse. Her patron and true allegiances are unclear — she helps those who seek her out but always at a price.",
     "sort_order": 52,
     "is_hidden": true
   },
   {
+    "npcid": 53,
+    "associations": [
+      {
+        "id": 54,
+        "name": "Milivoj",
+        "relationship": "Henrik manipulated Milivoj into stealing the bones of Saint Andral from the church.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Henrik was coerced by Strahd's agents into hiding vampire spawn in his shop.",
+        "type": "npc"
+      }
+    ],
     "name": "Henrik Van der Voort",
     "race": "Human",
     "npc_class": "Artisan / Coffin Maker",
@@ -631,11 +1388,21 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/henrik-van-der-voort.png",
-    "description": "Henrik Van der Voort is the coffin maker of Vallaki, a nervous, frightened man who has been coerced by Strahd's agents into hiding vampire spawn in the upstairs of his shop. Henrik lives in constant terror, knowing that the creatures above could descend and kill him at any moment, but too afraid of Strahd's retribution to seek help. His shop has become an unwitting den of undeath in the heart of Vallaki.",
+    "description": "Henrik Van der Voort is the coffin maker of Vallaki, a nervous, frightened man who lives and works alone in his shop. He is perpetually anxious, avoids eye contact, and clearly hides some terrible secret. Henrik is terrified of something but too afraid to seek help.",
+    "dm_notes": "Henrik has been coerced by Strahd's agents into hiding vampire spawn in the upstairs of his shop. He lives in constant terror, knowing that the creatures above could descend and kill him at any moment, but is too afraid of Strahd's retribution to seek help. He manipulated the gravedigger Milivoj into stealing the bones of Saint Andral from the church, removing the holy protection that kept vampires out. His shop has become an unwitting den of undeath in the heart of Vallaki.",
     "sort_order": 53,
     "is_hidden": true
   },
   {
+    "npcid": 54,
+    "associations": [
+      {
+        "id": 53,
+        "name": "Henrik Van der Voort",
+        "relationship": "Milivoj was manipulated by Henrik into stealing the sacred bones of Saint Andral.",
+        "type": "npc"
+      }
+    ],
     "name": "Milivoj",
     "race": "Human",
     "npc_class": "Commoner / Gravedigger",
@@ -643,11 +1410,21 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/milivoj.png",
-    "description": "Milivoj is a young gravedigger at the Church of St. Andral in Vallaki. Desperate to feed his younger siblings, he was manipulated by Henrik Van der Voort into stealing the sacred bones of Saint Andral from the church — the relic that protected the building from vampire entry. Milivoj is guilt-ridden but terrified of the consequences of his actions.",
+    "description": "Milivoj is a young gravedigger at the Church of St. Andral in Vallaki. He is scrawny, overworked, and perpetually dirty from digging graves. Milivoj struggles to feed his younger siblings and is desperate enough to take on any work that pays.",
+    "dm_notes": "Desperate to feed his siblings, Milivoj was manipulated by Henrik Van der Voort into stealing the sacred bones of Saint Andral from the church — the relic that protected the building from vampire entry. He is guilt-ridden but terrified of the consequences of his actions. The theft of the bones is a key plot point in the Feast of St. Andral event.",
     "sort_order": 54,
     "is_hidden": true
   },
   {
+    "npcid": 55,
+    "associations": [
+      {
+        "id": 38,
+        "name": "Shorthagot, Harbinger of Ruin",
+        "relationship": "Shorthagot serves as Tharizdun's avatar and harbinger, working to free the Chained God from imprisonment.",
+        "type": "npc"
+      }
+    ],
     "name": "Tharizdun, The Chained God",
     "race": "Deity / Elder Evil",
     "npc_class": "God of Eternal Darkness",
@@ -655,8 +1432,323 @@
     "status": "Imprisoned",
     "alignment_tag": "enemy",
     "portrait_url": "/images/Tharizdun.jpg",
-    "description": "Tharizdun is the Chained God, an ancient deity of madness, entropy, and eternal darkness who was imprisoned by the combined efforts of all other gods at the dawn of time. His very existence threatens the fabric of reality. Shorthagot serves as his avatar and harbinger, working to free the Chained God from his cosmic imprisonment. The four Keys of Shorthagot scattered across Damara are connected to the bindings that keep this terrible entity sealed away. Even imprisoned, Tharizdun's influence corrupts and drives mortals to madness.",
+    "description": "Tharizdun is the Chained God, an ancient deity of madness, entropy, and eternal darkness who was imprisoned by the combined efforts of all other gods at the dawn of time. His very existence threatens the fabric of reality. Even imprisoned, his influence corrupts and drives mortals to madness.",
+    "dm_notes": "Shorthagot serves as Tharizdun's avatar and harbinger, working to free the Chained God from his cosmic imprisonment. The four Keys of Shorthagot scattered across Damara are connected to the bindings that keep this terrible entity sealed away. The campaign's ultimate stakes involve preventing Tharizdun's release through the Shadowfell gateways.",
     "sort_order": 55,
+    "is_hidden": true
+  },
+  {
+    "npcid": 56,
+    "associations": [
+      {
+        "id": 2,
+        "name": "Ireena Kolyana",
+        "relationship": "Kolyan's adopted daughter. He found her as a young child wandering the Svalich Woods after a dire wolf attack separated her from her biological family. He raised her as his own alongside Ismark.",
+        "type": "npc"
+      },
+      {
+        "id": 3,
+        "name": "Ismark Kolyanovich",
+        "relationship": "Kolyan's biological son. Ismark inherited the burden of Burgomaster after Kolyan's death and carries the weight of protecting his sister.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Kolyan wrote a desperate letter pleading for help against Strahd's attacks on his home. Strahd's repeated visits to claim Ireena drove Kolyan to his death from sheer terror and exhaustion.",
+        "type": "npc"
+      },
+      {
+        "id": 14,
+        "name": "Father Donavich",
+        "relationship": "The village priest who presided over Kolyan's funeral at the church in the Village of Barovia.",
+        "type": "npc"
+      }
+    ],
+    "name": "Kolyan Indirovich",
+    "race": "Human",
+    "npc_class": "Noble / Burgomaster",
+    "location": "Village of Barovia (deceased)",
+    "status": "Dead",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Kolyan Indirovich was the Burgomaster of the Village of Barovia and the father of Ismark and adoptive father of Ireena. A good and honorable man, Kolyan spent his final days barricading his home against Strahd's nightly assaults as the vampire lord came to claim Ireena. The relentless siege broke Kolyan's health and spirit, and he died of a heart attack brought on by fright. His death left his children to face Strahd's wrath alone and set the campaign's events in motion.",
+    "dm_notes": "Kolyan's name follows the Barovian patronymic tradition — 'Indirovich' means 'son of Indir,' his father. His children carry his name forward: Ismark Kolyanovich ('son of Kolyan') and Ireena Kolyana ('daughter of Kolyan'). There is no family surname.\n\nKolyan found the young Ireena wandering at the edge of the Svalich Woods as a small child after a dire wolf attack scattered her biological family. He took her in and raised her as his own daughter alongside Ismark, never telling her the truth of her origins. Her biological brother Izek was separated during the same attack and eventually ended up in Vallaki, taken in by the Vallakovich household.\n\nKolyan was a descendant of Ismark the Great, a legendary Barovian hero, which is why the villagers mockingly call his son 'Ismark the Lesser.' Despite the impossible situation, Kolyan refused to surrender Ireena to Strahd. The forged letter bearing his name — the one that lured the adventurers to Barovia — was actually written by Strahd to draw fresh prey into his domain.\n\nAt campaign start, Kolyan's body lies in the family home awaiting burial. Ismark asks the party to help escort the coffin to the church for a proper funeral with Father Donavich.",
+    "sort_order": 56,
+    "is_hidden": true
+  },
+  {
+    "npcid": 57,
+    "associations": [
+      {
+        "id": 58,
+        "name": "Parriwimple",
+        "relationship": "Bildrath's nephew and enforcer at the shop. Dimwitted but massively strong, Parriwimple does the heavy lifting and intimidates anyone who might cause trouble.",
+        "type": "npc"
+      }
+    ],
+    "name": "Bildrath Cantemir",
+    "race": "Human",
+    "npc_class": "Commoner / Merchant",
+    "location": "Village of Barovia (Bildrath's Mercantile)",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Bildrath Cantemir is the owner of the only general store in the Village of Barovia. He is a greedy, self-serving man who gouges prices mercilessly — charging ten times the normal rate for basic supplies because he knows his customers have no alternative. Bildrath views the misery of Barovia as a business opportunity and shows no sympathy for those who cannot afford his prices. His massive nephew Parriwimple serves as both stock boy and enforcer.",
+    "dm_notes": "Bildrath is universally disliked but tolerated because his shop is the only source of equipment and supplies in the village. He refuses to negotiate and will call Parriwimple to deal with anyone who tries to steal or threaten him. Despite his greed, he is a coward who will capitulate if genuinely threatened with violence. He has no loyalty to Strahd or anyone else — only to his own profit.",
+    "sort_order": 57,
+    "is_hidden": true
+  },
+  {
+    "npcid": 58,
+    "associations": [
+      {
+        "id": 57,
+        "name": "Bildrath Cantemir",
+        "relationship": "Parriwimple's uncle and employer. Bildrath uses Parriwimple's strength to run the shop and intimidate customers.",
+        "type": "npc"
+      }
+    ],
+    "name": "Parriwimple",
+    "race": "Human",
+    "npc_class": "Commoner",
+    "location": "Village of Barovia (Bildrath's Mercantile)",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Parriwimple is Bildrath Cantemir's nephew — a hulking, simple-minded young man of immense physical strength. He works at his uncle's general store hauling crates, stocking shelves, and serving as an unspoken threat to anyone who might cause trouble. Despite his intimidating size, Parriwimple is gentle and childlike in demeanor. He genuinely wants to help people and is easily befriended with kind words or small gifts.",
+    "dm_notes": "Parriwimple is far stronger than he looks — easily capable of overpowering most adventurers in a grapple. However, he has no desire to fight and will only become violent if his uncle is directly threatened. He is easily manipulated by anyone who shows him kindness, which Bildrath exploits constantly. If befriended, Parriwimple can be a useful source of simple, honest information about the village — he says what he sees without guile or filter.",
+    "sort_order": 58,
+    "is_hidden": true
+  },
+  {
+    "npcid": 59,
+    "associations": [
+      {
+        "id": 60,
+        "name": "Luna E'Tressa",
+        "relationship": "Sarkov's wife. Luna speaks for them both since Sarkov lost his tongue. They gave up the Vistani traveling life together when they married.",
+        "type": "npc"
+      },
+      {
+        "id": 61,
+        "name": "Magda E'Tressa",
+        "relationship": "Sarkov's widowed aunt who handles cooking at the inn. Fiercely protective of her nephew.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Strahd had Sarkov's tongue cut out for speaking against the vampire lord's will. This act of cruelty drove Sarkov and Luna to abandon their Vistani caravan.",
+        "type": "npc"
+      }
+    ],
+    "name": "Sarkov E'Tressa",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Innkeeper",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Sarkov E'Tressa is the co-owner of the Blood of the Vine Inn in the Village of Barovia. A broad-shouldered, silent man in his late 40s, Sarkov communicates entirely through gestures and steady presence — his tongue was cut out for speaking against Strahd. Originally from the Tser Hill Vistani, Sarkov and his wife Luna gave up the Travel when they married and settled in the village as innkeepers, their views no longer aligned with the caravan's deference to Strahd.",
+    "dm_notes": "Sarkov is watchful and protective. He runs the inn's bar with quiet efficiency, and regulars understand his gestures and expressions well enough to communicate. He harbors a deep, silent hatred for Strahd but is pragmatic enough to know that open defiance means death. The party first met Sarkov on arrival in the Village of Barovia — Gregor awkwardly discovered his missing tongue while trying to converse with him.\n\nThe E'Tressa family are originally from the Tser Hill Vistani but gave up the nomadic life when Sarkov married Luna, who was from the Village of Barovia. Their decision to settle down and abandon the Travel put them at odds with their caravan, and they now live in exile from their former community.",
+    "sort_order": 59,
+    "is_hidden": true
+  },
+  {
+    "npcid": 60,
+    "associations": [
+      {
+        "id": 59,
+        "name": "Sarkov E'Tressa",
+        "relationship": "Luna's husband. She speaks for them both since Sarkov cannot. They gave up the Vistani traveling life when they married.",
+        "type": "npc"
+      },
+      {
+        "id": 62,
+        "name": "Ilyana Kostova",
+        "relationship": "Luna's godmother, who followed the family into exile at the inn.",
+        "type": "npc"
+      },
+      {
+        "id": 63,
+        "name": "Klara Vorovich",
+        "relationship": "Luna's distant cousin and the inn's bookkeeper. Unknown to Luna, Klara secretly spies for Strahd.",
+        "type": "npc"
+      }
+    ],
+    "name": "Luna E'Tressa",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Innkeeper",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Luna E'Tressa is the co-owner of the Blood of the Vine Inn and the voice of the establishment. A striking woman in her early 40s with kind but weary eyes, Luna was born in the Village of Barovia and married Sarkov of the Tser Hill Vistani. When Sarkov's tongue was cut out by Strahd's order, the couple abandoned the Travel and settled in her home village to run the inn. Luna was once a singer among the Vistani, and her warm voice still carries the cadence of old caravan songs. She speaks for both herself and Sarkov, translating his gestures for newcomers.",
+    "dm_notes": "Luna is the heart of the Blood of the Vine. She manages the inn's guests, mediates disputes, and keeps the extended family functioning. She is warm but exhausted by the weight of their exile and the constant oppression of life in Barovia. She knows more about the village's secrets than she lets on — years of running the only inn in town means she hears everything.\n\nHer marriage to Sarkov was a love match that cost them both their Vistani community. The Tser Hill Vistani viewed their departure as a betrayal, and the couple has had no contact with their former caravan since settling in the village.",
+    "sort_order": 60,
+    "is_hidden": true
+  },
+  {
+    "npcid": 61,
+    "associations": [
+      {
+        "id": 59,
+        "name": "Sarkov E'Tressa",
+        "relationship": "Magda's nephew. She followed him into exile and fiercely protects him and Luna.",
+        "type": "npc"
+      }
+    ],
+    "name": "Magda E'Tressa",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Cook",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Magda E'Tressa is Sarkov's widowed aunt and the cook at the Blood of the Vine Inn. A stout woman in her late 60s with a hooked nose and a cane she doesn't truly need, Magda is gruff, practical, and scolds patrons like unruly children. She followed her nephew into exile from the Tser Hill Vistani and has appointed herself the family's fierce protector. Her cooking is simple Barovian fare — heavy stews, black bread, and whatever root vegetables survive the cursed soil — but it keeps the inn running.",
+    "dm_notes": "Magda uses her cane more as a prop and occasional weapon than a walking aid. She is sharper than she appears and has a keen sense for trouble. She will fiercely defend Sarkov and Luna from anyone she perceives as a threat. Magda left the Tser Hill Vistani without hesitation when Sarkov was mutilated — family loyalty runs deeper than any caravan bond for her.",
+    "sort_order": 61,
+    "is_hidden": true
+  },
+  {
+    "npcid": 62,
+    "associations": [
+      {
+        "id": 60,
+        "name": "Luna E'Tressa",
+        "relationship": "Ilyana is Luna's godmother. She dotes on Luna and followed the family into exile.",
+        "type": "npc"
+      }
+    ],
+    "name": "Ilyana Kostova",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Seer",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Ilyana Kostova is Luna E'Tressa's godmother and a longtime fixture at the Blood of the Vine Inn. A tall, wiry woman in her early 70s who drapes herself in bright scarves, Ilyana was once a singer and dancer among the Tser Hill Vistani. Her voice has gone raspy with age, but she still hums old caravan tunes while she cleans. She claims to have 'second sight' — the ability to sense the presence of evil and read omens in ordinary events. Most dismiss it as superstition, though her warnings have an unsettling habit of proving accurate.",
+    "dm_notes": "Ilyana's 'second sight' is left deliberately ambiguous — she may genuinely have a minor gift of divination, or she may simply be a perceptive old woman who reads people well. Either way, she provides atmospheric flavor and can serve as a cryptic information source. She knows the old Vistani stories and traditions, and her warnings about roads, weather, and strangers carry weight with the inn's regulars even if they roll their eyes.",
+    "sort_order": 62,
+    "is_hidden": true
+  },
+  {
+    "npcid": 63,
+    "associations": [
+      {
+        "id": 60,
+        "name": "Luna E'Tressa",
+        "relationship": "Klara is Luna's distant cousin. Luna trusts her completely, unaware of her treachery.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Klara secretly passes information about inn patrons to Vistani loyalists who report directly to Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 27,
+        "name": "Arrigal",
+        "relationship": "Klara passes her intelligence through Vistani loyalist channels that ultimately reach Arrigal and Strahd's spy network.",
+        "type": "npc"
+      }
+    ],
+    "name": "Klara Vorovich",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Spy",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "enemy",
+    "portrait_url": "",
+    "description": "Klara Vorovich is Luna E'Tressa's distant cousin and the bookkeeper at the Blood of the Vine Inn. A thin, severe woman in her late 60s with long gray hair always tied back in a tight bun, Klara serves drinks with a forced smile and keeps the inn's ledgers in meticulous order. She is quiet, efficient, and always seems to be listening.",
+    "dm_notes": "Klara is a spy for Strahd — she carefully observes every traveler who passes through the inn and passes her intelligence to Vistani loyalists who report to Strahd's network. She never fully abandoned her loyalty to the Vistani's traditional service to Strahd. While the rest of the E'Tressa family broke with the caravan, Klara followed them to the village as an embedded informant.\n\nKlara is the reason Strahd always seems to know when strangers arrive in the Village of Barovia. She is calculating, patient, and careful — she has maintained her cover for years without arousing suspicion from her own family. If exposed, she will attempt to flee to the Vistani camps rather than fight.\n\nThis is a potential plot twist for the party — discovering that even the 'safe haven' of the Blood of the Vine has Strahd's eyes and ears inside it.",
+    "sort_order": 63,
+    "is_hidden": true
+  },
+  {
+    "npcid": 64,
+    "associations": [
+      {
+        "id": 59,
+        "name": "Sarkov E'Tressa",
+        "relationship": "Luvus works at the Blood of the Vine Inn alongside the E'Tressa family.",
+        "type": "npc"
+      },
+      {
+        "id": 16,
+        "name": "Morgantha",
+        "relationship": "Morgantha and her coven kidnapped Luvus's young daughter from the Village of Barovia. This loss drove Luvus to seek help from the adventurers.",
+        "type": "npc"
+      }
+    ],
+    "name": "Luvus",
+    "race": "Human (Vistani)",
+    "npc_class": "Commoner / Laborer",
+    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Luvus is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvus came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvus was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
+    "dm_notes": "Luvus and his family settled at the Blood of the Vine Inn, working alongside the E'Tressa family. His daughter vanished while Morgantha's coven was selling dream pastries in the village — the hags prey on children, grinding their life force into the addictive pastries.\n\nLuvus's encounter with the party was their first taste of the personal horror Barovia inflicts on its people. His grief is raw and genuine — he offered everything he had to the party if they would help find his daughter. This quest hook eventually led the party to Old Bonegrinder during Sessions 17-18.\n\nLuvus is protective of his remaining family and deeply grateful to anyone who shows compassion. He is quick with a joke when his spirits allow it, but the loss of his daughter has left him a shadow of the man he was. His wife remains at the inn, hoping for their daughter's return.",
+    "sort_order": 64,
+    "is_hidden": true
+  },
+  {
+    "npcid": 65,
+    "associations": [
+      {
+        "id": 16,
+        "name": "Morgantha Wormwiggle",
+        "relationship": "Bella's mother and the matriarch of the Bonegrinder coven. Morgantha leads the coven and handles the sale of dream pastries.",
+        "type": "npc"
+      },
+      {
+        "id": 66,
+        "name": "Offalia Wormwiggle",
+        "relationship": "Bella's daughter and the youngest member of the coven. Offalia is the most openly cruel of the three.",
+        "type": "npc"
+      }
+    ],
+    "name": "Bella Wormwiggle",
+    "race": "Night Hag",
+    "npc_class": "Hag",
+    "location": "Old Bonegrinder",
+    "status": "Alive",
+    "alignment_tag": "enemy",
+    "portrait_url": "",
+    "description": "Bella Wormwiggle appears as a hunched, middle-aged woman with stringy hair and a gap-toothed smile. She can be found at the Old Bonegrinder windmill alongside her mother and daughter, tending to the 'baking.' Bella is quieter than her mother Morgantha but watches visitors with unsettling intensity.",
+    "dm_notes": "Bella is a night hag and the middle generation of the Bonegrinder coven. She handles the grim work of processing the stolen children's life force into the dream pastry dough. Bella is pragmatic and methodical where Morgantha is cunning and Offalia is sadistic — she views the harvesting of children as simply the family trade.\n\nIn her true hag form, Bella is gaunt and terrible, with clawed hands stained dark from her work. She is the most dangerous of the three in direct combat, favoring her claws and the coven's shared spellcasting. The party encountered the coven at Old Bonegrinder during Sessions 17-18.",
+    "sort_order": 65,
+    "is_hidden": true
+  },
+  {
+    "npcid": 66,
+    "associations": [
+      {
+        "id": 16,
+        "name": "Morgantha Wormwiggle",
+        "relationship": "Offalia's grandmother and the matriarch of the Bonegrinder coven.",
+        "type": "npc"
+      },
+      {
+        "id": 65,
+        "name": "Bella Wormwiggle",
+        "relationship": "Offalia's mother and fellow coven member. Bella does most of the pastry preparation while Offalia handles the children.",
+        "type": "npc"
+      }
+    ],
+    "name": "Offalia Wormwiggle",
+    "race": "Night Hag",
+    "npc_class": "Hag",
+    "location": "Old Bonegrinder",
+    "status": "Alive",
+    "alignment_tag": "enemy",
+    "portrait_url": "",
+    "description": "Offalia ]Sunbane appears as a younger woman with a nervous giggle and fidgeting hands. She lurks around the upper floors of Old Bonegrinder, rarely venturing out to sell pastries like her grandmother. Offalia seems skittish and odd, but there is something deeply wrong behind her darting eyes.",
+    "dm_notes": "Offalia is a night hag and the youngest member of the Bonegrinder coven — Morgantha's granddaughter and Bella's daughter. She is the most openly sadistic of the three, taking particular delight in tormenting the kidnapped children before they are ground into dream pastry ingredients. Offalia keeps the children caged on the upper floor of the windmill and 'plays' with them in ways that would horrify even hardened adventurers.\n\nDespite her cruelty, Offalia is the weakest link in the coven — she is the most likely to panic if the coven is attacked and may try to flee rather than fight if separated from her mother and grandmother. The party encountered the coven at Old Bonegrinder during Sessions 17-18.",
+    "sort_order": 66,
     "is_hidden": true
   }
 ]

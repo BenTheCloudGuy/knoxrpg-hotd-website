@@ -499,6 +499,27 @@ async function renderNpcDetailPage(npcId, session) {
       ? sessionMentions.map(s => `<li><a href="/sessions" style="color:#e8b923;text-decoration:none;">Session ${s.session_number} — ${esc(s.title)}</a></li>`).join("")
       : `<li style="color:#666;">No session references found.</li>`;
 
+    // Build associations block
+    const assocData = Array.isArray(npc.associations) ? npc.associations : (typeof npc.associations === 'string' ? JSON.parse(npc.associations || '[]') : []);
+    const assocBlock = assocData.length > 0
+      ? assocData.map(a => {
+          const tagClass = a.type === 'npc' ? 'ally' : 'neutral';
+          return `<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="color:#e8b923;font-weight:600;">${esc(a.name)}</span>
+            </div>
+            <p style="color:#aaa;font-size:0.88rem;line-height:1.5;margin:0;">${esc(a.relationship || '')}</p>
+          </div>`;
+        }).join("")
+      : `<p style="color:#555;font-style:italic;">No known associations.</p>`;
+
+    const dmNotesBlock = isAdmin && npc.dm_notes
+      ? `<div style="margin-top:32px;border:1px solid #c8323244;border-radius:8px;padding:20px;background:#1a0a0a;">
+          <h2 style="color:#c83232;font-size:1.3rem;margin-bottom:12px;">&#128274; DM Notes</h2>
+          ${renderRichTextBlock(npc.dm_notes, "", "color:#ccc;font-size:0.95rem;line-height:1.7;")}
+        </div>`
+      : "";
+
     const body = `
   <div class="content" style="max-width:900px;margin:0 auto;">
     <p style="margin-bottom:16px;"><a href="/npcs" style="color:#e8b923;text-decoration:none;">&larr; Back to NPCs</a></p>
@@ -522,9 +543,16 @@ async function renderNpcDetailPage(npcId, session) {
     </div>
 
     <div style="margin-top:32px;">
+      <h2 style="color:#e8b923;font-size:1.3rem;margin-bottom:12px;">Associations</h2>
+      ${assocBlock}
+    </div>
+
+    <div style="margin-top:32px;">
       <h2 style="color:#e8b923;font-size:1.3rem;margin-bottom:12px;">Session Appearances</h2>
       <ul style="list-style:none;padding:0;margin:0;">${sessionList}</ul>
     </div>
+
+    ${dmNotesBlock}
 
     ${isAdmin ? `<div style="margin-top:32px;text-align:right;"><a href="/npcs/admin" style="color:#e8b923;text-decoration:none;font-weight:600;">&#9881; Edit in Admin &rarr;</a></div>` : ""}
   </div>

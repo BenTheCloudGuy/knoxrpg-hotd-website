@@ -364,11 +364,14 @@ async function renderDmAdminPage(session) {
             <div class="dmc-form-row">
               <label>Name<input id="npc-name" required /></label>
               <label>Race<input id="npc-race" /></label>
-              <label>Location<input id="npc-location" /></label>
+              <label>Class / Role<input id="npc-class" /></label>
             </div>
             <div class="dmc-form-row">
-              <label>Status<select id="npc-status"><option value="Alive">Alive</option><option value="Dead">Dead</option><option value="Unknown">Unknown</option><option value="Missing">Missing</option></select></label>
-              <label>Alignment<select id="npc-align"><option value="neutral">Neutral</option><option value="lawful good">Lawful Good</option><option value="neutral good">Neutral Good</option><option value="chaotic good">Chaotic Good</option><option value="lawful neutral">Lawful Neutral</option><option value="chaotic neutral">Chaotic Neutral</option><option value="lawful evil">Lawful Evil</option><option value="neutral evil">Neutral Evil</option><option value="chaotic evil">Chaotic Evil</option></select></label>
+              <label>Location<input id="npc-location" /></label>
+              <label>Status<select id="npc-status"><option value="Alive">Alive</option><option value="Dead">Dead</option><option value="Unknown">Unknown</option><option value="Missing">Missing</option><option value="Undead">Undead</option><option value="Imprisoned">Imprisoned</option><option value="Active">Active</option><option value="Corrupted">Corrupted</option></select></label>
+              <label>Alignment<select id="npc-align"><option value="neutral">Neutral</option><option value="ally">Ally</option><option value="enemy">Enemy</option></select></label>
+            </div>
+            <div class="dmc-form-row">
               <label>Sort Order<input type="number" id="npc-sort" value="0" /></label>
               <label>Hidden<select id="npc-hidden"><option value="false">Visible</option><option value="true">Hidden from Players</option></select></label>
             </div>
@@ -380,6 +383,16 @@ async function renderDmAdminPage(session) {
             </div>
             <label>Player Description <span style="color:#555;font-size:0.7rem;">(visible to players)</span><textarea id="npc-desc" rows="4" class="dmc-textarea"></textarea></label>
             <label>DM Notes <span style="color:#c83232;font-size:0.7rem;">(DM only — motives, alliances, secrets)</span><textarea id="npc-dm-notes" rows="4" class="dmc-textarea" style="border-color:#c8323244;"></textarea></label>
+            <div style="margin-top:8px;">
+              <label style="margin-bottom:4px;">Associations <span style="color:#555;font-size:0.7rem;">(linked NPCs and relationships)</span></label>
+              <div id="npc-assoc-list" style="margin-bottom:8px;"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <input id="npc-assoc-name" placeholder="NPC Name" style="flex:1;min-width:120px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;" />
+                <input id="npc-assoc-id" placeholder="NPC ID" type="number" style="width:70px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;" />
+                <input id="npc-assoc-rel" placeholder="Relationship" style="flex:2;min-width:200px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;color:#ccc;font-size:0.78rem;" />
+                <button type="button" class="dmc-btn dmc-btn-sm dmc-btn-primary" onclick="addAssociation()">+ Add</button>
+              </div>
+            </div>
             <div class="dmc-form-actions">
               <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
               <button type="button" class="dmc-btn dmc-btn-danger" id="npc-del-btn" onclick="deleteNpc()" style="display:none;">Delete</button>
@@ -1836,10 +1849,36 @@ async function renderDmAdminPage(session) {
     if (!q) return renderNpcs(_npcsCache);
     renderNpcs(_npcsCache.filter(n => (n.name+' '+n.race+' '+n.location+' '+n.npc_class).toLowerCase().includes(q)));
   }
+  let _npcAssociations = [];
+  function renderAssociations() {
+    const box = el('npc-assoc-list');
+    if (!_npcAssociations.length) { box.innerHTML = '<p style="color:#555;font-size:0.78rem;margin:4px 0;">No associations.</p>'; return; }
+    box.innerHTML = _npcAssociations.map(function(a, i) {
+      return '<div style="display:flex;gap:8px;align-items:center;padding:4px 8px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;margin-bottom:4px;">'+
+        '<span style="color:#e8b923;font-weight:600;min-width:100px;">'+esc(a.name)+'</span>'+
+        '<span style="color:#888;font-size:0.78rem;flex:1;">'+esc(a.relationship||'')+'</span>'+
+        '<button type="button" class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="removeAssociation('+i+')" style="padding:2px 6px;">✕</button></div>';
+    }).join('');
+  }
+  function addAssociation() {
+    var name = el('npc-assoc-name').value.trim();
+    var npcId = el('npc-assoc-id').value.trim();
+    var rel = el('npc-assoc-rel').value.trim();
+    if (!name) return;
+    _npcAssociations.push({name:name, id:npcId?parseInt(npcId):null, relationship:rel, type:'npc'});
+    el('npc-assoc-name').value = ''; el('npc-assoc-id').value = ''; el('npc-assoc-rel').value = '';
+    renderAssociations();
+  }
+  function removeAssociation(i) {
+    _npcAssociations.splice(i, 1);
+    renderAssociations();
+  }
   function newNpc() {
-    el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = '';
+    el('npc-id').value = ''; el('npc-name').value = ''; el('npc-race').value = ''; el('npc-class').value = '';
     el('npc-location').value = ''; el('npc-status').value = 'Alive'; el('npc-align').value = 'neutral';
     el('npc-sort').value = '0'; el('npc-hidden').value = 'false'; el('npc-portrait').value = ''; el('npc-desc').value = ''; el('npc-dm-notes').value = '';
+    _npcAssociations = [];
+    renderAssociations();
     npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Add NPC'; el('npc-del-btn').style.display = 'none';
     el('npc-edit').style.display = 'block';
@@ -1862,11 +1901,13 @@ async function renderDmAdminPage(session) {
   function editNpc(id) {
     const n = _npcsCache.find(x=>x.id===id);
     if (!n) return;
-    el('npc-id').value = n.id; el('npc-name').value = n.name||''; el('npc-race').value = n.race||'';
+    el('npc-id').value = n.id; el('npc-name').value = n.name||''; el('npc-race').value = n.race||''; el('npc-class').value = n.npc_class||'';
     el('npc-location').value = n.location||'';
     el('npc-status').value = n.status||'Unknown'; el('npc-align').value = n.alignment_tag||'neutral';
     el('npc-sort').value = n.sort_order||0; el('npc-hidden').value = n.is_hidden?'true':'false';
     el('npc-portrait').value = n.portrait_url||''; el('npc-desc').value = n.description||''; el('npc-dm-notes').value = n.dm_notes||'';
+    _npcAssociations = Array.isArray(n.associations) ? n.associations.slice() : [];
+    renderAssociations();
     npcPreviewPortrait();
     el('npc-edit-title').textContent = 'Edit: ' + n.name; el('npc-del-btn').style.display = 'inline-block';
     el('npc-edit').style.display = 'block';
@@ -1875,10 +1916,10 @@ async function renderDmAdminPage(session) {
   async function saveNpc(e) {
     e.preventDefault();
     const id = el('npc-id').value;
-    const body = { name:el('npc-name').value, race:el('npc-race').value, npc_class:'',
+    const body = { name:el('npc-name').value, race:el('npc-race').value, npc_class:el('npc-class').value,
       location:el('npc-location').value, status:el('npc-status').value, alignment_tag:el('npc-align').value,
       portrait_url:el('npc-portrait').value, description:el('npc-desc').value, dm_notes:el('npc-dm-notes').value,
-      sort_order:+el('npc-sort').value, is_hidden:el('npc-hidden').value==='true' };
+      associations:_npcAssociations, sort_order:+el('npc-sort').value, is_hidden:el('npc-hidden').value==='true' };
     const url = id ? '/api/dm-admin/npcs/'+id : '/api/dm-admin/npcs';
     const method = id ? 'PUT' : 'POST';
     const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});

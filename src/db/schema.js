@@ -43,6 +43,7 @@ async function ensureHotdTables() {
       CREATE INDEX IF NOT EXISTS idx_hotd_cal_month ON hotd_calendar_events (month_idx);
       CREATE TABLE IF NOT EXISTS hotd_npcs (
         id            SERIAL PRIMARY KEY,
+        npcid         INTEGER UNIQUE,
         name          TEXT NOT NULL,
         race          TEXT DEFAULT '',
         npc_class     TEXT DEFAULT '',
@@ -51,6 +52,8 @@ async function ensureHotdTables() {
         alignment_tag TEXT DEFAULT 'neutral',
         portrait_url  TEXT DEFAULT '',
         description   TEXT DEFAULT '',
+        dm_notes      TEXT DEFAULT '',
+        associations  JSONB DEFAULT '[]',
         sort_order    INTEGER DEFAULT 0,
         is_hidden     BOOLEAN DEFAULT TRUE,
         created_at    TIMESTAMPTZ DEFAULT NOW()
@@ -303,6 +306,8 @@ async function ensureHotdTables() {
     await pgPool.query("ALTER TABLE hotd_art ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'General'").catch(() => {});
     await pgPool.query("ALTER TABLE hotd_generated_images ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE").catch(() => {});
     await pgPool.query("ALTER TABLE hotd_npcs ADD COLUMN IF NOT EXISTS dm_notes TEXT DEFAULT ''").catch(() => {});
+    await pgPool.query("ALTER TABLE hotd_npcs ADD COLUMN IF NOT EXISTS npcid INTEGER UNIQUE").catch(() => {});
+    await pgPool.query("ALTER TABLE hotd_npcs ADD COLUMN IF NOT EXISTS associations JSONB DEFAULT '[]'").catch(() => {});
 
     // ── Campaign Notes (Kanban) table ──
     await pgPool.query(`
