@@ -4,5 +4,9 @@
             "approve": true,
             "matchCommandLine": true
         }
+    },
+    "[json]": {
+        "editor.wordWrap": "on",
+        "editor.wordWrapColumn": 120
     }
 }

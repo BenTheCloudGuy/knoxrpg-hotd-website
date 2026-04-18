@@ -481,23 +481,9 @@ async function renderNpcDetailPage(npcId, session) {
     if (result.rows.length === 0) return null;
     const npc = result.rows[0];
 
-    // Fetch session mentions for this NPC
-    let sessionMentions = [];
-    try {
-      const sr = await pgPool.query(
-        "SELECT session_number, title, summary FROM hotd_sessions WHERE summary ILIKE $1 ORDER BY session_number",
-        [`%${npc.name}%`]
-      );
-      sessionMentions = sr.rows;
-    } catch (_) {}
-
     const portraitBlock = npc.portrait_url
       ? `<div class="npc-detail-portrait"><img src="${esc(npc.portrait_url)}" alt="${esc(npc.name)}" /></div>`
       : "";
-
-    const sessionList = sessionMentions.length > 0
-      ? sessionMentions.map(s => `<li><a href="/sessions" style="color:#e8b923;text-decoration:none;">Session ${s.session_number} — ${esc(s.title)}</a></li>`).join("")
-      : `<li style="color:#666;">No session references found.</li>`;
 
     // Build associations block
     const assocData = Array.isArray(npc.associations) ? npc.associations : (typeof npc.associations === 'string' ? JSON.parse(npc.associations || '[]') : []);
@@ -545,11 +531,6 @@ async function renderNpcDetailPage(npcId, session) {
     <div style="margin-top:32px;">
       <h2 style="color:#e8b923;font-size:1.3rem;margin-bottom:12px;">Associations</h2>
       ${assocBlock}
-    </div>
-
-    <div style="margin-top:32px;">
-      <h2 style="color:#e8b923;font-size:1.3rem;margin-bottom:12px;">Session Appearances</h2>
-      <ul style="list-style:none;padding:0;margin:0;">${sessionList}</ul>
     </div>
 
     ${dmNotesBlock}

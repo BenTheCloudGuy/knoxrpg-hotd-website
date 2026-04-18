@@ -1,0 +1,19 @@
+                                        Table "public.hotd_npcs"
+    Column     |           Type           | Collation | Nullable |                Default                
+---------------+--------------------------+-----------+----------+---------------------------------------
+ id            | integer                  |           | not null | nextval('hotd_npcs_id_seq'::regclass)
+ name          | text                     |           | not null | 
+ race          | text                     |           |          | ''::text
+ npc_class     | text                     |           |          | ''::text
+ location      | text                     |           |          | ''::text
+ status        | text                     |           |          | 'Unknown'::text
+ alignment_tag | text                     |           |          | 'neutral'::text
+ portrait_url  | text                     |           |          | ''::text
+ description   | text                     |           |          | ''::text
+ sort_order    | integer                  |           |          | 0
+ created_at    | timestamp with time zone |           |          | now()
+ is_hidden     | boolean                  |           |          | true
+ dm_notes      | text                     |           |          | ''::text
+Indexes:
+    "hotd_npcs_pkey" PRIMARY KEY, btree (id)
+

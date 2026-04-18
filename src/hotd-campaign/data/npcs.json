@@ -81,7 +81,7 @@
     "alignment_tag": "ally",
     "portrait_url": "/images/ireena-kolyana.png",
     "description": "Ireena Kolyana is the adopted daughter of the late Burgomaster Kolyan Indirovich and the sister of Ismark.",
-    "dm_notes": "Unknown to her, she is the latest reincarnation of Tatyana, the woman Strahd loved and lost centuries ago. Strahd has bitten her twice, and she bears the marks on her neck, though she makes sure to have them covered with a scarf at all times. Ireena is brave, compassionate, and determined not to become Strahd's prisoner. She is skilled with a sword and refuses to be treated as a helpless victim.\n\nIreena's true origins: She was born to a Barovian family living near the Svalich Woods. As a young child, a dire wolf attack scattered her family — she was separated from her biological brother Izek during the chaos. The young Ireena was found wandering alone at the edge of the woods by Burgomaster Kolyan Indirovich, who took her in and raised her as his own daughter alongside his biological son Ismark. She has no memory of her life before Kolyan's home and does not know she is adopted.\n\nHer biological brother Izek Strazni survived the same attack but lost part of his arm to the wolves. He was eventually taken in by the Vallakovich household in Vallaki and grew into Baron Vallakovich's brutal enforcer. Izek is obsessed with Ireena's likeness — commissioning dolls from Blinsky that resemble her — but does not consciously understand why. Neither sibling knows the truth of their connection.\n\nIreena's name 'Kolyana' is a Barovian patronymic meaning 'daughter of Kolyan,' reflecting her adoptive father rather than any biological family surname.\n\nThe party's efforts to protect her from Strahd are central to the campaign.",
+    "dm_notes": "Unknown to her, she is the latest reincarnation of Tatyana, the woman Strahd loved and lost centuries ago. Strahd has bitten her twice, and she bears the marks on her neck, though she makes sure to have them covered with a scarf at all times. Ireena is brave, compassionate, and determined not to become Strahd's prisoner. She is skilled with a sword and refuses to be treated as a helpless victim.\n\nIreena's true origins: She was born to a Barovian family living near the Svalich Woods. As a young child, a dire wolf attack scattered her family — she was separated from her biological brother Izek during the chaos. The young Ireena was found wandering alone at the edge of the woods by Burgomaster Kolyan Indirovich, who took her in and raised her as his own daughter alongside his biological son Ismark. She has no memory of her life before Kolyan's home and does not know she is adopted.\n\nHer biological brother Izek Strazni survived the same attack but lost part of his arm to the wolves. He was eventually taken in by the Vallakovich household in Vallaki and grew into the Baron's loyal captain of the guard. Izek is obsessed with Ireena's likeness — commissioning dolls from Blinsky that resemble her — but does not consciously understand why. Neither sibling knows the truth of their connection.\n\nIreena's name 'Kolyana' is a Barovian patronymic meaning 'daughter of Kolyan,' reflecting her adoptive father rather than any biological family surname.\n\nThe party's efforts to protect her from Strahd are central to the campaign.",
     "sort_order": 2,
     "is_hidden": false
   },
@@ -109,7 +109,7 @@
     "alignment_tag": "ally",
     "portrait_url": "/images/ismark-kolyanovich.png",
     "description": "Ismark Kolyanovich, known unkindly by the villagers as 'Ismark the Lesser,' is the son of the late Burgomaster Kolyan Indirovich and Ireena's brother. A capable warrior and a man of honor, Ismark bears the weight of his father's death and the responsibility of protecting his sister. He desperately seeks allies who might help keep Ireena safe from Strahd.",
-    "dm_notes": "Ismark carries the unflattering nickname due to the villagers' perception that he cannot live up to his ancestor Ismark the Great. In an effort to protect Ireena, he and many of the able-bodied fighters joined Mordenkainen in an assault on Castle Ravenloft. The attack ended with Strahd being wounded, but not before Mordenkainen was thrown from the Castle walls and the remaining villagers were slaughtered. Only Ismark, Doru, and a handful of others managed to escape, and most of them were badly wounded.\n\nIsmark would not hesitate to join the party in fighting Strahd.",
+    "dm_notes": "Ismark carries the unflattering nickname due to the villagers' perception that he cannot live up to his ancestor Ismark the Great. In an effort to protect Ireena, he and many of the able-bodied fighters joined Mordenkainen in an assault on Castle Ravenloft. The attack ended with Strahd being wounded, but not before Mordenkainen was thrown from the Castle walls and the remaining villagers were slaughtered. Only Ismark, Doru, and a handful of others managed to escape, and most of them were badly wounded.\n\nIsmark grew up close to the Vallakovich family in Vallaki — his father Kolyan and Baron Vallakovich were old friends, and Ismark and Ireena attended the Festival of Light as honoured guests. This is why Ismark was certain Ireena would find safety in Vallaki, as the Vallakoviches watched both of them grow into the adults they are today.\n\nIsmark would not hesitate to join the party in fighting Strahd.",
     "sort_order": 3,
     "is_hidden": false
   },
@@ -277,13 +277,13 @@
     ],
     "name": "Kasimir Velikov",
     "race": "Dusk Elf",
-    "npc_class": "Wizard",
-    "location": "Vallaki (Vistani Camp)",
+    "npc_class": "Ranger",
+    "location": "Tser Hill Vistani Camp",
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "",
-    "description": "Kasimir Velikov is the leader of the dusk elves who live alongside the Vistani near Vallaki. He bears terrible scars — his ears were cut off as punishment for an act of defiance. Kasimir is haunted by visions and carries a deep, quiet grief for the losses his people have suffered.",
-    "dm_notes": "Kasimir's ears were cut off by Rahadin on Strahd's orders. He is haunted by visions sent by his dead sister Patrina, a dusk elf who was stoned to death by her own people when she agreed to become Strahd's bride. Kasimir seeks the Amber Temple to find the means to resurrect Patrina, unaware that her spirit has been corrupted by dark powers. His quest to the Amber Temple can serve as a major plot hook.",
+    "description": "Kasimir Velikov is the leader of the dusk elves who live alongside the Vistani near Vallaki. He bears terrible scars — his ears were cut off as punishment for an act of defiance. Kasimir is haunted by visions and carries a deep, quiet grief for the losses his people have suffered. He Leads the Night Rangers, a group of dusk elf rangers who protec the Vistani and his people.",
+    "dm_notes": "Kasimir's ears were cut off by Rahadin on Strahd's orders. He is haunted by visions sent by his dead sister Patrina, a dusk elf who was stoned to death by her own people when she agreed to become Strahd's bride. Kasimir seeks the Amber Temple to find the means to resurrect Patrina, unaware that her spirit has been corrupted by dark powers. His quest to the Amber Temple can serve as a major plot hook. Kasimir knows of the power located in the anicent ruins beneath the Amber Temple and that it was where Strahd had made his pact with Shorthagot. He believes that if he can access that power, he may be able to save his sister's soul and restore his people. Until this he will do what ever is necessary to avenge them and kill Rahadin, even if it means working with the adventurers or making a deal with Strahd himself.",
     "sort_order": 9,
     "is_hidden": true
   },
@@ -293,13 +293,25 @@
       {
         "id": 12,
         "name": "Izek Strazni",
-        "relationship": "Izek is the Baron's brutal enforcer and captain of the guard, carrying out his tyrannical orders.",
+        "relationship": "Izek serves as the Baron's loyal captain of the guard and protector of Vallaki. The Baron took Izek in as a youth and gave him purpose.",
         "type": "npc"
       },
       {
         "id": 11,
         "name": "Lady Fiona Wachter",
-        "relationship": "Fiona Wachter plots to overthrow Baron Vallakovich and seize control of Vallaki.",
+        "relationship": "Fiona is a close friend and trusted political ally of the Vallakovich family. The two families have supported each other for years.",
+        "type": "npc"
+      },
+      {
+        "id": 3,
+        "name": "Ismark Kolyanovich",
+        "relationship": "The Vallakoviches and the Indirovich family are close friends. Baron Vallakovich watched Ismark and Ireena grow up, hosting them at the Festival of Light as honoured guests.",
+        "type": "npc"
+      },
+      {
+        "id": 56,
+        "name": "Kolyan Indirovich",
+        "relationship": "Kolyan was one of Baron Vallakovich's closest friends among the Barovian burgomasters. They often attended each other's festivals and shared counsel on protecting their people.",
         "type": "npc"
       }
     ],
@@ -308,10 +320,10 @@
     "npc_class": "Noble / Politician",
     "location": "Vallaki (Burgomaster's Mansion)",
     "status": "Alive",
-    "alignment_tag": "neutral",
+    "alignment_tag": "ally",
     "portrait_url": "/images/baron-vallakovich.png",
-    "description": "Baron Vargas Vallakovich is the burgomaster of Vallaki and a tyrannical leader who believes that weekly festivals of forced merriment will keep Strahd's evil at bay. His motto is 'All will be well!' and he punishes anyone who displays unhappiness with imprisonment in the stocks or worse. He rules through fear and his brutish enforcer, Izek Strazni.",
-    "dm_notes": "Despite his delusions, the Baron genuinely believes his festivals protect Vallaki — he is delusional rather than malicious, though the result is tyranny all the same. His wife, Baroness Lydia, dutifully supports his madness. Lady Fiona Wachter plots to overthrow him, and Izek is the only thing keeping order. The citizens of Vallaki are growing resentful of the endless forced celebrations.",
+    "description": "Baron Vargas Vallakovich is the burgomaster of Vallaki and a fair but firm leader who strives to bring light and joy to his people despite the ever-present shadow of Strahd. His motto is 'All will be well!' and he organizes the annual Festival of Light — a beloved celebration that draws honoured guests from across Barovia's towns. He rules with a steady hand and is fiercely protective of Vallaki's citizens.",
+    "dm_notes": "Baron Vallakovich genuinely wants what is best for his people, but feels he must walk on eggshells to keep Strahd from taking notice of his small town. He tries to bring as much light and joy to Vallaki as possible while maintaining a firm hand on governance. His wife, Baroness Lydia, is a gracious hostess who helps organize the Festival of Light. Lady Fiona Wachter is a close friend and political ally of the family.\n\nThe Baron is close friends with the burgomasters of the other towns in Barovia. He and Kolyan Indirovich were particularly close — the Indirovich children, Ismark and Ireena, often attended the Festival of Light as honoured guests of the Vallakovich household. The Baron watched both of them grow into the adults they are today, which is why Ismark was certain Ireena would find safety in Vallaki.\n\nWhen Strahd attacked the Festival of Light, it shattered the peace the Baron had worked so hard to build. Lady Fiona Wachter's daughter was killed in the attack, devastating the Wachter family and hardening Fiona's resolve against Strahd.",
     "sort_order": 10,
     "is_hidden": true
   },
@@ -321,25 +333,25 @@
       {
         "id": 10,
         "name": "Baron Vargas Vallakovich",
-        "relationship": "Fiona secretly plots to overthrow Baron Vallakovich and seize power in Vallaki.",
+        "relationship": "Fiona is a close friend and ally of the Vallakovich family. The two houses have supported each other in Vallaki for years.",
         "type": "npc"
       },
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "Fiona maintains contact with Strahd and views him as Barovia's rightful ruler.",
+        "relationship": "Fiona holds a neutral stance toward Strahd — neither serving nor opposing him. After Strahd's attack on the Festival of Light killed her daughter, her neutrality has turned to cold fury.",
         "type": "npc"
       }
     ],
     "name": "Lady Fiona Wachter",
     "race": "Human",
-    "npc_class": "Noble / Warlock",
+    "npc_class": "Noble / Occultist",
     "location": "Vallaki (Wachterhaus)",
     "status": "Alive",
-    "alignment_tag": "enemy",
+    "alignment_tag": "neutral",
     "portrait_url": "/images/fiona-wachter.png",
-    "description": "Lady Fiona Wachter is a Vallakian noblewoman and a powerful political figure who openly opposes Baron Vallakovich's rule. She presents herself as a reasonable alternative to the Baron's tyranny, promising a return to normalcy for the people of Vallaki. Fiona is politically cunning, charming when she needs to be, and commands the loyalty of a growing number of Vallakians.",
-    "dm_notes": "Lady Fiona secretly worships devils and leads a cult of devil worshippers that meets in her home. She maintains contact with Strahd, whom she views as Barovia's rightful ruler, and will use any means — including the adventurers — to seize power in Vallaki. She keeps the preserved corpse of her dead husband in her bedroom and has two sons loyal to her cause. Her ambitions are entirely self-serving, cloaked in the guise of civic concern.",
+    "description": "Lady Fiona Wachter is a Vallakian noblewoman and a respected figure in Vallaki's political life. She is a close friend and ally of the Vallakovich family. Fiona is politically savvy, charming when she needs to be, and deeply devoted to her family. She carries herself with an air of quiet authority and is known for her sharp mind and unwavering composure.",
+    "dm_notes": "Lady Fiona practices demon worship and the occult as part of her Narfell faith — an ancient tradition she keeps privately but does not hide from those she trusts. She holds a neutral stance toward Strahd, neither serving him nor actively opposing him, viewing survival and pragmatism as the wisest course in Barovia.\n\nFiona is a close friend of the Vallakovich family and would never harm them. She keeps the preserved corpse of her dead husband in her bedroom — a product of her Narfell beliefs about death and the spirit world — and has two sons loyal to her.\n\nWhen Strahd attacked the Festival of Light, Fiona's daughter was killed. This devastating loss shattered her neutral stance toward the vampire lord and left her distraught and furious. Her grief has hardened into a quiet, burning anger toward Strahd — she may prove a powerful ally to anyone who seeks to bring him down, driven not by politics but by a mother's rage.",
     "sort_order": 11,
     "is_hidden": true
   },
@@ -349,7 +361,7 @@
       {
         "id": 10,
         "name": "Baron Vargas Vallakovich",
-        "relationship": "Izek serves as the Baron's brutal enforcer and captain of the guard in Vallaki.",
+        "relationship": "Izek serves as the Baron's loyal captain of the guard and protector of Vallaki. The Vallakovich household took Izek in as a youth and gave him purpose.",
         "type": "npc"
       },
       {
@@ -367,13 +379,13 @@
     ],
     "name": "Izek Strazni",
     "race": "Human (mutated)",
-    "npc_class": "Fighter / Berserker",
+    "npc_class": "Fighter / Captain of the Guard",
     "location": "Vallaki",
     "status": "Alive",
-    "alignment_tag": "enemy",
+    "alignment_tag": "neutral",
     "portrait_url": "/images/izek-strazni.png",
-    "description": "Izek Strazni is Baron Vallakovich's brutal enforcer and captain of the guard in Vallaki. He has a monstrous, oversized arm wreathed in barbs that can conjure fire — the result of a mysterious transformation during childhood. Izek is a sadistic bully who terrorizes the townspeople and delights in violence.",
-    "dm_notes": "Izek is secretly obsessed with Ireena Kolyana, commissioning the toymaker Blinsky to craft dolls in her likeness, though he doesn't understand why he feels drawn to her. Izek is Ireena's biological brother, separated in childhood.\n\nIzek's true origins: He and Ireena were born to a Barovian family living near the Svalich Woods. As young children, a dire wolf attack devastated their family. During the chaos, Izek lost part of his arm to the wolves and was separated from his younger sister. Ireena was found by Burgomaster Kolyan Indirovich and raised in the Village of Barovia, while Izek wandered alone until he was eventually taken in by the Vallakovich household in Vallaki.\n\nIzek's monstrous arm — an oversized, barbed limb capable of conjuring fire — grew back through unknown means, possibly connected to a dark gift or fiendish pact. The transformation happened during his youth in Vallaki and cemented his role as the Baron's enforcer, since no one dared challenge someone with such terrifying power.\n\nIzek is obsessed with a face he sees in his dreams — Ireena's face — though he has no conscious memory of his sister. He commissions the toymaker Gadof Blinsky to craft dolls in her likeness, filling his room with dozens of them. If Izek ever encounters Ireena, he will become fixated on her and may try to take her by force, believing she belongs with him. He does not understand the familial bond driving his obsession.\n\nIzek's surname 'Strazni' is not a patronymic — it may have been given to him by the Vallakovich household or adopted from another source, further severing his connection to his biological family.\n\nIzek is violent, unstable, and deeply dangerous. He delights in burning people who displease the Baron and has terrorized Vallaki for years. Despite his cruelty, his obsession with the dolls reveals a broken, deeply human need for connection to the family he lost.",
+    "description": "Izek Strazni is the captain of the guard in Vallaki and Baron Vallakovich's most trusted protector. He has a monstrous, oversized arm wreathed in barbs that can conjure fire — the result of a mysterious transformation during childhood. Izek is intimidating and fiercely loyal to the Baron, using his fearsome presence to keep order in the town.",
+    "dm_notes": "Izek is secretly obsessed with Ireena Kolyana, commissioning the toymaker Blinsky to craft dolls in her likeness, though he doesn't understand why he feels drawn to her. Izek is Ireena's biological brother, separated in childhood.\n\nIzek's true origins: He and Ireena were born to a Barovian family living near the Svalich Woods. As young children, a dire wolf attack devastated their family. During the chaos, Izek lost part of his arm to the wolves and was separated from his younger sister. Ireena was found by Burgomaster Kolyan Indirovich and raised in the Village of Barovia, while Izek wandered alone until he was eventually taken in by the Vallakovich household in Vallaki.\n\nIzek's monstrous arm — an oversized, barbed limb capable of conjuring fire — grew back through unknown means, possibly connected to a dark gift or fiendish pact. The transformation happened during his youth in Vallaki and cemented his role as the Baron's protector, since no one dared challenge someone with such terrifying power.\n\nIzek is obsessed with a face he sees in his dreams — Ireena's face — though he has no conscious memory of his sister. He commissions the toymaker Gadof Blinsky to craft dolls in her likeness, filling his room with dozens of them. If Izek ever encounters Ireena, he will become fixated on her and may try to take her by force, believing she belongs with him. He does not understand the familial bond driving his obsession.\n\nIzek's surname 'Strazni' is not a patronymic — it may have been given to him by the Vallakovich household or adopted from another source, further severing his connection to his biological family.\n\nDespite his loyalty to the Baron and his role as Vallaki's protector, Izek has a volatile temper and can be dangerously unpredictable when provoked. His obsession with the dolls reveals a broken, deeply human need for connection to the family he lost.",
     "sort_order": 12,
     "is_hidden": true
   },
@@ -1473,7 +1485,7 @@
     "alignment_tag": "ally",
     "portrait_url": "",
     "description": "Kolyan Indirovich was the Burgomaster of the Village of Barovia and the father of Ismark and adoptive father of Ireena. A good and honorable man, Kolyan spent his final days barricading his home against Strahd's nightly assaults as the vampire lord came to claim Ireena. The relentless siege broke Kolyan's health and spirit, and he died of a heart attack brought on by fright. His death left his children to face Strahd's wrath alone and set the campaign's events in motion.",
-    "dm_notes": "Kolyan's name follows the Barovian patronymic tradition — 'Indirovich' means 'son of Indir,' his father. His children carry his name forward: Ismark Kolyanovich ('son of Kolyan') and Ireena Kolyana ('daughter of Kolyan'). There is no family surname.\n\nKolyan found the young Ireena wandering at the edge of the Svalich Woods as a small child after a dire wolf attack scattered her biological family. He took her in and raised her as his own daughter alongside Ismark, never telling her the truth of her origins. Her biological brother Izek was separated during the same attack and eventually ended up in Vallaki, taken in by the Vallakovich household.\n\nKolyan was a descendant of Ismark the Great, a legendary Barovian hero, which is why the villagers mockingly call his son 'Ismark the Lesser.' Despite the impossible situation, Kolyan refused to surrender Ireena to Strahd. The forged letter bearing his name — the one that lured the adventurers to Barovia — was actually written by Strahd to draw fresh prey into his domain.\n\nAt campaign start, Kolyan's body lies in the family home awaiting burial. Ismark asks the party to help escort the coffin to the church for a proper funeral with Father Donavich.",
+    "dm_notes": "Kolyan's name follows the Barovian patronymic tradition — 'Indirovich' means 'son of Indir,' his father. His children carry his name forward: Ismark Kolyanovich ('son of Kolyan') and Ireena Kolyana ('daughter of Kolyan'). There is no family surname.\n\nKolyan found the young Ireena wandering at the edge of the Svalich Woods as a small child after a dire wolf attack scattered her biological family. He took her in and raised her as his own daughter alongside Ismark, never telling her the truth of her origins. Her biological brother Izek was separated during the same attack and eventually ended up in Vallaki, taken in by the Vallakovich household.\n\nKolyan was close friends with Baron Vargas Vallakovich and the other burgomasters of Barovia. The two families visited each other regularly, and Kolyan's children attended the Festival of Light in Vallaki as honoured guests. This close bond is why Ismark was certain Ireena would find safety with the Vallakoviches.\n\nKolyan was a descendant of Ismark the Great, a legendary Barovian hero, which is why the villagers mockingly call his son 'Ismark the Lesser.' Despite the impossible situation, Kolyan refused to surrender Ireena to Strahd. The forged letter bearing his name — the one that lured the adventurers to Barovia — was actually written by Strahd to draw fresh prey into his domain.\n\nAt campaign start, Kolyan's body lies in the family home awaiting burial. Ismark asks the party to help escort the coffin to the church for a proper funeral with Father Donavich.",
     "sort_order": 56,
     "is_hidden": true
   },
@@ -1686,12 +1698,12 @@
     "name": "Luvus",
     "race": "Human (Vistani)",
     "npc_class": "Commoner / Laborer",
-    "location": "Village of Barovia (Blood of the Vine Inn)",
+    "location": "Tser Hill Vistani Camp",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "",
-    "description": "Luvus is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvus came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvus was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
-    "dm_notes": "Luvus and his family settled at the Blood of the Vine Inn, working alongside the E'Tressa family. His daughter vanished while Morgantha's coven was selling dream pastries in the village — the hags prey on children, grinding their life force into the addictive pastries.\n\nLuvus's encounter with the party was their first taste of the personal horror Barovia inflicts on its people. His grief is raw and genuine — he offered everything he had to the party if they would help find his daughter. This quest hook eventually led the party to Old Bonegrinder during Sessions 17-18.\n\nLuvus is protective of his remaining family and deeply grateful to anyone who shows compassion. He is quick with a joke when his spirits allow it, but the loss of his daughter has left him a shadow of the man he was. His wife remains at the inn, hoping for their daughter's return.",
+    "description": "Luvush is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvush came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvush was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
+    "dm_notes": "Luvush will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvush's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
     "sort_order": 64,
     "is_hidden": true
   },
@@ -1746,8 +1758,8 @@
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "",
-    "description": "Offalia ]Sunbane appears as a younger woman with a nervous giggle and fidgeting hands. She lurks around the upper floors of Old Bonegrinder, rarely venturing out to sell pastries like her grandmother. Offalia seems skittish and odd, but there is something deeply wrong behind her darting eyes.",
-    "dm_notes": "Offalia is a night hag and the youngest member of the Bonegrinder coven — Morgantha's granddaughter and Bella's daughter. She is the most openly sadistic of the three, taking particular delight in tormenting the kidnapped children before they are ground into dream pastry ingredients. Offalia keeps the children caged on the upper floor of the windmill and 'plays' with them in ways that would horrify even hardened adventurers.\n\nDespite her cruelty, Offalia is the weakest link in the coven — she is the most likely to panic if the coven is attacked and may try to flee rather than fight if separated from her mother and grandmother. The party encountered the coven at Old Bonegrinder during Sessions 17-18.",
+    "description": "Offalia Wormwiggle appears as a young gril around the age of 10-12 years with a nervous giggle and fidgeting hands. She often goes with her grandmother to sell pies and charms the locals with her smile.. ",
+    "dm_notes": "Offalia is a night hag and the youngest member of the Bonegrinder coven — Morgantha's granddaughter and Bella's daughter. She is the most openly sadistic of the three, taking particular delight in tormenting the kidnapped children before they are ground into dream pastry ingredients. Offalia keeps the children caged on the upper floor of the windmill and 'plays' with them in ways that would horrify even hardened adventurers.\n\nDespite her cruelty, Offalia is the weakest link in the coven — she is the most likely to panic if the coven is attacked and may try to flee rather than fight if separated from her mother and grandmother. She is the one who interacts with the other children the most, and is the one that slips the a treat to help her Grandmother or Mother take them.",
     "sort_order": 66,
     "is_hidden": true
   }
