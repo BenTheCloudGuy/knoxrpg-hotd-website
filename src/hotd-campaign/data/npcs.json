@@ -235,6 +235,24 @@
         "name": "Kasimir Velikov",
         "relationship": "Rahadin cut off Kasimir's ears as punishment and orchestrated the genocide of the female dusk elves on Strahd's orders.",
         "type": "npc"
+      },
+      {
+        "id": 72,
+        "name": "Oskander",
+        "relationship": "Rahadin murdered Oskander — one of the Skander duplicates — in a fit of rage. The reason for their confrontation remains unknown. His death turned the entire Skander family against Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 28,
+        "name": "Mad Mary Strazni",
+        "relationship": "Mary Strazni is the widow of Oskander, whom Rahadin murdered. She was once Yuri Skander's apprentice before becoming Mad Mary.",
+        "type": "npc"
+      },
+      {
+        "id": 29,
+        "name": "Gertruda",
+        "relationship": "Gertruda is the daughter of Oskander, whom Rahadin killed. She naively went to Castle Ravenloft — the home of Rahadin's master.",
+        "type": "npc"
       }
     ],
     "name": "Rahadin",
@@ -245,7 +263,7 @@
     "alignment_tag": "enemy",
     "portrait_url": "/images/rahadin.png",
     "description": "Rahadin is Strahd's loyal chamberlain and right hand, a dusk elf who serves the Von Zarovich family with absolute devotion. He is surrounded by a deathly aura — the screaming phantoms of his countless victims follow him everywhere. Rahadin is an exceptionally skilled warrior and considers himself the count's most faithful servant.",
-    "dm_notes": "Rahadin betrayed his own people to serve Strahd and orchestrated the genocide of the female dusk elves on Strahd's orders, earning the eternal hatred of the surviving dusk elf community. He personally mutilated Kasimir Velikov by cutting off his ears as punishment for protesting. Rahadin has served the Von Zarovich family for centuries and views any threat to Strahd as a personal affront.",
+    "dm_notes": "Rahadin betrayed his own people to serve Strahd and orchestrated the genocide of the female dusk elves on Strahd's orders, earning the eternal hatred of the surviving dusk elf community. He personally mutilated Kasimir Velikov by cutting off his ears as punishment for protesting. Rahadin has served the Von Zarovich family for centuries and views any threat to Strahd as a personal affront.\n\nRahadin murdered Oskander — one of the five magical duplicates of the wizard Yuri Skander — in a fit of rage. Nobody is certain what their fight was about or why Rahadin killed him. Oskander had married Mary Strazni (Yuri's former apprentice) and they had a young daughter, Gertruda. His death devastated Mary, who left Vallaki and returned to the Village of Barovia where she became known as Mad Mary. Gertruda later naively traveled to Castle Ravenloft — ironically the home of Rahadin's master, Strahd.\n\nOnce word of Oskander's murder reached the other Skanders — Yuri, Iskander, Askander, Uskander, and Eskander — they vowed never to forgive Strahd. The entire Skander family, all powerful wizards, now harbor a deep hatred for Strahd and his servants. Rahadin's impulsive act of violence created a powerful bloc of enemies in Vallaki that Strahd may not even be aware of.",
     "sort_order": 7,
     "is_hidden": true
   },
