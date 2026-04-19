@@ -3,6 +3,7 @@ const { esc } = require("./utils");
 
 function inlineFormat(text) {
   return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:10px;margin:16px 0;box-shadow:0 4px 24px rgba(0,0,0,0.5);" />')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8b923;">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>');
 }

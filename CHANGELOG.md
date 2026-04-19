@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2026-04-19
+
+### Added
+- **Notable Groups page** — new `/groups` listing page and `/groups/:slug` detail pages for campaign organizations and factions
+  - Reads markdown files from `src/hotd-campaign/data/groups/` as source of truth
+  - Listing page shows each group as a card with image, type, status, and alignment
+  - Detail pages render the full markdown content with back-navigation
+- **Notable Groups nav entry** — added to the Campaign dropdown menu and campaign search index
+- **Markdown image support** — `![alt](src)` syntax now renders in the markdown-to-HTML converter
+
+### Changed
+- **npcs.json data updates** — expanded NPC backstories, associations, and DM notes across multiple entries
+- **Campaign content** — added Crew of the Sea Spray and Stormraven Sisters organization documents with full narrative prose, expanded history sections, and member profiles
+
 ## [1.17.0] - 2026-07-03
 
 ### Added

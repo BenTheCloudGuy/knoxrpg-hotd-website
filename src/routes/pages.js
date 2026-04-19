@@ -11,6 +11,7 @@ const {
   renderNpcsPage, renderNpcDetailPage, renderSessionsPage, renderCharactersPage,
   renderHistoryPage, renderArtifactsPage, renderHandoutsPage, renderArtGalleryPage,
   renderArtifactDetailPage, renderHandoutDetailPage, renderJournalPage,
+  renderGroupsPage, renderGroupDetailPage,
 } = require("../pages/campaign");
 
 // Admin pages
@@ -116,6 +117,17 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     return true;
   }
 
+  // ── Group detail page ──────────────────────────────────────
+  if (decoded.startsWith("/groups/") && decoded !== "/groups") {
+    const slug = decoded.split("/")[2];
+    if (slug) {
+      const detailHtml = renderGroupDetailPage(slug, session);
+      if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
+    }
+    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
+    return true;
+  }
+
   // ── Admin pages ────────────────────────────────────────────
   if (decoded.endsWith("/admin") && ["/home/admin","/calendar/admin","/maps/admin","/map/admin","/npcs/admin","/sessions/admin","/artifacts/admin","/handouts/admin","/art/admin","/bulk-upload/admin"].includes(decoded)) {
     if (!session || session.role !== "admin") { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
@@ -156,6 +168,8 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       html = await renderSessionsPage(session); break;
     case "/history":
       html = await renderHistoryPage(session); break;
+    case "/groups":
+      html = renderGroupsPage(session); break;
     case "/artifacts":
       html = await renderArtifactsPage(session); break;
     case "/handouts":

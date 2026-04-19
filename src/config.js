@@ -57,6 +57,7 @@ const NAV_ITEMS = [
       { label: "Characters", href: "/characters" },
       { label: "Maps", href: "/maps" },
       { label: "NPCs", href: "/npcs" },
+      { label: "Notable Groups", href: "/groups" },
       { label: "Sessions", href: "/sessions" },
       { label: "Artifacts", href: "/artifacts" },
       { label: "Handouts", href: "/handouts" },
@@ -80,6 +81,7 @@ const campaignPages = [
   { title: "Artifacts", href: "/artifacts", category: "Campaign", body: "Legendary items artifacts encountered or possessed" },
   { title: "Handouts", href: "/handouts", category: "Campaign", body: "Campaign handouts and artifact media for players" },
   { title: "Adventure Journal", href: "/journal", category: "Campaign", body: "Shared adventure journal notes session log real-time collaborative" },
+  { title: "Notable Groups", href: "/groups", category: "Campaign", body: "Notable groups organizations factions encountered during the campaign" },
   { title: "DM AI", href: "/dungeon-master", category: "Tool", body: "AI chatbot for D&D rules spells monsters items classes" },
 ];
 

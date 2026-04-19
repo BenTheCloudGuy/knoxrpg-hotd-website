@@ -3,6 +3,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const path = require("path");
+const fs = require("fs");
 const { pgPool } = require("../db/pool");
 const { esc, safeJson } = require("../lib/utils");
 const { HARPTOS_MONTHS, ordinal, STATIC_ROOT } = require("../config");
@@ -1421,6 +1422,88 @@ async function renderJournalPage(session) {
   return pageShell("Adventure Journal — Halls of the Damned", "/journal", body, session);
 }
 
+// ── Notable Groups (file-backed from groups/*.md) ─────────────
+
+function parseGroupMeta(mdContent) {
+  const lines = mdContent.split("\n");
+  const meta = { title: "", type: "", base: "", status: "", alignment: "", image: "" };
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.startsWith("# ")) meta.title = t.slice(2).trim();
+    if (t.startsWith("- **Type:**")) meta.type = t.replace("- **Type:**", "").trim();
+    if (t.startsWith("- **Base of Operations:**")) meta.base = t.replace("- **Base of Operations:**", "").trim();
+    if (t.startsWith("- **Status:**")) meta.status = t.replace("- **Status:**", "").trim();
+    if (t.startsWith("- **Alignment:**")) meta.alignment = t.replace("- **Alignment:**", "").trim();
+    const imgMatch = t.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/images\//, "/images/");
+  }
+  return meta;
+}
+
+function renderGroupsPage(session) {
+  const groupsDir = path.join(STATIC_ROOT, "data", "groups");
+  let groups = [];
+  try {
+    const files = fs.readdirSync(groupsDir).filter(f => f.endsWith(".md")).sort();
+    groups = files.map(f => {
+      const content = fs.readFileSync(path.join(groupsDir, f), "utf-8");
+      const meta = parseGroupMeta(content);
+      meta.slug = f.replace(/\.md$/, "");
+      return meta;
+    });
+  } catch (_) {}
+
+  const groupRows = groups.length > 0 ? groups.map(g => {
+    const alignClass = g.alignment.toLowerCase().includes("enemy") ? "enemy"
+      : g.alignment.toLowerCase().includes("ally") ? "ally" : "neutral";
+    return `
+    <a class="npc-row" href="/groups/${esc(g.slug)}" style="display:flex;text-decoration:none;color:inherit;cursor:pointer;transition:border-color 0.2s,transform 0.2s;">
+      <div class="npc-portrait">${g.image ? `<img src="${esc(g.image)}" alt="${esc(g.title)}" />` : '<div class="npc-placeholder">&#9876;</div>'}</div>
+      <div class="npc-info">
+        <h3>${esc(g.title)}</h3>
+        <span class="npc-tag ${alignClass}">${esc(g.alignment)}</span>
+        <div class="npc-details" style="margin-top:8px;">
+          <div class="npc-detail-row"><span class="npc-detail-label">Type</span><span class="npc-detail-value">${esc(g.type || "\u2014")}</span></div>
+          <div class="npc-detail-row"><span class="npc-detail-label">Base</span><span class="npc-detail-value">${esc(g.base || "\u2014")}</span></div>
+          <div class="npc-detail-row"><span class="npc-detail-label">Status</span><span class="npc-detail-value">${esc(g.status || "\u2014")}</span></div>
+          <div class="npc-detail-row"><span class="npc-detail-label">Alignment</span><span class="npc-detail-value">${esc(g.alignment || "\u2014")}</span></div>
+        </div>
+      </div>
+    </a>`;
+  }).join("") : `
+    <div class="npc-row" style="cursor:default;">
+      <div class="npc-portrait"><div class="npc-placeholder">&#9876;</div></div>
+      <div class="npc-info">
+        <h3>Groups Coming Soon</h3><span class="npc-tag neutral">Unknown</span>
+        <p>As the campaign progresses, notable groups and organizations will be documented here.</p>
+      </div>
+    </div>`;
+
+  const body = `
+  <div class="content">
+    <h2 class="section-title">&#9876; Notable Groups</h2>
+    <p style="color:#888;margin-bottom:24px;">Organizations, factions, and groups encountered during the campaign.</p>
+    ${groupRows}
+  </div>`;
+  return pageShell("Notable Groups — Halls of the Damned", "/groups", body, session);
+}
+
+function renderGroupDetailPage(slug, session) {
+  const safeName = slug.replace(/[^a-z0-9_-]/gi, "");
+  const filePath = path.join(STATIC_ROOT, "data", "groups", `${safeName}.md`);
+  if (!fs.existsSync(filePath)) return null;
+  let htmlContent = renderMarkdownFile(filePath);
+  htmlContent = htmlContent.replace(/src="\.\.\/images\//g, 'src="/images/');
+  const body = `
+  <div class="content">
+    <a href="/groups" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Notable Groups</a>
+    <div class="history-content" style="margin-top:16px;">${htmlContent}</div>
+  </div>`;
+  const md = fs.readFileSync(filePath, "utf-8");
+  const meta = parseGroupMeta(md);
+  return pageShell(`${meta.title || "Group"} — Halls of the Damned`, "/groups", body, session);
+}
+
 module.exports = {
   renderHouseRulesPage,
   renderHomePage,
@@ -1437,4 +1520,6 @@ module.exports = {
   renderArtifactDetailPage,
   renderHandoutDetailPage,
   renderJournalPage,
+  renderGroupsPage,
+  renderGroupDetailPage,
 };

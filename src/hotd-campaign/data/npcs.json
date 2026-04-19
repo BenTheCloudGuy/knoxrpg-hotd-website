@@ -136,13 +136,13 @@
       },
       {
         "id": 26,
-        "name": "Luvash",
+        "name": "Luvash Vanduva",
         "relationship": "Luvash is a Vistani leader of the Tser Hill Vistani and is under Madam Eva's broader spiritual authority.",
         "type": "npc"
       },
       {
         "id": 27,
-        "name": "Arrigal",
+        "name": "Arrigal Vanduva",
         "relationship": "Arrigal is a Vistani who serves as one of Strahd's spies, operating within the Vistani community Madam Eva leads. Madam Eva was suspicious of Arrigal's loyalties.",
         "type": "npc"
       }
@@ -343,6 +343,12 @@
         "name": "Kolyan Indirovich",
         "relationship": "Kolyan was one of Baron Vallakovich's closest friends among the Barovian burgomasters. They often attended each other's festivals and shared counsel on protecting their people.",
         "type": "npc"
+      },
+      {
+        "id": 24,
+        "name": "Baron Dmitri Krezkov",
+        "relationship": "Dmitri Krezkov is a close friend and fellow burgomaster. The Krezkovs attended the Festival of Light in Vallaki as honoured guests.",
+        "type": "npc"
       }
     ],
     "name": "Baron Vargas Vallakovich",
@@ -375,7 +381,7 @@
       {
         "id": 73,
         "name": "Nikolai Wachter Jr.",
-        "relationship": "Fiona's eldest son. Commands militia in the Order of the Silver Dragon contingent. Fond of wine and trouble.",
+        "relationship": "Fiona's eldest son. Fond of wine and trouble.",
         "type": "npc"
       },
       {
@@ -531,12 +537,6 @@
         "type": "npc"
       },
       {
-        "id": 64,
-        "name": "Luvash",
-        "relationship": "Morgantha's coven kidnapped Luvash's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder.",
-        "type": "npc"
-      },
-      {
         "id": 65,
         "name": "Bella Wormwiggle",
         "relationship": "Morgantha's daughter. Bella handles the grinding and preparation of the dream pastries at Old Bonegrinder.",
@@ -647,7 +647,7 @@
     "alignment_tag": "ally",
     "portrait_url": "/images/davian-martikov.png",
     "description": "Davian Martikov is the patriarch of the Martikov family who runs the Wizard of Wines winery, which produces the only wine in Barovia — a vital commodity. Davian is gruff, practical, and deeply committed to the well-being of Barovia's people. He and his family have an unusually keen awareness of events throughout the land.",
-    "dm_notes": "Davian is the secret leader of the Keepers of the Feather, a network of wereravens who are vowed enemies of Strahd and operate as spies throughout Barovia. The Martikovs can shapeshift into ravens, allowing them to gather intelligence across the domain. Their wereraven nature is a closely guarded secret — even most of Barovia's residents don't know the truth about the Martikov family.\n\nDavian's children include Urwin (who runs the Blue Water Inn in Vallaki with his wife Danika), Adrian (eldest son), and Stefania (married to Dag). The entire family are members of the Keepers of the Feather contingent in the Order of the Silver Dragon.",
+    "dm_notes": "Davian is the secret leader of the Keepers of the Feather, a network of wereravens who are vowed enemies of Strahd and operate as spies throughout Barovia. The Martikovs can shapeshift into ravens, allowing them to gather intelligence across the domain. Their wereraven nature is a closely guarded secret — even most of Barovia's residents don't know the truth about the Martikov family.\n\nDavian's children include Urwin (who runs the Blue Water Inn in Vallaki with his wife Danika), Adrian (eldest son), and Stefania (married to Dag). The entire family are vowed enemies of Strahd.",
     "sort_order": 19,
     "is_hidden": true
   },
@@ -835,19 +835,37 @@
       {
         "id": 25,
         "name": "The Abbot",
-        "relationship": "The Abbot resides at the Abbey of Saint Markovia above Krezk. Baron Krezkov tolerates his presence.",
+        "relationship": "The Abbot resides at the Abbey of Saint Markovia above Krezk. Dmitri does not trust the Abbot, but knows there is little he can do about him. The Abbot's creatures — the locals deride them as 'stitches' or 'mongle-folk' — are forced to stay on the Abbey grounds.",
+        "type": "npc"
+      },
+      {
+        "id": 87,
+        "name": "Anna Krezkova",
+        "relationship": "Dmitri's wife. Practical and steady — the kind of person who acts when others freeze. Together they grieve the loss of their daughter Ilya.",
+        "type": "npc"
+      },
+      {
+        "id": 10,
+        "name": "Baron Vargas Vallakovich",
+        "relationship": "Dmitri and Vargas are close friends among the Barovian burgomasters. They attended each other's festivals and shared counsel on protecting their people. Dmitri and Anna attended the Festival of Light in Vallaki as honoured guests.",
+        "type": "npc"
+      },
+      {
+        "id": 56,
+        "name": "Kolyan Indirovich",
+        "relationship": "Kolyan was a close friend and fellow burgomaster. His death was a blow to Dmitri, who saw Kolyan as one of the few leaders in Barovia who genuinely cared about his people.",
         "type": "npc"
       }
     ],
-    "name": "Baron Krezkov",
+    "name": "Baron Dmitri Krezkov",
     "race": "Human",
     "npc_class": "Noble / Warrior",
     "location": "Krezk",
     "status": "Alive",
-    "alignment_tag": "neutral",
+    "alignment_tag": "ally",
     "portrait_url": "/images/baron-krezkov.png",
-    "description": "Baron Dmitri Krezkov is the burgomaster of Krezk, a walled village at the base of the Abbey of Saint Markovia. He is a cautious, protective leader who keeps Krezk's gates closed to outsiders. He grudgingly allows strangers in only if they can prove themselves useful to the village's survival.",
-    "dm_notes": "Krezkov's greatest sorrow is the recent death of his young son Ilya, which has left both him and his wife Anna devastated. This grief may make him susceptible to desperate bargains — particularly any offer that promises to restore his son.\n\nThe party visited Krezk in Sessions 22-23 while recovering the Amulet of Ravenkind from the Abbey.",
+    "description": "Baron Dmitri Krezkov is the burgomaster of Krezk, a walled village at the base of the Abbey of Saint Markovia. He is a cautious, protective leader who keeps Krezk's gates closed to outsiders, grudgingly allowing strangers in only if they can prove themselves useful to the village's survival. Despite his guarded nature, Dmitri is a good man who cares deeply for his people and maintains close friendships with the other burgomasters of Barovia.",
+    "dm_notes": "Dmitri is a stern but fair leader who genuinely cares about his people. His wife Anna is his anchor — practical, steady, and unafraid to act when others freeze. Together they lead Krezk with a careful hand, keeping the village self-sufficient and its walls closed to outsiders.\n\nDmitri is close friends with the burgomasters of the other towns in Barovia. He and Baron Vargas Vallakovich share counsel on protecting their people and have attended each other's festivals. Dmitri and Anna were honoured guests at the Festival of Light in Vallaki, where they watched the proceedings and reacted to events as they unfolded — including coming to the aid of the players when Ireena came looking for help after Lady Williams was waiting for them at the Blue Water Inn. He was also a friend of the late Kolyan Indirovich, whose death hit Dmitri hard.\n\nDmitri's greatest sorrow is the recent death of his young daughter Ilya, which has left both him and Anna devastated. This grief may make him susceptible to desperate bargains — particularly any offer that promises to restore his daughter. He does not know that the Abbot used Ilya's body and essence in the creation of Vasilka. He does not trust the Abbot, but also knows that there is little he can do about him. The Abbot's creatures — the locals deride them as 'stitches' or 'mongle-folk' — are forced to stay on the Abbey grounds. If Dmitri ever sees Vasilka, he would recognize his daughter's face and essence.\n\nThe party visited Krezk in Sessions 22-23 while recovering the Amulet of Ravenkind from the Abbey.",
     "sort_order": 24,
     "is_hidden": true
   },
@@ -857,25 +875,37 @@
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "The Abbot is building a flesh golem bride for Strahd, believing this will end Barovia's curse.",
+        "relationship": "The Abbot built a flesh golem bride for Strahd, believing this would end Barovia's curse. Strahd was offended by the notion and attacked the Abbey.",
         "type": "npc"
       },
       {
         "id": 24,
-        "name": "Baron Krezkov",
-        "relationship": "The Abbot resides in the Abbey above Krezk, which Baron Krezkov governs.",
+        "name": "Baron Dmitri Krezkov",
+        "relationship": "The Abbot resides in the Abbey above Krezk, which Baron Krezkov governs. Krezkov does not trust the Abbot but can do little about him.",
+        "type": "npc"
+      },
+      {
+        "id": 88,
+        "name": "Vasilka",
+        "relationship": "The Abbot's creation and the being he thinks of as his daughter. He used the body and essence of Ilya Krezkov to create her. He used the Holy Symbol of Ravenkind to restore her after Strahd's attack.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Lady Williams came to the Abbot after Strahd's attack and ordered him to take his followers and attack the Vistani camps.",
         "type": "npc"
       }
     ],
     "name": "The Abbot",
-    "race": "Deva (in human disguise)",
-    "npc_class": "Cleric / Celestial",
+    "race": "Human",
+    "npc_class": "Cleric",
     "location": "Abbey of Saint Markovia, Krezk",
-    "status": "Corrupted",
+    "status": "Evil",
     "alignment_tag": "neutral",
     "portrait_url": "",
-    "description": "The Abbot is the enigmatic master of the Abbey of Saint Markovia above Krezk. He appears as a serene, handsome man who heals the sick and tends to the abbey's inhabitants — a collection of strange, misshapen creatures called mongrelfolk. The Abbot radiates an otherworldly calm and speaks of ending Barovia's curse with unsettling certainty.",
-    "dm_notes": "The Abbot is a deva — an angelic being who descended to Barovia centuries ago to bring hope to its people. He restored the Abbey and healed the sick, but centuries of exposure to Barovia's corruption and the Dark Powers twisted his mind. He now creates grotesque mongrelfolk from body parts and is building a 'perfect bride' for Strahd — a flesh golem named Vasilka — believing this will end the curse. The Abbot's fall from grace is one of Barovia's greatest tragedies.",
+    "description": "The Abbot is the enigmatic master of the Abbey of Saint Markovia above Krezk. He appears as a serene, handsome man who heals the sick and tends to the abbey's inhabitants — a collection of strange, misshapen creatures he calls mongrelfolk, though the townsfolk of Krezk call them stitches. He radiates an otherworldly calm and speaks of saving Strahd's soul with unsettling certainty.",
+    "dm_notes": "The Abbot is a deva — an angelic being who descended to Barovia centuries ago to bring hope to its people. He restored the Abbey and healed the sick, but centuries of exposure to Barovia's corruption and the Dark Powers twisted his mind. He now creates grotesque mongrelfolk from body parts and built a 'perfect bride' for Strahd — a flesh golem named Vasilka — believing this would end the curse. He used the body and essence of Ilya Krezkov to create Vasilka. The Abbot's fall from grace is one of Barovia's greatest tragedies.\n\nStrahd attacked the Abbey, offended by the very notion he would ever love Vasilka. With Vasilka gravely wounded, the Abbot went mad with rage. The Belview mongrelfolk feed off the Abbot's rage, becoming feral and dangerous. Using the power of the Holy Symbol of Ravenkind, the Abbot was able to restore Vasilka, who wore it as a gift from the one she thinks of as her Father and Creator.\n\nDuring Sessions 22-23, the Abbot forced the players to prove themselves by summoning a massive Flesh Golem. After a brutal battle that dropped Ivan and Dagger, the Abbot kept his word, ripped the amulet from Vasilka's neck, and handed it to Ivan. This act caused Vasilka to drop to the ground. When she woke, she was angered that these people would force her Father to give up such a powerful relic.\n\nAfter that, Lady Williams came to the Abbot and told him that Strahd was betrayed by the Vistani and wishes them all to pay. She ordered them to take his followers and attack the Vistani at Tser Raven, then move on to Tser Hill. They overwhelmed the Vistani at Tser Raven in the middle of the night, killing any they could and burning their wagons. The surviving members fled into the woods or to shelter in Krezk. After that, Vasilka took the horde to attack the Tser Hill Encampment — this is the current battle the players are in.\n\nThe Abbot's plan is to wipe out the Tser Hill Vistani and frame the players and their allies. He would then offer an alliance to Strahd to deal with the players, if Strahd agreed to take Vasilka as his bride. The Abbot will eventually show up in person — he is by far the biggest threat and will come to extract Vasilka when she begins taking damage.",
     "sort_order": 25,
     "is_hidden": true
   },
@@ -884,26 +914,44 @@
     "associations": [
       {
         "id": 27,
-        "name": "Arrigal",
-        "relationship": "Arrigal is Luvash's brother. While Luvash focuses on family, Arrigal secretly serves Strahd as a spy.",
+        "name": "Arrigal Vanduva",
+        "relationship": "Luvash's brother. While Luvash is the public heart of the camp, Arrigal turns grief into plans. Luvash trusts Arrigal completely, unaware that Arrigal secretly reports to Strahd.",
+        "type": "npc"
+      },
+      {
+        "id": 89,
+        "name": "Arabelle Vanduva",
+        "relationship": "Luvash's daughter. Kidnapped by the Bonegrinder hags and rescued by the adventurers. Luvash and his wife Sorina rushed to Arabelle as soon as they received Ireena's letter. Her safe return changed how the whole camp sees the party.",
         "type": "npc"
       },
       {
         "id": 4,
         "name": "Madam Eva",
-        "relationship": "Madam Eva is the spiritual leader of the Vistani, including Luvash's encampment.",
+        "relationship": "Madam Eva is the spiritual leader of the Vistani. Luvash respects her authority.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Luvash is furious at Strahd for his betrayal. His sister died in the Massacre of Tser Pool.",
+        "type": "npc"
+      },
+      {
+        "id": 16,
+        "name": "Morgantha",
+        "relationship": "Morgantha and her coven kidnapped Luvash's daughter Arabelle from the Vistani camp.",
         "type": "npc"
       }
     ],
-    "name": "Luvash",
+    "name": "Luvash Vanduva",
     "race": "Human (Vistani)",
     "npc_class": "Fighter / Chieftain",
-    "location": "Vallaki (Vistani Camp)",
+    "location": "Tser Hill Vistani Camp",
     "status": "Alive",
-    "alignment_tag": "neutral",
+    "alignment_tag": "ally",
     "portrait_url": "/images/luvash.png",
-    "description": "Luvash is one of the leaders of the Vistani encampment outside Vallaki. He is a large, boisterous man consumed with worry over his missing daughter, Arabelle, who was kidnapped from the camp.",
-    "dm_notes": "Luvash will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvash's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
+    "description": "Luvash Vanduva is the head of the Vanduva family and a leader of the Tser Hill Vistani. He is a large, boisterous man — talks with his hands, big reactions, quick to clasp a shoulder, slam a table, or go quiet all at once when emotion catches him. The players first encountered Luvash at the Blood of the Vine Inn in the Village of Barovia, where he was desperately searching for his daughter Arabelle, who had been kidnapped by the hags of Old Bonegrinder. After the adventurers rescued Arabelle, Luvash and his wife Sorina rushed to their daughter as soon as they received a letter from Ireena. Luvash publicly thanked the party in Vallaki — not quietly either — a deliberate statement showing his hand. His sister Nadara was married to one of the Tser Pool Vistani and died in the Massacre of Tser Pool. He is furious at Strahd for his betrayal.",
+    "dm_notes": "Luvash is the public heart of the Vistani half of camp. He is not subtle — grateful, angry, relieved, loud, protective, and still running hot. The players first met Luvash at the Blood of the Vine Inn, where he was a desperate father searching for his kidnapped daughter. The party rescued Arabelle from Old Bonegrinder, and when Ireena sent word, Luvash and his wife Sorina came as quickly as they could. He thanked the party publicly in Vallaki before leading them back toward Tser Hill. During the return, the camp was attacked by Patchwork Goblins led by Vasilka (orchestrated by the Abbot). Luvash knows which Vistani families are ready to stop hedging and which still want caution. He wants Arabelle safe, the dead honored, Nadara's death to mean something, and no more children lost on his watch. He fears this is only the start. Do not play him as just a brute — he gives the camp its public heart.",
     "sort_order": 26,
     "is_hidden": true
   },
@@ -912,26 +960,32 @@
     "associations": [
       {
         "id": 26,
-        "name": "Luvash",
-        "relationship": "Arrigal's brother. While Luvash is focused on family, Arrigal secretly serves Strahd.",
+        "name": "Luvash Vanduva",
+        "relationship": "Arrigal's brother. Luvash trusts Arrigal completely, unaware of his role as Strahd's spy.",
         "type": "npc"
       },
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "Arrigal is one of Strahd's most trusted spies among the Vistani, reporting everything he learns.",
+        "relationship": "Arrigal traded his loyalty for his life many years ago. He is one of Strahd's most trusted spies among the Vistani, reporting everything he learns.",
+        "type": "npc"
+      },
+      {
+        "id": 89,
+        "name": "Arabelle Vanduva",
+        "relationship": "Arrigal's niece. He is protective of her in his own way.",
         "type": "npc"
       }
     ],
-    "name": "Arrigal",
+    "name": "Arrigal Vanduva",
     "race": "Human (Vistani)",
     "npc_class": "Rogue / Spy",
-    "location": "Vallaki (Vistani Camp)",
+    "location": "Tser Hill Vistani Camp",
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/arrigal.png",
-    "description": "Arrigal is Luvash's brother, a charming and clever Vistani who frequents the encampment outside Vallaki. He is quick with a smile, an offer of wine, and friendly conversation — always eager to learn about newcomers and their plans. Arrigal is deadly with a blade and carries himself with the easy confidence of someone who knows more than he lets on.",
-    "dm_notes": "Arrigal is one of Strahd's most trusted spies among the Vistani. While appearing friendly and helpful to outsiders, he reports everything he learns directly to Strahd. He delivered the false letter from the Burgomaster that lured the adventurers to Barovia. His spy role is unknown to his brother Luvash, whose genuine concern for family Arrigal exploits as cover.",
+    "description": "Arrigal Vanduva is Luvash's brother and uncle to Arabelle. He is charming, clever, and deadly with a blade — carrying himself with the easy confidence of someone who knows more than he lets on. He is quiet, watches before he speaks, lets other people fill silence, and is hard to surprise. He is the one most likely to turn feeling into a plan. He has spent years reading roads, bargains, and threats better than most people in camp.",
+    "dm_notes": "Arrigal traded his loyalty to Strahd for his life many, many years ago. He is one of Strahd's most trusted spies among the Vistani — while appearing friendly and helpful, he reports everything he learns directly to Strahd. He delivered the false letter from the Burgomaster that lured the adventurers to Barovia. His spy role is unknown to his brother Luvash, whose genuine concern for family Arrigal exploits as cover. Luvash trusts him completely. Arrigal wants facts, timelines, who saw what, what Seraphine said, what the party has learned. He fears misreading the next move. He knows the roads around Vallaki, who in town can be bribed, trusted, or watched, and which old habits will get people killed now.",
     "sort_order": 27,
     "is_hidden": true
   },
@@ -1088,14 +1142,14 @@
       }
     ],
     "name": "Elandra Stormraven",
-    "race": "Half-Elf",
-    "npc_class": "Druid / Werewolf Alpha",
-    "location": "Werewolf Den (Defeated)",
+    "race": "Half-Elf (Vampire)",
+    "npc_class": "Bladesinger / Vampire",
+    "location": "Barovia",
     "status": "Dead",
     "alignment_tag": "enemy",
     "portrait_url": "/images/elandra-stormraven.jpg",
-    "description": "Elandra Stormraven was the third and most savage of the Stormraven siblings. She combined dark druidic magic with lycanthropic ferocity, making her one of the most dangerous foes the party faced.",
-    "dm_notes": "Elandra had allied with the werewolf pack led by Kiril Stoyanovich and served as head of Strahd's Personal Guard. She was encountered at the Werewolf Den on the 18th day of Kythorn during Session 21. Her defeat eliminated the last of the active Stormraven threats.",
+    "description": "Elandra Stormraven was the eldest and most savage of the Stormraven siblings. A bladesinger vampire and the martial apex predator of the trio, she was the first person Strahd ever turned and served as the leader of his Personal Guard. She dual-wielded two powerful magical longswords with terrifying speed and precision, combining vampiric ferocity with bladesong magic. She was one of the most dangerous foes the party faced.",
+    "dm_notes": "Elandra was the first person Strahd turned into a vampire and served as the leader of his Personal Guard. She was a bladesinger — a warrior wraith figure who led when open violence was called for. She allied with the werewolf packs through Kiril Stoyanovich, using Strahd’s authority to command the Den. She ordered Emil Toranescu to retrieve artifacts from the Wizard’s Tower and kill the people there.\n\nElandra plotted with Strahd and Kiril to have Zuleika Toranescu ambushed — she and Strahd’s personal guard killed Zuleika and his eldest son Ekrol while they were out hunting, disguised as human hunters from Vallaki to frame the humans and inflame the packs.\n\nThe party encountered Elandra at the Tser Pool Vistani settlement. After travelling all day from Tser Pool following the battle with Elandra, the players arrived at Old Bonegrinder. Her defeat eliminated the last of the active Stormraven threats.",
     "sort_order": 32,
     "is_hidden": true
   },
@@ -1105,42 +1159,124 @@
       {
         "id": 38,
         "name": "Shorthagot, Harbinger of Ruin",
-        "relationship": "The Order of the Yellow Rose guards one of the Keys of Shorthagot and the planar gateway connected to the entity.",
+        "relationship": "The Order of the Yellow Rose guards one of the Keys of Shorthagot and the planar gateway connected to the entity. Clarissa has spent her life studying the Netherese origins of the Infernal Machine.",
+        "type": "npc"
+      },
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "The King’s brother and Lord of Westwatch. Geoffrey sent the party to find Clarissa with a sealed letter. Clarissa knows Geoffrey well through the Damaran court but considers the King her true childhood friend, not Geoffrey.",
+        "type": "npc"
+      },
+      {
+        "id": 36,
+        "name": "Prince Ian Frostmantle",
+        "relationship": "Clarissa and Prince Ian are romantically involved, on and off.",
+        "type": "npc"
+      },
+      {
+        "id": 37,
+        "name": "Lady Elysra Nivariel Williams",
+        "relationship": "Clarissa never trusted Lady Elysra after the previous Lady Williams grew sick and died. Lyzara'Nualith captured and tortured Clarissa during the Fall of Valls.",
+        "type": "npc"
+      },
+      {
+        "id": 39,
+        "name": "Father Alric",
+        "relationship": "Old friend. Clarissa wrote her final letter to Father Alric during the Fall of Valls, entrusting him as the last guardian of the Key.",
         "type": "npc"
       }
     ],
     "name": "Mistress Clarissa Allyson",
     "race": "Human",
-    "npc_class": "Monk / Mystic",
-    "location": "Valls (Order of the Yellow Rose)",
+    "npc_class": "Cleric (Knowledge Domain) / High Warden",
+    "location": "Valls",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "",
-    "description": "Mistress Clarissa Allyson is a senior member of the Order of the Yellow Rose, a monastic order based in Valls. She is a disciplined and knowledgeable monk who possesses deep understanding of the ancient threats facing Damara.",
-    "dm_notes": "The Order of the Yellow Rose guards one of the Keys of Shorthagot and the planar gateway beneath their citadel in Valls. Mistress Allyson was rescued by the party during Sessions 6-7 when they arrived in Valls on the 30th day of Tarsakh. She possesses deep knowledge of the Shadowfell gateways and the ancient threat of Shorthagot. She serves as a key information source about the campaign's overarching cosmic conflict.",
+    "description": "Mistress Clarissa Allyson is the High Warden of the Yellow Rose and leader of the Order of the Yellow Rose, a sacred organization based in the Citadel of Valls in Damara. A childhood friend of King Frostmantle and the late Lord Williams, she is a woman of fierce intellect and iron will who has spent her lifetime buried in ancient tomes studying the lost Netherese Empire and the Infernal Machine. She never trusted Lord Williams’ new wife, Lady Elysra, after the previous Lady Williams grew sick and died under suspicious circumstances.",
+    "dm_notes": "Clarissa is the head of the Order of the Yellow Rose and the keeper of its ancient secrets. She grew up alongside King Frostmantle and Lord Williams in the Damaran court — there are few the King trusts, and fewer he calls friends, but Clarissa is among them. She is also romantically involved with Prince Ian Frostmantle, on and off.\n\nWhen Lord Williams’ first wife grew sick and died, many believed Lady Elysra had a hand in it — though none dared say it within earshot of Lord Williams. Clarissa never trusted the new Lady Williams. She noted in the margins of the Prophecy of the Unbound Rose: “I believe this speaks of Lady Williams. Her presence at court came too swiftly. She is not what she claims.”\n\nThe old Monastery of the Yellow Rose sits upon the ruins of Tur Pharael, where the Great Machine (Infernal Machine) was designed and created by Arthindol the Terraseer — a false identity of Shorthagot. Clarissa’s lifetime of research into Netherese history gave her deep knowledge of the Keys of Shorthagot and the planar gateways.\n\nDuring the Fall of Valls, Lady Williams (Lyzara’Nualith) led an assault on the Citadel. Clarissa sent the Key (the Veilpiercer) east with Brother Caelis and the Dawn Guard, then held the Citadel with her clerics to buy time for the people of Valls to escape. She wrote a final letter to Father Alric entrusting him as the last guardian.\n\nThe party found Clarissa chained in the Citadel, being tortured by Lyzara’Nualith and a mind-rending creature extracting the Key’s location. Despite the torture, she remained defiant. The party rescued her and the surviving clerics during Sessions 6–7. She shares her knowledge freely once the players present Lord Frostmantle’s letter proving they were sent by the Crown.",
     "sort_order": 33,
     "is_hidden": true
   },
   {
-    "npcid": 34,
+    "npcid": 81,
     "associations": [
       {
-        "id": 5,
-        "name": "Rudolph Van Richten",
-        "relationship": "Rudolph d'Avernir is an alias used by Van Richten at the Wizard Tower.",
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Brom's father.",
+        "type": "npc"
+      },
+      {
+        "id": 77,
+        "name": "Danika Dorakova Martikov",
+        "relationship": "Brom's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 75,
+        "name": "Stella Wachter",
+        "relationship": "Brom was wounded trying to save Stella and Karl Wachter at the Festival of Light.",
+        "type": "npc"
+      },
+      {
+        "id": 89,
+        "name": "Arabelle Vanduva",
+        "relationship": "Arabelle has feelings for Brom. He saved her during the battle at the Festival of Light.",
         "type": "npc"
       }
     ],
-    "name": "Rudolph d'Avernir",
-    "race": "Human",
-    "npc_class": "Wizard / Scholar",
-    "location": "The Wizard Tower, Barovia",
+    "name": "Brom Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Commoner",
+    "location": "Vallaki (Blue Water Inn)",
     "status": "Alive",
     "alignment_tag": "ally",
-    "portrait_url": "/images/rictavio-van-richten.png",
-    "description": "Rudolph d'Avernir is a knowledgeable scholar of the arcane and the planes who resides in a Wizard Tower in Barovia. His tower contains a library of rare texts and magical artifacts.",
-    "dm_notes": "The party encountered Rudolph d'Avernir at the Wizard Tower during Session 20 on the 17th day of Kythorn. He provided crucial information about the magical forces at work in Barovia and the broader conflict involving Shorthagot and the Shadowfell.\n\nRudolph d'Avernir is an alias used by Rudolph Van Richten. His true identity as the legendary monster hunter is concealed behind the persona of an eccentric scholar.",
-    "sort_order": 34,
+    "portrait_url": "",
+    "description": "Brom Martikov is Urwin and Danika's 17-year-old son. He is brave and eager, a wereraven like his parents. He was wounded at the Festival of Light trying to save Stella and Karl Wachter during Strahd's attack.",
+    "dm_notes": "Brom is brave and eager despite his youth. At the Festival of Light, he was wounded while trying to save Stella and Karl Wachter from the attacking minions. Arabelle, Luvash's daughter, has feelings for Brom. As a wereraven, Brom is part of the Keepers of the Feather.",
+    "sort_order": 81,
+    "is_hidden": true
+  },
+  {
+    "npcid": 89,
+    "associations": [
+      {
+        "id": 26,
+        "name": "Luvash Vanduva",
+        "relationship": "Arabelle's father. Her safe return from the Bonegrinder hags changed how the entire camp sees the party.",
+        "type": "npc"
+      },
+      {
+        "id": 27,
+        "name": "Arrigal Vanduva",
+        "relationship": "Arabelle's uncle.",
+        "type": "npc"
+      },
+      {
+        "id": 81,
+        "name": "Brom Martikov",
+        "relationship": "Arabelle has feelings for Brom. He saved her during the battle at the Festival of Light.",
+        "type": "npc"
+      },
+      {
+        "id": 4,
+        "name": "Madam Eva",
+        "relationship": "Madam Eva is the spiritual leader of the Vistani. Arabelle grew up hearing her stories.",
+        "type": "npc"
+      }
+    ],
+    "name": "Arabelle Vanduva",
+    "race": "Human (Vistani)",
+    "npc_class": "Warrior",
+    "location": "Tser Hill Vistani Camp",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Arabelle Vanduva is Luvash's 16-year-old daughter. She was kidnapped by the hags of Old Bonegrinder and rescued by the adventurers. She is quiet, watchful, and not cute — she notices details adults miss and says simple things that land hard because she is not trying to impress anyone. She came home when other children did not, and that changed how the whole camp sees her. At the Festival of Light, she arrived with Luvash and the Vistani wagons, and Brom Martikov saved her during the battle.",
+    "dm_notes": "Arabelle should not feel like \"the missing quest child.\" She came home when other children did not, and that changes how the whole camp sees her. She wants to feel normal again, though she probably cannot name that. She knows a child's version of the truth — which can be more useful than an adult's. She has feelings for Brom Martikov, who saved her at the Festival of Light. The party rescued her from Old Bonegrinder, and the early Tser Pool scenes had her wide-eyed and fascinated by the heroes.",
+    "sort_order": 89,
     "is_hidden": true
   },
   {
@@ -1149,25 +1285,31 @@
       {
         "id": 36,
         "name": "Prince Ian Frostmantle",
-        "relationship": "Prince Ian is the heir to the Frostmantle dynasty that Lord Geoffrey governs.",
+        "relationship": "Geoffrey’s nephew and the heir to the throne. Geoffrey is fiercely protective of him and carried him through the woods after the ambush.",
         "type": "npc"
       },
       {
-        "id": 41,
-        "name": "Bragus Orentide",
-        "relationship": "Bragus serves as a guard captain and military advisor in service to the Frostmantle dynasty.",
+        "id": 33,
+        "name": "Mistress Clarissa Allyson",
+        "relationship": "Geoffrey sent the party to find Clarissa with a sealed letter bearing his signet ring. He trusts her knowledge and wisdom.",
+        "type": "npc"
+      },
+      {
+        "id": 50,
+        "name": "Ser Brennor Cale",
+        "relationship": "One of Geoffrey’s knights who survived the undead ambush and made it to the church. After Father Alric’s death, Brennor led the remaining survivors to White Bridge.",
         "type": "npc"
       }
     ],
     "name": "Lord Geoffrey Frostmantle",
     "race": "Human",
     "npc_class": "Fighter / Noble",
-    "location": "Damara (Kingdom of Frostmantle)",
+    "location": "White Bridge",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/lordGeoffreyFrostmantle.jpg",
-    "description": "Lord Geoffrey Frostmantle is a nobleman of the Frostmantle dynasty that has ruled Damara since the great reunification in 1285 DR. He is a capable warrior and diplomat who oversees the defense of Damara's borders.",
-    "dm_notes": "The Frostmantles are considered fair and just rulers who restored order after centuries of conflict. Lord Geoffrey maintains the ancient alliance with the Order of the Yellow Rose and takes the threat of the Shadowfell gateways seriously. He commands the loyalty of soldiers like Bragus Orentide and oversees the kingdom's military defense.",
+    "description": "Lord Geoffrey Frostmantle is the younger brother of the King of Damara and the Lord of Westwatch, Protector of the Western Reaches. A capable warrior and commander, Geoffrey was the second-born son of the Frostmantle dynasty and was sent to train and lead the family’s forces in the Western Reaches. He is fiercely loyal to his brother the King and devoted to his nephew Prince Ian. The party first encountered Geoffrey on the banks of the Pelavir River, dragging his gravely wounded nephew from the wreckage of an undead ambush.",
+    "dm_notes": "Geoffrey led a force of 60 men (20 knights and 40 men-at-arms) toward Valls after reports of monsters and demonic creatures slaughtering villages and farms. They crossed the river north of the City of Valls and posted 20 men to guard the bridge as a retreat path. The force was ambushed by undead led by a dark rider and overwhelmed within minutes. As Prince Ian fell, Geoffrey and a few remaining knights formed a defensive perimeter. Geoffrey got the Prince onto his horse and rode, but the horse was killed and both fell. Geoffrey carried the gravely wounded Prince through the woods overnight, evading enemies, until they heard the Night Screamer attack on the Sea Spray.\n\nGeoffrey gave the party a sealed letter bearing his signet ring to take to Mistress Clarissa Allyson in Valls, asking her to share what she knows about the spreading darkness. He then returned to White Bridge with Captain Reaven’s crew, escorting the wounded Prince to safety.\n\nGeoffrey knows Clarissa well through the Damaran court but they are not close friends the way Clarissa and the King are — Geoffrey was raised apart from the capital, trained in the Western Reaches. His loyalty to his brother and nephew is absolute.",
     "sort_order": 35,
     "is_hidden": true
   },
@@ -1177,19 +1319,31 @@
       {
         "id": 35,
         "name": "Lord Geoffrey Frostmantle",
-        "relationship": "Prince Ian is the heir to Lord Geoffrey's Frostmantle dynasty.",
+        "relationship": "Ian’s uncle. Geoffrey carried Ian through the woods after the undead ambush and ensured his survival.",
+        "type": "npc"
+      },
+      {
+        "id": 33,
+        "name": "Mistress Clarissa Allyson",
+        "relationship": "Ian and Clarissa are romantically involved, on and off. Clarissa trusted the party only after seeing the letter proving they were sent by the Crown.",
+        "type": "npc"
+      },
+      {
+        "id": 50,
+        "name": "Ser Brennor Cale",
+        "relationship": "One of the knights sworn to Ian’s service who survived the ambush and led survivors to White Bridge.",
         "type": "npc"
       }
     ],
     "name": "Prince Ian Frostmantle",
     "race": "Human",
     "npc_class": "Paladin / Noble",
-    "location": "Damara",
+    "location": "White Bridge",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/princeIanFrostmantle.jpg",
-    "description": "Prince Ian Frostmantle is the heir to the Frostmantle dynasty of Damara. A young paladin trained in the martial and divine traditions, he represents the next generation of Damaran leadership.",
-    "dm_notes": "Prince Ian is deeply concerned about the supernatural threats emanating from Barovia and the Shadowfell gateways. He has been instrumental in rallying support for the party's mission and maintains close ties with the Order of the Yellow Rose. He was aboard the Sea Spray and was wounded during the Night Screamer attack in Session 02. The crew took him and his uncle to White Bridge for safety.",
+    "description": "Prince Ian Frostmantle is the eldest son of the King of Damara and heir to the Frostmantle dynasty. A young paladin trained in the martial and divine traditions, he was gravely wounded during the Night Screamer attack on the Sea Spray in Session 02 and carries an unknown curse linked to Tharizdun’s growing influence. When a healer attempted to mend his wounds, the magic was repelled by an impenetrable wall of darkness, and the Prince seized the healer’s wrist with unnatural strength, triggering terrifying visions.",
+    "dm_notes": "Prince Ian was aboard the Sea Spray when it was attacked by Night Screamers during Session 02. He was gravely wounded and carries an unknown curse linked to Tharizdun’s growing influence — healing magic is repelled by a wall of darkness when applied to him, and physical contact triggered disturbing visions for the healer Sage. His uncle Lord Geoffrey carried him through the woods after the ambush and the Sea Spray crew escorted them both to White Bridge for safety.\n\nIan is romantically involved with Mistress Clarissa Allyson, on and off. The letter Geoffrey gave the party was signed with Ian’s authority, and Clarissa would not share her knowledge until the players presented it as proof they were sent by the Crown.",
     "sort_order": 36,
     "is_hidden": true
   },
@@ -1199,20 +1353,106 @@
       {
         "id": 38,
         "name": "Shorthagot, Harbinger of Ruin",
-        "relationship": "Lady Williams' machinations served to breach the Shadowfell gateway, furthering Shorthagot's influence.",
+        "relationship": "Shorthagot is the avatar of Tharizdun, trapped in the Great Machine he helped the Netherese create. Lyzara'Nualith is attempting to free him so he can complete his work and free their master, Tharizdun.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Lyzara sought out Strahd after learning he possesses the Lode Stone, one of the four Keys. After being trapped in Barovia by the Mist, she presented herself as his representative while pursuing her own agenda. She convinced him the Vistani had betrayed him, leading to the attacks on the Vistani camps.",
+        "type": "npc"
+      },
+      {
+        "id": 33,
+        "name": "Mistress Clarissa Allyson",
+        "relationship": "Direct nemesis. Clarissa never trusted Elysra from the moment she arrived in Valls. Lyzara knew Clarissa was head of the Order of the Yellow Rose and knew the Key's location. She tortured Clarissa beneath the Citadel using a mind-rending creature to extract the Key's whereabouts.",
+        "type": "npc"
+      },
+      {
+        "id": 55,
+        "name": "Tharizdun, The Chained God",
+        "relationship": "Lyzara'Nualith's true master. Everything she does — the infiltration of Valls, the assault on the Citadel, the pursuit of the Keys — serves Tharizdun's liberation.",
+        "type": "npc"
+      },
+      {
+        "id": 90,
+        "name": "Lord Edmund Williams",
+        "relationship": "Her husband, whom she corrupted and ultimately murdered to gain control of Valls and access the vaults beneath the Citadel when Clarissa blocked her access.",
+        "type": "npc"
+      },
+      {
+        "id": 91,
+        "name": "LeJean",
+        "relationship": "The Constable of Valls who served her. She stabbed him with a dark dagger and transformed him into the Jailer as punishment for his betrayal.",
+        "type": "npc"
+      },
+      {
+        "id": 25,
+        "name": "The Abbot",
+        "relationship": "Lady Williams convinced Strahd that the Vistani had betrayed him. Strahd then ordered her to have the Abbot deal with them, resulting in the assaults on the Tser Pool and Tser Hill Vistani camps.",
         "type": "npc"
       }
     ],
     "name": "Lady Elysra Nivariel Williams",
     "race": "Succubus (disguised as Human)",
     "npc_class": "Fiend / Manipulator",
-    "location": "Valls (formerly)",
+    "location": "Barovia",
     "status": "Active",
     "alignment_tag": "enemy",
     "portrait_url": "/images/ladyWilliams.jpg",
-    "description": "Lady Elysra Nivariel Williams is a noblewoman of Valls who married Lord Edmund Williams. By 1496 DR, she was at the center of the catastrophic events known as the Fall of Valls. She is beautiful, charming, and politically astute — a masterful manipulator who uses intrigue to achieve her goals.",
-    "dm_notes": "Lady Williams is a succubus who infiltrated Damaran society through her marriage to Lord Edmund Williams. She orchestrated the Fall of Valls, breaching the Shadowfell gateway beneath the Order of the Yellow Rose's citadel. Her machinations unleashed dark forces that threatened all of Damara. Her true demonic nature is revealed only in her transformed state — in human guise she is indistinguishable from a mortal noblewoman.",
+    "description": "Lady Elysra Nivariel Williams is the primary antagonist of the campaign — a succubus named Lyzara'Nualith who infiltrated Damaran high society by taking the human form and name Elysra Nivariel. She arrived in Valls presenting herself as a widow of minor Damaran nobility and entered the service of Lady Meagana Williams. She poisoned Meagana and, while the woman was wasting away, comforted and corrupted Lord Edmund Williams during his grief — eventually marrying him and dropping her maiden name. Beautiful, charming, and politically astute, she spent years positioning herself to access the secrets beneath the Citadel of the Yellow Rose. She orchestrated the Fall of Valls in 1496 DR, personally led the assault on the Citadel, and now operates within Barovia — trapped by the Mist after tricking Lady Fiona Wachter and others into summoning her through it. In human guise she is indistinguishable from a mortal noblewoman, but her true nature is revealed in moments of rage — her eyes flare with madness, a violet glow of abyssal power curls around her hands, and her voice fills the room with fanatic intensity.",
+    "dm_notes": "Lyzara'Nualith is a succubus in service to Tharizdun, the Chained God. Her ultimate goal is to free Shorthagot — Tharizdun's avatar — from the Great Machine beneath the ruins of Thul Avenar (now the Monastery of the Yellow Rose), so that Shorthagot can complete his work and free their master.\n\nINFILTRATION OF VALLS: Lyzara arrived in Valls under the human identity of Elysra Nivariel, presenting as a widow of minor Damaran nobility. She entered the employ of Lady Meagana Williams, wife of Lord Edmund Williams — a close friend of King Frostmantle and Clarissa Allyson. She slowly poisoned Meagana, and while the woman wasted away, she comforted Edmund and corrupted his mind. After Meagana's death she married Edmund. Many suspected Elysra had a hand in Meagana's death, but none dared say so within earshot of Lord Williams.\n\nShe spent years studying the Citadel's old construction, walking halls that had been closed for generations, and asking clever questions about wards, the Yellow Rose, and the sealed chambers Clarissa had begun to unearth. Clarissa never trusted her. Father Alric later recalled: \"There is power behind Lady Williams. Power that no grieving widow should wield.\"\n\nShe finally killed Edmund to gain control of Valls when Clarissa continued to block her access to the vaults and records beneath the Citadel.\n\nTHE FALL OF VALLS (1496 DR): Lady Williams led the assault on the Citadel of the Yellow Rose. Her forces breached the planar gateway beneath the city, flooding Valls with horrors from the Shadowfell. She personally oversaw the torture of Mistress Clarissa Allyson in the ruined chambers beneath the Citadel, using a mind-rending creature to extract the location of the Veilpiercer — one of the four Keys of Shorthagot. When the party intervened (Session 07), she released a wall of arcane energy to throw them back, then stabbed Constable LeJean with a dark dagger — \"That is for your betrayal! Fool!\" — transforming him into a 40-foot monstrosity called the Jailer. She opened a portal and vanished.\n\nINSIDE BAROVIA: Lady Williams tricked Lady Fiona Wachter and other women into performing a ritual that summoned her into Barovia, allowing her to slip past the Mist and Strahd's initial notice. She did not realize this would also trap her within Barovia like anyone else. She sought out Strahd after learning he possesses the Lode Stone (the second Key) and presented herself as his representative while pursuing her own agenda. She wants the players to bring the Veilpiercer to the Great Machine and open it so she can make her attack.\n\nAt the Festival of Light in Vallaki (Session 26), she appeared uninvited and publicly delivered Strahd's message, mocking the festival. Mist rolled into the square and chaos erupted — Stella Wachter was killed by her minions during the attack. Afterward at the Blue Water Inn, she put a spell on Urwin Martikov, waited for the party, and offered a deal: turn over the Key and she will reveal the location of Strahd's Necromantic Anchor and transport them to the Amber Temple. She made clear the Artifact will be hers one way or the other. She will not start a fight no matter what the players say.\n\nShe convinced Strahd that the Vistani had betrayed him, and Strahd ordered her to have the Abbot deal with them — resulting in the massacre at Tser Pool and the assault on Tser Hill.\n\nCONNECTION TO THE STREET URCHINS: Before the Fall of Valls, Constable LeJean ran the street urchins of the city. He sent one of them — Dagger — to steal from Lady Williams. Dagger was caught, and Lady Williams turned him into a dog as punishment.\n\nENDGAME: The final confrontation with Lyzara'Nualith takes place at the Monastery of the Yellow Rose / Tur Farael, at the entrance to the Infernal Machine. She will track the players there and attempt to take the Keys and use the Machine. If she activates it without all four Keys, powerful magic will tear through Faerûn before the Machine explodes, destroying much of the Dalelands. The players must stop her and use the Keys to prevent the explosion.\n\nHer rallying cry: \"YES! To shatter the wheel of suffering… to burn this wretched tapestry to ash!\"",
     "sort_order": 37,
+    "is_hidden": true
+  },
+  {
+    "npcid": 90,
+    "associations": [
+      {
+        "id": 37,
+        "name": "Lady Elysra Nivariel Williams",
+        "relationship": "Edmund's second wife. The succubus Lyzara'Nualith poisoned his first wife Meagana, corrupted his mind during his grief, married him, and ultimately murdered him to gain control of Valls.",
+        "type": "npc"
+      },
+      {
+        "id": 33,
+        "name": "Mistress Clarissa Allyson",
+        "relationship": "Childhood friend. Edmund, Clarissa, and King Frostmantle grew up together at court. Clarissa tried to protect the Citadel's secrets from Lady Williams but could not break through Edmund's corrupted loyalty.",
+        "type": "npc"
+      }
+    ],
+    "name": "Lord Edmund Williams",
+    "race": "Human",
+    "npc_class": "Noble",
+    "location": "Valls",
+    "status": "Dead",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Lord Edmund Williams was a Damaran nobleman and the Lord of Valls — a childhood friend of King Frostmantle and Mistress Clarissa Allyson. He was a good man whose mind was corrupted by the succubus Lyzara'Nualith after she entered his household in the guise of Elysra Nivariel. His first wife, Lady Meagana Williams, was slowly poisoned by Lyzara while she was in Meagana's employ. As Meagana wasted away, Lyzara comforted Edmund and corrupted his mind, eventually marrying him. Many suspected Elysra had a hand in Meagana's death, but none dared say so within earshot of Lord Williams. He was ultimately murdered by his own wife when she needed to seize control of Valls and access the vaults and records beneath the Citadel of the Yellow Rose, which Clarissa had been blocking.",
+    "dm_notes": "Lord Edmund Williams was one of King Frostmantle's closest friends and allies. Along with Clarissa Allyson, the three grew up together at court. Edmund was a noble and honorable man who fell prey to a demon's manipulation — Lyzara'Nualith targeted his household specifically because of his position as Lord of Valls and his proximity to the Citadel of the Yellow Rose.\n\nHis first wife, Lady Meagana Williams, hired Elysra Nivariel as a servant or attendant. Lyzara used this position to slowly poison Meagana while simultaneously comforting the grieving Edmund and corrupting his mind. After Meagana's death, Edmund married Elysra. Father Alric recalled that she \"captured Lord Williams' heart as his wife was slowly wasting away.\"\n\nWhen Clarissa continued to block Elysra's access to the vaults and archives beneath the Citadel, Lyzara could wait no longer and killed Edmund to take direct control of Valls. His death is referenced in the campaign sources as \"the deceased Lord Williams.\"",
+    "sort_order": 90,
+    "is_hidden": true
+  },
+  {
+    "npcid": 91,
+    "associations": [
+      {
+        "id": 37,
+        "name": "Lady Elysra Nivariel Williams",
+        "relationship": "LeJean served Lady Williams as Constable of Valls. She stabbed him with a dark dagger and transformed him into the Jailer — a 40-foot monstrosity — as punishment for his betrayal.",
+        "type": "npc"
+      }
+    ],
+    "name": "LeJean",
+    "race": "Human (formerly)",
+    "npc_class": "Constable",
+    "location": "Citadel of Valls (beneath)",
+    "status": "Dead",
+    "alignment_tag": "enemy",
+    "portrait_url": "",
+    "description": "LeJean was the Constable of Valls who served Lady Elysra Williams. He ran the street urchins of the city, using them as a network of petty thieves. When Lady Williams fled the Citadel after torturing Mistress Clarissa Allyson, she stabbed LeJean with a dark dagger — \"That is for your betrayal! Fool!\" — and the blade melted into his body, transforming him into a 40-foot monstrosity known as the Jailer. The creature wielded a 20-foot whip made from a massive spine, and its rib cage formed an iron jail with screaming souls trapped inside. The party eventually brought the creature down.",
+    "dm_notes": "LeJean stood beside Lady Williams during the torture of Clarissa in the ruined chambers beneath the Citadel. The mind-rending creature used to interrogate Clarissa had its tendrils connected to both Clarissa and LeJean. When the party burst in and Lady Williams decided to flee through a portal, she stabbed LeJean as a final act — transforming him into the Jailer, a massive aberration the party had to fight (Session 07).\n\nBefore the Fall of Valls, LeJean ran the street urchins of the city. Among them was Dagger, whom LeJean sent to steal from Lady Williams. Dagger was caught, and Lady Williams turned him into a dog as punishment.\n\nLeJean's \"betrayal\" that earned Elysra's wrath is left deliberately vague — it may refer to his failure to prevent the party from reaching the Citadel, or to some earlier act of defiance.",
+    "sort_order": 91,
     "is_hidden": true
   },
   {
@@ -1221,40 +1461,65 @@
       {
         "id": 55,
         "name": "Tharizdun, The Chained God",
-        "relationship": "Shorthagot is an ancient avatar and harbinger of Tharizdun, working to free the Chained God.",
+        "relationship": "Shorthagot is Tharizdun's avatar, birthed from the Abyss itself to embody his master's will. His sole purpose is to free the Chained God from his cosmic imprisonment.",
         "type": "npc"
       },
       {
         "id": 37,
         "name": "Lady Elysra Nivariel Williams",
-        "relationship": "Lady Williams orchestrated the Fall of Valls, breaching a Shadowfell gateway connected to Shorthagot's prison.",
+        "relationship": "Lyzara'Nualith serves Shorthagot's cause. She orchestrated the Fall of Valls to breach the planar gateway connected to his prison beneath the Infernal Machine, and now pursues the Keys needed to free him.",
         "type": "npc"
       }
     ],
     "name": "Shorthagot, Harbinger of Ruin",
     "race": "Aberration / Avatar",
     "npc_class": "Elder Entity",
-    "location": "The Shadowfell (imprisoned)",
+    "location": "The Infernal Machine, Thul Avenar (imprisoned)",
     "status": "Imprisoned",
     "alignment_tag": "enemy",
     "portrait_url": "/images/Shothragot.jpg",
-    "description": "Shorthagot, Harbinger of Ruin, is an ancient entity imprisoned in the Shadowfell. Its influence seeps through the weakened barriers between planes, corrupting everything it touches. It is the ultimate threat behind many of the campaign's events.",
-    "dm_notes": "Shorthagot is an ancient avatar of Tharizdun, the Chained God — one of the most terrifying entities in all existence. The Netherese Empire accidentally contacted Shorthagot through their Great Machine at Thul Avenar, and the entity was eventually imprisoned in the Shadowfell after the Time of Troubles. Its binding was split into four Keys scattered across Damara.\n\nLady Williams orchestrated the Fall of Valls to breach a Shadowfell gateway connected to Shorthagot's prison. The Order of the Yellow Rose guards one of the Keys.",
+    "description": "Shorthagot, Harbinger of Ruin, is Tharizdun’s avatar — a being birthed from the Abyss itself to embody the Chained God’s will. He is the ultimate threat behind the campaign’s events. In the age of Netheril, Shorthagot infiltrated the Empire’s highest circles disguised as Arthindol the Terraseer, one of Netheril’s most trusted archmages. He manipulated and corrupted the greatest arcane minds of Netheril into creating the Great Machine at Thul Avenar — a device he told them would let them access a new form of magic, but which was in truth designed to awaken Tharizdun. When champions of Faerûn rose to oppose him, they defeated Shorthagot and used the very machine he had devised to imprison him. Bound by divine, mechanical, and magical forces, Shorthagot was sealed into a displacement prison beyond space and time within the Infernal Machine. His prison is slowly weakening as the millennia have passed, and his influence seeps through the barriers between planes, corrupting everything it touches.",
+    "dm_notes": "ORIGINS: Shorthagot is an avatar of Tharizdun, the Chained God — one of the most terrifying entities in all existence. Tharizdun was imprisoned by the combined efforts of all other gods at the dawn of time after he created the Abyss and waged the Dawn War. Throughout history, his followers have sought to free him. Shorthagot was the most formidable of these agents.\n\nTHE NETHERESE DECEPTION: Shorthagot infiltrated the Empire of Netheril disguised as Arthindol the Terraseer. In these \"humans\" he saw an opportunity to finally complete his purpose. To free his master.. After embedding himself in the Empire's highest arcane circles. He oversaw multiple state-level arcane projects, including six scattered research sites called the Thul laboratories — imperial black laboratories hidden far from Netheril's heart so no rival could see the whole design. He worked to keep the truth from those that might stop him. It took more than two centuries to complete the work at these sites..\n  • Thul Vharak (Mount Ghakis) — shielding, warding, containment fields\n  • Thul Seyr — veil-piercing, planar contact, transport\n  • Thul Mystren — mythallar crystal refinement and power-routing\n  • Thul Karath — construct intelligence, automaton cores\n  • Thul Oraph — long-range observation, divinatory mapping\n  • Thul Avenar (\"The Gate of the Horizon\") — the central site where all research came together in the making of the Great Machine\n\nEach site knew only part of the truth. Only Arthindol and a very small inner circle knew they were all building pieces of the same thing. He tempted the Netherese with the promise of a machine merging magic and technology that would let them access a new form of magic. It was all a lie — the Machine was designed to awaken Tharizdun.\n\nTHE IMPRISONMENT: Champions of Faerûn defeated Shorthagot and his allies. These allies called themselves the Order of the Yellow Rose. They used the very machine he had devised to imprison him. The Great Machine's harmonic lattice was reversed, collapsing Shorthagot's essence into a pocket dimension outside of space and time. Bound by mechanical and arcane forces, he was sealed into a displacement prison beyond space and time within the Machine itself.\n\nTHE SEAL: Seven arcanists survived the imprisonment. They concluded that destroying the Machine was impossible — its core was interwoven with the Aether well beneath the mountain. Removing it would destabilize the displacement prison containing Shorthagot. They collapsed the upper citadel, fused the mountain's strata with spellglass and obsidian, and inscribed a Seal keyed to harmonic comprehension. The entrance to Thul Avenar can be accessed using 4 powerful Artifacts.. The Machine was renamed the Infernal Machine after contact with Shorthagot and his imprisonment.\n\nTHE KEYS: Four artifacts — the Keys:\n  1. The Heart of the Machine - a sphere 4\" by 4\" that contains a small amount of the essence of Shorthagot and is needed to communicate with Shorthagot.\n  2. The Lode Stone — Used to manage access to realms or realities. Created by Netheril Empire.\n  3. The Veilpiercer — pierces the veils between realities..\n  4. The Kara'thrix Coil — stabilizes the energy of the other keys and is a powerful/modified Ioun Stone/Mythaller.\n\nTHE ORDER OF THE YELLOW ROSE: Founded just before the Fall of the Netheril Empire to stop Shorthagot from completing his work and freeing Tharizdun. They were successful, but at great cost as Shorthagot is a powerful foe. The Order swore an oath to keep the keys safe and the Infernal Machine as they call it, sealed forever.\n\nCURRENT STATE: Shorthagot remains displaced in a non-localized interval beyond space and time. His prison is sustained indirectly by the altered architecture of the Infernal Machine. His influence slowly seeps through the weakening barriers. Lyzara'Nualith, his servant, is actively pursuing the Keys to restore the Machine's original configuration and reverse the displacement.\n\nAs recorded by the arcanist Kelith Omvaran: \"The entity is not destroyed. It is imprisoned in The Infernal Machine beneath Túr-Pharael. If rediscovered by those driven by ambition rather than discipline, the consequences will impact everything and all things.",
     "sort_order": 38,
     "is_hidden": true
   },
   {
     "npcid": 39,
-    "associations": [],
-    "name": "Father Alric",
+    "associations": [
+      {
+        "id": 33,
+        "name": "Mistress Clarissa Allyson",
+        "relationship": "Alric's oldest student and close friend. Clarissa's torn missive addressed him as \"my old friend\" and entrusted him as the final guardian of the Key after Valls fell.",
+        "type": "npc"
+      },
+      {
+        "id": 30,
+        "name": "Kaelin Stormraven",
+        "relationship": "Alric's killer. Kaelin disguised herself as a lost child and, once inside the Old Church, slit his throat without warning during Session 04.",
+        "type": "npc"
+      },
+      {
+        "id": 50,
+        "name": "Ser Brennor Cale",
+        "relationship": "Brennor sheltered at the Old Church alongside Alric with survivors from Valls. After Alric's death, Brennor took command of the remaining survivors.",
+        "type": "npc"
+      },
+      {
+        "id": 37,
+        "name": "Lady Elysra Nivariel Williams",
+        "relationship": "Alric was deeply suspicious of Lady Williams and shared critical intelligence about her with the party before his death — her knowledge of the Citadel's sealed chambers, her influence over Lord Williams, and the power he sensed behind her.",
+        "type": "npc"
+      }
+    ],
+    "name": "Father Alric Vendril",
     "race": "Human",
     "npc_class": "Cleric",
-    "location": "Traveling with party",
-    "status": "Alive",
+    "location": "Old Church, West Road (deceased)",
+    "status": "Dead",
     "alignment_tag": "ally",
     "portrait_url": "/images/Father_Alric.png",
-    "description": "Father Alric is a priest who has accompanied the party during their journey. A man of deep faith, he provides spiritual guidance and healing magic to those in need.",
-    "dm_notes": "Father Alric's dedication to combating the undead and fiendish forces of Barovia makes him a steadfast ally in the fight against Strahd and the greater darkness threatening the region. His healing abilities have proven invaluable during the party's travels.",
+    "description": "Father Alric Vendril was the First Sage of the Yellow Rose — a senior member of the Order and one of Mistress Clarissa Allyson's oldest friends and confidants. Gaunt and silver-haired, he looked more spirit than man, his face deeply lined with age and sorrow. He wore a simple, threadbare robe marked with the faded emblem of a sunburst and carried a battered iron rosary, the beads worn smooth by decades of prayer. Despite his frail frame, there was a quiet strength about him — a light that had not yet surrendered to the dark. His healing magic had faded over the years, limited to cantrips and lesser prayers, but his faith and wisdom remained steadfast. He was killed by Kaelin Stormraven during Session 04 at the Old Church near the West Road.",
+    "dm_notes": "ROLE IN THE ORDER: Father Alric was the First Sage of the Yellow Rose, a senior member of the Order who served beneath Mistress Clarissa Allyson. Clarissa knew him from when she was barely more than a scribe, and he watched her rise to rebuild the Order. Their bond was deep — her torn missive addressed him as \"my old friend\" and named him the final guardian of the Key.\n\nTHE FALL OF VALLS: During the Fall, Alric stayed in the lower quarters of the city tending to the sick and dying. He saw the mists rising first, curling through alleyways before the dead marched. He heard the bells of the Citadel toll once — and then never again. He fled with survivors and knights to the Old Church near the West Road, where he sheltered them alongside Ser Brennor Cale and a handful of battered knights.\n\nINTELLIGENCE SHARED: Before his death, Alric provided the party with critical information:\n  • On Lady Williams: \"She knew too much of the Citadel's old construction. She walked halls that had been closed for generations. She asked clever questions about wards, the Yellow Rose, and the sealed chambers Clarissa had begun to unearth. Clarissa never trusted her.\"\n  • On Clarissa: \"A keen mind — sharper than any sword. She is a fortress of will. If she yet lives, she will not have fallen idly.\"\n  • On the sealed chambers: \"Some doors must remain sealed... some evils must never be woken.\"\n  • He dreamed of the mist and heard voices in his sleep — a voice calling fragments of Tharizdun's name, which he recognized from ancient forbidden texts once locked in the temple library.\n\nDEATH (Session 04): Kaelin Stormraven, disguised as a lost child the party had rescued from Hell Hounds, struck without warning. Her form twisted into a young woman, and in one smooth motion she slit Father Alric's throat, then vanished in a shimmer of arcane mist to attack Sage. The party fought and killed Kaelin, but Alric was already dead.\n\nBURIAL (Session 05): Ser Brennor Cale arrived with three weathered knights. At Krutha's firm urging, Alric's body was given to flame to ensure no dark power could claim him. A prayer to Lathander, god of renewal and light, was offered. Brennor spoke: \"He was a light in the dark, a comfort to the broken. Let his soul find peace where the shadows can no longer touch him.\"\n\nLEGACY: Among the dead refugees on the West Road, the party found a bloodied, partially burned letter bearing the seal of the Yellow Rose — Clarissa's torn missive addressed to Alric. It revealed that Valls had fallen, that the Key had been sent east with Brother Caelis and the Dawn Guard, and that Alric was entrusted as its final guardian. He never received it. Brother Fridriec Embershade of the Verdant Heart druid enclave mourns Alric as a distant cousin.",
     "sort_order": 39,
     "is_hidden": true
   },
@@ -1264,64 +1529,20 @@
       {
         "id": 6,
         "name": "Ezmerelda d'Avenir",
-        "relationship": "Velinka is connected to the d'Avenir family of monster hunters.",
+        "relationship": "Velinka's niece — daughter of Velinka's sister Sorina. Velinka believes all her family died when the Stormraven Sisters destroyed the Tser Pass Vistani at the Druid Clearing in Damara. She is unaware that Ezmerelda survived.",
         "type": "npc"
       }
     ],
     "name": "Velinka d'Avenir",
-    "race": "Human (Vistani heritage)",
-    "npc_class": "Rogue / Scout",
-    "location": "Barovia",
+    "race": "Human (Vistani)",
+    "npc_class": "Druid",
+    "location": "Druid Circle in Damara",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/Velinka d'Avenir.png",
-    "description": "Velinka d'Avenir is a Vistani woman who serves as a guide and source of information about the Vistani people. Resourceful and street-smart, she walks a careful line between the Vistani traditions and her own moral compass.",
-    "dm_notes": "Velinka is connected to the d'Avenir family of monster hunters. Her Vistani heritage and knowledge of the complex relationship between the Vistani and Strahd make her a valuable source of information for those navigating Barovia.",
+    "description": "Velinka d'Avenir is a Vistani woman originally of the Tser Pass Vistani and the d'Avenir family. She is the sister of Sorina d'Avenir and aunt of Ezmerelda. When the Stormraven Sisters attacked and wiped out the Tser Pass Vistani at the Druid Clearing in Damara — punishment for betraying Strahd — Velinka was pulled from the wreckage by druids of the Verdant Heart and nursed back to life. She believes all her family perished in the attack and is unaware that her niece Ezmerelda also survived. While recovering among the druids, Velinka experienced prophetic visions of Barovia burning beneath an unblinking red eye. She guided the party through the Devil's Mists to the Gates of Barovia during Session 09, opening the gates with Vistani blood but refusing to enter herself.",
+    "dm_notes": "BACKGROUND: Velinka was originally part of the Tser Pass Vistani, a caravan led by the d'Avenir family. Her sister Sorina was the heart of the caravan — strong, willful, and devoted to the old Vistani ways. The Stormraven Sisters destroyed the caravan at the Druid Clearing in Damara as retribution for betraying Strahd. Only Velinka and her niece Ezmerelda survived, though neither knows the other is alive.\n\nRESCUE AND VISIONS: After the attack, Velinka was pulled from the wreckage by druids of the Verdant Heart and taken to a forest \"that does not belong on any map.\" While recovering, she saw visions — \"dreams woven into bark and bone\" — of Barovia burning beneath an unblinking red eye. These prophetic dreams drove her to guide travelers toward Barovia when the time came.\n\nSESSION 09 — GUIDE TO BAROVIA: Velinka guided the party through the Devil's Mists to the Gates of Barovia. She warned them to be careful around Vistani, as many serve Strahd: \"Not all of us serve Strahd. Some of us remember what we were before he shackled our blood to his will. Our music once called down stars, not shadows.\" She opened the massive stone gates with Vistani blood but refused to enter herself, warning the party to follow the road and reach the Village of Barovia before sunset.\n\nCURRENT STATUS: Velinka remains at the Druid Circle in Damara with the Verdant Heart druids. She believes her entire family — including Sorina and little Ezzie — died at the Druid Clearing. She does not know Ezmerelda survived and is now active in Barovia as a monster hunter.",
     "sort_order": 40,
-    "is_hidden": true
-  },
-  {
-    "npcid": 41,
-    "associations": [
-      {
-        "id": 35,
-        "name": "Lord Geoffrey Frostmantle",
-        "relationship": "Bragus serves as a guard captain and military advisor in service to the Frostmantle dynasty.",
-        "type": "npc"
-      }
-    ],
-    "name": "Bragus Orentide",
-    "race": "Human",
-    "npc_class": "Fighter / Guard Captain",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/BragusOrentide.jpg",
-    "description": "Bragus Orentide is a seasoned warrior and guard captain in the service of the Frostmantle dynasty. He is known for his unwavering loyalty and tactical acumen.",
-    "dm_notes": "A veteran of numerous conflicts, Bragus serves as a protector and military advisor, often found at the front lines whenever Damara faces threats from the encroaching darkness of the Shadowfell.",
-    "sort_order": 41,
-    "is_hidden": true
-  },
-  {
-    "npcid": 42,
-    "associations": [
-      {
-        "id": 38,
-        "name": "Shorthagot, Harbinger of Ruin",
-        "relationship": "Edic's research into the Netheril Empire's Great Machine and the Keys of Shorthagot is central to understanding the cosmic threat.",
-        "type": "npc"
-      }
-    ],
-    "name": "Edic Tholomen",
-    "race": "Human",
-    "npc_class": "Wizard / Sage",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/EdicTholomen.jpg",
-    "description": "Edic Tholomen is a scholar and wizard who studies the ancient Netherese ruins and the magical forces that permeate the region around Damara. Edic is soft-spoken but brilliant, often lost in thought about arcane theories.",
-    "dm_notes": "His research into the Netheril Empire's Great Machine and the Keys of Shorthagot has provided crucial intelligence about the nature of the cosmic threat facing the world.",
-    "sort_order": 42,
     "is_hidden": true
   },
   {
@@ -1338,12 +1559,18 @@
         "name": "Selene Brightwater",
         "relationship": "Fellow Sea Spray crew member. Part of the tight-knit family Garrick found aboard the ship.",
         "type": "npc"
+      },
+      {
+        "id": 92,
+        "name": "Captain Reaven \"Emerald Eyes\"",
+        "relationship": "Captain of the Sea Spray. Garrick was drawn in by the unlikely camaraderie aboard her ship and stayed aboard permanently.",
+        "type": "npc"
       }
     ],
     "name": "Garrick Ironbrow",
     "race": "Dwarf",
     "npc_class": "Fighter",
-    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
+    "location": "Damara",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/GarrickIronbrow.jpg",
@@ -1366,92 +1593,24 @@
         "name": "Garrick Ironbrow",
         "relationship": "Fellow Sea Spray crew member and shipwright. Part of the family Gorak found aboard the Sea Spray.",
         "type": "npc"
+      },
+      {
+        "id": 92,
+        "name": "Captain Reaven \"Emerald Eyes\"",
+        "relationship": "Captain of the Sea Spray. Reaven was the only captain who gave Gorak a chance, earning his absolute devotion. She judged him by his strength and character, not his race.",
+        "type": "npc"
       }
     ],
     "name": "Gorak Broken Tusk",
     "race": "Orc",
-    "npc_class": "Fighter (Sailor)",
-    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
+    "npc_class": "Barbarian (Path of the Juggernaut)",
+    "location": "Damara",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/GorakBrokenTusk.jpg",
     "description": "Gorak Broken Tusk is the First Mate of the Sea Spray and a towering mountain of muscle wrapped in a Blue Seaman's coat that would never button. A full-blooded orc with piercing yellow eyes and countless battle scars, Gorak wields a ship's anchor as his weapon of choice. He is disciplined despite his fearsome appearance, commanding respect through strength and unwavering loyalty. Captain Reaven was the only captain who would give him a chance and let him serve aboard her ship — a debt of trust that Gorak repays with absolute devotion. The crew of the Sea Spray became the family he never had.",
     "dm_notes": "The Sea Spray set out from Frosthaven in Vasa, carrying the party as hired protection — King Frostmantle's wars with Narfell had made the Pelavir River route dangerous. Gorak survived the Night Screamer attack during Session 02 but took a huge bloody gash in the fight, swinging his anchor with deadly force against the creatures. After the Sea Spray was wrecked on the shore of the Pelavir River just past Bloodstone Pass, Gorak stayed behind with Captain Reaven to tend to the wounded Prince Ian Frostmantle and salvage what they could from the wreck. The party left to find Mistress Clarissa Allyson, while Gorak and the crew escorted the Prince and his uncle to White Bridge and safety from the growing reach of the Mist.\n\nGorak's loyalty to Emerald Eyes is absolute — she gave him something no one else would: a chance. As an orc, he was turned away from every crew and company he approached. Reaven judged him by his strength and character, not his race, and that earned her his undying loyalty. Over time, the crew — Reaven, Selene, Garrick — became the only family he has ever known.",
     "sort_order": 44,
-    "is_hidden": true
-  },
-  {
-    "npcid": 45,
-    "associations": [],
-    "name": "Haldor Stonehand",
-    "race": "Dwarf",
-    "npc_class": "Cleric / Artificer",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/HaldorStonehand.jpg",
-    "description": "Haldor Stonehand is a dwarven cleric and craftsman who combines divine magic with exceptional skill in stonework and metalcraft. His stone hand, the result of a petrification curse he only partially reversed, has become his namesake.",
-    "dm_notes": "He serves as a spiritual leader among the dwarven communities of Damara and has dedicated his life to creating holy artifacts capable of combating the undead plague spreading from Barovia.",
-    "sort_order": 45,
-    "is_hidden": true
-  },
-  {
-    "npcid": 46,
-    "associations": [],
-    "name": "Mira Fleetfoot",
-    "race": "Halfling",
-    "npc_class": "Rogue / Scout",
-    "location": "Damara / Barovia border",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/MiraFleetfoot.jpg",
-    "description": "Mira Fleetfoot is a halfling scout who specializes in navigating the dangerous borderlands between Damara and Barovia. Quick-witted and light on her feet, Mira has an uncanny ability to slip past danger unseen.",
-    "dm_notes": "She serves as a courier and intelligence gatherer for the forces opposing Strahd, carrying messages between allied groups scattered throughout the region.",
-    "sort_order": 46,
-    "is_hidden": true
-  },
-  {
-    "npcid": 47,
-    "associations": [
-      {
-        "id": 38,
-        "name": "Shorthagot, Harbinger of Ruin",
-        "relationship": "Olaera's expertise in planar magic is invaluable in understanding the weakening boundaries that allow Shorthagot's influence to spread.",
-        "type": "npc"
-      }
-    ],
-    "name": "Olaera Moonsilver",
-    "race": "Elf",
-    "npc_class": "Wizard / Enchantress",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/OlaeraMoonSilver.jpg",
-    "description": "Olaera Moonsilver is an elven enchantress who has studied the mystical barriers between the Material Plane and the Shadowfell for centuries. Olaera is graceful, ancient, and carries the weight of seeing civilizations rise and fall.",
-    "dm_notes": "Her expertise in planar magic makes her invaluable in understanding the Mists of Ravenloft and the weakening boundaries that allow Shorthagot's influence to spread.",
-    "sort_order": 47,
-    "is_hidden": true
-  },
-  {
-    "npcid": 48,
-    "associations": [
-      {
-        "id": 35,
-        "name": "Lord Geoffrey Frostmantle",
-        "relationship": "Rurik serves as a soldier in the Frostmantle dynasty's forces.",
-        "type": "npc"
-      }
-    ],
-    "name": "Rurik",
-    "race": "Human",
-    "npc_class": "Fighter / Soldier",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/Rurik.jpg",
-    "description": "Rurik is a stalwart soldier in service to the Frostmantle dynasty. A man of few words but decisive action, he is respected by his fellow soldiers for his bravery and reliability.",
-    "dm_notes": "Rurik has proven himself in numerous engagements against the dark forces threatening Damara. He is always the first to volunteer for dangerous missions.",
-    "sort_order": 48,
     "is_hidden": true
   },
   {
@@ -1468,12 +1627,18 @@
         "name": "Garrick Ironbrow",
         "relationship": "Garrick watches over Selene with gruff, paternal concern. He carved her first wand handle and pretends not to worry when her wild magic surges.",
         "type": "npc"
+      },
+      {
+        "id": 92,
+        "name": "Captain Reaven \"Emerald Eyes\"",
+        "relationship": "Captain of the Sea Spray. Reaven found Selene as a stowaway and took her in. Selene sees her as family and is deeply loyal to her.",
+        "type": "npc"
       }
     ],
     "name": "Selene Brightwater",
     "race": "Half-Elf",
     "npc_class": "Sorcerer (Wild Magic)",
-    "location": "Pelavir River, past Bloodstone Pass (Sea Spray wreckage)",
+    "location": "Damara",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/SeleneBrightwater.jpg",
@@ -1483,48 +1648,83 @@
     "is_hidden": true
   },
   {
+    "npcid": 92,
+    "associations": [
+      {
+        "id": 44,
+        "name": "Gorak Broken Tusk",
+        "relationship": "Reaven’s First Mate and most devoted crew member. She was the only captain who would give an orc a chance, judging him by his strength and character rather than his race. Gorak repays that trust with absolute loyalty.",
+        "type": "npc"
+      },
+      {
+        "id": 43,
+        "name": "Garrick Ironbrow",
+        "relationship": "The Sea Spray’s shipwright. Garrick joined not long after Gorak, initially hired as a guard for a single voyage. The unlikely camaraderie aboard the Sea Spray became the closest thing to family he’d had in years.",
+        "type": "npc"
+      },
+      {
+        "id": 49,
+        "name": "Selene Brightwater",
+        "relationship": "Reaven’s young ward. Selene stowed away aboard the Sea Spray to escape a cruel family. Reaven was furious when she found the girl, but the more she listened to Selene’s story, the softer she became. The crew adopted Selene as their own.",
+        "type": "npc"
+      },
+      {
+        "id": 36,
+        "name": "Prince Ian Frostmantle",
+        "relationship": "Reaven and her crew escorted the gravely wounded Prince to White Bridge after the Night Screamer attack wrecked the Sea Spray.",
+        "type": "npc"
+      },
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "Geoffrey returned to White Bridge with Reaven’s crew after entrusting the party with his sealed letter for Mistress Clarissa.",
+        "type": "npc"
+      }
+    ],
+    "name": "Captain Reaven \"Emerald Eyes\"",
+    "race": "Tabaxi",
+    "npc_class": "Rogue (Swashbuckler)",
+    "location": "Damara",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Captain Reaven is a Tabaxi swashbuckler and the captain of the Sea Spray. Silver-furred and sleek despite the wear of travel, her emerald-green eyes scan every room with the sharpness of a blade. Her movements are smooth, precise, and controlled — a predator entering a den full of prey. Known throughout the northern rivers as \"Emerald Eyes,\" Reaven is confident, daring, and known for taking on dangerous voyages that other captains refuse. She fights with dual blades, darting between enemies with deadly precision. She commands absolute loyalty from her crew — not through fear, but through trust and the family she has built aboard her ship.",
+    "dm_notes": "BACKGROUND: Captain Reaven has a mysterious past with the Damaran rebels. She is known for dangerous voyages along the northern rivers and has built a reputation as one of the few captains willing to sail contested waters.\n\nSESSION 01 — THE FROZEN ANCHOR: Reaven recruited the party at the Frozen Anchor tavern in Frosthaven. She entered with her crew — Gorak, Garrick, and Selene — and offered work: \"The Sea Spray is sailing south along the river, and I need a crew that can handle any trouble ahead.\" She hired the party as protection for the voyage down the Pelavir River, which had become dangerous due to King Frostmantle’s wars with Narfell.\n\nSESSION 02 — NIGHT SCREAMER ATTACK: During the voyage, the Sea Spray was attacked by Night Screamers. Reaven fought with deadly precision, her blades flashing as she darted between the creatures. The ship was wrecked on the shore of the Pelavir River just past Bloodstone Pass. After the battle, Reaven distributed healing potions to the party: \"Consider it a gift... or perhaps an investment. If you lot are heading into that cursed city, you’re going to need every bit of help you can get.\"\n\nAFTER THE WRECK: While the party left to find Mistress Clarissa Allyson in Valls, Reaven stayed behind with her crew to tend to the wounded Prince Ian Frostmantle. She and the crew escorted the Prince and Lord Geoffrey Frostmantle to White Bridge and safety from the growing reach of the Mist.\n\nLEADERSHIP STYLE: Reaven commands through trust rather than authority. She gave Gorak a chance when no one else would, took in Selene as a stowaway and adopted her into the crew, and earned Garrick’s lifelong loyalty through genuine camaraderie. She smirks rather than getting angry, and her voice is \"smooth but firm, cutting through silence like a well-honed dagger.\" She also reminded the party to be cautious about unsanctioned magic use under Damaran law.",
+    "sort_order": 92,
+    "is_hidden": true
+  },
+  {
     "npcid": 50,
-    "associations": [],
+    "associations": [
+      {
+        "id": 35,
+        "name": "Lord Geoffrey Frostmantle",
+        "relationship": "Brennor served in Lord Geoffrey's retinue during the journey to Valls.",
+        "type": "npc"
+      },
+      {
+        "id": 36,
+        "name": "Prince Ian Frostmantle",
+        "relationship": "Brennor is sworn to the Prince's service. He led survivors to White Bridge hoping to reunite with the Prince.",
+        "type": "npc"
+      },
+      {
+        "id": 39,
+        "name": "Father Alric",
+        "relationship": "Father Alric was killed by Kaelin Stormraven. After his death, Brennor took command of the survivors.",
+        "type": "npc"
+      }
+    ],
     "name": "Ser Brennor Cale",
     "race": "Human",
-    "npc_class": "Paladin / Knight",
-    "location": "Damara",
+    "npc_class": "Knight",
+    "location": "White Bridge",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/SerBrennorCale.png",
-    "description": "Ser Brennor Cale is a paladin and knight sworn to protect Damara. A man of unwavering faith and courage, he wears gleaming plate armor bearing the crest of his order and wields a blessed longsword.",
-    "dm_notes": "Brennor has dedicated his life to the eradication of evil and the defense of Damara from the supernatural threats emerging from the Shadowfell. He is among the foremost champions standing against the advance of darkness.",
+    "description": "Ser Brennor Cale is a paladin and knight sworn to the Frostmantle dynasty. He was among Prince Ian Frostmantle's retinue during the journey to Valls and one of the few knights to survive the undead ambush. He made it to the abandoned church where he and other survivors sheltered. After Father Alric was killed by Kaelin Stormraven, Brennor took command of the remaining survivors from Valls and led them to White Bridge in hopes of reuniting with the Prince and Lord Geoffrey Frostmantle.",
+    "dm_notes": "Ser Brennor was part of Lord Geoffrey Frostmantle's party of 60 men (20 knights and 40 men-at-arms) that crossed the river north of Valls. After the undead ambush led by a dark rider decimated the group, Brennor was one of the few knights who reached the abandoned church where the party later found them during Sessions 03-04. When Father Alric was killed by Kaelin Stormraven, Brennor assumed responsibility for the surviving civilians and soldiers from Valls and led them to White Bridge to seek safety and await word from the Prince and his uncle.",
     "sort_order": 50,
-    "is_hidden": true
-  },
-  {
-    "npcid": 51,
-    "associations": [],
-    "name": "Thalin Emberbrew",
-    "race": "Dwarf",
-    "npc_class": "Ranger / Brewer",
-    "location": "Damara",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "/images/ThalinEmberbrew.jpg",
-    "description": "Thalin Emberbrew is a dwarven ranger and master brewer who knows the mountains and forests of Damara like no other. His 'Emberbrew' — a dwarf-strength spirit — is legendary.",
-    "dm_notes": "Thalin serves as a guide through the treacherous wilderness. His fiery concoctions are as potent in combat as they are at the tavern table. Rumor has it, his Emberbrew can burn through a troll's regeneration.",
-    "sort_order": 51,
-    "is_hidden": true
-  },
-  {
-    "npcid": 52,
-    "associations": [],
-    "name": "Vera Thorn",
-    "race": "Human",
-    "npc_class": "Warlock / Herbalist",
-    "location": "Damara borderlands",
-    "status": "Alive",
-    "alignment_tag": "neutral",
-    "portrait_url": "/images/VeraThorn.jpg",
-    "description": "Vera Thorn is a mysterious herbalist and hedge witch who lives on the borderlands between Damara and the Mists. She possesses knowledge of rare plants and potions. Her thorny temperament matches her namesake.",
-    "dm_notes": "Some of Vera's potions can protect against the effects of Barovia's curse. Her patron and true allegiances are unclear — she helps those who seek her out but always at a price.",
-    "sort_order": 52,
     "is_hidden": true
   },
   {
@@ -1533,25 +1733,25 @@
       {
         "id": 54,
         "name": "Milivoj",
-        "relationship": "Henrik manipulated Milivoj into stealing the bones of Saint Andral from the church.",
+        "relationship": "Henrik will manipulate the desperate gravedigger Milivoj into stealing the Bones of Saint Andral from the church, removing the holy protection that keeps Strahd and his forces out.",
         "type": "npc"
       },
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "Henrik was coerced by Strahd's agents into hiding vampire spawn in his shop.",
+        "relationship": "Henrik has been coerced by Strahd’s agents into servitude. He lives in constant terror, forced to hide vampire spawn and Blood Hunters in the attic of his shop as Strahd prepares to breach Vallaki’s walls.",
         "type": "npc"
       }
     ],
     "name": "Henrik Van der Voort",
     "race": "Human",
     "npc_class": "Artisan / Coffin Maker",
-    "location": "Vallaki",
+    "location": "Vallaki (Coffin Maker’s Shop)",
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/henrik-van-der-voort.png",
-    "description": "Henrik Van der Voort is the coffin maker of Vallaki, a nervous, frightened man who lives and works alone in his shop. He is perpetually anxious, avoids eye contact, and clearly hides some terrible secret. Henrik is terrified of something but too afraid to seek help.",
-    "dm_notes": "Henrik has been coerced by Strahd's agents into hiding vampire spawn in the upstairs of his shop. He lives in constant terror, knowing that the creatures above could descend and kill him at any moment, but is too afraid of Strahd's retribution to seek help. He manipulated the gravedigger Milivoj into stealing the bones of Saint Andral from the church, removing the holy protection that kept vampires out. His shop has become an unwitting den of undeath in the heart of Vallaki.",
+    "description": "Henrik Van der Voort is the coffin maker of Vallaki — a nervous, thin, perpetually exhausted man who lives and works alone in his shop among the narrow streets of town. He avoids eye contact, jumps at sudden noises, and clearly hides some terrible secret. Henrik is not evil — just terrified and cornered. He has been coerced by Strahd’s agents into hiding creatures in the storage loft above his workshop, and he hasn’t slept in days.",
+    "dm_notes": "CURRENT STATE: Henrik has been coerced by Strahd’s agents into hiding vampire spawn and Blood Hunters (werewolves) in the storage loft above his workshop. The loft feels heavy, watchful, and unnaturally still. Henrik lives in constant terror, knowing the creatures above could descend and kill him at any moment, but is too afraid of Strahd’s retribution to seek help or flee. He acted under threat, not loyalty.\n\nUPCOMING — BONES OF SAINT ANDRAL: Strahd’s agents will manipulate Henrik into convincing the gravedigger Milivoj to steal the sacred Bones of Saint Andral from the Church of St. Andral. The bones are the spiritual lynchpin of Vallaki’s resistance — while they remain in the church, the building is consecrated ground that Strahd and his spawn cannot enter. Their removal will break the church’s protection and leave Vallaki vulnerable.\n\nUPCOMING — VALLAKI FALLS: The theft of the bones and the hidden forces in Henrik’s attic are both part of Strahd’s plan to breach the walls of Vallaki. The spawn and Blood Hunters concealed in shipping crates in the loft will deploy when the time comes, striking from inside the town while Strahd’s external forces attack. Henrik’s shop is a critical staging point for the fall of the town.\n\nROLEPLAY: Henrik hasn’t slept in days. Neighbors whisper about strange noises from his shop. If confronted, he may break down and confess — or the creatures in the loft may attack first. He is a broken man, not a villain.",
     "sort_order": 53,
     "is_hidden": true
   },
@@ -1561,7 +1761,7 @@
       {
         "id": 53,
         "name": "Henrik Van der Voort",
-        "relationship": "Milivoj was manipulated by Henrik into stealing the sacred bones of Saint Andral.",
+        "relationship": "Milivoj will be manipulated by Henrik into stealing the sacred Bones of Saint Andral from the church, removing the holy protection that keeps Strahd out.",
         "type": "npc"
       }
     ],
@@ -1573,30 +1773,8 @@
     "alignment_tag": "neutral",
     "portrait_url": "/images/milivoj.png",
     "description": "Milivoj is a young gravedigger at the Church of St. Andral in Vallaki. He is scrawny, overworked, and perpetually dirty from digging graves. Milivoj struggles to feed his younger siblings and is desperate enough to take on any work that pays.",
-    "dm_notes": "Desperate to feed his siblings, Milivoj was manipulated by Henrik Van der Voort into stealing the sacred bones of Saint Andral from the church — the relic that protected the building from vampire entry. He is guilt-ridden but terrified of the consequences of his actions. The theft of the bones is a key plot point in the Feast of St. Andral event.",
+    "dm_notes": "CURRENT STATE: Milivoj has not yet stolen the bones. He is a desperate young man trying to feed his siblings, working as a gravedigger’s apprentice at the Church of St. Andral under Father Lucian Petrovich.\n\nUPCOMING — BONES OF SAINT ANDRAL: Henrik Van der Voort, acting under orders from Strahd’s agents, will manipulate Milivoj into stealing the sacred Bones of Saint Andral from the church. Milivoj’s desperation to feed his family will make him vulnerable to Henrik’s offer of coin. The theft will remove the holy protection that prevents Strahd and his forces from entering consecrated ground — a critical step in Strahd’s plan to bring about the fall of Vallaki.\n\nAFTERMATH: Once the theft is done, Milivoj will be guilt-ridden but terrified of the consequences. He is a pawn, not a conspirator — he has no idea what the bones truly protect or what Strahd plans to do once they are removed.",
     "sort_order": 54,
-    "is_hidden": true
-  },
-  {
-    "npcid": 55,
-    "associations": [
-      {
-        "id": 38,
-        "name": "Shorthagot, Harbinger of Ruin",
-        "relationship": "Shorthagot serves as Tharizdun's avatar and harbinger, working to free the Chained God from imprisonment.",
-        "type": "npc"
-      }
-    ],
-    "name": "Tharizdun, The Chained God",
-    "race": "Deity / Elder Evil",
-    "npc_class": "God of Eternal Darkness",
-    "location": "Imprisoned beyond the planes",
-    "status": "Imprisoned",
-    "alignment_tag": "enemy",
-    "portrait_url": "/images/Tharizdun.jpg",
-    "description": "Tharizdun is the Chained God, an ancient deity of madness, entropy, and eternal darkness who was imprisoned by the combined efforts of all other gods at the dawn of time. His very existence threatens the fabric of reality. Even imprisoned, his influence corrupts and drives mortals to madness.",
-    "dm_notes": "Shorthagot serves as Tharizdun's avatar and harbinger, working to free the Chained God from his cosmic imprisonment. The four Keys of Shorthagot scattered across Damara are connected to the bindings that keep this terrible entity sealed away. The campaign's ultimate stakes involve preventing Tharizdun's release through the Shadowfell gateways.",
-    "sort_order": 55,
     "is_hidden": true
   },
   {
@@ -1624,6 +1802,12 @@
         "id": 14,
         "name": "Father Donavich",
         "relationship": "The village priest who presided over Kolyan's funeral at the church in the Village of Barovia.",
+        "type": "npc"
+      },
+      {
+        "id": 24,
+        "name": "Baron Dmitri Krezkov",
+        "relationship": "Dmitri was a close friend and fellow burgomaster. Kolyan's death was a blow to Dmitri, who saw him as one of the few leaders in Barovia who genuinely cared about his people.",
         "type": "npc"
       }
     ],
@@ -1812,7 +1996,7 @@
       },
       {
         "id": 27,
-        "name": "Arrigal",
+        "name": "Arrigal Vanduva",
         "relationship": "Klara passes her intelligence through Vistani loyalist channels that ultimately reach Arrigal and Strahd's spy network.",
         "type": "npc"
       }
@@ -1827,34 +2011,6 @@
     "description": "Klara Vorovich is Luna E'Tressa's distant cousin and the bookkeeper at the Blood of the Vine Inn. A thin, severe woman in her late 60s with long gray hair always tied back in a tight bun, Klara serves drinks with a forced smile and keeps the inn's ledgers in meticulous order. She is quiet, efficient, and always seems to be listening.",
     "dm_notes": "Klara is a spy for Strahd — she carefully observes every traveler who passes through the inn and passes her intelligence to Vistani loyalists who report to Strahd's network. She never fully abandoned her loyalty to the Vistani's traditional service to Strahd. While the rest of the E'Tressa family broke with the caravan, Klara followed them to the village as an embedded informant.\n\nKlara is the reason Strahd always seems to know when strangers arrive in the Village of Barovia. She is calculating, patient, and careful — she has maintained her cover for years without arousing suspicion from her own family. If exposed, she will attempt to flee to the Vistani camps rather than fight.\n\nThis is a potential plot twist for the party — discovering that even the 'safe haven' of the Blood of the Vine has Strahd's eyes and ears inside it.",
     "sort_order": 63,
-    "is_hidden": true
-  },
-  {
-    "npcid": 64,
-    "associations": [
-      {
-        "id": 59,
-        "name": "Sarkov E'Tressa",
-        "relationship": "Luvash works at the Blood of the Vine Inn alongside the E'Tressa family.",
-        "type": "npc"
-      },
-      {
-        "id": 16,
-        "name": "Morgantha",
-        "relationship": "Morgantha and her coven kidnapped Luvash's young daughter from the Village of Barovia. This loss drove Luvash to seek help from the adventurers.",
-        "type": "npc"
-      }
-    ],
-    "name": "Luvash",
-    "race": "Human (Vistani)",
-    "npc_class": "Commoner / Laborer",
-    "location": "Tser Hill Vistani Camp",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "",
-    "description": "Luvash is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvash came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvash was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
-    "dm_notes": "Luvash will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvash's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
-    "sort_order": 64,
     "is_hidden": true
   },
   {
@@ -2128,8 +2284,8 @@
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "",
-    "description": "Nikolai Wachter Jr. is Lady Fiona Wachter's eldest son and the heir to Wachterhaus. He is fond of wine and trouble but carries his family name with pride. He commands the militia in the Order of the Silver Dragon contingent.",
-    "dm_notes": "Nikolai Jr. is fond of wine and trouble, often found at the Blue Water Inn or about town with his brother Karl. Despite his carousing, he is a capable fighter and commands the Wachter militia contingent in the Order of the Silver Dragon.\n\nAt the Festival of Light, Nikolai protected Elvir Martikov — Urwin's youngest daughter — during Strahd's attack. The two have feelings for each other. This connection between the Wachter and Martikov families could prove significant.\n\nNikolai is aware his mother has her Narfell practices but pays them little mind. He is unaware she keeps his father's preserved corpse in her bedroom.",
+    "description": "Nikolai Wachter Jr. is Lady Fiona Wachter's eldest son and the heir to Wachterhaus. He is fond of wine and trouble but carries his family name with pride.",
+    "dm_notes": "Nikolai Jr. is fond of wine and trouble, often found at the Blue Water Inn or about town with his brother Karl. Despite his carousing, he is a capable fighter and is a capable fighter.\n\nAt the Festival of Light, Nikolai protected Elvir Martikov — Urwin's youngest daughter — during Strahd's attack. The two have feelings for each other. This connection between the Wachter and Martikov families could prove significant.\n\nNikolai is aware his mother has her Narfell practices but pays them little mind. He is unaware she keeps his father's preserved corpse in her bedroom.",
     "sort_order": 73,
     "is_hidden": true
   },
@@ -2165,40 +2321,6 @@
     "description": "Karl Wachter is Lady Fiona Wachter's second-born son. A bookworm like his father Nikolai, Karl is quieter and more studious than his older brother. He carries a heavy burden of guilt over his sister Stella's death at the Festival of Light.",
     "dm_notes": "Karl takes after his late father Nikolai Wachter in his love of books and scholarship. He spends time in the Wachterhaus library his father built, continuing the family tradition of historical study.\n\nAt the Festival of Light, Karl tried to protect his younger sister Stella from the attacking minions of Lady Williams but was unable to save her. He feels responsible for her death and the guilt weighs heavily on him.",
     "sort_order": 74,
-    "is_hidden": true
-  },
-  {
-    "npcid": 75,
-    "associations": [
-      {
-        "id": 11,
-        "name": "Lady Fiona Wachter",
-        "relationship": "Stella's mother. Stella was following in Fiona's Narfell footsteps.",
-        "type": "npc"
-      },
-      {
-        "id": 73,
-        "name": "Nikolai Wachter Jr.",
-        "relationship": "Stella's older brother.",
-        "type": "npc"
-      },
-      {
-        "id": 74,
-        "name": "Karl Wachter",
-        "relationship": "Stella's brother. Karl tried to protect her but couldn't.",
-        "type": "npc"
-      }
-    ],
-    "name": "Stella Wachter",
-    "race": "Human",
-    "npc_class": "Noble / Occultist",
-    "location": "Vallaki (formerly)",
-    "status": "Dead",
-    "alignment_tag": "ally",
-    "portrait_url": "",
-    "description": "Stella Wachter was Lady Fiona Wachter's youngest child and only daughter. She was killed at the Festival of Light during Strahd's attack on Vallaki. Her death shattered her mother's neutrality toward Strahd and turned the Wachter family against the vampire lord.",
-    "dm_notes": "Stella was the child most like her mother — she was following in Fiona's Narfell footsteps and was already showing promise as a Demon Master. Fiona saw Stella as her successor in the family's ancient traditions.\n\nAt the Festival of Light, Stella was killed by minions of Lady Williams during Strahd's attack. Karl tried to protect her but couldn't save her. Her death broke Fiona — Anna Krezkova had to physically get Fiona moving during the chaos.",
-    "sort_order": 75,
     "is_hidden": true
   },
   {
@@ -2249,7 +2371,7 @@
     "alignment_tag": "ally",
     "portrait_url": "",
     "description": "Urwin Martikov runs the Blue Water Inn in Vallaki with his wife Danika. He is Davian Martikov's son and a member of the Keepers of the Feather — a secret network of wereravens opposed to Strahd.",
-    "dm_notes": "Urwin and Danika are both wereravens and members of the Keepers of the Feather. The Blue Water Inn serves as a key intelligence hub for the network. Urwin is protective of his children — Elvir, Brom (17), and Bray (14) — all of whom have inherited the wereraven bloodline.\n\nThe entire Martikov family are members of the Keepers of the Feather contingent in the Order of the Silver Dragon and are vowed enemies of Strahd.",
+    "dm_notes": "Urwin and Danika are both wereravens and members of the Keepers of the Feather. The Blue Water Inn serves as a key intelligence hub for the network. Urwin is protective of his children — Elvir, Brom (17), and Bray (14) — all of whom have inherited the wereraven bloodline.\n\nThe entire Martikov family are vowed enemies of Strahd.",
     "sort_order": 76,
     "is_hidden": true
   },
@@ -2357,40 +2479,6 @@
     "description": "Elvir Martikov is Urwin and Danika's youngest daughter. She is a wereraven and lives with her family at the Blue Water Inn in Vallaki.",
     "dm_notes": "Elvir is Urwin and Danika's youngest child and daughter. She has feelings for Nikolai Wachter Jr., who protected her during Strahd's attack on the Festival of Light. The connection between the Martikov and Wachter families through Elvir and Nikolai could prove significant.",
     "sort_order": 80,
-    "is_hidden": true
-  },
-  {
-    "npcid": 81,
-    "associations": [
-      {
-        "id": 76,
-        "name": "Urwin Martikov",
-        "relationship": "Brom's father.",
-        "type": "npc"
-      },
-      {
-        "id": 77,
-        "name": "Danika Dorakova Martikov",
-        "relationship": "Brom's mother.",
-        "type": "npc"
-      },
-      {
-        "id": 75,
-        "name": "Stella Wachter",
-        "relationship": "Brom was wounded trying to save Stella and Karl Wachter at the Festival of Light.",
-        "type": "npc"
-      }
-    ],
-    "name": "Brom Martikov",
-    "race": "Human (Wereraven)",
-    "npc_class": "Commoner",
-    "location": "Vallaki (Blue Water Inn)",
-    "status": "Alive",
-    "alignment_tag": "ally",
-    "portrait_url": "",
-    "description": "Brom Martikov is Urwin and Danika's 17-year-old son. He is brave and eager, a wereraven like his parents. He was wounded at the Festival of Light trying to save Stella and Karl Wachter during Strahd's attack.",
-    "dm_notes": "Brom is brave and eager despite his youth. At the Festival of Light, he was wounded while trying to save Stella and Karl Wachter from the attacking minions. Arabelle, Luvash's daughter, has feelings for Brom. As a wereraven, Brom is part of the Keepers of the Feather contingent in the Order of the Silver Dragon.",
-    "sort_order": 81,
     "is_hidden": true
   },
   {
@@ -2579,6 +2667,74 @@
     "description": "Ekrol Toranescu was Zuleika's eldest son and a promising young warrior of the Toranescu pack. He died alongside his father when they were ambushed by Elandra Stormraven and Strahd's personal guard, who were disguised as human hunters from Vallaki.",
     "dm_notes": "Ekrol fell next to his father Zuleika in the ambush orchestrated by Kiril Stoyanovich, Elandra Stormraven, and Strahd's personal guard. His death, along with his father's, was made to look like the work of human hunters from Vallaki — a lie designed to inflame hatred between the werewolves and humans and justify Kiril's takeover of the Den.",
     "sort_order": 86,
+    "is_hidden": true
+  },
+  {
+    "npcid": 87,
+    "associations": [
+      {
+        "id": 24,
+        "name": "Baron Dmitri Krezkov",
+        "relationship": "Anna's husband and the burgomaster of Krezk. Together they grieve the loss of their daughter Ilya.",
+        "type": "npc"
+      },
+      {
+        "id": 11,
+        "name": "Lady Fiona Wachter",
+        "relationship": "Anna studied sorcery with Fiona and continues to help Fiona grieve the loss of Stella, having recently lost her own child Ilya. Anna physically got Fiona moving after Fiona broke down following Stella's death during Strahd's attack on the Festival of Light.",
+        "type": "npc"
+      },
+      {
+        "id": 10,
+        "name": "Baron Vargas Vallakovich",
+        "relationship": "Anna and Dmitri attended the Festival of Light in Vallaki as honoured guests of the Vallakovich household.",
+        "type": "npc"
+      }
+    ],
+    "name": "Anna Krezkova",
+    "race": "Human",
+    "npc_class": "Noble / Sorceress",
+    "location": "Krezk",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Anna Krezkova is the wife of Baron Dmitri Krezkov, burgomaster of Krezk. She is grieving the death of their daughter Ilya but remains practical and steady — the kind of person who acts when others freeze. Anna is a respectable sorceress, having studied with Lady Fiona Wachter.",
+    "dm_notes": "Anna is the steady hand behind the Krezkov household. While Dmitri leads with caution and duty, Anna leads with action and composure. She is grieving the loss of their daughter Ilya alongside Dmitri, but her grief has not broken her — if anything, it has made her sharper.\n\nAnna is a respectable sorceress, having studied with Lady Fiona Wachter. The two women share a bond deepened by shared loss — Anna continues to help Fiona grieve the death of Stella, having recently lost her own child.\n\nAt the Festival of Light in Vallaki, Anna and Dmitri were honoured guests watching the proceedings with the other burgomasters and their families. When Strahd attacked, Anna was the one who physically got Lady Fiona Wachter moving after Fiona broke down following Stella's death. While others froze, Anna did not hesitate.\n\nAnna is a practical ally — calm, observant, and steady under pressure.",
+    "sort_order": 87,
+    "is_hidden": true
+  },
+  {
+    "npcid": 88,
+    "associations": [
+      {
+        "id": 25,
+        "name": "The Abbot",
+        "relationship": "Vasilka's creator and the being she thinks of as her Father. She is fiercely loyal to him.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Vasilka was created to serve Strahd as his bride. She is loyal to him as her purpose.",
+        "type": "npc"
+      },
+      {
+        "id": 24,
+        "name": "Baron Dmitri Krezkov",
+        "relationship": "Vasilka was created using the body and essence of Dmitri's daughter Ilya. Dmitri does not know this, but would recognize his daughter's face if he ever saw Vasilka.",
+        "type": "npc"
+      }
+    ],
+    "name": "Vasilka",
+    "race": "Undead/Construct",
+    "npc_class": "Sorceress",
+    "location": "Abbey of Saint Markovia",
+    "status": "Active",
+    "alignment_tag": "enemy",
+    "portrait_url": "",
+    "description": "Vasilka is a flesh golem created by the Abbot using the body and essence of Ilya Krezkov, the daughter of Baron Dmitri Krezkov. Also referred to as 'the Resurrected Ilya Krezkov,' Vasilka was built to serve as Strahd's bride. The Abbot thinks of Vasilka as his daughter — an innocent child made to appease Strahd. She is a powerful Undead/Construct Sorceress with Lair Actions and special combat actions.",
+    "dm_notes": "Vasilka is fiercely loyal to the Abbot and to Strahd, as she was created to serve him. She wore the Holy Symbol of Ravenkind as a gift from her Father/Creator until the Abbot was forced to rip it from her neck and hand it to the players during Sessions 22-23. This act caused Vasilka to drop to the ground, and when she woke she was angered that these people would force her Father to give up such a powerful relic.\n\nVasilka led an assault on the Tser Hill Vistani camp with Patchwork Goblins and Direwolves during Sessions 27-28. She demonstrated terrifying power — taking control of Thorian's water spell and hurling it back over the defenders on the hilltop. She has what feels like an unlimited supply of Mongrelfolk/Patchwork Goblins at her disposal. This is the current battle the players are in.\n\nPrior to Tser Hill, Vasilka and the Abbot's forces overwhelmed the Vistani at Tser Raven in the middle of the night, killing any they could and burning their wagons. The surviving members fled into the woods or to shelter in Krezk.\n\nVasilka can potentially be recruited as an ally if the players kill the Abbot without harming her or her mongrelfolk. She would want to be free and for her kind to be left alone in the Abbey in exchange for their aid.",
+    "sort_order": 88,
     "is_hidden": true
   }
 ]
