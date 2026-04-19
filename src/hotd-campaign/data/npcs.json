@@ -99,17 +99,29 @@
         "name": "Strahd Von Zarovich",
         "relationship": "Ismark opposes Strahd and seeks allies to help protect his sister from the vampire lord.",
         "type": "npc"
+      },
+      {
+        "id": 15,
+        "name": "Doru",
+        "relationship": "Ismark's old friend. Together they reformed the Village Militia after Doru was healed of his vampirism. Doru commands the foot soldiers under Ismark's leadership.",
+        "type": "npc"
+      },
+      {
+        "id": 14,
+        "name": "Father Donavich",
+        "relationship": "Father Donavich blessed the reformed Village Militia and serves as second in command and healer.",
+        "type": "npc"
       }
     ],
     "name": "Ismark Kolyanovich",
     "race": "Human",
-    "npc_class": "Fighter / Noble",
+    "npc_class": "Fighter / Militia Leader",
     "location": "Village of Barovia",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "/images/ismark-kolyanovich.png",
-    "description": "Ismark Kolyanovich, known unkindly by the villagers as 'Ismark the Lesser,' is the son of the late Burgomaster Kolyan Indirovich and Ireena's brother. A capable warrior and a man of honor, Ismark bears the weight of his father's death and the responsibility of protecting his sister. He desperately seeks allies who might help keep Ireena safe from Strahd.",
-    "dm_notes": "Ismark carries the unflattering nickname due to the villagers' perception that he cannot live up to his ancestor Ismark the Great. In an effort to protect Ireena, he and many of the able-bodied fighters joined Mordenkainen in an assault on Castle Ravenloft. The attack ended with Strahd being wounded, but not before Mordenkainen was thrown from the Castle walls and the remaining villagers were slaughtered. Only Ismark, Doru, and a handful of others managed to escape, and most of them were badly wounded.\n\nIsmark grew up close to the Vallakovich family in Vallaki — his father Kolyan and Baron Vallakovich were old friends, and Ismark and Ireena attended the Festival of Light as honoured guests. This is why Ismark was certain Ireena would find safety in Vallaki, as the Vallakoviches watched both of them grow into the adults they are today.\n\nIsmark would not hesitate to join the party in fighting Strahd.",
+    "description": "Ismark Kolyanovich, once known unkindly as 'Ismark the Lesser,' is the son of the late Burgomaster Kolyan Indirovich and Ireena's brother. A capable warrior and a man of honor, Ismark now leads the reformed Village Militia — the Barovian contingent — alongside his old friend Doru. With nearly 75 men and women under their command and Father Donavich's blessing, Ismark has finally stepped out of his ancestor's shadow.",
+    "dm_notes": "Ismark carries the unflattering nickname due to the villagers' perception that he cannot live up to his ancestor Ismark the Great. In an effort to protect Ireena, he and many of the able-bodied fighters joined Mordenkainen in an assault on Castle Ravenloft. The attack ended with Strahd being wounded, but not before Mordenkainen was thrown from the Castle walls and the remaining villagers were slaughtered. Only Ismark, Doru, and a handful of others managed to escape, and most of them were badly wounded.\n\nIsmark grew up close to the Vallakovich family in Vallaki — his father Kolyan and Baron Vallakovich were old friends, and Ismark and Ireena attended the Festival of Light as honoured guests. This is why Ismark was certain Ireena would find safety in Vallaki, as the Vallakoviches watched both of them grow into the adults they are today.\n\nWhen Doru was healed of his vampirism, he reached out to Ismark to reform the Village Militia. Ismark was all too eager — he had received word from his sister Ireena in Vallaki that the fight against Strahd was building momentum. With Father Donavich blessing the new militia and serving as cleric, the two men recruited nearly 75 men and women to join. Ismark leads the Barovian contingent overall, with Father Donavich as second in command and healer, and Doru commanding the foot soldiers.\n\nIsmark would not hesitate to join the party in fighting Strahd.",
     "sort_order": 3,
     "is_hidden": false
   },
@@ -429,13 +441,13 @@
     ],
     "name": "Father Donavich",
     "race": "Human",
-    "npc_class": "Cleric (fallen)",
+    "npc_class": "Cleric / Militia Healer",
     "location": "Village of Barovia (Church)",
     "status": "Alive",
-    "alignment_tag": "neutral",
+    "alignment_tag": "ally",
     "portrait_url": "/images/father-donavich.png",
-    "description": "Father Donavich is the broken priest of the church in the Village of Barovia. Once a man of strong faith, Donavich is now a haggard, sleepless wreck who mutters prayers endlessly and refuses to leave the church. He is deeply troubled by something in the building's undercroft but will not speak of it willingly.",
-    "dm_notes": "Donavich's faith has been shattered since his son Doru returned from an assault on Castle Ravenloft as a vampire spawn. He has kept Doru locked in the church undercroft, praying desperately for divine intervention that never comes. The constant screaming of his son, begging for blood, has driven the priest to the edge of madness. He refuses to abandon Doru despite the danger the vampire spawn poses.",
+    "description": "Father Donavich is the priest of the church in the Village of Barovia. Once a broken man whose faith was shattered by his son's vampiric curse, Donavich has been renewed by Doru's miraculous healing. He blessed the reformed Village Militia and now serves as its second in command and healer, his faith in the Lord of Light restored.",
+    "dm_notes": "Donavich's faith was shattered when his son Doru returned from the assault on Castle Ravenloft as a vampire spawn. He kept Doru locked in the church undercroft, praying desperately for divine intervention. He eventually discovered a cure for the vampirism, but it would only take permanent effect if the vampire that bit Doru — Seraphine Stormraven — was slain. When the party killed Seraphine at the Battle of Tser Pool, Doru was fully healed and Donavich's faith was restored.\n\nWith new life and renewed faith in the Lord of Light, Donavich blessed the reformed Village Militia that his son Doru and Ismark Kolyanovich built together. He now serves as the militia's second in command and healer, providing spiritual guidance and divine support to the nearly 75 men and women who answered the call. Donavich is a changed man — no longer the haggard, sleepless wreck he once was, but a cleric with purpose and fire in his heart.",
     "sort_order": 14,
     "is_hidden": true
   },
@@ -445,25 +457,31 @@
       {
         "id": 14,
         "name": "Father Donavich",
-        "relationship": "Doru's father, who keeps him locked in the church undercroft and prays for his salvation.",
+        "relationship": "Doru's father. Now that Doru is healed, Donavich blessed the new Village Militia and serves as its cleric.",
         "type": "npc"
       },
       {
-        "id": 1,
-        "name": "Strahd Von Zarovich",
-        "relationship": "Strahd turned Doru into a vampire spawn as a cruel joke after Doru joined the assault on Castle Ravenloft.",
+        "id": 3,
+        "name": "Ismark Kolyanovich",
+        "relationship": "Doru's old friend. Together they reformed the Village Militia after Doru was healed. Ismark leads the Barovian contingent while Doru commands the foot soldiers.",
+        "type": "npc"
+      },
+      {
+        "id": 31,
+        "name": "Seraphine Stormraven",
+        "relationship": "Seraphine bit Doru during the assault on Castle Ravenloft, turning him into a vampire spawn. Her death was the cure that freed him.",
         "type": "npc"
       }
     ],
     "name": "Doru",
-    "race": "Vampire Spawn (formerly Human)",
-    "npc_class": "Commoner (turned)",
-    "location": "Village of Barovia (Church undercroft)",
-    "status": "Undead",
-    "alignment_tag": "enemy",
+    "race": "Human",
+    "npc_class": "Fighter / Militia Commander",
+    "location": "Village of Barovia",
+    "status": "Alive",
+    "alignment_tag": "ally",
     "portrait_url": "/images/doru.png",
-    "description": "Doru is Father Donavich's son, locked away in the undercroft of the Village of Barovia's church. His desperate cries can sometimes be heard echoing from below the floorboards. Something terrible has happened to the young man, and his father guards the secret with broken, frantic devotion.",
-    "dm_notes": "Doru was transformed into a vampire spawn after foolishly joining a group of villagers who stormed Castle Ravenloft. Strahd slaughtered the attackers but turned Doru as a cruel joke, sending him home to torment his father. Doru is emaciated and desperate for blood, chained in the church undercroft. Moments of his former personality still surface through the bloodlust, making his situation all the more tragic.",
+    "description": "Doru is Father Donavich's son, once cursed as a vampire spawn but now healed after the death of Seraphine Stormraven. Freed from his torment, Doru reached out to his old friend Ismark Kolyanovich to reform the Village Militia that was destroyed during the assault on Castle Ravenloft. With Father Donavich's blessing, the two men recruited nearly 75 men and women to join. Doru now commands the foot soldiers of the Barovian contingent.",
+    "dm_notes": "Doru was transformed into a vampire spawn after joining a group of villagers who stormed Castle Ravenloft. During the assault, Seraphine Stormraven bit him, turning him into a vampire spawn. He was sent home to torment his father, who kept him chained in the church undercroft for months. Father Donavich discovered a cure — but it would only take permanent effect if the vampire that bit Doru was slain. When the party killed Seraphine Stormraven at the Battle of Tser Pool, the curse was broken and Doru was fully healed.\n\nOnce restored, Doru wasted no time. He reached out to his old friend Ismark, who was all too eager to act — Ismark had received word from his sister Ireena in Vallaki that the fight against Strahd was building momentum. With Father Donavich blessing the new militia and serving as its cleric, Doru and Ismark recruited nearly 75 men and women from the Village of Barovia to join. Doru now commands the foot soldiers while Ismark leads the Barovian contingent overall, with Father Donavich as second in command and healer.\n\nDoru is a changed man — the months of torment as a vampire spawn have hardened him, and he fights with the desperate fury of someone who knows exactly what Strahd's darkness can do to a person.",
     "sort_order": 15,
     "is_hidden": true
   },
@@ -478,8 +496,8 @@
       },
       {
         "id": 64,
-        "name": "Luvush",
-        "relationship": "Morgantha's coven kidnapped Luvush's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder.",
+        "name": "Luvash",
+        "relationship": "Morgantha's coven kidnapped Luvash's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder.",
         "type": "npc"
       },
       {
@@ -503,7 +521,7 @@
     "alignment_tag": "enemy",
     "portrait_url": "/images/morgantha.png",
     "description": "Morgantha appears as an old woman who travels the roads near the Village of Barovia, selling sweet-smelling 'dream pastries' from a cart. The pastries are wildly popular among the desperate people of Barovia, granting vivid, happy dreams that provide temporary escape from the domain's misery. She operates out of the Old Bonegrinder windmill with her daughter and granddaughter.",
-    "dm_notes": "Morgantha is a night hag and the matriarch of the Bonegrinder coven. Her daughter Bella Wormwiggle and granddaughter Offalia Wormwiggle complete the hag coven. The dream pastries are made from the life force of kidnapped children — a horrific cost hidden behind the addictive treats. The coven disguises themselves as old women to move freely among the villagers.\n\nMorgantha's coven kidnapped Luvus's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder during Sessions 17-18.",
+    "dm_notes": "Morgantha is a night hag and the matriarch of the Bonegrinder coven. Her daughter Bella Wormwiggle and granddaughter Offalia Wormwiggle complete the hag coven. The dream pastries are made from the life force of kidnapped children — a horrific cost hidden behind the addictive treats. The coven disguises themselves as old women to move freely among the villagers.\n\nMorgantha's coven kidnapped Luvash's young daughter from the Village of Barovia to grind her life force into dream pastries. This act led the party to Old Bonegrinder during Sessions 17-18.",
     "sort_order": 16,
     "is_hidden": true
   },
@@ -813,7 +831,7 @@
         "type": "npc"
       }
     ],
-    "name": "Mad Mary",
+    "name": "Mad Mary Strazni",
     "race": "Human",
     "npc_class": "Commoner",
     "location": "Village of Barovia",
@@ -1685,25 +1703,25 @@
       {
         "id": 59,
         "name": "Sarkov E'Tressa",
-        "relationship": "Luvus works at the Blood of the Vine Inn alongside the E'Tressa family.",
+        "relationship": "Luvash works at the Blood of the Vine Inn alongside the E'Tressa family.",
         "type": "npc"
       },
       {
         "id": 16,
         "name": "Morgantha",
-        "relationship": "Morgantha and her coven kidnapped Luvus's young daughter from the Village of Barovia. This loss drove Luvus to seek help from the adventurers.",
+        "relationship": "Morgantha and her coven kidnapped Luvash's young daughter from the Village of Barovia. This loss drove Luvash to seek help from the adventurers.",
         "type": "npc"
       }
     ],
-    "name": "Luvus",
+    "name": "Luvash",
     "race": "Human (Vistani)",
     "npc_class": "Commoner / Laborer",
     "location": "Tser Hill Vistani Camp",
     "status": "Alive",
     "alignment_tag": "ally",
     "portrait_url": "",
-    "description": "Luvush is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvush came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvush was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
-    "dm_notes": "Luvush will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvush's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
+    "description": "Luvash is a Vistani man who works at the Blood of the Vine Inn as a handyman and horse handler. A wiry man with a neatly trimmed beard and once-laughing eyes now dulled by grief, Luvash came to the village with his wife and young daughter seeking a quieter life away from the caravans. His world was shattered when his daughter was taken by the hags of Old Bonegrinder — lured away under the guise of the old women who sell dream pastries in the village. Luvash was the first NPC the party encountered in distress, and his desperate plea for help led them toward the Bonegrinder windmill.",
+    "dm_notes": "Luvash will reward anyone who brings his daughter Arabelle back safely. While the Vistani traditionally serve Strahd, Luvash's primary loyalty is to his family and his people. His grief and desperation make him a sympathetic figure and a useful quest-giver.",
     "sort_order": 64,
     "is_hidden": true
   },
