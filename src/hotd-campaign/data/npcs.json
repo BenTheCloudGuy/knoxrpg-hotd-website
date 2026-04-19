@@ -353,7 +353,7 @@
     "alignment_tag": "ally",
     "portrait_url": "/images/baron-vallakovich.png",
     "description": "Baron Vargas Vallakovich is the burgomaster of Vallaki and a fair but firm leader who strives to bring light and joy to his people despite the ever-present shadow of Strahd. His motto is 'All will be well!' and he organizes the annual Festival of Light — a beloved celebration that draws honoured guests from across Barovia's towns. He rules with a steady hand and is fiercely protective of Vallaki's citizens.",
-    "dm_notes": "Baron Vallakovich genuinely wants what is best for his people, but feels he must walk on eggshells to keep Strahd from taking notice of his small town. He tries to bring as much light and joy to Vallaki as possible while maintaining a firm hand on governance. His wife, Baroness Lydia, is a gracious hostess who helps organize the Festival of Light. Lady Fiona Wachter is a close friend and political ally of the family.\n\nThe Baron is close friends with the burgomasters of the other towns in Barovia. He and Kolyan Indirovich were particularly close — the Indirovich children, Ismark and Ireena, often attended the Festival of Light as honoured guests of the Vallakovich household. The Baron watched both of them grow into the adults they are today, which is why Ismark was certain Ireena would find safety in Vallaki.\n\nWhen Strahd attacked the Festival of Light, it shattered the peace the Baron had worked so hard to build. Lady Fiona Wachter's daughter was killed in the attack, devastating the Wachter family and hardening Fiona's resolve against Strahd.",
+    "dm_notes": "Baron Vallakovich genuinely wants what is best for his people, but feels he must walk on eggshells to keep Strahd from taking notice of his small town. He tries to bring as much light and joy to Vallaki as possible while maintaining a firm hand on governance. His wife, Baroness Lydia, is a gracious hostess who helps organize the Festival of Light. Lady Fiona Wachter is a close friend and political ally of the family.\n\nThe Baron is close friends with the burgomasters of the other towns in Barovia. He and Kolyan Indirovich were particularly close — the Indirovich children, Ismark and Ireena, often attended the Festival of Light as honoured guests of the Vallakovich household. The Baron watched both of them grow into the adults they are today, which is why Ismark was certain Ireena would find safety in Vallaki.\n\nWhen Strahd attacked the Festival of Light, it shattered the peace the Baron had worked so hard to build. Lady Fiona Wachter's youngest child, Stella Wachter, was killed in the attack. Stella's death devastated the Wachter family and hardened Fiona's resolve against Strahd.",
     "sort_order": 10,
     "is_hidden": true
   },
@@ -371,6 +371,24 @@
         "name": "Strahd Von Zarovich",
         "relationship": "Fiona holds a neutral stance toward Strahd — neither serving nor opposing him. After Strahd's attack on the Festival of Light killed her daughter, her neutrality has turned to cold fury.",
         "type": "npc"
+      },
+      {
+        "id": 73,
+        "name": "Nikolai Wachter Jr.",
+        "relationship": "Fiona's eldest son. Commands militia in the Order of the Silver Dragon contingent. Fond of wine and trouble.",
+        "type": "npc"
+      },
+      {
+        "id": 74,
+        "name": "Karl Wachter",
+        "relationship": "Fiona's second-born son. A bookworm like his father Nikolai. Feels responsible for Stella's death.",
+        "type": "npc"
+      },
+      {
+        "id": 75,
+        "name": "Stella Wachter",
+        "relationship": "Fiona's youngest child and only daughter. Killed at the Festival of Light. Stella was following in Fiona's Narfell footsteps and showed promise as a Demon Master.",
+        "type": "npc"
       }
     ],
     "name": "Lady Fiona Wachter",
@@ -381,7 +399,7 @@
     "alignment_tag": "neutral",
     "portrait_url": "/images/fiona-wachter.png",
     "description": "Lady Fiona Wachter is a Vallakian noblewoman and a respected figure in Vallaki's political life. She is a close friend and ally of the Vallakovich family. Fiona is politically savvy, charming when she needs to be, and deeply devoted to her family. She carries herself with an air of quiet authority and is known for her sharp mind and unwavering composure.",
-    "dm_notes": "Lady Fiona practices demon worship and the occult as part of her Narfell faith — an ancient tradition she keeps privately but does not hide from those she trusts. She holds a neutral stance toward Strahd, neither serving him nor actively opposing him, viewing survival and pragmatism as the wisest course in Barovia.\n\nFiona is a close friend of the Vallakovich family and would never harm them. She keeps the preserved corpse of her dead husband in her bedroom — a product of her Narfell beliefs about death and the spirit world — and has two sons loyal to her.\n\nWhen Strahd attacked the Festival of Light, Fiona's daughter was killed. This devastating loss shattered her neutral stance toward the vampire lord and left her distraught and furious. Her grief has hardened into a quiet, burning anger toward Strahd — she may prove a powerful ally to anyone who seeks to bring him down, driven not by politics but by a mother's rage.",
+    "dm_notes": "Lady Fiona practices demon worship and the occult as part of her Narfell faith — an ancient tradition she keeps privately but does not hide from those she trusts. She holds a neutral stance toward Strahd, neither serving him nor actively opposing him, viewing survival and pragmatism as the wisest course in Barovia.\n\nFiona is a close friend of the Vallakovich family and would never harm them. She keeps the preserved corpse of her dead husband Nikolai in her bedroom — maintained with Gentle Repose as a product of her Narfell beliefs about death and the spirit world. Nikolai was a serious historian who built the famous Wachterhaus library over decades, discussing ancient histories and lost languages with Strahd himself over wine. He was killed over a decade ago while traveling to investigate Netherese ruins near Mount Ghakis — the common story says werewolves, but nobody truly knows.\n\nFiona has two sons — Nikolai Jr. and Karl — and had a daughter, Stella, the youngest. Nikolai Jr. is fond of wine and trouble but commands the militia. Karl is a bookworm like his father. Stella was following in Fiona's Narfell footsteps and was already showing promise as a Demon Master.\n\nWhen Strahd attacked the Festival of Light, Stella was killed by minions of Lady Williams. This devastating loss shattered Fiona's neutral stance toward the vampire lord. Karl tried to protect his younger sister but couldn't — he carries the guilt of her death. Fiona's grief has hardened into a quiet, burning rage toward Strahd — she may prove a powerful ally to anyone who seeks to bring him down, driven not by politics but by a mother's fury.",
     "sort_order": 11,
     "is_hidden": true
   },
@@ -601,6 +619,24 @@
         "name": "Strahd Von Zarovich",
         "relationship": "Davian and the Keepers of the Feather secretly work to undermine Strahd's control over Barovia.",
         "type": "npc"
+      },
+      {
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Davian's son. Runs the Blue Water Inn in Vallaki with his wife Danika.",
+        "type": "npc"
+      },
+      {
+        "id": 78,
+        "name": "Adrian Martikov",
+        "relationship": "Davian's eldest son.",
+        "type": "npc"
+      },
+      {
+        "id": 79,
+        "name": "Stefania Martikov",
+        "relationship": "Davian's adult daughter, married to Dag Martikov.",
+        "type": "npc"
       }
     ],
     "name": "Davian Martikov",
@@ -611,7 +647,7 @@
     "alignment_tag": "ally",
     "portrait_url": "/images/davian-martikov.png",
     "description": "Davian Martikov is the patriarch of the Martikov family who runs the Wizard of Wines winery, which produces the only wine in Barovia — a vital commodity. Davian is gruff, practical, and deeply committed to the well-being of Barovia's people. He and his family have an unusually keen awareness of events throughout the land.",
-    "dm_notes": "Davian is the secret leader of the Keepers of the Feather, a network of wereravens who operate as spies against Strahd throughout Barovia. The Martikovs can shapeshift into ravens, allowing them to gather intelligence across the domain. Their wereraven nature is a closely guarded secret — even most of Barovia's residents don't know the truth about the Martikov family.",
+    "dm_notes": "Davian is the secret leader of the Keepers of the Feather, a network of wereravens who are vowed enemies of Strahd and operate as spies throughout Barovia. The Martikovs can shapeshift into ravens, allowing them to gather intelligence across the domain. Their wereraven nature is a closely guarded secret — even most of Barovia's residents don't know the truth about the Martikov family.\n\nDavian's children include Urwin (who runs the Blue Water Inn in Vallaki with his wife Danika), Adrian (eldest son), and Stefania (married to Dag). The entire family are members of the Keepers of the Feather contingent in the Order of the Silver Dragon.",
     "sort_order": 19,
     "is_hidden": true
   },
@@ -643,31 +679,37 @@
       {
         "id": 22,
         "name": "Emil Toranescu",
-        "relationship": "Kiril imprisoned Emil and seized control of the werewolf pack.",
+        "relationship": "Emil replaced Kiril as Den Leader after the packs expelled him. Kiril views her as a weak usurper.",
         "type": "npc"
       },
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "Kiril is completely loyal to Strahd, who granted the werewolves hunting rights throughout Barovia.",
+        "relationship": "Kiril and his Blood Hunters serve Strahd without question.",
         "type": "npc"
       },
       {
         "id": 32,
         "name": "Elandra Stormraven",
-        "relationship": "Elandra allied with the werewolf pack and was encountered alongside Kiril at the Werewolf Den.",
+        "relationship": "Kiril plotted with Elandra and Strahd's personal guard to ambush and kill Zuleika Toranescu, making it appear as if human hunters from Vallaki had done it.",
+        "type": "npc"
+      },
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Kiril conspired to have Zuleika assassinated by Elandra Stormraven and Strahd's guard, disguised as human hunters. This allowed Kiril to seize control of the Den.",
         "type": "npc"
       }
     ],
     "name": "Kiril Stoyanovich",
     "race": "Werewolf (Human)",
-    "npc_class": "Barbarian / Pack Leader",
-    "location": "Werewolf Den",
+    "npc_class": "Barbarian / Alpha",
+    "location": "Roaming Barovia (Blood Hunters)",
     "status": "Alive",
     "alignment_tag": "enemy",
     "portrait_url": "/images/kiril-stoyanovich.png",
-    "description": "Kiril Stoyanovich is the alpha werewolf who leads the Barovian werewolf pack from their den in the mountains. He is brutal, savage, and utterly loyal to Strahd. Kiril leads raids on villages and kidnaps children to be turned into new pack members.",
-    "dm_notes": "Kiril seized control of the pack after imprisoning the former leader, Emil Toranescu. Strahd granted the werewolves hunting rights throughout Barovia in exchange for their loyalty. The party fought through the Werewolf Den in Session 21.",
+    "description": "Kiril Stoyanovich is a brutal and hateful alpha werewolf who leads the Blood Hunters — a rogue pack of roughly 30 warriors who serve Lord Strahd without question. He was expelled from the Werewolf Den after the packs rose up against his savage leadership. Kiril is consumed by hatred toward the people of Vallaki, who killed his original pack when he was young.",
+    "dm_notes": "Kiril's original pack was wiped out by human hunters from Vallaki when he was young. The Toranescu pack took him in and raised him, but the hatred never left. When Zuleika Toranescu led the Den as a just and measured leader who sought peace with humans, Kiril saw it as weakness.\n\nKnowing he could not defeat Zuleika in a direct challenge for leadership, Kiril plotted with Strahd and Elandra Stormraven to have Zuleika ambushed. Elandra and Strahd's personal guard killed Zuleika and his eldest son Ekrol while they were out hunting, dressed as human hunters from Vallaki to frame the humans and inflame the packs.\n\nWith Zuleika dead, Kiril seized control of the Den and all its packs. He ordered relentless attacks on human settlements — throwing werewolves against towns and farms without mercy. The resulting casualties were devastating on both sides, and eventually the Den rose up and expelled Kiril in favor of Emil Toranescu, Zuleika's mate, who was a respected warrior and shaman.\n\nEnraged, Kiril left the Den with roughly 30 warriors who shared his hatred — mostly those who had lost loved ones to human hunters. They call themselves the Blood Hunters and roam Barovia in service to Strahd. It was the Blood Hunters who attacked the players outside the Tser Pool Vistani camp under orders from Elandra Stormraven, to test the party's capabilities.\n\nThe party fought through the Werewolf Den in Session 21.",
     "sort_order": 21,
     "is_hidden": true
   },
@@ -677,31 +719,55 @@
       {
         "id": 23,
         "name": "Zuleika Toranescu",
-        "relationship": "Zuleika is Emil's devoted mate who desperately seeks his release from Castle Ravenloft.",
+        "relationship": "Emil's late mate. Zuleika was the former Den Leader who was assassinated by Elandra Stormraven and Strahd's guard.",
         "type": "npc"
       },
       {
         "id": 21,
         "name": "Kiril Stoyanovich",
-        "relationship": "Kiril seized control of the pack after Emil was imprisoned by Strahd.",
+        "relationship": "Kiril was expelled from the Den and Emil replaced him as leader. Kiril views her as a weak usurper.",
         "type": "npc"
       },
       {
         "id": 1,
         "name": "Strahd Von Zarovich",
-        "relationship": "Strahd imprisoned Emil in Castle Ravenloft's dungeon after Emil questioned his authority.",
+        "relationship": "Emil fears Strahd but hopes the adventurers can defeat him and give the packs a chance at peace.",
+        "type": "npc"
+      },
+      {
+        "id": 83,
+        "name": "Kiara Toranescu",
+        "relationship": "Emil's mother-in-law. Kiara serves as Den Mother and made a deal with the players on behalf of the Den.",
+        "type": "npc"
+      },
+      {
+        "id": 84,
+        "name": "Duesius Toranescu",
+        "relationship": "Emil's father-in-law. Protective of the family and the Den.",
+        "type": "npc"
+      },
+      {
+        "id": 85,
+        "name": "Jiro Toranescu",
+        "relationship": "Emil's young son. She would do anything to protect him.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Elandra was Strahd's emissary to the Den. She ordered Emil to attack the Wizard's Tower and kill the people there.",
         "type": "npc"
       }
     ],
     "name": "Emil Toranescu",
     "race": "Werewolf (Human)",
-    "npc_class": "Fighter / Pack Leader",
-    "location": "Castle Ravenloft (prisoner)",
-    "status": "Imprisoned",
+    "npc_class": "Fighter / Druid (Shaman)",
+    "location": "Werewolf Den",
+    "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/emil-toranescu.png",
-    "description": "Emil Toranescu is the former leader of the Barovian werewolf pack, now imprisoned in Castle Ravenloft's dungeon. He is more reasonable and measured than the current pack alpha, Kiril Stoyanovich.",
-    "dm_notes": "Emil was imprisoned by Strahd after questioning the vampire's authority. His imprisonment allowed the more savage Kiril to take control of the pack. Emil's mate, Zuleika, desperately seeks his release and may ally with the party to rescue him. Emil could potentially be convinced to turn the pack against Strahd if freed — making his rescue a valuable objective.",
+    "description": "Emil Toranescu is the current Den Leader of the Barovian werewolf packs — a respected warrior and shaman who took leadership after the packs expelled Kiril Stoyanovich. She does not want to continue the war with humans, having lost too many loved ones already, but feared to betray Strahd and his emissary Elandra Stormraven knowing it would mean death for her people and her young son Jiro.",
+    "dm_notes": "Emil is Zuleika's mate and took over as Den Leader after the packs expelled Kiril Stoyanovich. Like her husband's parents Kiara and Duesius, she does not want to continue the war with humans — they have lost too many loved ones and too much of their humanity.\n\nWhen Elandra Stormraven came to the Den and ordered Emil to retrieve artifacts from the Wizard's Tower and kill the people there, Emil didn't want to do it but knew that resisting Strahd was certain death for all her people, including her small pup Jiro. She led the attack reluctantly.\n\nThe players believed Emil was killed when she jumped from the tower window to escape during the fight. Unknown to the players and the Den, she survived the fall. After the players left the Den the morning after the battle with Elandra Stormraven, Emil and about 8 other wounded from the Wizard's Tower battle returned. She learned of the deal that Kiara and Duesius made with the players and the defeat of all three Stormraven Sisters.\n\nEmil plans to honor the agreement. She hopes the players will be able to defeat Strahd and give the packs a chance at peace. She is a pragmatic leader who will protect her people above all else.",
     "sort_order": 22,
     "is_hidden": true
   },
@@ -711,25 +777,55 @@
       {
         "id": 22,
         "name": "Emil Toranescu",
-        "relationship": "Zuleika's imprisoned mate. She prays constantly for his safe return.",
+        "relationship": "Zuleika's mate. Emil now leads the Den in his memory.",
         "type": "npc"
       },
       {
         "id": 21,
         "name": "Kiril Stoyanovich",
-        "relationship": "Zuleika secretly opposes Kiril's brutal leadership of the werewolf pack.",
+        "relationship": "Kiril conspired with Elandra Stormraven and Strahd's guard to assassinate Zuleika, disguised as human hunters from Vallaki.",
+        "type": "npc"
+      },
+      {
+        "id": 32,
+        "name": "Elandra Stormraven",
+        "relationship": "Elandra and Strahd's personal guard killed Zuleika while disguised as human hunters.",
+        "type": "npc"
+      },
+      {
+        "id": 83,
+        "name": "Kiara Toranescu",
+        "relationship": "Zuleika's mother. She continues to serve the Den as Den Mother.",
+        "type": "npc"
+      },
+      {
+        "id": 84,
+        "name": "Duesius Toranescu",
+        "relationship": "Zuleika's father.",
+        "type": "npc"
+      },
+      {
+        "id": 86,
+        "name": "Ekrol Toranescu",
+        "relationship": "Zuleika's eldest son, who died alongside his father in the ambush.",
+        "type": "npc"
+      },
+      {
+        "id": 85,
+        "name": "Jiro Toranescu",
+        "relationship": "Zuleika's youngest son, now in Emil's care.",
         "type": "npc"
       }
     ],
     "name": "Zuleika Toranescu",
     "race": "Werewolf (Human)",
-    "npc_class": "Cleric / Pack Member",
-    "location": "Werewolf Den (Mother Night shrine)",
-    "status": "Alive",
-    "alignment_tag": "neutral",
+    "npc_class": "Fighter / Den Leader",
+    "location": "Werewolf Den (deceased)",
+    "status": "Dead",
+    "alignment_tag": "ally",
     "portrait_url": "/images/zuleika-toranescu.png",
-    "description": "Zuleika Toranescu is a werewolf and a member of the Barovian pack who tends the shrine to Mother Night within the werewolf den. She is more composed and thoughtful than most of the pack, carrying herself with quiet dignity.",
-    "dm_notes": "Zuleika is the devoted mate of the imprisoned Emil Toranescu. She secretly opposes Kiril's brutal leadership and prays constantly for Emil's safe return. She is willing to help anyone who promises to free her husband from Castle Ravenloft's dungeons. She represents the more civilized faction within the werewolf pack and can serve as an unexpected ally.",
+    "description": "Zuleika Toranescu was the Pack Leader of the Toranescu pack and Den Leader — the leader of all the werewolf packs in Barovia. He was a capable warrior and a just leader who did not hate humans, as his mate Emil was once a human who was turned. He was assassinated by Elandra Stormraven and Strahd's personal guard, who disguised themselves as human hunters from Vallaki.",
+    "dm_notes": "Zuleika was a just leader who tried to reign in the elements within the Den that wanted to kill for the sake of killing. He did not hate humans — his mate Emil was once human before she was turned — and he believed in doing what was best for the Den and his Pack.\n\nKiril Stoyanovich, who Zuleika's family had taken in and raised after human hunters wiped out Kiril's pack, could not defeat Zuleika in a direct challenge for leadership. Instead, Kiril plotted with Strahd and Elandra Stormraven to have Zuleika ambushed. Elandra and Strahd's personal guard killed Zuleika and his eldest son Ekrol while they were out hunting, dressing as human hunters from Vallaki to frame the humans and inflame hatred within the packs.\n\nZuleika's death allowed Kiril to seize control of the Den, but his brutal leadership eventually led the packs to expel him in favor of Emil. Zuleika is remembered as the last good Den Leader, and his murder is one of Strahd's most cynical acts of manipulation.",
     "sort_order": 23,
     "is_hidden": true
   },
@@ -847,6 +943,18 @@
         "name": "Gertruda",
         "relationship": "Gertruda is Mad Mary's daughter who left to find Castle Ravenloft, driving Mary to madness with grief.",
         "type": "npc"
+      },
+      {
+        "id": 72,
+        "name": "Oskander",
+        "relationship": "Mary's late husband. Oskander was one of the Skander duplicates of Yuri Skander. He was murdered by Rahadin.",
+        "type": "npc"
+      },
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "Mary was Yuri's young apprentice before the amulet of wishing created the Skander duplicates. The incident traumatized her and changed her life forever.",
+        "type": "npc"
       }
     ],
     "name": "Mad Mary Strazni",
@@ -856,8 +964,8 @@
     "status": "Alive",
     "alignment_tag": "neutral",
     "portrait_url": "/images/mad-mary.png",
-    "description": "Mad Mary is a grief-stricken woman in the Village of Barovia whose daughter went missing. She can be heard wailing from her boarded-up townhouse, inconsolable and half-mad with worry. Mary's screams echo through the empty streets, adding to the village's oppressive atmosphere.",
-    "dm_notes": "Mary's daughter Gertruda left to find Castle Ravenloft, naively believing she could persuade Strahd to be kind. Mary doesn't know where Gertruda went — only that she is gone. The sound of her wailing is often the first thing the party hears when entering the Village of Barovia.",
+    "description": "Mad Mary — born Mary Strazni — is a grief-stricken woman in the Village of Barovia whose daughter Gertruda went missing. She can be heard wailing from her boarded-up townhouse, inconsolable and half-mad with worry. Mary's screams echo through the empty streets, adding to the village's oppressive atmosphere.",
+    "dm_notes": "Mary Strazni was once a young and beautiful apprentice to the wizard Yuri Skander at Skanders Imporium of Magic in Vallaki. While studying an amulet of wishing — a pendant with a single copper coin enclosed in amber — she inadvertently triggered its power by expressing a wish for more men like Yuri in the world. The resulting flash created five duplicates of Yuri, each with all his memories and abilities. The incident shook Mary deeply.\n\nOne of the duplicates, Oskander, fell in love with Mary and married her. They had a daughter, Gertrude, whom they both loved dearly. When Rahadin murdered Oskander in a fit of rage, Mary was devastated. She eventually left Vallaki and returned to the Village of Barovia with Gertrude.\n\nYears later, Gertrude left to find Castle Ravenloft, naively believing she could persuade Strahd to be kind. Mary doesn't know where Gertrude went — only that she is gone. The compounded losses of her husband and daughter have driven Mary to the edge of madness. The sound of her wailing is often the first thing the party hears when entering the Village of Barovia.",
     "sort_order": 28,
     "is_hidden": true
   },
@@ -875,6 +983,12 @@
         "name": "Strahd Von Zarovich",
         "relationship": "Gertruda naively came to Castle Ravenloft believing she could appeal to Strahd's better nature.",
         "type": "npc"
+      },
+      {
+        "id": 72,
+        "name": "Oskander",
+        "relationship": "Gertruda's father. Oskander was one of the Skander duplicates, murdered by Rahadin before Gertruda was old enough to remember him well.",
+        "type": "npc"
       }
     ],
     "name": "Gertruda",
@@ -885,7 +999,7 @@
     "alignment_tag": "neutral",
     "portrait_url": "/images/gertruda.png",
     "description": "Gertruda is Mad Mary's daughter, a sheltered young woman who vanished from the Village of Barovia. She has lived her entire life under her overprotective mother's care and is dangerously innocent about the true nature of the world outside her door.",
-    "dm_notes": "Gertruda left the village to seek out Castle Ravenloft, believing she could appeal to Strahd's better nature. She now resides in the castle as Strahd's 'guest,' unaware of the mortal danger she is in. Her naivety is both tragic and dangerous — she genuinely believes Strahd is a misunderstood nobleman rather than a predatory vampire.",
+    "dm_notes": "Gertruda is the daughter of Oskander and Mary Strazni (Mad Mary). Her father Oskander — one of the Skander duplicates of Yuri Skander — was murdered by Rahadin when Gertruda was young. After his death, Mary took Gertruda to the Village of Barovia where she grew up sheltered and overprotected.\n\nGertruda left the village to seek out Castle Ravenloft, believing she could appeal to Strahd's better nature. She now resides in the castle as Strahd's 'guest,' unaware of the mortal danger she is in. Her naivety is both tragic and dangerous — she genuinely believes Strahd is a misunderstood nobleman rather than a predatory vampire.",
     "sort_order": 29,
     "is_hidden": true
   },
@@ -1797,6 +1911,674 @@
     "description": "Offalia Wormwiggle appears as a young gril around the age of 10-12 years with a nervous giggle and fidgeting hands. She often goes with her grandmother to sell pies and charms the locals with her smile.. ",
     "dm_notes": "Offalia is a night hag and the youngest member of the Bonegrinder coven — Morgantha's granddaughter and Bella's daughter. She is the most openly sadistic of the three, taking particular delight in tormenting the kidnapped children before they are ground into dream pastry ingredients. Offalia keeps the children caged on the upper floor of the windmill and 'plays' with them in ways that would horrify even hardened adventurers.\n\nDespite her cruelty, Offalia is the weakest link in the coven — she is the most likely to panic if the coven is attacked and may try to flee rather than fight if separated from her mother and grandmother. She is the one who interacts with the other children the most, and is the one that slips the a treat to help her Grandmother or Mother take them.",
     "sort_order": 66,
+    "is_hidden": true
+  },
+  {
+    "npcid": 67,
+    "associations": [
+      {
+        "id": 68,
+        "name": "Iskander",
+        "relationship": "Duplicate of Yuri. Helps run Skanders Imporium of Magic.",
+        "type": "npc"
+      },
+      {
+        "id": 71,
+        "name": "Eskander",
+        "relationship": "Duplicate of Yuri. Helps run Skanders Imporium of Magic.",
+        "type": "npc"
+      },
+      {
+        "id": 72,
+        "name": "Oskander",
+        "relationship": "Duplicate of Yuri. Married Mary Strazni and was murdered by Rahadin.",
+        "type": "npc"
+      },
+      {
+        "id": 69,
+        "name": "Askander",
+        "relationship": "Duplicate of Yuri. Runs the Alchemy shop in Vallaki.",
+        "type": "npc"
+      },
+      {
+        "id": 70,
+        "name": "Uskander",
+        "relationship": "Duplicate of Yuri. Runs the Antique store in Vallaki.",
+        "type": "npc"
+      },
+      {
+        "id": 28,
+        "name": "Mad Mary Strazni",
+        "relationship": "Mary was Yuri's young apprentice. She accidentally triggered the amulet of wishing that created the Skander duplicates.",
+        "type": "npc"
+      }
+    ],
+    "name": "Yuri Skander",
+    "race": "Human",
+    "npc_class": "Wizard",
+    "location": "Vallaki (Skanders Imporium of Magic)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Yuri Skander is a respected wizard who runs Skanders Imporium of Magic in Vallaki, buying and selling much of the magical merchandise that the Tser Hill Vistani bring into town from beyond the Mists. He is the 'Prime' Skander — the original — from whom five duplicates were created by a magical accident involving an amulet of wishing.",
+    "dm_notes": "Yuri was a respected wizard whose young apprentice Mary Strazni accidentally triggered an amulet of wishing — a pendant with a single copper coin enclosed in amber. While studying it, Mary expressed a wish that there were more men like Yuri in Vallaki. The resulting flash created five duplicates of Yuri, each with all his memories and abilities. They decided Yuri should remain the Prime Skander, and the duplicates took new names: Iskander, Askander, Uskander, Eskander, and Oskander. Over the years, each became their own person with distinct interests and lives.\n\nYuri, Iskander, and Eskander continue to run the Imporium together. When Rahadin murdered Oskander, the Skanders vowed never to forgive Strahd. The entire Skander family now harbors a deep hatred for the vampire lord and his servants.",
+    "sort_order": 67,
+    "is_hidden": true
+  },
+  {
+    "npcid": 68,
+    "associations": [
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "The Prime Skander, from whom Iskander was duplicated.",
+        "type": "npc"
+      }
+    ],
+    "name": "Iskander",
+    "race": "Human",
+    "npc_class": "Wizard",
+    "location": "Vallaki (Skanders Imporium of Magic)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Iskander is one of the five duplicates of Yuri Skander, created by the accidental triggering of an amulet of wishing. He continues to work alongside Yuri and Eskander at Skanders Imporium of Magic in Vallaki.",
+    "dm_notes": "Iskander retains all of Yuri's original memories and magical abilities but has developed into his own person over the years. He helps run the Imporium and shares the other Skanders' hatred of Strahd after Rahadin murdered their brother Oskander.",
+    "sort_order": 68,
+    "is_hidden": true
+  },
+  {
+    "npcid": 69,
+    "associations": [
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "The Prime Skander, from whom Askander was duplicated.",
+        "type": "npc"
+      }
+    ],
+    "name": "Askander",
+    "race": "Human",
+    "npc_class": "Wizard / Alchemist",
+    "location": "Vallaki (Alchemy Shop)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Askander is one of the five duplicates of Yuri Skander who took up alchemy after the duplication. He owns and operates the Alchemy shop in Vallaki and has become very skilled at his craft.",
+    "dm_notes": "Askander diverged from the other Skanders by pursuing alchemy rather than general wizardry. He is very good at it at this point and his shop is a valuable resource in Vallaki. He shares the Skanders' hatred of Strahd after Rahadin murdered their brother Oskander.",
+    "sort_order": 69,
+    "is_hidden": true
+  },
+  {
+    "npcid": 70,
+    "associations": [
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "The Prime Skander, from whom Uskander was duplicated.",
+        "type": "npc"
+      }
+    ],
+    "name": "Uskander",
+    "race": "Human",
+    "npc_class": "Wizard / Antiquarian",
+    "location": "Vallaki (Antique Store)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Uskander is one of the five duplicates of Yuri Skander who developed a love for all things ancient. He runs the Antique store in Vallaki and is a knowledgeable scholar of Barovian history and artifacts.",
+    "dm_notes": "Uskander became close friends with Nikolai Wachter, bonding over their shared love of history and antiquities. However, when it was learned that Nikolai was associating with Strahd — the master of Rahadin, who killed Oskander — Uskander broke off the friendship. This happened shortly before Nikolai was murdered while traveling to investigate ruins to the south near Mount Ghakis.\n\nUskander now runs the Antique store in Vallaki and shares the Skanders' hatred of Strahd. His knowledge of ancient artifacts and Barovian history makes him a potentially valuable resource for the party.",
+    "sort_order": 70,
+    "is_hidden": true
+  },
+  {
+    "npcid": 71,
+    "associations": [
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "The Prime Skander, from whom Eskander was duplicated.",
+        "type": "npc"
+      }
+    ],
+    "name": "Eskander",
+    "race": "Human",
+    "npc_class": "Wizard",
+    "location": "Vallaki (Skanders Imporium of Magic)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Eskander is one of the five duplicates of Yuri Skander. He continues to work alongside Yuri and Iskander at Skanders Imporium of Magic in Vallaki.",
+    "dm_notes": "Eskander retains all of Yuri's original memories and magical abilities but has developed into his own person over the years. He helps run the Imporium and shares the other Skanders' hatred of Strahd after Rahadin murdered their brother Oskander.",
+    "sort_order": 71,
+    "is_hidden": true
+  },
+  {
+    "npcid": 72,
+    "associations": [
+      {
+        "id": 67,
+        "name": "Yuri Skander",
+        "relationship": "The Prime Skander, from whom Oskander was duplicated.",
+        "type": "npc"
+      },
+      {
+        "id": 28,
+        "name": "Mad Mary Strazni",
+        "relationship": "Oskander fell in love with and married Mary Strazni, Yuri's former apprentice.",
+        "type": "npc"
+      },
+      {
+        "id": 29,
+        "name": "Gertruda",
+        "relationship": "Oskander's daughter with Mary. He loved Gertruda dearly.",
+        "type": "npc"
+      },
+      {
+        "id": 7,
+        "name": "Rahadin",
+        "relationship": "Rahadin murdered Oskander in a fit of rage. The reason for their confrontation is unknown.",
+        "type": "npc"
+      }
+    ],
+    "name": "Oskander",
+    "race": "Human",
+    "npc_class": "Wizard",
+    "location": "Vallaki (formerly)",
+    "status": "Dead",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Oskander was one of the five duplicates of Yuri Skander. Unlike his brothers who pursued magic and commerce, Oskander fell in love with Mary Strazni — Yuri's young apprentice — and married her. They had a daughter, Gertrude, whom they both loved dearly.",
+    "dm_notes": "Oskander was the Skander duplicate who chose love over magic. He married Mary Strazni and they had a daughter, Gertrude. Rahadin murdered Oskander in a fit of rage — nobody is certain what their fight was about or why Rahadin killed him. His death devastated Mary, who eventually left Vallaki and returned to the Village of Barovia with Gertrude, where she became known as Mad Mary.\n\nOnce word of Oskander's murder reached the other Skanders, they vowed never to forgive Strahd — the master Rahadin serves. Oskander's death turned the entire Skander family into bitter enemies of Castle Ravenloft.",
+    "sort_order": 72,
+    "is_hidden": true
+  },
+  {
+    "npcid": 73,
+    "associations": [
+      {
+        "id": 11,
+        "name": "Lady Fiona Wachter",
+        "relationship": "Nikolai's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 74,
+        "name": "Karl Wachter",
+        "relationship": "Nikolai's younger brother.",
+        "type": "npc"
+      },
+      {
+        "id": 75,
+        "name": "Stella Wachter",
+        "relationship": "Nikolai's youngest sibling. Killed at the Festival of Light.",
+        "type": "npc"
+      },
+      {
+        "id": 80,
+        "name": "Elvir Martikov",
+        "relationship": "Nikolai has feelings for Elvir, Urwin Martikov's youngest daughter. She shares those feelings.",
+        "type": "npc"
+      }
+    ],
+    "name": "Nikolai Wachter Jr.",
+    "race": "Human",
+    "npc_class": "Noble / Fighter",
+    "location": "Vallaki (Wachterhaus)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Nikolai Wachter Jr. is Lady Fiona Wachter's eldest son and the heir to Wachterhaus. He is fond of wine and trouble but carries his family name with pride. He commands the militia in the Order of the Silver Dragon contingent.",
+    "dm_notes": "Nikolai Jr. is fond of wine and trouble, often found at the Blue Water Inn or about town with his brother Karl. Despite his carousing, he is a capable fighter and commands the Wachter militia contingent in the Order of the Silver Dragon.\n\nAt the Festival of Light, Nikolai protected Elvir Martikov — Urwin's youngest daughter — during Strahd's attack. The two have feelings for each other. This connection between the Wachter and Martikov families could prove significant.\n\nNikolai is aware his mother has her Narfell practices but pays them little mind. He is unaware she keeps his father's preserved corpse in her bedroom.",
+    "sort_order": 73,
+    "is_hidden": true
+  },
+  {
+    "npcid": 74,
+    "associations": [
+      {
+        "id": 11,
+        "name": "Lady Fiona Wachter",
+        "relationship": "Karl's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 73,
+        "name": "Nikolai Wachter Jr.",
+        "relationship": "Karl's older brother.",
+        "type": "npc"
+      },
+      {
+        "id": 75,
+        "name": "Stella Wachter",
+        "relationship": "Karl's younger sister. He tried to protect her but failed.",
+        "type": "npc"
+      }
+    ],
+    "name": "Karl Wachter",
+    "race": "Human",
+    "npc_class": "Noble / Scholar",
+    "location": "Vallaki (Wachterhaus)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Karl Wachter is Lady Fiona Wachter's second-born son. A bookworm like his father Nikolai, Karl is quieter and more studious than his older brother. He carries a heavy burden of guilt over his sister Stella's death at the Festival of Light.",
+    "dm_notes": "Karl takes after his late father Nikolai Wachter in his love of books and scholarship. He spends time in the Wachterhaus library his father built, continuing the family tradition of historical study.\n\nAt the Festival of Light, Karl tried to protect his younger sister Stella from the attacking minions of Lady Williams but was unable to save her. He feels responsible for her death and the guilt weighs heavily on him.",
+    "sort_order": 74,
+    "is_hidden": true
+  },
+  {
+    "npcid": 75,
+    "associations": [
+      {
+        "id": 11,
+        "name": "Lady Fiona Wachter",
+        "relationship": "Stella's mother. Stella was following in Fiona's Narfell footsteps.",
+        "type": "npc"
+      },
+      {
+        "id": 73,
+        "name": "Nikolai Wachter Jr.",
+        "relationship": "Stella's older brother.",
+        "type": "npc"
+      },
+      {
+        "id": 74,
+        "name": "Karl Wachter",
+        "relationship": "Stella's brother. Karl tried to protect her but couldn't.",
+        "type": "npc"
+      }
+    ],
+    "name": "Stella Wachter",
+    "race": "Human",
+    "npc_class": "Noble / Occultist",
+    "location": "Vallaki (formerly)",
+    "status": "Dead",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Stella Wachter was Lady Fiona Wachter's youngest child and only daughter. She was killed at the Festival of Light during Strahd's attack on Vallaki. Her death shattered her mother's neutrality toward Strahd and turned the Wachter family against the vampire lord.",
+    "dm_notes": "Stella was the child most like her mother — she was following in Fiona's Narfell footsteps and was already showing promise as a Demon Master. Fiona saw Stella as her successor in the family's ancient traditions.\n\nAt the Festival of Light, Stella was killed by minions of Lady Williams during Strahd's attack. Karl tried to protect her but couldn't save her. Her death broke Fiona — Anna Krezkova had to physically get Fiona moving during the chaos.",
+    "sort_order": 75,
+    "is_hidden": true
+  },
+  {
+    "npcid": 76,
+    "associations": [
+      {
+        "id": 19,
+        "name": "Davian Martikov",
+        "relationship": "Urwin's father and patriarch of the Martikov family.",
+        "type": "npc"
+      },
+      {
+        "id": 77,
+        "name": "Danika Dorakova Martikov",
+        "relationship": "Urwin's wife. They run the Blue Water Inn together.",
+        "type": "npc"
+      },
+      {
+        "id": 80,
+        "name": "Elvir Martikov",
+        "relationship": "Urwin's youngest daughter.",
+        "type": "npc"
+      },
+      {
+        "id": 81,
+        "name": "Brom Martikov",
+        "relationship": "Urwin's son. 17 years old, brave and eager.",
+        "type": "npc"
+      },
+      {
+        "id": 82,
+        "name": "Bray Martikov",
+        "relationship": "Urwin's son. 14 years old, equally brave.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Urwin and the Keepers of the Feather secretly work to undermine Strahd.",
+        "type": "npc"
+      }
+    ],
+    "name": "Urwin Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Innkeeper / Ranger",
+    "location": "Vallaki (Blue Water Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Urwin Martikov runs the Blue Water Inn in Vallaki with his wife Danika. He is Davian Martikov's son and a member of the Keepers of the Feather — a secret network of wereravens opposed to Strahd.",
+    "dm_notes": "Urwin and Danika are both wereravens and members of the Keepers of the Feather. The Blue Water Inn serves as a key intelligence hub for the network. Urwin is protective of his children — Elvir, Brom (17), and Bray (14) — all of whom have inherited the wereraven bloodline.\n\nThe entire Martikov family are members of the Keepers of the Feather contingent in the Order of the Silver Dragon and are vowed enemies of Strahd.",
+    "sort_order": 76,
+    "is_hidden": true
+  },
+  {
+    "npcid": 77,
+    "associations": [
+      {
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Danika's husband.",
+        "type": "npc"
+      },
+      {
+        "id": 19,
+        "name": "Davian Martikov",
+        "relationship": "Danika's father-in-law.",
+        "type": "npc"
+      }
+    ],
+    "name": "Danika Dorakova Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Innkeeper / Ranger",
+    "location": "Vallaki (Blue Water Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Danika Dorakova Martikov is Urwin's wife and co-proprietor of the Blue Water Inn in Vallaki. She is a wereraven and a member of the Keepers of the Feather.",
+    "dm_notes": "Danika is a capable and practical woman who helps run the Blue Water Inn alongside Urwin. She is a wereraven like her husband and is part of the Keepers of the Feather intelligence network. She is a devoted mother to Elvir, Brom, and Bray.",
+    "sort_order": 77,
+    "is_hidden": true
+  },
+  {
+    "npcid": 78,
+    "associations": [
+      {
+        "id": 19,
+        "name": "Davian Martikov",
+        "relationship": "Adrian's father.",
+        "type": "npc"
+      }
+    ],
+    "name": "Adrian Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Ranger",
+    "location": "Wizard of Wines Winery",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Adrian Martikov is Davian's eldest son and works at the Wizard of Wines winery. He is a wereraven and member of the Keepers of the Feather.",
+    "dm_notes": "Adrian is Davian's eldest son and helps manage the winery operations. As a wereraven, he serves as part of the Keepers of the Feather intelligence network throughout Barovia.",
+    "sort_order": 78,
+    "is_hidden": true
+  },
+  {
+    "npcid": 79,
+    "associations": [
+      {
+        "id": 19,
+        "name": "Davian Martikov",
+        "relationship": "Stefania's father.",
+        "type": "npc"
+      }
+    ],
+    "name": "Stefania Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Commoner",
+    "location": "Wizard of Wines Winery",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Stefania Martikov is Davian's adult daughter, married to Dag Martikov. She is a wereraven and member of the Keepers of the Feather.",
+    "dm_notes": "Stefania and her husband Dag have four children: Claudiu (15), Martin (11), Viggo (8), and baby Yolanda. The family lives and works at the Wizard of Wines winery. All are wereravens and part of the Keepers of the Feather.",
+    "sort_order": 79,
+    "is_hidden": true
+  },
+  {
+    "npcid": 80,
+    "associations": [
+      {
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Elvir's father.",
+        "type": "npc"
+      },
+      {
+        "id": 77,
+        "name": "Danika Dorakova Martikov",
+        "relationship": "Elvir's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 73,
+        "name": "Nikolai Wachter Jr.",
+        "relationship": "Nikolai has feelings for Elvir, and she shares those feelings.",
+        "type": "npc"
+      }
+    ],
+    "name": "Elvir Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Commoner",
+    "location": "Vallaki (Blue Water Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Elvir Martikov is Urwin and Danika's youngest daughter. She is a wereraven and lives with her family at the Blue Water Inn in Vallaki.",
+    "dm_notes": "Elvir is Urwin and Danika's youngest child and daughter. She has feelings for Nikolai Wachter Jr., who protected her during Strahd's attack on the Festival of Light. The connection between the Martikov and Wachter families through Elvir and Nikolai could prove significant.",
+    "sort_order": 80,
+    "is_hidden": true
+  },
+  {
+    "npcid": 81,
+    "associations": [
+      {
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Brom's father.",
+        "type": "npc"
+      },
+      {
+        "id": 77,
+        "name": "Danika Dorakova Martikov",
+        "relationship": "Brom's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 75,
+        "name": "Stella Wachter",
+        "relationship": "Brom was wounded trying to save Stella and Karl Wachter at the Festival of Light.",
+        "type": "npc"
+      }
+    ],
+    "name": "Brom Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Commoner",
+    "location": "Vallaki (Blue Water Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Brom Martikov is Urwin and Danika's 17-year-old son. He is brave and eager, a wereraven like his parents. He was wounded at the Festival of Light trying to save Stella and Karl Wachter during Strahd's attack.",
+    "dm_notes": "Brom is brave and eager despite his youth. At the Festival of Light, he was wounded while trying to save Stella and Karl Wachter from the attacking minions. Arabelle, Luvash's daughter, has feelings for Brom. As a wereraven, Brom is part of the Keepers of the Feather contingent in the Order of the Silver Dragon.",
+    "sort_order": 81,
+    "is_hidden": true
+  },
+  {
+    "npcid": 82,
+    "associations": [
+      {
+        "id": 76,
+        "name": "Urwin Martikov",
+        "relationship": "Bray's father.",
+        "type": "npc"
+      },
+      {
+        "id": 77,
+        "name": "Danika Dorakova Martikov",
+        "relationship": "Bray's mother.",
+        "type": "npc"
+      }
+    ],
+    "name": "Bray Martikov",
+    "race": "Human (Wereraven)",
+    "npc_class": "Commoner",
+    "location": "Vallaki (Blue Water Inn)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Bray Martikov is Urwin and Danika's 14-year-old son. Young but equally brave and eager as his older brother Brom. He is a wereraven like his parents.",
+    "dm_notes": "Bray is the youngest of Urwin and Danika's children. Despite his age, he is brave and eager to help. As a wereraven, he is part of the Keepers of the Feather.",
+    "sort_order": 82,
+    "is_hidden": true
+  },
+  {
+    "npcid": 83,
+    "associations": [
+      {
+        "id": 84,
+        "name": "Duesius Toranescu",
+        "relationship": "Kiara's husband. Very protective of their family.",
+        "type": "npc"
+      },
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Kiara's son. The former Den Leader, killed by Elandra Stormraven and Strahd's guard.",
+        "type": "npc"
+      },
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Kiara's daughter-in-law and current Den Leader.",
+        "type": "npc"
+      },
+      {
+        "id": 85,
+        "name": "Jiro Toranescu",
+        "relationship": "Kiara's grandson. She is fiercely protective of him.",
+        "type": "npc"
+      },
+      {
+        "id": 86,
+        "name": "Ekrol Toranescu",
+        "relationship": "Kiara's grandson. Killed alongside his father Zuleika.",
+        "type": "npc"
+      }
+    ],
+    "name": "Kiara Toranescu",
+    "race": "Werewolf (Human)",
+    "npc_class": "Druid / Den Mother",
+    "location": "Werewolf Den",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Kiara Toranescu is the Den Mother of the Barovian werewolf packs — a druid and healer who serves as the spiritual heart of the Den. She is Jiro's grandmother and the mother of the late Den Leader Zuleika. She approaches outsiders peacefully and made a deal with the adventurers on behalf of the Den.",
+    "dm_notes": "Kiara is the mother of the late Zuleika Toranescu and wife of Duesius. She has served as Den Mother for decades, tending to the wounded, mediating disputes between packs, and teaching the younger wolves. Like her husband and daughter-in-law Emil, she does not want to continue the war with humans.\n\nWhen the players came to the Werewolf Den in Session 21, it was Kiara who approached them peacefully with the words 'Be at ease — there is one here who would speak to you.' She and Duesius negotiated a deal with the players on behalf of the Den. After Emil returned from the Wizard's Tower battle, she learned of the deal and chose to honor it.\n\nKiara is fiercely protective of her grandson Jiro, who has already lost his father and older brothers to human hunters.",
+    "sort_order": 83,
+    "is_hidden": true
+  },
+  {
+    "npcid": 84,
+    "associations": [
+      {
+        "id": 83,
+        "name": "Kiara Toranescu",
+        "relationship": "Duesius's wife and the Den Mother.",
+        "type": "npc"
+      },
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Duesius's son. The former Den Leader, assassinated.",
+        "type": "npc"
+      },
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Duesius's daughter-in-law and current Den Leader.",
+        "type": "npc"
+      },
+      {
+        "id": 85,
+        "name": "Jiro Toranescu",
+        "relationship": "Duesius's grandson. He is very protective of the boy.",
+        "type": "npc"
+      }
+    ],
+    "name": "Duesius Toranescu",
+    "race": "Werewolf (Human)",
+    "npc_class": "Fighter / Elder",
+    "location": "Werewolf Den",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Duesius Toranescu is Kiara's husband and the grandfather of Jiro. He is very protective of his family and the Den. A grizzled elder werewolf, Duesius carries himself with quiet authority and compassion — especially toward his grandson.",
+    "dm_notes": "Duesius is the patriarch of the Toranescu family. He lost his son Zuleika and grandson Ekrol to Elandra Stormraven's assassination plot. Despite this, he does not seek blind revenge — like his wife Kiara, he believes the packs have lost too much already.\n\nDuesius helped negotiate the deal with the players at the Werewolf Den in Session 21. An Insight check reveals the compassion, pride, and humor in his eyes as he watches his grandson Jiro, the last male heir of the Toranescu line.",
+    "sort_order": 84,
+    "is_hidden": true
+  },
+  {
+    "npcid": 85,
+    "associations": [
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Jiro's mother and the current Den Leader.",
+        "type": "npc"
+      },
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Jiro's late father. The former Den Leader.",
+        "type": "npc"
+      },
+      {
+        "id": 83,
+        "name": "Kiara Toranescu",
+        "relationship": "Jiro's grandmother. Fiercely protective of him.",
+        "type": "npc"
+      },
+      {
+        "id": 84,
+        "name": "Duesius Toranescu",
+        "relationship": "Jiro's grandfather.",
+        "type": "npc"
+      }
+    ],
+    "name": "Jiro Toranescu",
+    "race": "Werewolf (Human)",
+    "npc_class": "Commoner (child)",
+    "location": "Werewolf Den",
+    "status": "Alive",
+    "alignment_tag": "neutral",
+    "portrait_url": "",
+    "description": "Jiro Toranescu is a young werewolf boy who has suffered tremendous loss — his father Zuleika and older brothers were killed, and his mother Emil was believed dead after the fight at the Wizard's Tower. He is fierce, angry, and heartbroken.",
+    "dm_notes": "Jiro lost his father Zuleika and older brothers Ekrol to violence. His mother Emil led the attack on the Wizard's Tower under Elandra's orders and was believed killed when she jumped from a tower window to escape the players. When the players arrived at the Werewolf Den in Session 21, Jiro charged Brother Ivan with a kitchen knife — tears streaking down his face, but hatred and rage in his eyes.\n\nIf the players spared Jiro, Kiara explained why the child was angry. Jiro kicked Ivan in the chin before running deeper into the cave.\n\nUnknown to Jiro and the Den at the time, his mother Emil survived the fall and returned after the players left. Jiro is the last young heir of the Toranescu pack and his grandparents are fiercely protective of him.",
+    "sort_order": 85,
+    "is_hidden": true
+  },
+  {
+    "npcid": 86,
+    "associations": [
+      {
+        "id": 23,
+        "name": "Zuleika Toranescu",
+        "relationship": "Ekrol's father. They died side by side in the ambush.",
+        "type": "npc"
+      },
+      {
+        "id": 22,
+        "name": "Emil Toranescu",
+        "relationship": "Ekrol's mother.",
+        "type": "npc"
+      },
+      {
+        "id": 83,
+        "name": "Kiara Toranescu",
+        "relationship": "Ekrol's grandmother.",
+        "type": "npc"
+      }
+    ],
+    "name": "Ekrol Toranescu",
+    "race": "Werewolf (Human)",
+    "npc_class": "Fighter",
+    "location": "Werewolf Den (deceased)",
+    "status": "Dead",
+    "alignment_tag": "ally",
+    "portrait_url": "",
+    "description": "Ekrol Toranescu was Zuleika's eldest son and a promising young warrior of the Toranescu pack. He died alongside his father when they were ambushed by Elandra Stormraven and Strahd's personal guard, who were disguised as human hunters from Vallaki.",
+    "dm_notes": "Ekrol fell next to his father Zuleika in the ambush orchestrated by Kiril Stoyanovich, Elandra Stormraven, and Strahd's personal guard. His death, along with his father's, was made to look like the work of human hunters from Vallaki — a lie designed to inflame hatred between the werewolves and humans and justify Kiril's takeover of the Den.",
+    "sort_order": 86,
     "is_hidden": true
   }
 ]
