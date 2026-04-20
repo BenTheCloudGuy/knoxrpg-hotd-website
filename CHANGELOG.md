@@ -4,6 +4,13 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-04-20
+
+### Added
+- **Art Gallery — NPC Portraits** — bulk-added 73 visible NPC portraits to the Art & Images gallery under the "NPC Portraits" category
+- **Art Gallery — Groups** — added 2 group images (Crew of the Seaspray, Stormraven Sisters) under the "Groups & Organizations" category
+- **Art gallery bulk-insert script** — `scripts/add-art-gallery.js` for idempotent insertion of NPC and group images into `hotd_art`
+
 ## [2.2.0] - 2026-04-20
 
 ### Added
