@@ -441,19 +441,19 @@ function pageCss() {
     .map-card-body p { color: #aaa; font-size: 0.82rem; }
     /* ── Art Gallery Grid ── */
     .art-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px; margin-bottom: 48px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px; margin-bottom: 48px;
     }
+    @media (min-width: 600px)  { .art-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; } }
+    @media (min-width: 900px)  { .art-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; } }
+    @media (min-width: 1200px) { .art-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; } }
     .art-card {
-      background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+      background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
       overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
-      cursor: pointer;
+      cursor: pointer; aspect-ratio: 1;
     }
     .art-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(232,185,35,0.15); }
-    .art-card img { width: 100%; height: 200px; object-fit: cover; }
-    .art-card-body { padding: 10px 14px; }
-    .art-card-body h3 { color: #e8b923; font-size: 0.9rem; margin-bottom: 2px; }
-    .art-card-body p { color: #aaa; font-size: 0.78rem; }
+    .art-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
     /* ── Calendar ── */
     .calendar-card {
       background: #1a1a1a; border: 1px solid #333; border-radius: 10px;

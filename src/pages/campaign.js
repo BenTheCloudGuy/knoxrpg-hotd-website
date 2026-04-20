@@ -809,23 +809,36 @@ async function renderHandoutsPage(session) {
 
 // ── Art / Images Gallery Page ─────────────────────────────────
 async function renderArtGalleryPage(session) {
-  let artItems = [];
-  try { const r = await pgPool.query("SELECT * FROM hotd_art ORDER BY sort_order, created_at DESC"); artItems = r.rows; } catch (_) {}
+  // Scan filesystem for images (everything except maps/)
+  const imgDir = path.join(STATIC_ROOT, 'images');
+  const imageExts = /\.(png|jpg|jpeg|webp)$/i;
+  const excludeDirs = new Set(['maps']);
 
-  const artCards = artItems.length > 0 ? artItems.map(a => `
-    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(a.image_url)}, ${JSON.stringify(a.title || "Art")})'>
-      <img src="${esc(a.image_url)}" alt="${esc(a.title || "Art")}" />
-      ${a.title || a.description ? `<div class="art-card-body">${a.title ? `<h3>${esc(a.title)}</h3>` : ""}${a.description ? `<p>${esc(a.description)}</p>` : ""}</div>` : ""}
-    </div>`).join("") : `<p style="color:#888;text-align:center;">No art or images uploaded yet.</p>`;
+  function collectImages(dir, urlPrefix) {
+    let images = [];
+    if (!fs.existsSync(dir)) return images;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (excludeDirs.has(entry.name)) continue;
+        images = images.concat(collectImages(path.join(dir, entry.name), `${urlPrefix}/${entry.name}`));
+      } else if (imageExts.test(entry.name)) {
+        images.push(`${urlPrefix}/${entry.name}`);
+      }
+    }
+    return images;
+  }
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/art/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
+  const allImages = collectImages(imgDir, '/images').sort();
+
+  const artCards = allImages.length > 0 ? allImages.map(url => `
+    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(url)}, "")'>
+      <img src="${esc(url)}" alt="" loading="lazy" />
+    </div>`).join("") : `<p style="color:#888;text-align:center;">No images found.</p>`;
 
   const body = `
   <div class="content">
     <h2 class="section-title">&#127912; Art &amp; Images</h2>
     <p style="color:#888;margin-bottom:24px;">Campaign art, character portraits, scene illustrations, and other images. Click to enlarge.</p>
-    ${adminLink}
     <div class="art-grid">${artCards}</div>
   </div>
   ${artifactOverlayBlock("Art")}`;
