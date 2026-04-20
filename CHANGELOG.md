@@ -4,6 +4,13 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-04-20
+
+### Changed
+- **Art Gallery — filesystem-based** — gallery now loads images directly from `src/hotd-campaign/images/` (excluding `maps/`) instead of querying the `hotd_art` database table
+- **Art Gallery — image-only cards** — removed titles and descriptions from gallery cards; images only with click-to-enlarge overlay
+- **Art Gallery — responsive grid** — column count now adjusts automatically based on window width with breakpoints at 600px, 900px, and 1200px
+
 ## [2.3.0] - 2026-04-20
 
 ### Added
