@@ -4,6 +4,17 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-04-20
+
+### Added
+- **Squad AI team** — initialized Squad framework with 4 specialized agents (Mercer, Helm, Foundry, Artisan) plus Scribe and Ralph
+- **Squad skills** — migrated existing prompts into 6 Squad skills: npc-portrait-generation, docker-testing, git-commit-flow, question-answer, foundry-vtt-module, helm-microk8s
+- **Squad decisions** — codified project conventions (code style, architecture, deployment rules) into `.squad/decisions.md`
+- **Squad routing** — configured work routing table mapping 15 work types to the correct agent
+
+### Fixed
+- **NPC visibility** — removed dead `visible` field from npcs.json (was unused by codebase), set `is_hidden: false` on 73 NPCs using the correct `is_hidden` field that the DB/server actually reads
+
 ## [2.1.0] - 2026-04-20
 
 ### Added
