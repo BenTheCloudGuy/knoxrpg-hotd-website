@@ -4,6 +4,19 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-04-20
+
+### Added
+- **Custom NPC portraits** — generated 69 custom dark fantasy portraits for all campaign NPCs using GPT Image 1, replacing placeholder and book art with a consistent art style
+- **NPC visibility flags** — set `visible: true` on 58 NPCs that players have directly interacted with across Sessions 1-28
+- **Portrait URLs** — added `portrait_url` references for 42 NPCs that were previously missing image links
+
+### Changed
+- **Strahd portrait** — replaced book art (.jpg) with custom portrait (.png); young, powerful, human appearance with dark eyes
+- **Father Alric portrait** — renamed from `Father_Alric.png` to `father-alric.png` with new custom art
+- **Velinka d'Avenir portrait** — renamed from `Velinka d'Avenir.png` to `velinka-davenir.png` with new custom art
+- **Book art replacements** — replaced 30 NPCs that previously used D&D book art with custom generated portraits in consistent dark fantasy style
+
 ## [2.0.0] - 2026-04-19
 
 ### Changed
