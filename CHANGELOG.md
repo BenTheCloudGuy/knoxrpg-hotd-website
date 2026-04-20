@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-19
+
+### Changed
+- **OpenAI SDK upgrade** — upgraded `openai` package from v4.77.0 to v6.34.0
+- **Image generation model** — migrated from DALL-E 3 (deprecated 2026-05-12) to GPT Image 1 (`gpt-image-1`)
+  - Removed `style` parameter (not supported by GPT Image models)
+  - Removed explicit `response_format: "b64_json"` (now the default)
+  - Quality options changed from standard/hd to low/medium/high/auto
+  - Size options changed from 1792x to 1536x variants, added `auto` option
+- **DM Admin Image Studio UI** — removed Style dropdown, updated Quality and Size selectors to match GPT Image options
+- **API Test page UI** — updated labels, dropdowns, and tab names from "DALL-E" to "GPT Image"
+- **azure.js import** — simplified `require("openai")` import (removed legacy v3 compatibility shim)
+- **Embed pipeline** — replaced raw `fetch()` calls to OpenAI API with `openai` SDK `embeddings.create()` method
+
 ## [1.18.0] - 2026-04-19
 
 ### Added

@@ -315,25 +315,23 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       const fullPrompt = stylePrefix ? `${stylePrefix} ${prompt}` : prompt;
 
       const size = body.size || "1024x1024";
-      const style = body.style || "vivid";
-      const quality = body.quality || "standard";
+      const quality = body.quality || "medium";
       const folder = body.folder || null;
       const tags = body.tags || [];
 
-      // Call DALL-E 3
+      // Call GPT Image
       const imgResp = await azure.openaiClient.images.generate({
-        model: "dall-e-3",
+        model: "gpt-image-1",
         prompt: fullPrompt,
         n: 1,
         size,
-        style,
         quality,
-        response_format: "b64_json",
       });
 
       const b64 = imgResp.data[0].b64_json;
       const revisedPrompt = imgResp.data[0].revised_prompt || "";
       const imgBuffer = Buffer.from(b64, "base64");
+      const style = body.style || "";
 
       // Save to local storage
       const ts = Date.now();
@@ -365,7 +363,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
         },
       });
     } catch (err) {
-      console.error("DALL-E generation error:", err);
+      console.error("Image generation error:", err);
       sendJSON(res, { error: err.message }, 500);
     }
     return true;

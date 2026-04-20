@@ -182,14 +182,12 @@ async function renderDmAdminPage(session) {
         <div class="dmc-form-row">
           <label>Size<select id="img-size">
             <option value="1024x1024">1024x1024</option>
-            <option value="1792x1024">1792x1024</option>
-            <option value="1024x1792">1024x1792</option>
-          </select></label>
-          <label>Style<select id="img-style">
-            <option value="vivid">Vivid</option><option value="natural">Natural</option>
+            <option value="1536x1024">1536x1024</option>
+            <option value="1024x1536">1024x1536</option>
+            <option value="auto">Auto</option>
           </select></label>
           <label>Quality<select id="img-quality">
-            <option value="standard">Standard</option><option value="hd">HD</option>
+            <option value="medium">Medium</option><option value="low">Low</option><option value="high">High</option><option value="auto">Auto</option>
           </select></label>
           <label>Folder<input id="img-folder" placeholder="NPCs, Scenes..." list="img-folders-dl" /><datalist id="img-folders-dl"></datalist></label>
         </div>
@@ -1100,13 +1098,13 @@ async function renderDmAdminPage(session) {
     el('img-status').textContent = 'Generating... (15-30s)';
     try {
       const tags = [];
-      const r = await fetch('/api/dm-admin/images/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,size:el('img-size').value,style:el('img-style').value,quality:el('img-quality').value,folder:el('img-folder').value||null,tags})});
+      const r = await fetch('/api/dm-admin/images/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,size:el('img-size').value,quality:el('img-quality').value,folder:el('img-folder').value||null,tags})});
       const d = await r.json();
       if(!r.ok) throw new Error(d.error);
       _imgPreviewId = d.image.id;
       el('img-preview-src').src = d.image.image_url;
       el('img-preview-prompt').textContent = d.image.prompt;
-      el('img-preview-revised').textContent = d.image.revised_prompt ? 'DALL-E revised: ' + d.image.revised_prompt : '';
+      el('img-preview-revised').textContent = d.image.revised_prompt ? 'Revised: ' + d.image.revised_prompt : '';
       el('img-preview').style.display = 'flex';
       el('img-status').textContent = 'Done!';
       setTimeout(()=>el('img-status').textContent='',3000);
@@ -1121,7 +1119,7 @@ async function renderDmAdminPage(session) {
     _imgId = id;
     el('img-modal-src').src = img.image_url;
     el('img-modal-prompt').textContent = img.prompt;
-    el('img-modal-revised').textContent = img.revised_prompt ? 'DALL-E revised: ' + img.revised_prompt : '';
+    el('img-modal-revised').textContent = img.revised_prompt ? 'Revised: ' + img.revised_prompt : '';
     el('img-modal-meta').innerHTML = '<span>'+img.size+'</span><span>'+img.style+'</span><span>'+img.quality+'</span><span>'+(img.folder||'Unfiled')+'</span><span>'+new Date(img.created_at).toLocaleString()+'</span>';
     el('img-modal-folder').value = img.folder||'';
     const tags = img.tags?(typeof img.tags==='string'?JSON.parse(img.tags):img.tags):[];

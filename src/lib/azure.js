@@ -8,7 +8,7 @@ let SecretClient;
 try { ({ SecretClient } = require("@azure/keyvault-secrets")); } catch (_e) { /* optional in dev */ }
 
 let OpenAI;
-try { OpenAI = require("openai").default || require("openai"); } catch (_e) {}
+try { OpenAI = require("openai"); } catch (_e) {}
 
 // ── Key Vault client ───────────────────────────────────────────
 let kvClient = null;

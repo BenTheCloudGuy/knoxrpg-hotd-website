@@ -45,6 +45,9 @@ const EMBED_MODEL = "text-embedding-3-small";
 const EMBED_DIMENSIONS = 1536;
 const EMBED_BATCH_SIZE = 100; // max inputs per API call
 
+const OpenAI = require("openai");
+let openaiClient = null;
+
 // ── Content root (relative to repo) ──────────────────────────
 const REPO_ROOT = path.resolve(__dirname, "..");
 const CONTENT_DIR = path.join(REPO_ROOT, "src", "hotd-campaign");
@@ -383,6 +386,9 @@ async function stageEmbed(chunks) {
   if (!OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is required for embedding");
   }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: OPENAI_API_KEY });
+  }
 
   let totalTokens = 0;
   let apiCalls = 0;
@@ -394,23 +400,17 @@ async function stageEmbed(chunks) {
     const texts = batch.map(c => c.text);
 
     try {
-      const resp = await fetch("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: EMBED_MODEL, input: texts, dimensions: EMBED_DIMENSIONS }),
+      const resp = await openaiClient.embeddings.create({
+        model: EMBED_MODEL,
+        input: texts,
+        dimensions: EMBED_DIMENSIONS,
       });
       apiCalls++;
 
-      if (!resp.ok) {
-        const errBody = await resp.text();
-        throw new Error(`OpenAI API ${resp.status}: ${errBody}`);
-      }
+      totalTokens += resp.usage?.total_tokens || 0;
 
-      const data = await resp.json();
-      totalTokens += data.usage?.total_tokens || 0;
-
-      for (let j = 0; j < data.data.length; j++) {
-        batch[j].embedding = data.data[j].embedding;
+      for (let j = 0; j < resp.data.length; j++) {
+        batch[j].embedding = resp.data[j].embedding;
       }
 
       log(`  Batch ${Math.floor(i / EMBED_BATCH_SIZE) + 1}: ${batch.length} embedded (${data.usage?.total_tokens || "?"} tokens)`);

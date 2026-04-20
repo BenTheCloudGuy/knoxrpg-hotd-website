@@ -183,13 +183,11 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
 
       const t0 = Date.now();
       const response = await azure.openaiClient.images.generate({
-        model: "dall-e-3",
+        model: "gpt-image-1",
         prompt: String(prompt).slice(0, 4000),
         n: 1,
         size: size || "1024x1024",
-        quality: quality || "standard",
-        style: style || "vivid",
-        response_format: "b64_json",
+        quality: quality || "medium",
       });
       const elapsed = Date.now() - t0;
 
@@ -198,10 +196,9 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
         image_b64: imageData.b64_json,
         revised_prompt: imageData.revised_prompt || "",
         _debug: {
-          model: "dall-e-3",
+          model: "gpt-image-1",
           size: size || "1024x1024",
-          quality: quality || "standard",
-          style: style || "vivid",
+          quality: quality || "medium",
           latencyMs: elapsed,
           promptLength: prompt.length,
         },

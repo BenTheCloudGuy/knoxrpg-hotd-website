@@ -145,7 +145,7 @@ function renderApiTestPage(session) {
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="chat">DM AI Chat</button>
       <button class="tab-btn" data-tab="search">Search</button>
-      <button class="tab-btn" data-tab="image">Image Gen (DALL-E)</button>
+      <button class="tab-btn" data-tab="image">Image Gen (GPT Image)</button>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ -->
@@ -260,7 +260,7 @@ function renderApiTestPage(session) {
     <div class="tab-panel" id="tab-image">
       <div class="test-grid">
         <div class="panel">
-          <h3>&#127912; DALL-E 3 Request</h3>
+          <h3>&#127912; GPT Image Request</h3>
           <label>Image Prompt</label>
           <textarea id="imagePrompt" rows="4" placeholder="Describe the image to generate...">A dark medieval castle perched on a cliff above misty forests, gothic architecture, dramatic lightning, D&amp;D fantasy art style</textarea>
 
@@ -269,22 +269,18 @@ function renderApiTestPage(session) {
               <label>Size</label>
               <select id="imageSize">
                 <option value="1024x1024" selected>1024x1024 (Square)</option>
-                <option value="1792x1024">1792x1024 (Landscape)</option>
-                <option value="1024x1792">1024x1792 (Portrait)</option>
+                <option value="1536x1024">1536x1024 (Landscape)</option>
+                <option value="1024x1536">1024x1536 (Portrait)</option>
+                <option value="auto">Auto</option>
               </select>
             </div>
             <div class="field">
               <label>Quality</label>
               <select id="imageQuality">
-                <option value="standard" selected>Standard</option>
-                <option value="hd">HD</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Style</label>
-              <select id="imageStyle">
-                <option value="vivid" selected>Vivid</option>
-                <option value="natural">Natural</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+                <option value="high">High</option>
+                <option value="auto">Auto</option>
               </select>
             </div>
           </div>
@@ -540,8 +536,7 @@ function renderApiTestPage(session) {
           body: JSON.stringify({
             prompt: prompt,
             size: document.getElementById('imageSize').value,
-            quality: document.getElementById('imageQuality').value,
-            style: document.getElementById('imageStyle').value
+            quality: document.getElementById('imageQuality').value
           })
         });
         var elapsed = ((performance.now() - t0) / 1000).toFixed(2);
