@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-04-20
+
+### Added
+- **Notable Groups — Vistani** — new group page covering origins, culture, the six Vistani encampments, and key NPCs
+- **Notable Groups — Bonegrinder Coven** — new group page for the Wormwiggle hag coven with battle history, member status, and DM notes
+- **Group art — Vistani** — generated custom organization image for the Vistani group page
+- **Group art — Bonegrinder Coven** — generated custom organization image for the Bonegrinder Coven group page
+
+### Fixed
+- **DM Notes visibility** — group detail pages now strip `## DM Notes` sections for non-admin users; previously DM-only content was visible to all visitors
+
+### Removed
+- **Book art images** — removed 67 extracted book art images (`image_page_*.png`) from the campaign images directory
+
 ## [2.4.0] - 2026-04-20
 
 ### Changed

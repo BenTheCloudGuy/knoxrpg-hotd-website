@@ -9,7 +9,7 @@ const { esc, safeJson } = require("../lib/utils");
 const { HARPTOS_MONTHS, ordinal, STATIC_ROOT } = require("../config");
 const { pageShell } = require("../components/shell");
 const { mapOverlayBlock, artifactOverlayBlock } = require("../components/overlays");
-const { renderMarkdownFile, renderRichTextBlock } = require("../lib/markdown");
+const { renderMarkdownFile, renderRichTextBlock, markdownToHtml } = require("../lib/markdown");
 
 // ── House Rules Page ──────────────────────────────────────────
 function renderHouseRulesPage(session) {
@@ -1505,15 +1505,19 @@ function renderGroupDetailPage(slug, session) {
   const safeName = slug.replace(/[^a-z0-9_-]/gi, "");
   const filePath = path.join(STATIC_ROOT, "data", "groups", `${safeName}.md`);
   if (!fs.existsSync(filePath)) return null;
-  let htmlContent = renderMarkdownFile(filePath);
+  let md = fs.readFileSync(filePath, "utf-8");
+  const isAdmin = session && session.role === 'admin';
+  if (!isAdmin) {
+    md = md.replace(/\n## DM Notes[\s\S]*$/, '');
+  }
+  const meta = parseGroupMeta(md);
+  let htmlContent = markdownToHtml(md);
   htmlContent = htmlContent.replace(/src="\.\.\/images\//g, 'src="/images/');
   const body = `
   <div class="content">
     <a href="/groups" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Notable Groups</a>
     <div class="history-content" style="margin-top:16px;">${htmlContent}</div>
   </div>`;
-  const md = fs.readFileSync(filePath, "utf-8");
-  const meta = parseGroupMeta(md);
   return pageShell(`${meta.title || "Group"} — Halls of the Damned`, "/groups", body, session);
 }
 
