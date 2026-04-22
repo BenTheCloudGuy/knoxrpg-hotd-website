@@ -159,7 +159,7 @@ shadow of Strahd Von Zarovich.
 Rise of the Von Zarovich Dynasty (-339 DR to 100 DR)
 Lord Viktor Von Zarovich, a local military governor, swiftly unified Damara, Vaasa, Narfell, and Impiltur
 under his rule. Establishing his capital at the ancient Netherese seat of power, Viktor crowned himself
-King Von Zarovich and renamed the city Morov, honoring his wife, Isolde Morovich. His reign ushered in
+King Von Zarovich and named the barony Morov, honoring his wife, Isolde Morovich, establishing his capital at Heliogabalus. His reign ushered in
 a Golden Age characterized by stability and prosperity.
 The Decline and Division
 The Golden Age ended abruptly when King Ivan Von Zarovich assumed the throne. His cruelty incited
@@ -701,7 +701,7 @@ In the immediate aftermath of Netheril's fall, a military governor named Lord Vi
 control of the Damaran region. With a mixture of military might and strategic diplomacy, Viktor unified
 territories that would later become Vaasa, Damara, Narfell, and Impiltur. He crowned himself King Von
 Zarovich, founding the Kingdom of Damara, establishing his capital at the former Netherese stronghold,
-renaming it Morov in honor of his wife Isolde Morovich. His rule was long and prosperous, remembered
+naming the barony Morov in honor of his wife Isolde Morovich and establishing his capital at Heliogabalus. His rule was long and prosperous, remembered
 fondly for restoring stability.
 ### The Rise of Strahd
 The Von Zarovich dynasty enjoyed a period known as the Golden Age (-389 DR to 100 DR). This changed

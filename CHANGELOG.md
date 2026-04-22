@@ -4,6 +4,15 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-04-22
+
+### Fixed
+- **Damara lore correction** — updated Morov from a city to the Barony of Morov with Heliogabalus as its capital, aligning with R.A. Salvatore's *The Bloodstone Lands* (FR9) and official Forgotten Realms canon
+  - `damara.md` — intro, Morov section, and DM Notes updated
+  - `history.md` — Von Zarovich founding corrected
+  - `bonegrinder-coven.md` — Viktor's capital references fixed
+  - `rewrite-realms.js` — DM Notes template updated
+
 ## [2.6.1] - 2026-04-21
 
 ### Added

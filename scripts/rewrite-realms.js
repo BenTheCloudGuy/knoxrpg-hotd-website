@@ -452,7 +452,7 @@ The Zhentarim maintain active interest in Anauroch's trade routes and buried Net
 
   'damara': `## DM Notes
 
-Damara is a central location in the Halls of the Damned campaign. The Von Zarovich dynasty ruled Damara from approximately -300 DR until the dynasty's collapse following Strahd's curse. Viktor Von Zarovich founded the kingdom with its capital at the fortified city of Morov, built on ancient Netherese ruins. King Barov I, King Vladimir, and King Barov II expanded and strengthened the realm before Strahd Von Zarovich's transformation into a vampire lord shattered the dynasty's power.
+Damara is a central location in the Halls of the Damned campaign. The Von Zarovich dynasty ruled Damara from approximately -300 DR until the dynasty's collapse following Strahd's curse. Viktor Von Zarovich founded the kingdom and established his capital at Heliogabalus within the Barony of Morov, a province he named after his wife Isolde Morovich. The barony was built upon the ruins of an ancient Netherese outpost. King Barov I, King Vladimir, and King Barov II expanded and strengthened the realm before Strahd Von Zarovich's transformation into a vampire lord shattered the dynasty's power.
 
 The Frostmantle dynasty took control in 1285 DR under Irik Frostmantle, with support from House Williams. The current ruler, King Yarin Frostmantle, is a petty and oppressive tyrant. His son, Prince Ian Frostmantle, was severely wounded investigating events in Valls.
 

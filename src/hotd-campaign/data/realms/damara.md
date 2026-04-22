@@ -6,7 +6,7 @@
 > **Region:** Forgotten Lands
 > **Languages:** Damaran
 
-Damara is a rugged and diverse region located in the Forgotten Lands, known for its rich deposits of bloodstone and other precious resources. The people of Damara are hardy and resilient, having adapted to the harsh climate and rocky terrain. The region is characterized by its mountainous landscapes, particularly the East Galena and Earthspur Mountains, which provide both challenges and opportunities for its inhabitants. The government is currently under the rule of the usurper King Yarin Frostmantle, whose oppressive reign has sparked unrest among the populace. Historically, Damara has been a site of conflict and power struggles, with its wealth attracting both adventurers and invaders. The region's history is marked by the rise and fall of dynasties, including the Von Zarovich dynasty, which once ruled from the city of Morov. Today, Damara is a thriving hub for adventurers, despite the looming threats from both internal strife and external dangers, such as demonic incursions.
+Damara is a rugged and diverse region located in the Forgotten Lands, known for its rich deposits of bloodstone and other precious resources. The people of Damara are hardy and resilient, having adapted to the harsh climate and rocky terrain. The region is characterized by its mountainous landscapes, particularly the East Galena and Earthspur Mountains, which provide both challenges and opportunities for its inhabitants. The government is currently under the rule of the usurper King Yarin Frostmantle, whose oppressive reign has sparked unrest among the populace. Historically, Damara has been a site of conflict and power struggles, with its wealth attracting both adventurers and invaders. The region's history is marked by the rise and fall of dynasties, including the Von Zarovich dynasty, which once ruled from Heliogabalus within the Barony of Morov. Today, Damara is a thriving hub for adventurers, despite the looming threats from both internal strife and external dangers, such as demonic incursions.
 
 ![The White Worm takes Karlach, Astarion, and Shadowheart by surprise](../../images/realms/02-006.white-worm.png)
 
@@ -32,9 +32,9 @@ The Monastery of the Yellow Rose, also known as the Citadel of the White Worm, i
 
 The Vaasan Gate is a fortified pass that serves as a crucial border crossing between Damara and the neighboring land of Vaasa. It is heavily guarded and serves as a checkpoint for travelers and traders moving between the two regions. The gate has been the site of numerous battles, as it is a strategic point of control. The surrounding area is rugged and treacherous, with the East Galena Mountains providing a natural barrier. Control of the Vaasan Gate is vital for maintaining security and trade routes in the region.
 
-### Morov
+### Barony of Morov
 
-Morov, once the capital of the Von Zarovich dynasty, is a city steeped in history. Built on ancient Netherese ruins, Morov is a testament to the enduring legacy of the past. The city is known for its fortified walls and its strategic location, which made it a center of power during the reign of the Von Zarovich dynasty. Though no longer the capital, Morov remains an important city in Damara, with its own unique culture and traditions. It is a place where history and modernity coexist, offering a glimpse into the region's storied past.
+The Barony of Morov is one of the city provinces of Damara, situated in the kingdom's most fertile southern lands around Lake Mogador. Heliogabalus, the barony's largest city and the capital of Damara, sits within its borders. During the Von Zarovich dynasty, Viktor named the barony in honor of his wife, Isolde Morovich, and ruled from Heliogabalus as his seat of power. The barony is steeped in history, with ancient Netherese ruins underlying parts of the region. Though the Von Zarovich dynasty fell long ago, the Barony of Morov remains one of the wealthiest and most stable provinces in Damara, its bountiful natural resources and strategic location ensuring its continued importance.
 
 ### Castle Perilous
 
@@ -50,7 +50,7 @@ The Order of the Yellow Rose is a monastic order dedicated to Ilmater, the god o
 
 ## DM Notes
 
-Damara is a central location in the Halls of the Damned campaign. The Von Zarovich dynasty ruled Damara from approximately -300 DR until the dynasty's collapse following Strahd's curse. Viktor Von Zarovich founded the kingdom with its capital at the fortified city of Morov, built on ancient Netherese ruins. King Barov I, King Vladimir, and King Barov II expanded and strengthened the realm before Strahd Von Zarovich's transformation into a vampire lord shattered the dynasty's power.
+Damara is a central location in the Halls of the Damned campaign. The Von Zarovich dynasty ruled Damara from approximately -300 DR until the dynasty's collapse following Strahd's curse. Viktor Von Zarovich founded the kingdom and established his capital at Heliogabalus within the Barony of Morov, a province he named after his wife Isolde Morovich. The barony was built upon the ruins of an ancient Netherese outpost. King Barov I, King Vladimir, and King Barov II expanded and strengthened the realm before Strahd Von Zarovich's transformation into a vampire lord shattered the dynasty's power.
 
 The Frostmantle dynasty took control in 1285 DR under Irik Frostmantle, with support from House Williams. The current ruler, King Yarin Frostmantle, is a petty and oppressive tyrant. His son, Prince Ian Frostmantle, was severely wounded investigating events in Valls.
 
