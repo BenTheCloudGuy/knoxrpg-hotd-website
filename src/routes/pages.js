@@ -12,6 +12,7 @@ const {
   renderHistoryPage, renderArtifactsPage, renderHandoutsPage, renderArtGalleryPage,
   renderArtifactDetailPage, renderHandoutDetailPage, renderJournalPage,
   renderGroupsPage, renderGroupDetailPage,
+  renderRealmsPage, renderRealmDetailPage,
 } = require("../pages/campaign");
 
 // Admin pages
@@ -117,6 +118,17 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     return true;
   }
 
+  // ── Realm detail page ─────────────────────────────────────
+  if (decoded.startsWith("/realms/") && decoded !== "/realms") {
+    const slug = decoded.split("/")[2];
+    if (slug) {
+      const detailHtml = renderRealmDetailPage(slug, session);
+      if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
+    }
+    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
+    return true;
+  }
+
   // ── Group detail page ──────────────────────────────────────
   if (decoded.startsWith("/groups/") && decoded !== "/groups") {
     const slug = decoded.split("/")[2];
@@ -170,6 +182,8 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       html = await renderHistoryPage(session); break;
     case "/groups":
       html = renderGroupsPage(session); break;
+    case "/realms":
+      html = renderRealmsPage(session); break;
     case "/artifacts":
       html = await renderArtifactsPage(session); break;
     case "/handouts":

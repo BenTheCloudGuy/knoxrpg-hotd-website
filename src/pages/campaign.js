@@ -1453,6 +1453,85 @@ function parseGroupMeta(mdContent) {
   return meta;
 }
 
+// ── Realm Pages ─────────────────────────────────────────────
+
+function parseRealmMeta(content) {
+  const meta = { title: '', region: '', image: '' };
+  for (const line of content.split('\n').slice(0, 10)) {
+    const t = line.trim();
+    if (t.startsWith('# ') && !meta.title) meta.title = t.slice(2);
+    const imgMatch = t.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/\.\.\/images\//, '/images/');
+    const regionMatch = t.match(/\*\*Region:\*\*\s*(.+)/);
+    if (regionMatch) meta.region = regionMatch[1];
+  }
+  return meta;
+}
+
+function renderRealmsPage(session) {
+  const realmsDir = path.join(STATIC_ROOT, 'data', 'realms');
+  let realms = [];
+  try {
+    const files = fs.readdirSync(realmsDir).filter(f => f.endsWith('.md')).sort();
+    realms = files.map(f => {
+      const content = fs.readFileSync(path.join(realmsDir, f), 'utf-8');
+      const meta = parseRealmMeta(content);
+      meta.slug = f.replace(/\.md$/, '');
+      return meta;
+    });
+  } catch (_) {}
+
+  const realmRows = realms.length > 0 ? realms.map(r => `
+    <a class="npc-row" href="/realms/${esc(r.slug)}" style="display:flex;text-decoration:none;color:inherit;cursor:pointer;transition:border-color 0.2s,transform 0.2s;">
+      <div class="npc-portrait">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.title)}" />` : '<div class="npc-placeholder">&#127758;</div>'}</div>
+      <div class="npc-info">
+        <h3>${esc(r.title)}</h3>
+        ${r.region ? `<span class="npc-tag neutral">${esc(r.region)}</span>` : ''}
+      </div>
+    </a>`).join('') : `
+    <div class="npc-row" style="cursor:default;">
+      <div class="npc-portrait"><div class="npc-placeholder">&#127758;</div></div>
+      <div class="npc-info">
+        <h3>Realms Coming Soon</h3><span class="npc-tag neutral">Unknown</span>
+        <p>As the campaign progresses, realms of Faerun will be documented here.</p>
+      </div>
+    </div>`;
+
+  const body = `
+  <div class="content">
+    <h2 class="section-title">&#127758; Realms of Faerun</h2>
+    <p style="color:#888;margin-bottom:24px;">Kingdoms, nations, and lands of the Forgotten Realms.</p>
+    ${realmRows}
+  </div>`;
+  return pageShell('Realms of Faerun — Halls of the Damned', '/realms', body, session);
+}
+
+function renderRealmDetailPage(slug, session) {
+  const safeName = slug.replace(/[^a-z0-9_-]/gi, '');
+  const filePath = path.join(STATIC_ROOT, 'data', 'realms', `${safeName}.md`);
+  if (!fs.existsSync(filePath)) return null;
+  let md = fs.readFileSync(filePath, 'utf-8');
+  const isAdmin = session && session.role === 'admin';
+  if (!isAdmin) {
+    md = md.replace(/\n## DM Notes[\s\S]*$/, '');
+  }
+  const meta = parseRealmMeta(md);
+  let htmlContent = markdownToHtml(md);
+  htmlContent = htmlContent.replace(/src="\.\.\/\.\.\/images\//g, 'src="/images/');
+  // Make images clickable for popout overlay
+  htmlContent = htmlContent.replace(
+    /<img\s+src="([^"]+)"\s+alt="([^"]*)"\s+style="([^"]*)"/g,
+    '<img src="$1" alt="$2" style="$3cursor:pointer;" onclick="openArtifactOverlay(\'$1\',\'$2\')"'
+  );
+  const body = `
+  <div class="content">
+    <a href="/realms" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Realms</a>
+    <div class="history-content" style="margin-top:16px;">${htmlContent}</div>
+  </div>
+  ${artifactOverlayBlock('Realm Map')}`;
+  return pageShell(`${meta.title || 'Realm'} — Halls of the Damned`, '/realms', body, session);
+}
+
 function renderGroupsPage(session) {
   const groupsDir = path.join(STATIC_ROOT, "data", "groups");
   let groups = [];
@@ -1537,6 +1616,8 @@ module.exports = {
   renderArtifactDetailPage,
   renderHandoutDetailPage,
   renderJournalPage,
+  renderRealmsPage,
+  renderRealmDetailPage,
   renderGroupsPage,
   renderGroupDetailPage,
 };

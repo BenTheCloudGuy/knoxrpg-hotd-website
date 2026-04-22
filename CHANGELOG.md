@@ -4,6 +4,16 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-04-21
+
+### Added
+- **Realms pages** — new `/realms` listing page and `/realms/:slug` detail pages for the Forgotten Realms encyclopedia
+- **Realm encyclopedia content** — 42 realm files expanded with detailed lore covering geography, politics, notable locations, and factions for each region of Faerun
+- **Image popout on realm pages** — clicking any image on a realm detail page opens a full-screen zoom/pan overlay
+
+### Fixed
+- **Faerun accent normalization** — standardized "Faerûn" to "Faerun" across all realm files for consistency
+
 ## [2.5.0] - 2026-04-20
 
 ### Added

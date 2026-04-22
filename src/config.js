@@ -46,6 +46,9 @@ const NAV_ITEMS = [
     label: "Game Info", dropdown: [
       { label: "Calendar", href: "/calendar" },
       { label: "History", href: "/history" },
+      { label: "Realms", href: "/realms" },
+      { label: "Maps", href: "/maps" },
+      { label: "Notable Groups", href: "/groups" },
       { label: "Art & Images", href: "/art" },
       { label: "House Rules", href: "/house-rules" },
       { label: "DM AI", href: "/dungeon-master" },
@@ -55,9 +58,7 @@ const NAV_ITEMS = [
   {
     label: "Campaign", dropdown: [
       { label: "Characters", href: "/characters" },
-      { label: "Maps", href: "/maps" },
       { label: "NPCs", href: "/npcs" },
-      { label: "Notable Groups", href: "/groups" },
       { label: "Sessions", href: "/sessions" },
       { label: "Artifacts", href: "/artifacts" },
       { label: "Handouts", href: "/handouts" },
@@ -82,6 +83,7 @@ const campaignPages = [
   { title: "Handouts", href: "/handouts", category: "Campaign", body: "Campaign handouts and artifact media for players" },
   { title: "Adventure Journal", href: "/journal", category: "Campaign", body: "Shared adventure journal notes session log real-time collaborative" },
   { title: "Notable Groups", href: "/groups", category: "Campaign", body: "Notable groups organizations factions encountered during the campaign" },
+  { title: "Realms", href: "/realms", category: "Game Info", body: "Realms of Faerun regions nations kingdoms lands geography Forgotten Realms campaign world" },
   { title: "DM AI", href: "/dungeon-master", category: "Tool", body: "AI chatbot for D&D rules spells monsters items classes" },
 ];
 
