@@ -1456,14 +1456,26 @@ function parseGroupMeta(mdContent) {
 // ── Realm Pages ─────────────────────────────────────────────
 
 function parseRealmMeta(content) {
-  const meta = { title: '', region: '', image: '' };
-  for (const line of content.split('\n').slice(0, 10)) {
+  const meta = { title: '', region: '', image: '', summary: '' };
+  const lines = content.split('\n');
+  for (const line of lines.slice(0, 10)) {
     const t = line.trim();
     if (t.startsWith('# ') && !meta.title) meta.title = t.slice(2);
     const imgMatch = t.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
     if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/\.\.\/images\//, '/images/');
     const regionMatch = t.match(/\*\*Region:\*\*\s*(.+)/);
     if (regionMatch) meta.region = regionMatch[1];
+    const glanceMatch = t.match(/\*\*At a Glance:\*\*\s*(.+)/);
+    if (glanceMatch) meta.summary = glanceMatch[1];
+  }
+  if (!meta.summary) {
+    for (const line of lines) {
+      const t = line.trim();
+      if (t && !t.startsWith('#') && !t.startsWith('!') && !t.startsWith('>') && !t.startsWith('---')) {
+        meta.summary = t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        break;
+      }
+    }
   }
   return meta;
 }
@@ -1487,6 +1499,7 @@ function renderRealmsPage(session) {
       <div class="npc-info">
         <h3>${esc(r.title)}</h3>
         ${r.region ? `<span class="npc-tag neutral">${esc(r.region)}</span>` : ''}
+        ${r.summary ? `<p style="color:#aaa;font-size:0.85rem;margin-top:8px;line-height:1.5;">${esc(r.summary)}</p>` : ''}
       </div>
     </a>`).join('') : `
     <div class="npc-row" style="cursor:default;">
