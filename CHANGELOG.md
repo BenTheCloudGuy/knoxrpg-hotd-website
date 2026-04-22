@@ -9,7 +9,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 ### Added
 - **Realms pages** — new `/realms` listing page and `/realms/:slug` detail pages for the Forgotten Realms encyclopedia
 - **Realm encyclopedia content** — 42 realm files expanded with detailed lore covering geography, politics, notable locations, and factions for each region of Faerun
+- **Realm listing summaries** — each realm card on the `/realms` page now shows a description pulled from the "At a Glance" field or the first paragraph
 - **Image popout on realm pages** — clicking any image on a realm detail page opens a full-screen zoom/pan overlay
+- **Notable Groups — Netheril Empire** — new group page covering the ancient Netherese civilization
 
 ### Fixed
 - **Faerun accent normalization** — standardized "Faerûn" to "Faerun" across all realm files for consistency
