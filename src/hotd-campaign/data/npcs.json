@@ -2736,5 +2736,57 @@
     "dm_notes": "Vasilka is fiercely loyal to the Abbot and to Strahd, as she was created to serve him. She wore the Holy Symbol of Ravenkind as a gift from her Father/Creator until the Abbot was forced to rip it from her neck and hand it to the players during Sessions 22-23. This act caused Vasilka to drop to the ground, and when she woke she was angered that these people would force her Father to give up such a powerful relic.\n\nVasilka led an assault on the Tser Hill Vistani camp with Patchwork Goblins and Direwolves during Sessions 27-28. She demonstrated terrifying power — taking control of Thorian's water spell and hurling it back over the defenders on the hilltop. She has what feels like an unlimited supply of Mongrelfolk/Patchwork Goblins at her disposal. This is the current battle the players are in.\n\nPrior to Tser Hill, Vasilka and the Abbot's forces overwhelmed the Vistani at Tser Raven in the middle of the night, killing any they could and burning their wagons. The surviving members fled into the woods or to shelter in Krezk.\n\nVasilka can potentially be recruited as an ally if the players kill the Abbot without harming her or her mongrelfolk. She would want to be free and for her kind to be left alone in the Abbey in exchange for their aid.",
     "sort_order": 88,
     "is_hidden": false
+  },
+  {
+    "npcid": 93,
+    "associations": [
+      {
+        "id": 5,
+        "name": "Rudolph Van Richten",
+        "relationship": "One of Mordenkainen's oldest and closest friends. Van Richten called him to Barovia to help defeat Strahd and the Stormraven Sisters. They share a bond forged across decades of fighting the supernatural.",
+        "type": "npc"
+      },
+      {
+        "id": 6,
+        "name": "Ezmerelda d'Avenir",
+        "relationship": "Mordenkainen has an uncle/niece relationship with Ezmerelda. She calls him 'Uncle Mordy.' Van Richten asked Mordenkainen to help avenge the death of her family, and it did not take much convincing.",
+        "type": "npc"
+      },
+      {
+        "id": 3,
+        "name": "Ismark Kolyanovich",
+        "relationship": "Ismark fought alongside Mordenkainen in the assault on Castle Ravenloft. He was one of three survivors.",
+        "type": "npc"
+      },
+      {
+        "id": 2,
+        "name": "Ireena Kolyana",
+        "relationship": "Ireena joined the assault on Castle Ravenloft. When Strahd saw her on the ramparts, he faltered, giving Mordenkainen the opening to strike.",
+        "type": "npc"
+      },
+      {
+        "id": 15,
+        "name": "Doru",
+        "relationship": "Doru fought in the assault on Castle Ravenloft. During the battle, Seraphine Stormraven bit him and turned him into a vampire spawn.",
+        "type": "npc"
+      },
+      {
+        "id": 1,
+        "name": "Strahd Von Zarovich",
+        "relationship": "Mordenkainen gravely wounded Strahd during the assault on Castle Ravenloft. Strahd struck him down and cast him from the battlements. Strahd believes him dead.",
+        "type": "npc"
+      }
+    ],
+    "name": "Mordenkainen",
+    "race": "Human",
+    "npc_class": "Wizard (Archmage)",
+    "location": "Traveling (recently recovered near Mount Baratok)",
+    "status": "Alive",
+    "alignment_tag": "ally",
+    "portrait_url": "/images/mordenkainen.png",
+    "description": "Mordenkainen is a legendary archmage from the world of Oerth. He came to Barovia a year ago at the request of his old friend Rudolph Van Richten to help defeat Strahd and the Stormraven Sisters. After a failed assault on Castle Ravenloft that left him broken and mad, he spent ten months wandering the northern woods near Mount Baratok, attacking anything that came close. He was recently found and restored by Van Richten and Ezmerelda.",
+    "dm_notes": "Mordenkainen arrived in Barovia roughly one year before the players, about six months ahead of Van Richten. Van Richten had called his old friend in to help destroy Strahd and the Stormraven Sisters for Ezmerelda, whose family was killed by them. Mordenkainen is fond of Ezmerelda, treating her like a niece. She calls him 'Uncle Mordy.' It did not take much convincing to bring him to Barovia.\n\nWhile Mordenkainen was building alliances and preparing for the assault, Klara Vorovich, a spy at the Blood of the Vine Inn, reported his activities through Vistani loyalist channels to Strahd. With his plans exposed, Mordenkainen had no choice but to act before he was ready. He rallied what allies he had: Doru, Ireena, Ismark, and about fifty villagers, and launched a desperate assault on Castle Ravenloft.\n\nThe assault failed. On the ramparts, Strahd descended in person. When he saw Ireena, he faltered for a single heartbeat, giving Mordenkainen his chance. The wizard struck Strahd with a devastating spell that gravely wounded him. But Strahd recovered and struck Mordenkainen down, pushing him over the edge of the castle walls. He fell into the valley below.\n\nMordenkainen survived the fall but lost his spellbook and magical focus. The impact and Strahd's attack shattered his mind. He could not remember who he was or why he was so badly injured. For the last ten months, he has been wandering the northern woods around Mount Baratok, feral and dangerous, attacking anything and anyone that came close. Strahd believes him dead.\n\nVan Richten and Ezmerelda tracked him down and restored him with a Greater Restoration spell (referenced in Session 27 wrap-up). He is described as confused about what happened but 'his same stubborn self.' They are heading back to town and should arrive in two days.\n\nMordenkainen is stubborn, brilliant, and does not suffer fools. Without his spellbook and focus, he is operating at reduced power. His 8th and 9th level spell slots are unavailable. The DM may restore them when his spellbook is recovered or at a major story milestone. Even weakened, he is the most powerful spellcaster the party has access to. His Staff of Power survived the fall.",
+    "sort_order": 93,
+    "is_hidden": false
   }
 ]

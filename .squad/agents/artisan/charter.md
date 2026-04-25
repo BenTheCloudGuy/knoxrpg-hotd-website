@@ -15,10 +15,26 @@ Generates custom NPC portraits, campaign artwork, and AI-generated content using
 - `grep`, `edit`, `view`, `terminal`, `memory`
 
 ## Conventions
-- Style prefix for all portraits: `Dark fantasy character portrait, digital painting style, head and shoulders framing, dramatic directional lighting, rich painterly brushwork, moody atmosphere, medieval fantasy setting, cinematic contrast, muted dark background, semi-realistic, D&D fantasy art.`
-- Image generation: `model: 'gpt-image-1'`, `size: '1024x1024'`, `quality: 'high'`
+- **Image generation tool:** Always use `scripts/gen-image.js` — never create one-off scripts in `tmp/`
+  ```bash
+  # Portrait (1024x1024, auto style prefix)
+  NODE_PATH=scripts/node_modules node scripts/gen-image.js -p "prompt" -o "filename.png"
+
+  # Scene (1536x1024, scene style prefix)
+  NODE_PATH=scripts/node_modules node scripts/gen-image.js -p "prompt" -o "filename.png" -s 1536x1024 --scene
+
+  # Tall portrait (1024x1536)
+  NODE_PATH=scripts/node_modules node scripts/gen-image.js -p "prompt" -o "filename.png" -s 1024x1536
+
+  # Fully custom prompt (no style prefix)
+  NODE_PATH=scripts/node_modules node scripts/gen-image.js -p "full prompt here" -o "filename.png" --no-style
+
+  # Preview prompt without generating
+  NODE_PATH=scripts/node_modules node scripts/gen-image.js -p "prompt" -o "filename.png" --dry-run
+  ```
+- Style prefix for portraits is automatic via `gen-image.js` (dark fantasy, digital painting, D&D art)
+- Image generation: `model: 'gpt-image-1'`, `quality: 'high'` (defaults)
 - Output format: PNG saved to `src/hotd-campaign/images/` with lowercase-hyphenated naming
-- Scripts run from `tmp/` with `NODE_PATH=../scripts/node_modules`
 - Do NOT guess physical appearance — ask the user if NPC data lacks specifics
 - Do NOT update `npcs.json` unless explicitly asked
 - Writing style: No em-dashes, no flowery language, direct and grounded prose

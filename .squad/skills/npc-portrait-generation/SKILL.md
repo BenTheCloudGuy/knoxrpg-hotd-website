@@ -23,10 +23,21 @@ Generate dark fantasy character portraits for campaign NPCs using the GPT Image 
    - One distinctive detail (a scar, weapon, symbol, magical effect, etc.)
    - Background setting (location-appropriate, atmospheric, not distracting)
 
-4. Generate the image by creating and running a Node.js script in `tmp/` that:
-   - Uses the `openai` SDK (require from `NODE_PATH=../scripts/node_modules`)
-   - Calls `client.images.generate()` with `model: 'gpt-image-1'`, `size: '1024x1024'`, `quality: 'high'`
-   - Saves the output as a `.png` to `src/hotd-campaign/images/` using lowercase-hyphenated naming (e.g., `madam-eva.png`)
+4. Generate the image using the reusable `scripts/gen-image.js` tool:
+
+   ```bash
+   NODE_PATH=scripts/node_modules node scripts/gen-image.js \
+     --prompt "Character-specific description here" \
+     --output "npc-name.png" \
+     --size 1024x1024 \
+     --quality high
+   ```
+
+   The tool automatically prepends the dark fantasy style prefix. Use `--scene` for wider scene art, `--no-style` for fully custom prompts, or `--dry-run` to preview without generating.
+
+   Available sizes: `1024x1024` (portrait), `1536x1024` (landscape scene), `1024x1536` (tall portrait)
+
+   Output is always saved to `src/hotd-campaign/images/`.
 
 5. Show the generated image to the user for approval.
 

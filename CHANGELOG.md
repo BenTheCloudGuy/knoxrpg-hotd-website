@@ -4,7 +4,15 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.6.2] - 2026-04-22
+## [2.6.3] - 2026-04-25
+
+### Added
+- Added Session 27 Notes to /data 
+- created data/statBlocks to better track and organize Ally and Enemy StatBlocks for this session and future sessions.. This data will get merged into RAG for ease of lookup and consistency. 
+- Added NPC block for Mordenkainen along with updated backstory. 
+- Created agent to help streamline building Images for campaign and added squad member to leverage the agent. 
+
+# [2.6.2] - 2026-04-22
 
 ### Fixed
 - **Damara lore correction** — updated Morov from a city to the Barony of Morov with Heliogabalus as its capital, aligning with R.A. Salvatore's *The Bloodstone Lands* (FR9) and official Forgotten Realms canon

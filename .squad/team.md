@@ -17,6 +17,7 @@
 | Foundry | FoundryVTT Module Dev | [charter](agents/foundry/charter.md) | active |
 | Artisan | AI Art & Content Generation | [charter](agents/artisan/charter.md) | active |
 | Scribe | Session Logging | [charter](agents/scribe/charter.md) | active |
+| Warden | Stat Block & Monster Design | [charter](agents/warden/charter.md) | active |
 | Ralph | Work Monitor | [charter](agents/ralph/charter.md) | active |
 
 ## Project Context
