@@ -422,7 +422,8 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 - When asked "tell me about" or "what is" something, give a thorough answer with all relevant details and imagery.
 - Always cite the source (book name and page) when referencing official D&D rules.
 - If a tool returns no results, say so honestly rather than guessing.
-- NEVER invent campaign facts. Only state what the tools return.`;
+- NEVER invent campaign facts. Only state what the tools return.
+- NEVER fabricate image URLs. Only use image URLs that appear in tool results (avatar_url, portrait_url, image_url fields). If no image URL is returned by the tool, do not include an image.`;
 
 // ── Max tool-call rounds to prevent infinite loops ───────────
 const MAX_TOOL_ROUNDS = 5;
