@@ -252,9 +252,13 @@ async function executeTool(name, args, openaiClient) {
           sessions: res.rows.map(s => ({ number: s.session_number, title: s.title, summary: (s.summary || "").slice(0, 500), game_date: s.game_date })),
         });
       }
-      // No params — return latest 5
-      const res = await pgPool.query("SELECT session_number, title, game_date FROM hotd_sessions ORDER BY session_number DESC LIMIT 5");
-      return JSON.stringify({ count: res.rows.length, sessions: res.rows.map(s => ({ number: s.session_number, title: s.title, game_date: s.game_date })) });
+      // No params — return the latest session with full summary, plus recent list
+      const latest = await pgPool.query("SELECT session_number, title, summary, game_date, play_date FROM hotd_sessions ORDER BY session_number DESC LIMIT 1");
+      const recent = await pgPool.query("SELECT session_number, title, game_date FROM hotd_sessions ORDER BY session_number DESC LIMIT 5");
+      return JSON.stringify({
+        latest_session: latest.rows.length ? { number: latest.rows[0].session_number, title: latest.rows[0].title, summary: latest.rows[0].summary, game_date: latest.rows[0].game_date, play_date: latest.rows[0].play_date } : null,
+        recent_sessions: recent.rows.map(s => ({ number: s.session_number, title: s.title, game_date: s.game_date })),
+      });
     }
 
     case "lookup_spell": {
