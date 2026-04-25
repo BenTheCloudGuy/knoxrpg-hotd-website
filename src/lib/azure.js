@@ -1,14 +1,17 @@
 // ══════════════════════════════════════════════════════════════
 // ── OpenAI + Storage Client ───────────────────────────────────
-// Initializes OpenAI SDK from OPENAI_API_KEY env var (Cortana).
-// Also handles file uploads to local storage or Azure Blob.
+// Uses Arc managed identity to load secrets from Key Vault.
+// Falls back to OPENAI_API_KEY env var when identity unavailable.
 // ══════════════════════════════════════════════════════════════
 
 const { credential } = require("../db/pool");
-const { STORAGE_ACCOUNT_NAME } = require("../config");
+const { STORAGE_ACCOUNT_NAME, KEY_VAULT_URL, OPENAI_KV_SECRET_NAME } = require("../config");
 
 let BlobServiceClient;
-try { ({ BlobServiceClient } = require("@azure/storage-blob")); } catch (_e) { /* optional */ }
+try { ({ BlobServiceClient } = require("@azure/storage-blob")); } catch (_e) {}
+
+let SecretClient;
+try { ({ SecretClient } = require("@azure/keyvault-secrets")); } catch (_e) {}
 
 let OpenAI;
 try { OpenAI = require("openai"); } catch (_e) {}
@@ -20,7 +23,26 @@ let aiModel = process.env.AI_MODEL || "gpt-5.4-mini";
 async function initOpenAI() {
   if (openaiClient) return;
 
-  const apiKey = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || "";
+  let apiKey = "";
+
+  // Try Key Vault via Arc managed identity first
+  if (SecretClient && credential) {
+    try {
+      const kvClient = new SecretClient(KEY_VAULT_URL, credential);
+      const secret = await kvClient.getSecret(OPENAI_KV_SECRET_NAME);
+      apiKey = secret.value || "";
+      if (apiKey) console.log(`  AI: OpenAI key loaded from Key Vault (${OPENAI_KV_SECRET_NAME})`);
+    } catch (err) {
+      console.warn(`  AI: Key Vault fetch failed: ${err.message}`);
+    }
+  }
+
+  // Fall back to env var
+  if (!apiKey) {
+    apiKey = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || "";
+    if (apiKey) console.log("  AI: OpenAI key loaded from environment variable");
+  }
+
   if (OpenAI && apiKey) {
     openaiClient = new OpenAI({ apiKey });
     console.log(`  AI: OpenAI client initialized (model: ${aiModel})`);

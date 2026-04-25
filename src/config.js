@@ -5,10 +5,10 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 const isDevSlot = (process.env.PG_MI_USER || "").includes("/slots/dev");
 const MAIN_SITE = isDevSlot ? "https://dev-web.knoxrpg.com" : "https://web.knoxrpg.com";
 const STATIC_ROOT = path.join(__dirname, "hotd-campaign");
-const STORAGE_ACCOUNT_NAME = process.env.STORAGE_ACCOUNT_NAME || "knoxrpgwebsitestore";
+const STORAGE_ACCOUNT_NAME = process.env.STORAGE_ACCOUNT_NAME || "cloudgeekcusgaming01";
 const isAzure = !!(process.env.WEBSITE_INSTANCE_ID || process.env.IDENTITY_ENDPOINT);
 const HOTD_CONTENT_DIR = process.env.HOTD_CONTENT_DIR || "";
-const KEY_VAULT_NAME = process.env.KEY_VAULT_NAME || "knoxrpg-website-kv";
+const KEY_VAULT_NAME = process.env.KEY_VAULT_NAME || "cloudgeek-cus-keyvault";
 const KEY_VAULT_URL = `https://${KEY_VAULT_NAME}.vault.azure.net`;
 const OPENAI_KV_SECRET_NAME = process.env.OPENAI_KV_SECRET_NAME || "openai-api-key";
 

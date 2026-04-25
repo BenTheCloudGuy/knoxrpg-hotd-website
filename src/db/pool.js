@@ -1,6 +1,22 @@
 const { Pool } = require("pg");
 
-// ── PostgreSQL Pool (Cortana override) ────────────────────────
+// ── Azure Credential (Arc managed identity on Cortana) ─────────
+let credential = null;
+let DefaultAzureCredential;
+try { ({ DefaultAzureCredential } = require("@azure/identity")); } catch (_e) {}
+
+if (DefaultAzureCredential && process.env.IDENTITY_ENDPOINT) {
+  try {
+    credential = new DefaultAzureCredential();
+    console.log(`  Azure: credential initialized (Arc managed identity)`);
+  } catch (err) {
+    console.warn(`  Azure: credential init failed: ${err.message}`);
+  }
+} else {
+  console.log(`  Azure: no managed identity (IDENTITY_ENDPOINT not set)`);
+}
+
+// ── PostgreSQL Pool ───────────────────────────────────────────
 const pgPool = new Pool({
   host: process.env.PGHOST,
   port: parseInt(process.env.PGPORT || "5432", 10),
@@ -12,7 +28,6 @@ const pgPool = new Pool({
 });
 console.log(`  PG: password auth → ${process.env.PGHOST}`);
 
-const credential = null;
 async function getPgAccessToken() { return null; }
 
 // ── Local content URL rewriting ───────────────────────────────

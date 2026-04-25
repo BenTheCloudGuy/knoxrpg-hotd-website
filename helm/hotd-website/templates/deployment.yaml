@@ -20,9 +20,13 @@ spec:
       labels:
         {{- include "hotd-website.selectorLabels" . | nindent 8 }}
     spec:
+      hostNetwork: {{ .Values.hostNetwork | default false }}
       securityContext:
         runAsUser: {{ .Values.securityContext.runAsUser }}
         fsGroup: {{ .Values.securityContext.fsGroup }}
+        {{- if .Values.arcIdentity.enabled }}
+        supplementalGroups: [984]
+        {{- end }}
       containers:
         - name: hotd-website
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -47,16 +51,33 @@ spec:
               value: {{ .Values.postgres.database | quote }}
             - name: HOTD_CONTENT_DIR
               value: "/data/hotd-content"
+            - name: STORAGE_ACCOUNT_NAME
+              value: {{ .Values.storage.accountName | quote }}
+            - name: KEY_VAULT_NAME
+              value: {{ .Values.keyVault.name | quote }}
+            - name: OPENAI_KV_SECRET_NAME
+              value: {{ .Values.keyVault.openaiSecretName | quote }}
+            {{- if .Values.openai.apiKey }}
             - name: OPENAI_API_KEY
               value: {{ .Values.openai.apiKey | quote }}
-            - name: RAG_SERVICE_URL
-              value: {{ .Values.rag.url | quote }}
+            {{- end }}
+            {{- if .Values.arcIdentity.enabled }}
+            - name: IDENTITY_ENDPOINT
+              value: "http://localhost:40342/metadata/identity/oauth2/token"
+            - name: IMDS_ENDPOINT
+              value: "http://localhost:40342"
+            {{- end }}
           volumeMounts:
             - name: hotd-content
               mountPath: /data/hotd-content
               readOnly: true
             - name: notebook-images
               mountPath: {{ .Values.notebookImages.mountPath }}
+            {{- if .Values.arcIdentity.enabled }}
+            - name: arc-tokens
+              mountPath: /var/opt/azcmagent/tokens
+              readOnly: true
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           readinessProbe:
@@ -71,3 +92,9 @@ spec:
         - name: notebook-images
           persistentVolumeClaim:
             claimName: hotd-notebook-images
+        {{- if .Values.arcIdentity.enabled }}
+        - name: arc-tokens
+          hostPath:
+            path: /var/opt/azcmagent/tokens
+            type: Directory
+        {{- end }}

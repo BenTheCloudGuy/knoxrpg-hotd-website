@@ -40,11 +40,23 @@ notebookImages:
 
 # -- OpenAI -------------------------------------------------------------------
 openai:
-  apiKey: ""                 # REQUIRED — set via --set or a secrets file
+  apiKey: ""                 # Optional fallback — managed identity preferred
 
-# -- RAG Service --------------------------------------------------------------
-rag:
-  url: http://dnd-rag.hotd-website.svc.cluster.local:3001
+# -- Azure Arc Managed Identity -----------------------------------------------
+arcIdentity:
+  enabled: true              # Enable Arc managed identity for KV + Storage
+
+# -- Azure Storage Account ----------------------------------------------------
+storage:
+  accountName: cloudgeekcusgaming01
+
+# -- Azure Key Vault -----------------------------------------------------------
+keyVault:
+  name: cloudgeek-cus-keyvault
+  openaiSecretName: openai-api-key
+
+# -- Host Network (required for Arc identity) ----------------------------------
+hostNetwork: true
 
 # -- Ingress ------------------------------------------------------------------
 ingress:
