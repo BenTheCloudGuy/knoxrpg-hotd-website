@@ -48,7 +48,7 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
       }));
 
       const model = (params && params.model) || azure.aiModel;
-      const maxTokens = (params && params.max_tokens) || 2048;
+      const maxTokens = (params && (params.max_completion_tokens || params.max_tokens)) || 2048;
       const temperature = (params && params.temperature != null) ? params.temperature : 0.7;
 
       const { reply, _debug } = await chatWithTools(azure.openaiClient, model, userMessages, { maxTokens, temperature });

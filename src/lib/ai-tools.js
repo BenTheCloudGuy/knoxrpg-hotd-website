@@ -450,7 +450,7 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
     const completionParams = {
       model,
       messages: chatMessages,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
       temperature,
       tools: toolDefinitions,
       tool_choice: rounds === 1 ? "auto" : "auto",

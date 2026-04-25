@@ -495,7 +495,7 @@ ${ragContext}${entityContext}`;
           { role: "system", content: systemPrompt },
           { role: "user", content: prompt },
         ],
-        max_tokens: 4096,
+        max_completion_tokens: 4096,
         temperature: 0.8,
       });
 
@@ -716,7 +716,7 @@ ${ragContext}`;
       const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: chatMessages,
-        max_tokens: 4096,
+        max_completion_tokens: 4096,
         temperature: 0.7,
       });
 
