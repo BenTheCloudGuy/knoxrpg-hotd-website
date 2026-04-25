@@ -264,7 +264,11 @@ async function executeTool(name, args, openaiClient) {
     case "lookup_spell": {
       const pattern = `%${args.name}%`;
       try {
-        const res = await pgPool.query("SELECT * FROM spells WHERE name ILIKE $1 LIMIT 3", [pattern]);
+        const res = await pgPool.query(
+          `SELECT name, level, school, activation_type, range_field, components, duration_type, duration_field,
+                  requires_concentration, can_cast_as_ritual, can_cast_at_higher_level, aoe_type, aoe_size,
+                  save_ability, description_text, source, source_page
+           FROM spells WHERE name ILIKE $1 LIMIT 3`, [pattern]);
         if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No spell found matching "${args.name}"` });
         return JSON.stringify({ found: true, spells: res.rows });
       } catch (_) {
@@ -275,7 +279,13 @@ async function executeTool(name, args, openaiClient) {
     case "lookup_monster": {
       const pattern = `%${args.name}%`;
       try {
-        const res = await pgPool.query("SELECT * FROM monsters WHERE name ILIKE $1 LIMIT 3", [pattern]);
+        const res = await pgPool.query(
+          `SELECT name, size, type, sub_types, alignment, challenge_rating, challenge_rating_display, xp,
+                  proficiency_bonus, armor_class, armor_class_type, hit_points, average_hit_points, hit_dice,
+                  ability_scores, speed, skills, saving_throws, senses, passive_perception,
+                  damage_resistances, damage_immunities, damage_vulnerabilities, condition_immunities,
+                  languages, environments, description_text, is_legendary, avatar_url, source
+           FROM monsters WHERE name ILIKE $1 LIMIT 3`, [pattern]);
         if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No monster found matching "${args.name}"` });
         return JSON.stringify({ found: true, monsters: res.rows });
       } catch (_) {
@@ -286,7 +296,11 @@ async function executeTool(name, args, openaiClient) {
     case "lookup_magic_item": {
       const pattern = `%${args.name}%`;
       try {
-        const res = await pgPool.query("SELECT * FROM magic_items WHERE name ILIKE $1 LIMIT 3", [pattern]);
+        const res = await pgPool.query(
+          `SELECT name, type, item_type, rarity, requires_attunement, cost, weight,
+                  has_charges, number_of_charges, charge_reset_condition,
+                  description_text, avatar_url, source, source_page
+           FROM magic_items WHERE name ILIKE $1 LIMIT 3`, [pattern]);
         if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No magic item found matching "${args.name}"` });
         return JSON.stringify({ found: true, items: res.rows });
       } catch (_) {
