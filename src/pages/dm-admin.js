@@ -435,15 +435,14 @@ async function renderDmAdminPage(session) {
         </div>
         <form onsubmit="saveAiCfg(event)">
           <div class="dmc-form-row">
-            <label>Model<select id="ai-model"><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4-turbo">gpt-4-turbo</option></select></label>
+            <label>Model<select id="ai-model"><option value="gpt-5.4-mini" selected>gpt-5.4-mini</option><option value="gpt-5.4">gpt-5.4</option><option value="gpt-5.4-nano">gpt-5.4-nano</option></select></label>
             <label>Temperature<input type="number" id="ai-temp" min="0" max="2" step="0.1" value="0.7" /></label>
             <label>Max Tokens<input type="number" id="ai-maxtokens" min="100" max="4096" value="1024" /></label>
           </div>
           <label>System Prompt<textarea id="ai-prompt" rows="8" class="dmc-textarea"></textarea></label>
           <div id="ai-tools" class="dmc-tools-grid"></div>
           <div class="dmc-form-row" style="margin-top:16px;">
-            <label>DALL-E Size<select id="ai-imgsize"><option value="1024x1024">1024x1024</option><option value="1792x1024">1792x1024</option><option value="1024x1792">1024x1792</option></select></label>
-            <label>DALL-E Style<select id="ai-imgstyle"><option value="vivid">Vivid</option><option value="natural">Natural</option></select></label>
+            <label>Image Size<select id="ai-imgsize"><option value="1024x1024">1024x1024</option><option value="1792x1024">1792x1024</option><option value="1024x1792">1024x1792</option></select></label>
           </div>
           <div class="dmc-form-actions"><button type="submit" class="dmc-btn dmc-btn-primary">Save AI Config</button></div>
         </form>

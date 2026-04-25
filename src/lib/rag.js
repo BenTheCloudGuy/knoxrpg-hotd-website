@@ -52,14 +52,35 @@ async function searchEmbeddings(openai, query, opts = {}) {
     paramIdx++;
   }
 
-  const sql = `
-    SELECT title, chunk_text, source_type, source_id, source_path, metadata,
-           1 - (embedding <=> $1::vector) AS score
-    FROM hotd_embeddings
-    ${whereClause}
-    ORDER BY embedding <=> $1::vector
-    LIMIT $2
-  `;
+  // Hybrid: combine vector similarity with full-text keyword match
+  // Full-text boost is added when query terms appear in the text
+  const tsQuery = query.split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean).join(' & ');
+  const hasTsQuery = tsQuery.length > 0;
+
+  let sql;
+  if (hasTsQuery) {
+    params.push(tsQuery);
+    sql = `
+      SELECT title, chunk_text, source_type, source_id, source_path, metadata,
+             (1 - (embedding <=> $1::vector)) +
+             CASE WHEN to_tsvector('english', chunk_text) @@ to_tsquery('english', $${paramIdx}) THEN 0.05 ELSE 0 END
+             AS score
+      FROM hotd_embeddings
+      ${whereClause}
+      ORDER BY score DESC
+      LIMIT $2
+    `;
+    paramIdx++;
+  } else {
+    sql = `
+      SELECT title, chunk_text, source_type, source_id, source_path, metadata,
+             1 - (embedding <=> $1::vector) AS score
+      FROM hotd_embeddings
+      ${whereClause}
+      ORDER BY embedding <=> $1::vector
+      LIMIT $2
+    `;
+  }
 
   const { rows } = await pgPool.query(sql, params);
   return rows.filter(r => r.score >= minScore).map(r => ({

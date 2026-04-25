@@ -117,7 +117,7 @@ async function generateImage(args) {
 
   const client = new OpenAI();
   const result = await client.images.generate({
-    model: 'gpt-image-1',
+    model: 'gpt-image-1.5',
     prompt: finalPrompt,
     size: args.size,
     quality: args.quality,

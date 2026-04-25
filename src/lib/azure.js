@@ -1,50 +1,26 @@
+// ══════════════════════════════════════════════════════════════
+// ── OpenAI + Storage Client ───────────────────────────────────
+// Initializes OpenAI SDK from OPENAI_API_KEY env var (Cortana).
+// Also handles file uploads to local storage or Azure Blob.
+// ══════════════════════════════════════════════════════════════
+
 const { credential } = require("../db/pool");
-const { STORAGE_ACCOUNT_NAME, KEY_VAULT_URL, OPENAI_KV_SECRET_NAME } = require("../config");
+const { STORAGE_ACCOUNT_NAME } = require("../config");
 
 let BlobServiceClient;
-try { ({ BlobServiceClient } = require("@azure/storage-blob")); } catch (_e) { /* optional in dev */ }
-
-let SecretClient;
-try { ({ SecretClient } = require("@azure/keyvault-secrets")); } catch (_e) { /* optional in dev */ }
+try { ({ BlobServiceClient } = require("@azure/storage-blob")); } catch (_e) { /* optional */ }
 
 let OpenAI;
 try { OpenAI = require("openai"); } catch (_e) {}
 
-// ── Key Vault client ───────────────────────────────────────────
-let kvClient = null;
-if (SecretClient && credential) {
-  try {
-    kvClient = new SecretClient(KEY_VAULT_URL, credential);
-    console.log(`  Key Vault: client initialized → ${KEY_VAULT_URL}`);
-  } catch (err) {
-    console.warn("  WARN: Key Vault client init failed:", err.message);
-  }
-} else {
-  console.log("  Key Vault: disabled (no SDK or credential)");
-}
-
 // ── AI client (OpenAI, initialized async via initOpenAI) ──
 let openaiClient = null;
-let aiModel = process.env.AI_MODEL || "gpt-4o-mini";
+let aiModel = process.env.AI_MODEL || "gpt-5.4-mini";
 
 async function initOpenAI() {
   if (openaiClient) return;
 
-  // Load OpenAI API key from Key Vault or env var
-  let apiKey = "";
-  if (kvClient) {
-    try {
-      const secret = await kvClient.getSecret(OPENAI_KV_SECRET_NAME);
-      apiKey = secret.value || "";
-      if (apiKey) console.log(`  AI: OpenAI key loaded from Key Vault (${OPENAI_KV_SECRET_NAME})`);
-    } catch (err) {
-      console.warn(`  AI: Key Vault fetch failed (${OPENAI_KV_SECRET_NAME}):`, err.message);
-    }
-  }
-  if (!apiKey) {
-    apiKey = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || "";
-    if (apiKey) console.log("  AI: OpenAI key loaded from environment variable");
-  }
+  const apiKey = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || "";
   if (OpenAI && apiKey) {
     openaiClient = new OpenAI({ apiKey });
     console.log(`  AI: OpenAI client initialized (model: ${aiModel})`);

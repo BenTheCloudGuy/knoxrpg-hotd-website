@@ -1,0 +1,9 @@
+{
+  "mode": "dry-run",
+  "source_filter": null,
+  "started_at": "2026-04-25T15:34:11.353Z",
+  "stages": {},
+  "completed_at": "2026-04-25T15:34:11.370Z",
+  "success": false,
+  "error": "relation \"hotd_embeddings\" does not exist"
+}

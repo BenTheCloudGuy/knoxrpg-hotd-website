@@ -7,10 +7,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 ## [2.6.3] - 2026-04-25
 
 ### Added
-- Added Session 27 Notes to /data 
-- created data/statBlocks to better track and organize Ally and Enemy StatBlocks for this session and future sessions.. This data will get merged into RAG for ease of lookup and consistency. 
-- Added NPC block for Mordenkainen along with updated backstory. 
-- Created agent to help streamline building Images for campaign and added squad member to leverage the agent. 
+- Added Session 27 Notes to /data
+- created data/statBlocks to better track and organize Ally and Enemy StatBlocks for this session and future sessions.. This data will get merged into RAG for ease of lookup and consistency.
+- Added NPC block for Mordenkainen along with updated backstory.
+- Created agent to help streamline building Images for campaign and added squad member to leverage the agent.
+
+### Changed
+- **OpenAI model upgrade** — default chat model updated to `gpt-5.4-mini`, image generation to `gpt-image-1.5`, DM Admin dropdown now offers the 5.4 family
+- **DM AI now queries pgvector directly** — removed dependency on external `dnd-rag` microservice; both `search_dnd_reference` and new `search_campaign_lore` tools use pgvector embeddings on Cortana
+- **New `search_campaign_lore` tool** — DM AI function-calling tool for semantic search over embedded campaign content (stat blocks, groups, realms, campaign notes) with optional `source_type` filtering
+- **Hybrid search** — pgvector semantic similarity now boosted by PostgreSQL full-text keyword matching for better recall on proper nouns and exact terms
+- **DM Notes splitting** — embed pipeline detects `## DM Notes` sections in markdown files and marks them `is_dm_only: true`, preventing spoiler content from appearing in player-facing DM AI responses
+- **Section-aware chunking** — embed pipeline now splits on `## ` heading boundaries first, merging small sections and sub-splitting oversized ones, keeping stat block sections and spell lists intact
+- **IVFFlat index rebuild** — embed pipeline rebuilds the pgvector IVFFlat index after full reindex or large batch inserts for faster similarity search
+- **Embed pipeline self-bootstraps** — creates `hotd_embeddings` table and pgvector extension on startup if missing, so the pipeline works on fresh Cortana DB without needing the web server to run first
+- **Cleaned up azure.js** — removed dead Azure Key Vault code; OpenAI client loads directly from `OPENAI_API_KEY` env var
+
+### Fixed
+- Fixed `data.usage` reference bug in embed pipeline batch logging (was referencing undefined `data` instead of `resp`)
+- Fixed embed pipeline SCRAM auth failure when PG env vars missing (table bootstrap error)
 
 # [2.6.2] - 2026-04-22
 

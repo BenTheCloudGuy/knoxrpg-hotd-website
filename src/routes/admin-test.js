@@ -183,7 +183,7 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
 
       const t0 = Date.now();
       const response = await azure.openaiClient.images.generate({
-        model: "gpt-image-1",
+        model: "gpt-image-1.5",
         prompt: String(prompt).slice(0, 4000),
         n: 1,
         size: size || "1024x1024",
@@ -196,7 +196,7 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
         image_b64: imageData.b64_json,
         revised_prompt: imageData.revised_prompt || "",
         _debug: {
-          model: "gpt-image-1",
+          model: "gpt-image-1.5",
           size: size || "1024x1024",
           quality: quality || "medium",
           latencyMs: elapsed,

@@ -321,7 +321,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
 
       // Call GPT Image
       const imgResp = await azure.openaiClient.images.generate({
-        model: "gpt-image-1",
+        model: "gpt-image-1.5",
         prompt: fullPrompt,
         n: 1,
         size,
@@ -487,7 +487,7 @@ ${templateInstr}
 ${ragContext}${entityContext}`;
 
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
-      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-4o-mini";
+      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
 
       const completion = await azure.openaiClient.chat.completions.create({
         model,
@@ -711,7 +711,7 @@ ${ragContext}`;
       ];
 
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
-      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-4o-mini";
+      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
 
       const completion = await azure.openaiClient.chat.completions.create({
         model,

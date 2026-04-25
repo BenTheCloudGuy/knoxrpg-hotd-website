@@ -175,9 +175,21 @@ async function stageExtract() {
     for (const filePath of mdFiles) {
       const relativePath = path.relative(REPO_ROOT, filePath).replace(/\\/g, "/");
       const raw = fs.readFileSync(filePath, "utf-8");
-      sources.push({ type: "lore", id: null, title: path.basename(filePath, ".md"), content: raw, is_dm_only: false, source_path: relativePath, metadata: { file: relativePath } });
+      const baseName = path.basename(filePath, ".md");
+
+      // Split on "## DM Notes" to separate player-visible from DM-only content
+      const dmSplit = raw.split(/(?=^## DM Notes)/m);
+      const playerContent = dmSplit[0].trim();
+      const dmContent = dmSplit.length > 1 ? dmSplit.slice(1).join("\n").trim() : null;
+
+      if (playerContent) {
+        sources.push({ type: "lore", id: null, title: baseName, content: playerContent, is_dm_only: false, source_path: relativePath, metadata: { file: relativePath } });
+      }
+      if (dmContent) {
+        sources.push({ type: "lore", id: null, title: `${baseName} (DM Notes)`, content: dmContent, is_dm_only: true, source_path: relativePath, metadata: { file: relativePath, dm_only: true } });
+      }
     }
-    log(`Lore files: ${mdFiles.length} extracted`);
+    log(`Lore files: ${mdFiles.length} extracted (with DM Notes splitting)`);
   }
 
   // ── Files: JSON data files ──────────────────────────────────
@@ -413,7 +425,7 @@ async function stageEmbed(chunks) {
         batch[j].embedding = resp.data[j].embedding;
       }
 
-      log(`  Batch ${Math.floor(i / EMBED_BATCH_SIZE) + 1}: ${batch.length} embedded (${data.usage?.total_tokens || "?"} tokens)`);
+      log(`  Batch ${Math.floor(i / EMBED_BATCH_SIZE) + 1}: ${batch.length} embedded (${resp.usage?.total_tokens || "?"} tokens)`);
     } catch (err) {
       errors.push({ batch: Math.floor(i / EMBED_BATCH_SIZE), error: err.message });
       log(`  ERROR batch ${Math.floor(i / EMBED_BATCH_SIZE) + 1}: ${err.message}`);
@@ -514,6 +526,18 @@ async function stageStore(chunks) {
   log(`Total vectors: ${totals.total} (${totals.dm_only} DM-only)`);
   for (const r of byType) log(`  ${r.source_type}: ${r.count}`);
 
+  // Rebuild IVFFlat index for fast similarity search
+  if (MODE === "full" || upserted > 50) {
+    try {
+      log("Rebuilding IVFFlat index...");
+      await pgPool.query("DROP INDEX IF EXISTS idx_embed_ivfflat");
+      const listCount = Math.max(1, Math.floor(Math.sqrt(parseInt(totals.total))));
+      await pgPool.query(`CREATE INDEX idx_embed_ivfflat ON hotd_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = ${listCount})`);
+      log(`IVFFlat index rebuilt (lists=${listCount})`);
+    } catch (err) {
+      log(`WARN: IVFFlat index rebuild failed: ${err.message}`);
+    }
+  }
   report.stages.store = {
     upserted,
     deleted_orphans: deletedOrphans,
@@ -555,13 +579,34 @@ async function cleanOrphans() {
 function splitIntoChunks(text, maxChars, overlap) {
   if (text.length <= maxChars) return [text];
 
-  // Try to split on markdown headers first
-  const headerSections = text.split(/(?=^## )/m);
-  if (headerSections.length > 1 && headerSections.every(s => s.length <= maxChars)) {
-    return headerSections.filter(s => s.trim().length > 0);
+  // Strategy 1: Split on markdown ## headers, keeping each section intact
+  const headerSections = text.split(/(?=^## )/m).filter(s => s.trim().length > 0);
+  if (headerSections.length > 1) {
+    // Merge small sections together, split large ones
+    const merged = [];
+    let current = "";
+    for (const section of headerSections) {
+      if (section.length > maxChars) {
+        // This section is too big on its own; flush current, then sub-split it
+        if (current.trim()) merged.push(current.trim());
+        current = "";
+        merged.push(...splitByParagraphs(section, maxChars, overlap));
+      } else if (current.length + section.length > maxChars && current.length > 0) {
+        merged.push(current.trim());
+        current = section;
+      } else {
+        current += (current ? "\n\n" : "") + section;
+      }
+    }
+    if (current.trim()) merged.push(current.trim());
+    if (merged.length > 0) return merged;
   }
 
-  // Fall back to paragraph-based sliding window
+  // Strategy 2: Paragraph-based sliding window
+  return splitByParagraphs(text, maxChars, overlap);
+}
+
+function splitByParagraphs(text, maxChars, overlap) {
   const paragraphs = text.split(/\n\n+/);
   const chunks = [];
   let current = "";
@@ -569,9 +614,8 @@ function splitIntoChunks(text, maxChars, overlap) {
   for (const para of paragraphs) {
     if (current.length + para.length + 2 > maxChars && current.length > 0) {
       chunks.push(current.trim());
-      // Overlap: keep tail of current chunk
       const words = current.split(/\s+/);
-      const overlapWords = Math.ceil(overlap / 5); // rough word count for overlap
+      const overlapWords = Math.ceil(overlap / 5);
       current = words.slice(-overlapWords).join(" ") + "\n\n" + para;
     } else {
       current += (current ? "\n\n" : "") + para;
@@ -579,7 +623,7 @@ function splitIntoChunks(text, maxChars, overlap) {
   }
   if (current.trim()) chunks.push(current.trim());
 
-  // If any chunk is still too long, hard-split by sentences
+  // Hard-split any remaining oversized chunks by sentences
   const final = [];
   for (const chunk of chunks) {
     if (chunk.length <= maxChars) {
@@ -598,7 +642,6 @@ function splitIntoChunks(text, maxChars, overlap) {
       if (buf.trim()) final.push(buf.trim());
     }
   }
-
   return final;
 }
 
@@ -647,16 +690,30 @@ async function main() {
     await pgPool.query("SELECT 1");
     log("Database connected.");
 
-    // Ensure unique constraint exists for upsert
+    // Ensure pgvector extension and hotd_embeddings table exist
+    await pgPool.query("CREATE EXTENSION IF NOT EXISTS vector");
     await pgPool.query(`
-      DO $$ BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint WHERE conname = 'hotd_embeddings_chunk_hash_key'
-        ) THEN
-          ALTER TABLE hotd_embeddings ADD CONSTRAINT hotd_embeddings_chunk_hash_key UNIQUE (chunk_hash);
-        END IF;
-      END $$;
+      CREATE TABLE IF NOT EXISTS hotd_embeddings (
+        id            SERIAL PRIMARY KEY,
+        source_type   TEXT NOT NULL,
+        source_id     INTEGER,
+        source_path   TEXT,
+        chunk_index   INTEGER DEFAULT 0,
+        title         TEXT DEFAULT '',
+        chunk_text    TEXT NOT NULL,
+        chunk_hash    TEXT NOT NULL,
+        metadata      JSONB DEFAULT '{}',
+        embedding     vector(1536),
+        is_dm_only    BOOLEAN DEFAULT FALSE,
+        created_at    TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        CONSTRAINT hotd_embeddings_chunk_hash_key UNIQUE (chunk_hash)
+      );
+      CREATE INDEX IF NOT EXISTS idx_embed_source ON hotd_embeddings (source_type, source_id);
+      CREATE INDEX IF NOT EXISTS idx_embed_hash ON hotd_embeddings (chunk_hash);
+      CREATE INDEX IF NOT EXISTS idx_embed_dm ON hotd_embeddings (is_dm_only);
     `);
+    log("Embeddings table: ready.");
 
     const sources = await stageExtract();
     const chunks = stageChunk(sources);

@@ -112,7 +112,7 @@ ${frhofText ? `## FRHoF Source Text\n\n${frhofText}` : '(No FRHoF source availab
   const t0 = Date.now();
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-5.4-mini',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: userMessage }

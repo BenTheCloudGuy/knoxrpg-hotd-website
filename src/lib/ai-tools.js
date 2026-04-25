@@ -7,7 +7,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const { pgPool } = require("../db/pool");
-const { buildRagContext } = require("./search");
+const { searchEmbeddings } = require("./rag");
 
 // ── Tool definitions (OpenAI function-calling schema) ────────
 
@@ -168,12 +168,27 @@ const toolDefinitions = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "search_campaign_lore",
+      description: "Search embedded campaign lore, stat blocks, group info, realm descriptions, and campaign notes using semantic search. Use for campaign-specific world-building, NPC stat blocks, faction details, realm geography, or any campaign content not in the database tables.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "The campaign topic, character name, location, or concept to search for" },
+          source_type: { type: "string", description: "Optional: filter by source type (lore, lore_json, npc, session, artifact, character, journal)", enum: ["lore", "lore_json", "npc", "session", "artifact", "character", "journal"] },
+        },
+        required: ["query"],
+      },
+    },
+  },
 ];
 
 
 // ── Tool implementations ────────────────────────────────────
 
-async function executeTool(name, args) {
+async function executeTool(name, args, openaiClient) {
   switch (name) {
 
     case "lookup_npc": {
@@ -334,9 +349,29 @@ async function executeTool(name, args) {
     }
 
     case "search_dnd_reference": {
-      const context = await buildRagContext(args.query);
-      if (!context) return JSON.stringify({ found: false, message: "No reference material found or RAG service unavailable" });
+      if (!openaiClient) return JSON.stringify({ found: false, message: "AI client not available for search" });
+      const results = await searchEmbeddings(openaiClient, args.query, { limit: 6, minScore: 0.3 });
+      if (results.length === 0) return JSON.stringify({ found: false, message: "No reference material found" });
+      const context = results.map(r => `## ${r.title}\n${r.chunk_text}`).join("\n\n---\n\n");
       return JSON.stringify({ found: true, content: context });
+    }
+
+    case "search_campaign_lore": {
+      if (!openaiClient) return JSON.stringify({ found: false, message: "AI client not available for semantic search" });
+      const searchOpts = { limit: 8, minScore: 0.25 };
+      if (args.source_type) searchOpts.sourceType = args.source_type;
+      const results = await searchEmbeddings(openaiClient, args.query, searchOpts);
+      if (results.length === 0) return JSON.stringify({ found: false, message: `No campaign lore found matching "${args.query}"` });
+      return JSON.stringify({
+        found: true,
+        count: results.length,
+        results: results.map(r => ({
+          title: r.title,
+          source_type: r.source_type,
+          score: r.score,
+          content: r.chunk_text,
+        })),
+      });
     }
 
     default:
@@ -359,6 +394,7 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 - For handouts or documents: use \`get_handout\`.
 - For calendar/timeline questions: use \`get_calendar\`.
 - For D&D rules, class features, conditions, or general lore: use \`search_dnd_reference\`.
+- For campaign world-building, stat blocks, factions, realm info, or campaign notes: use \`search_campaign_lore\`.
 - You may call multiple tools in parallel if the question requires data from different sources.
 
 ## CRITICAL: Answer the Actual Question
@@ -439,7 +475,7 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
         const callT0 = Date.now();
         let result;
         try {
-          result = await executeTool(fnName, fnArgs);
+          result = await executeTool(fnName, fnArgs, openaiClient);
         } catch (err) {
           result = JSON.stringify({ error: err.message });
         }

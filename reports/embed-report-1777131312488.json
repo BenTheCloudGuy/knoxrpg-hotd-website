@@ -1,0 +1,9 @@
+{
+  "mode": "dry-run",
+  "source_filter": null,
+  "started_at": "2026-04-25T15:35:12.465Z",
+  "stages": {},
+  "completed_at": "2026-04-25T15:35:12.487Z",
+  "success": false,
+  "error": "relation \"hotd_sessions\" does not exist"
+}
