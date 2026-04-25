@@ -390,7 +390,9 @@ const SYSTEM_PROMPT_WITH_TOOLS = `You are the DM AI for "Halls of the Damned", a
 You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool before answering — do not guess or rely on general knowledge when a tool can provide accurate campaign-specific data.
 
 ## Tool Usage Guidelines
-- For NPC questions: use \`lookup_npc\` with the NPC name. For "who is in <location>": use \`search_npcs\`.
+- When asked "who is [name]" or about a character by name: call BOTH \`lookup_npc\` AND \`get_player_character\` in parallel — the name could be either a PC or NPC. Use whichever returns a result.
+- For "who is in <location>" or NPC searches by trait: use \`search_npcs\`.
+- For "list the party" or "who are the player characters": use \`get_player_character\` with a broad name like "%" or a common term.
 - For "what happened last session", "what happened recently", or session/event questions: use \`get_session_log\` WITHOUT a session_number to get the most recent sessions, then report from the HIGHEST session number returned. That is the latest session.
 - For "what day is it", "what is the current date", or any time/calendar question: use \`get_calendar\` with NO parameters to get the current in-game date.
 - For spell questions: use \`lookup_spell\`. For monster questions: use \`lookup_monster\`.
