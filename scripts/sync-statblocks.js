@@ -197,8 +197,21 @@ function parseCreatureBlock(block, fileName) {
 function splitCreatureBlocks(content, fileName) {
   const blocks = [];
 
-  // Skip ally files — those are NPCs, not monsters
-  if (fileName.startsWith('ally-')) return blocks;
+  // For ally files, treat the whole file as a single creature (H1 header)
+  // For non-ally files, check for multi-creature H2 blocks
+  const isAlly = fileName.startsWith('ally-');
+
+  if (isAlly) {
+    const trimmed = content.trim();
+    if (/\*\*Armor Class\*\*/.test(trimmed) || /\*\*Hit Points\*\*/.test(trimmed)) {
+      const header = trimmed.match(/^# (.+)/m)?.[1] || fileName.replace('.md', '');
+      const cleanName = header.split(/\s*[—–]\s*/)[0].trim();
+      // Split off DM Notes for the stat block
+      const dmSplit = trimmed.split(/(?=^## DM Notes)/m);
+      blocks.push({ header: cleanName, content: dmSplit[0].trim(), fileName });
+    }
+    return blocks;
+  }
 
   // Try splitting on ## headers first (multi-creature files like stitches.md)
   const h2Parts = content.split(/(?=^## [^#])/m);
