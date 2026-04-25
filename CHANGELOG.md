@@ -4,6 +4,39 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-04-25
+
+### Added
+- **Circle Magic homebrew mechanic** — new `casting_circle.md` lore document defining cooperative spellcasting rules with Netherese origins, The Lead / Circle Members system, slot pooling, metamagic-style Circle Enhancements (Empower, Heighten, Widen, Extend, Reach, Fortify, Quicken, Distribute, Safeguard, Supplant), circle breaking mechanics, and passive save DC scaling
+- **Homebrew stat block sync** — new `sync-statblocks.js` parses statBlocks/*.md files and upserts into the `monsters` table (source=hotd-homebrew), giving DM AI a single lookup for both DDB and campaign creatures
+- **`search_campaign_lore` tool** — DM AI function-calling tool for semantic search over pgvector embeddings with optional source_type filtering
+- **Arc managed identity** — Cortana registered with Azure Arc; website pod loads OpenAI key from Key Vault via managed identity instead of GitHub Actions secrets
+
+### Changed
+- **OpenAI models upgraded** — chat: `gpt-5.4-mini`, images: `gpt-image-1.5`, DM Admin dropdown: 5.4 family
+- **DM AI queries pgvector directly** — removed dependency on external `dnd-rag` microservice for all AI tool lookups
+- **Hybrid search** — pgvector semantic similarity boosted by PostgreSQL full-text keyword matching
+- **DM Notes splitting** — embed pipeline detects `## DM Notes` sections and marks them `is_dm_only: true`
+- **Section-aware chunking** — splits on `## ` heading boundaries, keeping stat blocks and spell lists intact
+- **IVFFlat index rebuild** — embed pipeline rebuilds pgvector index after bulk inserts
+- **System prompt overhaul** — parallel NPC+PC lookup, latest session with full summary, calendar date queries, image rendering from tool data only, 5e stat block formatting
+- **Replaced `SELECT *` in AI tools** — spell/monster/magic_item lookups now return structured columns only, eliminating raw_json token bloat
+- **Helm deployment** — `hostNetwork: true` + `dnsPolicy: ClusterFirstWithHostNet` + `Recreate` strategy for Arc identity access
+- **Storage account** — updated from deleted `knoxrpgwebsitestore` to `cloudgeekcusgaming01`; homebrew creature images uploaded to blob storage
+
+### Fixed
+- `max_tokens` → `max_completion_tokens` for gpt-5.4 family compatibility
+- `get_session_log` returns latest session with full summary (was returning wrong session)
+- Parallel PC + NPC lookup prevents "not found" when asking about player characters
+- Prevented model from fabricating image URLs for spells and other non-image data
+- Embed pipeline `data.usage` → `resp.usage` batch logging bug
+- Embed pipeline self-bootstraps `hotd_embeddings` table on fresh DB
+
+### Removed
+- 21 statBlocks/*.md files — all 24 creatures (18 allies + 6 enemies) synced to monsters table with images in blob storage
+- Azure Key Vault dead code from pool.js (replaced with working Arc managed identity)
+- External RAG service dependency from DM AI tools
+
 ## [2.9.3] - 2026-04-25
 
 ### Added
