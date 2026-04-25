@@ -28,3 +28,15 @@ This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, d
 - Always check for existing patterns in the codebase before introducing new ones
 - When modifying Helm templates, validate with `helm template`
 - FoundryVTT module code must target Foundry v13 API
+
+
+## Configure Remote Server
+Azure VM: knoxrpgappsrv01
+Azure IP: 20.29.42.149
+SSHConfig Entry: 
+  host hotd
+    HostName 20.29.42.149
+    Port 22
+    User gamemaster
+    IdentityFile ~/.ssh/my_cloudgeeklabs
+AzureDNS Entry: hotd-test.knoxrpg.com → 20.29.42.149
