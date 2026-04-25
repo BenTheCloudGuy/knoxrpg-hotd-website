@@ -38,7 +38,14 @@ jobs:
         run: |
           cd scripts
           npm init -y --silent 2>/dev/null || true
-          npm install pg --no-save --silent
+          npm install pg openai --no-save --silent
+
+      - name: Sync stat blocks to monsters table
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          echo "Syncing homebrew stat blocks to monsters table..."
+          node scripts/sync-statblocks.js --verbose
 
       - name: Run pipeline
         env:
