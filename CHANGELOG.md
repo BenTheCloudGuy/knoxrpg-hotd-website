@@ -4,6 +4,21 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] - 2026-04-26
+
+### Fixed
+- **Search result links 404** — RAG results used raw `source_path` (file paths like `src/hotd-campaign/data/npcs.json`) as hrefs; added `resolveHref()` to map `source_type` + `source_id`/`source_path` to real site URLs (`/npcs/5`, `/groups/vistani`, `/realms/damara`, etc.)
+- **Duplicate search results** — same entity appearing 3-4 times from different embedding chunks; added deduplication by href+title, keeping highest-scoring chunk per entity
+
+### Added
+- **AI Overview on search** — GPT generates a 2-3 sentence summary from top results, displayed above the result list
+- **Google-style search UI** — replaced boxed card layout with clean borderless results: green breadcrumb paths, blue linked titles, snippet text with query term highlighting, category labels, and relevance percentages
+- **Search timing and count** — result metadata line ("About 12 results (0.45 seconds)")
+- **Friendly category labels** — `source_type` values mapped to readable names (NPC, Session Log, Player Character, Campaign Lore, etc.)
+
+### Changed
+- **Search result ranking** — results sorted by pgvector cosine similarity score displayed as relevance percentage
+
 ## [3.4.0] - 2026-04-26
 
 ### Added

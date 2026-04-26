@@ -192,32 +192,43 @@ function renderSearchPage(session, query) {
   <style>
     ${navCss()}
     body { margin: 0; background: #0d0d0d; color: #e0ddd5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    .search-page { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
-    .search-header { margin-bottom: 28px; }
+    .search-page { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
+    .search-header { margin-bottom: 24px; }
     .search-header h1 { color: #e8b923; font-size: 1.8rem; font-weight: 900; margin-bottom: 12px; }
-    .search-bar { display: flex; gap: 0; margin-bottom: 24px; }
+    .search-bar { display: flex; gap: 0; margin-bottom: 8px; }
     .search-bar input {
-      flex: 1; padding: 12px 16px; border: 2px solid #333; border-radius: 8px 0 0 8px;
+      flex: 1; padding: 12px 16px; border: 2px solid #333; border-radius: 24px 0 0 24px;
       font-size: 1rem; background: #1a1a1a; color: #e0ddd5; outline: none;
     }
     .search-bar input:focus { border-color: #e8b923; }
     .search-bar button {
-      padding: 12px 20px; border: 2px solid #e8b923; border-left: none;
+      padding: 12px 24px; border: 2px solid #e8b923; border-left: none;
       background: #e8b923; color: #1a1a1a; font-weight: 700; cursor: pointer;
-      border-radius: 0 8px 8px 0; font-size: 0.9rem; text-transform: uppercase;
+      border-radius: 0 24px 24px 0; font-size: 0.9rem; text-transform: uppercase;
     }
     .search-bar button:hover { background: #f0c83d; }
-    .search-results { list-style: none; padding: 0; }
-    .search-results li {
-      background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
-      padding: 16px 20px; margin-bottom: 10px; transition: border-color 0.15s;
+    .search-meta { color: #666; font-size: 0.82rem; margin-bottom: 24px; padding-left: 4px; }
+    /* AI Summary */
+    .ai-summary {
+      background: #161616; border-left: 3px solid #e8b923; padding: 14px 18px;
+      margin-bottom: 28px; border-radius: 0 8px 8px 0;
     }
-    .search-results li:hover { border-color: #e8b923; }
-    .search-results a { color: #e8b923; text-decoration: none; font-weight: 600; font-size: 1rem; }
-    .search-results a:hover { text-decoration: underline; }
-    .search-results .sr-cat { color: #888; font-size: 0.78rem; text-transform: uppercase; margin-top: 2px; }
-    .search-results .sr-body { color: #aaa; font-size: 0.88rem; margin-top: 4px; }
+    .ai-summary-label { color: #e8b923; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .ai-summary-text { color: #bbb; font-size: 0.92rem; line-height: 1.6; }
+    /* Results list */
+    .search-results { list-style: none; padding: 0; margin: 0; }
+    .sr-item { padding: 0 0 20px; margin-bottom: 4px; }
+    .sr-breadcrumb { color: #5a8a5a; font-size: 0.8rem; margin-bottom: 2px; }
+    .sr-title { margin: 0; }
+    .sr-title a { color: #8ab4f8; text-decoration: none; font-size: 1.1rem; font-weight: 500; }
+    .sr-title a:hover { text-decoration: underline; }
+    .sr-title a:visited { color: #c58af9; }
+    .sr-snippet { color: #aaa; font-size: 0.88rem; line-height: 1.55; margin-top: 4px; }
+    .sr-meta { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+    .sr-category { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    .sr-score { color: #555; font-size: 0.72rem; }
     .search-empty { color: #888; text-align: center; padding: 48px 24px; }
+    .search-loading { color: #888; font-size: 0.9rem; padding: 24px 4px; }
     .site-footer { text-align: center; padding: 24px; color: #555; border-top: 1px solid #222; font-size: 0.8rem; }
     .site-footer a { color: #e8b923; text-decoration: none; }
   </style>
@@ -230,6 +241,7 @@ function renderSearchPage(session, query) {
       <input type="text" id="searchInput" value="${q}" placeholder="Search campaign content..." autocomplete="off">
       <button id="searchBtn">Search</button>
     </div>
+    <div class="search-meta" id="searchMeta"></div>
     <div id="aiSummary"></div>
     <ul class="search-results" id="searchResults"></ul>
     <div class="search-empty" id="searchEmpty" style="display:none;">No results found.</div>
@@ -241,24 +253,68 @@ function renderSearchPage(session, query) {
     var btn = document.getElementById('searchBtn');
     var resultsList = document.getElementById('searchResults');
     var emptyMsg = document.getElementById('searchEmpty');
+    var metaEl = document.getElementById('searchMeta');
+    var aiEl = document.getElementById('aiSummary');
+
+    function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function highlightSnippet(text, query) {
+      if (!text || !query) return escHtml(text || '');
+      var escaped = escHtml(text);
+      var terms = query.toLowerCase().split(/\\s+/).filter(function(t) { return t.length > 2; });
+      terms.forEach(function(term) {
+        var re = new RegExp('(' + term.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\\\$&') + ')', 'gi');
+        escaped = escaped.replace(re, '<strong style="color:#e0ddd5;">$1</strong>');
+      });
+      return escaped;
+    }
 
     async function doSearch(q) {
       if (!q || q.length < 2) return;
-      resultsList.innerHTML = '<li style="color:#888;">Searching...</li>';
+      resultsList.innerHTML = '';
+      metaEl.textContent = '';
+      aiEl.innerHTML = '';
       emptyMsg.style.display = 'none';
+      resultsList.innerHTML = '<li class="search-loading">Searching...</li>';
+      var startTime = Date.now();
       try {
         var resp = await fetch('/api/search?q=' + encodeURIComponent(q));
         var data = await resp.json();
+        var elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
         if (!data.results || data.results.length === 0) {
-          resultsList.innerHTML = ''; emptyMsg.style.display = 'block'; return;
+          resultsList.innerHTML = '';
+          metaEl.textContent = '';
+          emptyMsg.style.display = 'block';
+          return;
         }
+
+        metaEl.textContent = 'About ' + data.total + ' results (' + elapsed + ' seconds)';
         emptyMsg.style.display = 'none';
+
+        // AI Summary
+        if (data.aiSummary) {
+          aiEl.innerHTML = '<div class="ai-summary"><div class="ai-summary-label">AI Overview</div><div class="ai-summary-text">' + escHtml(data.aiSummary) + '</div></div>';
+        }
+
         resultsList.innerHTML = data.results.map(function(r) {
-          return '<li><a href="' + (r.href || '#') + '">' + (r.title || 'Untitled') + '</a>' +
-            '<div class="sr-cat">' + (r.category || '') + '</div>' +
-            (r.body ? '<div class="sr-body">' + r.body.substring(0, 200) + '...</div>' : '') + '</li>';
+          var href = r.href && r.href !== '#' ? r.href : null;
+          var crumb = r.breadcrumb || (href ? 'hotd.knoxrpg.com' + href : '');
+          var snippet = r.body ? highlightSnippet(r.body.substring(0, 250), q) : '';
+          var titleHtml = href
+            ? '<a href="' + escHtml(href) + '">' + escHtml(r.title || 'Untitled') + '</a>'
+            : '<span style="color:#8ab4f8;">' + escHtml(r.title || 'Untitled') + '</span>';
+          return '<li class="sr-item">' +
+            (crumb ? '<div class="sr-breadcrumb">' + escHtml(crumb) + '</div>' : '') +
+            '<h3 class="sr-title">' + titleHtml + '</h3>' +
+            (snippet ? '<div class="sr-snippet">' + snippet + '</div>' : '') +
+            '<div class="sr-meta">' +
+              '<span class="sr-category">' + escHtml(r.category || '') + '</span>' +
+              '<span class="sr-score">Relevance: ' + (r.score || 0) + '%</span>' +
+            '</div>' +
+          '</li>';
         }).join('');
-      } catch(e) { resultsList.innerHTML = '<li style="color:#ef4444;">Search failed.</li>'; }
+      } catch(e) { resultsList.innerHTML = '<li style="color:#ef4444;padding:24px 0;">Search failed. Please try again.</li>'; }
     }
 
     btn.addEventListener('click', function() { doSearch(input.value.trim()); });
