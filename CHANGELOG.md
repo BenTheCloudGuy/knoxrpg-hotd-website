@@ -4,6 +4,12 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.3] - 2026-04-26
+
+### Changed
+- **House Rules page** — replaced static image with rendered markdown content; scales properly at all resolutions and matches the site's look and feel
+- **House Rules content** — full house rules written out as structured markdown with Table Rules, Mechanic Rules, and Magic sections including Overcasting and Circle Magic summaries with links to full rule pages
+
 ## [3.3.2] - 2026-04-26
 
 ### Fixed

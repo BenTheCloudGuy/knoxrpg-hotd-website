@@ -13,9 +13,11 @@ const { renderMarkdownFile, renderRichTextBlock, markdownToHtml } = require("../
 
 // ── House Rules Page ──────────────────────────────────────────
 function renderHouseRulesPage(session) {
+  const rulesPath = path.join(STATIC_ROOT, "data", "houserules.md");
+  const htmlContent = renderMarkdownFile(rulesPath);
   const body = `
-  <div style="display:flex;justify-content:center;padding:24px 0;">
-    <img src="/images/HouseRulesPage.jpg" alt="House Rules" style="width:75%;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,0.5);" />
+  <div class="content">
+    <div class="history-content">${htmlContent}</div>
   </div>`;
   return pageShell("House Rules — Halls of the Damned", "/house-rules", body, session);
 }
