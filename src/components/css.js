@@ -61,6 +61,23 @@ function navCss() {
     }
     .nav-dropdown-menu a:last-child { border-bottom: none; }
     .nav-dropdown-menu a:hover { background: rgba(255,255,255,0.08); color: #e8b923; }
+    /* ── Submenu flyout ── */
+    .nav-submenu-wrap { position: relative; }
+    .nav-submenu-wrap > a { display: block; padding: 10px 20px; font-size: 0.82rem; white-space: nowrap; border-bottom: 1px solid #2a2a2a; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
+    .nav-submenu {
+      display: none; position: absolute; left: 100%; top: 0;
+      background: #1a1a1a; border: 1px solid #333; border-left: 2px solid #8b0000;
+      min-width: 180px; z-index: 2001;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); border-radius: 0 6px 6px 0;
+    }
+    .nav-submenu-wrap:hover > .nav-submenu { display: block; }
+    .nav-submenu a {
+      display: block; padding: 10px 20px; font-size: 0.82rem;
+      white-space: nowrap; border-bottom: 1px solid #2a2a2a;
+      text-transform: uppercase; letter-spacing: 0.5px; color: #ccc; text-decoration: none;
+    }
+    .nav-submenu a:last-child { border-bottom: none; }
+    .nav-submenu a:hover { background: rgba(255,255,255,0.08); color: #e8b923; }
     /* ── Search bar in nav ── */
     .nav-search {
       position: relative; display: flex; align-items: center; margin-right: 8px;
@@ -133,6 +150,7 @@ function navCss() {
       border-bottom: none; cursor: default;
     }
     .nav-mobile-drawer .mobile-dropdown-child { padding-left: 44px; }
+    .nav-mobile-drawer .mobile-submenu-child { padding-left: 64px; font-size: 0.78rem; color: #999; }
     .nav-mobile-drawer .nav-mobile-search { padding: 12px 24px; }
     .nav-mobile-drawer .nav-mobile-search input {
       background: #2a2a2a; border: 1px solid #444; border-radius: 4px;

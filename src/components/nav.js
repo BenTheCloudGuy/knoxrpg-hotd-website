@@ -142,6 +142,14 @@ function renderNav(activePath, session) {
         const isCrossSite = c.external && c.href && c.href.includes("knoxrpg.com");
         const target = c.external && !isCrossSite ? ' target="_blank" rel="noopener"' : "";
         const tp = isCrossSite ? ` onclick="teleportTo('${c.href}','${esc(c.label)}');return false;"` : '';
+        // Submenu support
+        if (c.submenu && c.submenu.length) {
+          const subLinks = c.submenu.map(s => {
+            const sActive = activePath === s.href;
+            return `<a href="${esc(s.href)}"${sActive ? ' class="active"' : ''}>${esc(s.label)}</a>`;
+          }).join('');
+          return `<div class="nav-submenu-wrap"><a href="${esc(c.href)}"${cActive ? ' class="active"' : ''}>${esc(c.label)} &#9656;</a><div class="nav-submenu">${subLinks}</div></div>`;
+        }
         return `<a href="${esc(c.href)}"${cActive ? ' class="active"' : ""}${target}${tp}>${esc(c.label)}</a>`;
       }).join("");
       return `<div class="nav-dropdown"><a href="#"${childActive ? ' class="active"' : ""}>${esc(item.label)}</a><div class="nav-dropdown-menu">${ddLinks}</div></div>`;
@@ -174,7 +182,14 @@ function renderNav(activePath, session) {
         const isCrossSite = c.external && c.href && c.href.includes("knoxrpg.com");
         const target = c.external && !isCrossSite ? ' target="_blank" rel="noopener"' : "";
         const tp = isCrossSite ? ` onclick="teleportTo('${c.href}','${esc(c.label)}');return false;"` : '';
-        return `<a href="${esc(c.href)}" class="mobile-dropdown-child${cActive ? " active" : ""}"${target}${tp}>${esc(c.label)}</a>`;
+        let subItems = '';
+        if (c.submenu && c.submenu.length) {
+          subItems = c.submenu.map(s => {
+            const sActive = activePath === s.href;
+            return `<a href="${esc(s.href)}" class="mobile-dropdown-child mobile-submenu-child${sActive ? ' active' : ''}">${esc(s.label)}</a>`;
+          }).join('');
+        }
+        return `<a href="${esc(c.href)}" class="mobile-dropdown-child${cActive ? " active" : ""}"${target}${tp}>${esc(c.label)}</a>${subItems}`;
       }).join("");
       return `<span class="mobile-dropdown-label">${esc(item.label)}</span>${children}`;
     }

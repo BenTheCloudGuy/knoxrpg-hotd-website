@@ -4,6 +4,24 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-04-26
+
+### Added
+- **Overcasting page** (`/overcasting`) — full rendered markdown page for the Overcasting homebrew mechanic with back-link to House Rules
+- **Circle Magic page** (`/circle-magic`) — full rendered markdown page for the Circle Magic homebrew mechanic with back-link to House Rules
+- **House Rules submenu** — hovering over House Rules in the Game Info nav dropdown now shows a flyout submenu with Overcasting and Circle Magic links; mobile drawer shows them as indented children
+- **Markdown table rendering** — `markdownToHtml()` now parses pipe-delimited markdown tables into styled HTML tables with header rows
+- **Markdown blockquote rendering** — `markdownToHtml()` now renders `> text` as gold-bordered italic quote blocks
+- **Markdown nested list rendering** — `markdownToHtml()` now handles indented sub-lists with circle bullet styling
+- **Markdown h4 heading support** — `markdownToHtml()` now renders `####` headings
+
+### Fixed
+- **Site search broken** — `search.js` was still trying to reach the external RAG microservice (removed in v3.0.0); rewired to use pgvector semantic search via `rag.js` and the OpenAI embeddings client directly
+- **`buildRagContext()` dead code** — was calling a non-existent external RAG endpoint; now delegates to `buildEmbeddingContext()` from `rag.js`
+
+### Changed
+- **Search results now include campaign content** — search returns NPCs, sessions, lore, spells, and other embedded content from pgvector alongside the static page index
+
 ## [3.3.4] - 2026-04-26
 
 ### Fixed

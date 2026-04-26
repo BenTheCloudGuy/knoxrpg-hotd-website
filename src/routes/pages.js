@@ -7,7 +7,8 @@ const { readBody, parseForm } = require("../lib/utils");
 
 // Campaign pages
 const {
-  renderHouseRulesPage, renderHomePage, renderCalendarPage, renderMapsPage,
+  renderHouseRulesPage, renderOvercastingPage, renderCircleMagicPage,
+  renderHomePage, renderCalendarPage, renderMapsPage,
   renderNpcsPage, renderNpcDetailPage, renderSessionsPage, renderCharactersPage,
   renderHistoryPage, renderArtifactsPage, renderHandoutsPage, renderArtGalleryPage,
   renderArtifactDetailPage, renderHandoutDetailPage, renderJournalPage,
@@ -168,6 +169,10 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       html = await renderHomePage(session); break;
     case "/house-rules":
       html = renderHouseRulesPage(session); break;
+    case "/overcasting":
+      html = renderOvercastingPage(session); break;
+    case "/circle-magic":
+      html = renderCircleMagicPage(session); break;
     case "/calendar":
       html = await renderCalendarPage(session, url.searchParams.get("month")); break;
     case "/maps":

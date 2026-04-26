@@ -50,7 +50,10 @@ const NAV_ITEMS = [
       { label: "Maps", href: "/maps" },
       { label: "Notable Groups", href: "/groups" },
       { label: "Art & Images", href: "/art" },
-      { label: "House Rules", href: "/house-rules" },
+      { label: "House Rules", href: "/house-rules", submenu: [
+        { label: "Overcasting", href: "/overcasting" },
+        { label: "Circle Magic", href: "/circle-magic" },
+      ]},
       { label: "DM AI", href: "/dungeon-master" },
       { label: "FoundryVTT", href: "https://hotd-foundry.knoxrpg.com", external: true },
     ]
@@ -74,6 +77,8 @@ const NAV_RIGHT_ITEMS = [];
 const campaignPages = [
   { title: "Home", href: "/", category: "Page", body: "Halls of the Damned campaign hub landing page dashboard" },
   { title: "House Rules", href: "/house-rules", category: "Page", body: "Campaign house rules custom rules reference" },
+  { title: "Overcasting", href: "/overcasting", category: "Page", body: "Overcasting house rules pushing beyond spell slot limits hit dice constitution" },
+  { title: "Circle Magic", href: "/circle-magic", category: "Page", body: "Circle magic cooperative spellcasting circle enhancements empower heighten widen" },
   { title: "Calendar", href: "/calendar", category: "Campaign", body: "Calendar of Harptos game world calendar tracking dates and events" },
   { title: "Maps", href: "/maps", category: "Campaign", body: "Acquired maps from campaign adventures" },
   { title: "NPCs", href: "/npcs", category: "Campaign", body: "Notable NPCs allies enemies persons of interest encountered" },

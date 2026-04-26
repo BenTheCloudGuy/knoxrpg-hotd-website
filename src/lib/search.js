@@ -1,6 +1,6 @@
 const { campaignPages } = require("../config");
-
-const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "";
+const { searchEmbeddings, buildEmbeddingContext } = require("./rag");
+const azure = require("./azure");
 
 function searchCampaignLocal(query) {
   if (!query || query.length < 2) return [];
@@ -23,48 +23,40 @@ function searchCampaignLocal(query) {
 async function searchCampaign(query) {
   if (!query || query.length < 2) return { results: [], total: 0 };
 
-  // Try RAG semantic search first
-  if (RAG_SERVICE_URL) {
+  const local = searchCampaignLocal(query);
+
+  // Try pgvector semantic search if OpenAI client is available
+  if (azure.openaiClient) {
     try {
-      const res = await fetch(`${RAG_SERVICE_URL}/rag/site-search?q=${encodeURIComponent(query)}&limit=20`);
-      if (res.ok) {
-        const data = await res.json();
-        // Merge RAG results with local page results (local gets priority)
-        const local = searchCampaignLocal(query);
-        const ragResults = (data.results || []).map(r => ({
-          title: r.title,
-          href: r.href,
-          category: r.category,
-          body: r.body,
-          score: Math.round(r.score * 100),
-        }));
-        // Deduplicate: local pages win over RAG for same title
-        const seen = new Set(local.map(l => l.title));
-        const merged = [...local, ...ragResults.filter(r => !seen.has(r.title))];
-        merged.sort((a, b) => b.score - a.score);
-        return { results: merged, total: merged.length };
-      }
+      const ragResults = await searchEmbeddings(azure.openaiClient, query, {
+        includeDmOnly: false,
+        limit: 20,
+        minScore: 0.25,
+      });
+      const mapped = ragResults.map(r => ({
+        title: r.title || 'Untitled',
+        href: r.source_path || '#',
+        category: r.source_type || 'Campaign',
+        body: (r.chunk_text || '').slice(0, 300),
+        score: Math.round(r.score * 100),
+      }));
+      // Merge: local pages first, then RAG results, deduplicated by title
+      const seen = new Set(local.map(l => l.title));
+      const merged = [...local, ...mapped.filter(r => !seen.has(r.title))];
+      merged.sort((a, b) => b.score - a.score);
+      return { results: merged, total: merged.length };
     } catch (err) {
       console.warn("RAG search failed, falling back to local:", err.message);
     }
   }
 
-  const results = searchCampaignLocal(query);
-  return { results, total: results.length };
+  return { results: local, total: local.length };
 }
 
 async function buildRagContext(query) {
-  if (!RAG_SERVICE_URL) return "";
+  if (!azure.openaiClient) return "";
   try {
-    const res = await fetch(`${RAG_SERVICE_URL}/rag/context`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, maxTokens: 3000 }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.context || "";
-    }
+    return await buildEmbeddingContext(azure.openaiClient, query, { includeDmOnly: false });
   } catch (err) {
     console.warn("RAG context build failed:", err.message);
   }

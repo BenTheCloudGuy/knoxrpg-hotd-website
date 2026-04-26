@@ -22,6 +22,30 @@ function renderHouseRulesPage(session) {
   return pageShell("House Rules — Halls of the Damned", "/house-rules", body, session);
 }
 
+// ── Overcasting Page ──────────────────────────────────────────
+function renderOvercastingPage(session) {
+  const mdPath = path.join(STATIC_ROOT, "data", "over-casting.md");
+  const htmlContent = renderMarkdownFile(mdPath);
+  const body = `
+  <div class="content">
+    <a href="/house-rules" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to House Rules</a>
+    <div class="history-content" style="margin-top:16px;">${htmlContent}</div>
+  </div>`;
+  return pageShell("Overcasting — Halls of the Damned", "/overcasting", body, session);
+}
+
+// ── Circle Magic Page ─────────────────────────────────────────
+function renderCircleMagicPage(session) {
+  const mdPath = path.join(STATIC_ROOT, "data", "casting_circle.md");
+  const htmlContent = renderMarkdownFile(mdPath);
+  const body = `
+  <div class="content">
+    <a href="/house-rules" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to House Rules</a>
+    <div class="history-content" style="margin-top:16px;">${htmlContent}</div>
+  </div>`;
+  return pageShell("Circle Magic — Halls of the Damned", "/circle-magic", body, session);
+}
+
 // ── Home / Landing Page ───────────────────────────────────────
 async function renderHomePage(session) {
   // Fetch latest session
@@ -1617,6 +1641,8 @@ function renderGroupDetailPage(slug, session) {
 
 module.exports = {
   renderHouseRulesPage,
+  renderOvercastingPage,
+  renderCircleMagicPage,
   renderHomePage,
   renderCalendarPage,
   renderMapsPage,
