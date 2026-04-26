@@ -4,6 +4,11 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2026-04-26
+
+### Fixed
+- **Telemetry lazy client getter** — `telemetry.js` now lazily resolves `defaultClient` on each call instead of caching null at module load time; fixes custom events not being sent when App Insights is late-initialized from Key Vault
+
 ## [3.3.0] - 2026-04-26
 
 ### Added
