@@ -1,9 +1,20 @@
 #!/usr/bin/env node
 
 // ── Application Insights — must be initialized before all other imports ──
+let appInsightsClient = null;
 if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
   const appInsights = require("applicationinsights");
-  appInsights.setup().start();
+  appInsights.setup()
+    .setAutoCollectRequests(true)
+    .setAutoCollectPerformance(true, true)
+    .setAutoCollectExceptions(true)
+    .setAutoCollectDependencies(true)
+    .setAutoCollectConsole(true, true)
+    .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
+    .setSendLiveMetrics(true)
+    .start();
+  appInsightsClient = appInsights.defaultClient;
+  appInsightsClient.context.tags[appInsightsClient.context.keys.cloudRole] = "hotd-website";
 }
 
 const http = require("http");

@@ -55,6 +55,11 @@ keyVault:
   name: cloudgeek-cus-keyvault
   openaiSecretName: openai-api-key
 
+# -- Application Insights ------------------------------------------------------
+appInsights:
+  connectionString: ""   # Set via --set or loaded from Key Vault at startup
+  kvSecretName: appinsights-connection-string
+
 # -- Host Network (required for Arc identity) ----------------------------------
 hostNetwork: true
 

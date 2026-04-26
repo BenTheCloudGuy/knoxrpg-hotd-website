@@ -4,6 +4,23 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-04-26
+
+### Added
+- **Azure Application Insights APM** — `hotd-website-insights` resource created in `cloudgeek-cus-mgmt`, linked to `cloudgeek-cus-law` Log Analytics workspace
+- **Full auto-instrumentation** — HTTP requests, PG dependencies, exceptions, performance counters, console logs, live metrics, and distributed tracing (W3C)
+- **Telemetry helper module** (`src/lib/telemetry.js`) — `trackEvent`, `trackMetric`, and domain-specific helpers for auth, AI chat, and DB queries
+- **Auth event tracking** — login success/failure (with IP and user agent), signup, and logout events sent as App Insights custom events
+- **DM AI chat tracking** — every chat completion tracked with username, role, model, token usage, latency, tool calls, and finish reason
+- **Generic DB query tracking** — `query_database` tool logs SQL, row count, latency, and user role
+- **App Insights connection string in Key Vault** — stored as `appinsights-connection-string` secret; loaded via Arc managed identity at startup if env var not set
+- **Container Insights deployed** — `azuremonitor-containers` extension installed on `cgl-cortana-k8s` Arc cluster, streaming container logs and metrics to `cloudgeek-cus-law`
+- **Helm support for App Insights** — `appInsights.connectionString` and `appInsights.kvSecretName` values; `APPLICATIONINSIGHTS_CONNECTION_STRING` and `APPINSIGHTS_KV_SECRET_NAME` env vars in deployment template
+
+### Changed
+- **`server.js` App Insights bootstrap** — enhanced with auto-collect for requests, performance, exceptions, dependencies, console, live metrics, distributed tracing, and cloud role tag
+- **`azure.js` late-init** — loads App Insights connection string from Key Vault during `initOpenAI()` if not already set via env var
+
 ## [3.2.1] - 2026-04-26
 
 ### Fixed

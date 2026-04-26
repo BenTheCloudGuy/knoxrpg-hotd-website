@@ -8,6 +8,7 @@
 
 const { pgPool } = require("../db/pool");
 const { searchEmbeddings } = require("./rag");
+const { trackAiChat, trackDbQuery } = require("./telemetry");
 
 // ── Tool definitions (OpenAI function-calling schema) ────────
 
@@ -545,13 +546,16 @@ async function executeTool(name, args, openaiClient, isDM = false) {
       // ── Execute in read-only transaction ──
       let client;
       try {
+        const queryT0 = Date.now();
         client = await pgPool.connect();
         await client.query('BEGIN READ ONLY');
         const res = await client.query(sql);
         await client.query('COMMIT');
         client.release();
+        const queryMs = Date.now() - queryT0;
 
         const rows = (res.rows || []).slice(0, 100);
+        trackDbQuery(sql, rows.length, queryMs, isDM ? 'admin' : 'player');
         // Strip large/binary columns from results to save tokens
         const cleanRows = rows.map(row => {
           const clean = {};
@@ -810,6 +814,18 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
     debug.totalMessages = chatMessages.length;
 
     const reply = choice.message.content || "I don't have a response for that.";
+    trackAiChat({
+      username: opts.username || '',
+      isDM,
+      model,
+      finishReason: choice.finish_reason,
+      toolCalls: debug.toolCalls.map(r => r.calls.map(c => c.tool).join(',')).join('; '),
+      latencyMs: debug.openaiLatencyMs,
+      promptTokens: (completion.usage || {}).prompt_tokens || 0,
+      completionTokens: (completion.usage || {}).completion_tokens || 0,
+      totalTokens: (completion.usage || {}).total_tokens || 0,
+      toolRounds: rounds,
+    });
     return { reply, _debug: debug };
   }
 
@@ -817,6 +833,15 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
   debug.totalRounds = rounds;
   debug.openaiLatencyMs = Date.now() - t0;
   debug.warning = "Max tool-call rounds exceeded";
+  trackAiChat({
+    username: opts.username || '',
+    isDM,
+    model,
+    finishReason: 'max_rounds_exceeded',
+    toolCalls: debug.toolCalls.map(r => r.calls.map(c => c.tool).join(',')).join('; '),
+    latencyMs: debug.openaiLatencyMs,
+    toolRounds: rounds,
+  });
   return { reply: "I ran into a limit while looking up information. Please try a more specific question.", _debug: debug };
 }
 

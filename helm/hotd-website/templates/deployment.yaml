@@ -68,6 +68,12 @@ spec:
             - name: OPENAI_API_KEY
               value: {{ .Values.openai.apiKey | quote }}
             {{- end }}
+            {{- if .Values.appInsights.connectionString }}
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              value: {{ .Values.appInsights.connectionString | quote }}
+            {{- end }}
+            - name: APPINSIGHTS_KV_SECRET_NAME
+              value: {{ .Values.appInsights.kvSecretName | quote }}
             {{- if .Values.arcIdentity.enabled }}
             - name: IDENTITY_ENDPOINT
               value: "http://localhost:40342/metadata/identity/oauth2/token"

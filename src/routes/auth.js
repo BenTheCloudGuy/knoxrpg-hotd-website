@@ -6,6 +6,7 @@ const { pgPool, bcrypt } = require("../db/pool");
 const { readBody, parseForm } = require("../lib/utils");
 const { createSession, destroySession, setSessionCookie, clearSessionCookie, validatePassword } = require("../lib/auth");
 const { renderLoginPage, renderSignupPage } = require("../pages/auth");
+const { trackLogin, trackSignup, trackLogout } = require("../lib/telemetry");
 
 /**
  * Handle auth routes. Returns true if the route was handled, false otherwise.
@@ -44,6 +45,7 @@ async function handleAuthRoutes(decoded, req, res, session, url) {
         }
         const match = await bcrypt.compare(form.password, user.password_hash);
         if (!match) {
+          trackLogin(form.username, false, req.socket.remoteAddress, req.headers['user-agent']);
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
           res.end(renderLoginPage("Invalid username or password."));
           return true;
@@ -54,6 +56,7 @@ async function handleAuthRoutes(decoded, req, res, session, url) {
           return true;
         }
         const sid = await createSession(user);
+        trackLogin(form.username, true, req.socket.remoteAddress, req.headers['user-agent']);
         setSessionCookie(res, sid);
         res.writeHead(302, { Location: "/" });
         res.end();
@@ -105,6 +108,7 @@ async function handleAuthRoutes(decoded, req, res, session, url) {
           "INSERT INTO account_info (first_name, last_name, email, username, password_hash, role, is_approved) VALUES ($1, $2, $3, $4, $5, 'user', false)",
           [form.firstName, form.lastName, form.email, form.username, hash]
         );
+        trackSignup(form.username, req.socket.remoteAddress);
         res.writeHead(302, { Location: "/login?msg=Account created! An admin must approve your account before you can login." });
         res.end();
         return true;
@@ -119,7 +123,9 @@ async function handleAuthRoutes(decoded, req, res, session, url) {
 
   // ── Logout ─────────────────────────────────────────────────
   if (decoded === "/logout") {
+    const logoutUser = session ? session.username : 'unknown';
     await destroySession(req);
+    trackLogout(logoutUser);
     clearSessionCookie(res);
     res.writeHead(302, { Location: "/" });
     res.end();
