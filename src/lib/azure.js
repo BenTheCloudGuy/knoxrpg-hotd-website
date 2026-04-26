@@ -44,6 +44,7 @@ async function initOpenAI() {
             try {
               const appInsights = require("applicationinsights");
               if (!appInsights.defaultClient) {
+                process.env.OTEL_SERVICE_NAME = process.env.OTEL_SERVICE_NAME || 'hotd-website';
                 appInsights.setup()
                   .setAutoCollectRequests(true)
                   .setAutoCollectPerformance(true, true)
@@ -53,7 +54,6 @@ async function initOpenAI() {
                   .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
                   .setSendLiveMetrics(true)
                   .start();
-                appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = "hotd-website";
                 console.log(`  AI: App Insights loaded from Key Vault (${aiSecretName})`);
               }
             } catch (_) {}

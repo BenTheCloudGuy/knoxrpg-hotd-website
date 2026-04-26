@@ -2,6 +2,7 @@
 
 // ── Application Insights — must be initialized before all other imports ──
 let appInsightsClient = null;
+process.env.OTEL_SERVICE_NAME = process.env.OTEL_SERVICE_NAME || 'hotd-website';
 if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
   const appInsights = require("applicationinsights");
   appInsights.setup()
@@ -14,7 +15,6 @@ if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
     .setSendLiveMetrics(true)
     .start();
   appInsightsClient = appInsights.defaultClient;
-  appInsightsClient.context.tags[appInsightsClient.context.keys.cloudRole] = "hotd-website";
 }
 
 const http = require("http");

@@ -4,6 +4,11 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.2] - 2026-04-26
+
+### Fixed
+- **App Insights cloud role name** — set `OTEL_SERVICE_NAME=hotd-website` for applicationinsights v3.x (OpenTelemetry); replaces broken v2 context tags API that showed as `unknown_service:node`
+
 ## [3.3.1] - 2026-04-26
 
 ### Fixed
