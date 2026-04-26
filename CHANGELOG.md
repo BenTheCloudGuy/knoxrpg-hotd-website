@@ -4,6 +4,11 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3] - 2026-04-26
+
+### Fixed
+- **Reference pages show complete content** — reference pages now fetch all sibling chunks from the same section/chapter (matched by `source_path` and normalized title), joining them in order to display the full content instead of a single ~3,000 char chunk
+
 ## [3.5.2] - 2026-04-26
 
 ### Added

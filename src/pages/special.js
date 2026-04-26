@@ -339,7 +339,7 @@ const REF_CATEGORY_LABELS = {
 async function renderReferencePage(hash, session) {
   try {
     const { rows } = await pgPool.query(
-      'SELECT title, chunk_text, source_type, metadata FROM hotd_embeddings WHERE chunk_hash = $1 LIMIT 1',
+      'SELECT title, chunk_text, chunk_index, source_type, source_path, metadata FROM hotd_embeddings WHERE chunk_hash = $1 LIMIT 1',
       [hash]
     );
     if (rows.length === 0) return null;
@@ -347,13 +347,28 @@ async function renderReferencePage(hash, session) {
     const row = rows[0];
     const category = REF_CATEGORY_LABELS[row.source_type] || 'Reference';
     const source = (row.metadata && row.metadata.source) || (row.metadata && row.metadata.book) || '';
+    const totalChunks = (row.metadata && row.metadata.total_chunks) || 1;
     const cleanTitle = (row.title || 'Reference')
       .replace(/\s*\(\d+\/\d+\)\s*$/, '')
       .replace(/\s*\(DM Notes\)\s*$/i, '')
       .trim();
 
-    // Convert chunk text to HTML (it's structured like markdown)
-    const htmlContent = markdownToHtml(row.chunk_text || '');
+    // Fetch all sibling chunks from the same section to show complete content
+    let fullText = row.chunk_text || '';
+    if (totalChunks > 1 && row.source_path) {
+      const titlePattern = cleanTitle + ' (%';
+      const siblings = await pgPool.query(
+        `SELECT chunk_text, chunk_index FROM hotd_embeddings
+         WHERE source_path = $1 AND (title LIKE $2 OR title = $3)
+         ORDER BY chunk_index`,
+        [row.source_path, titlePattern, cleanTitle]
+      );
+      if (siblings.rows.length > 1) {
+        fullText = siblings.rows.map(s => s.chunk_text).join('\n\n');
+      }
+    }
+
+    const htmlContent = markdownToHtml(fullText);
 
     const body = `
     <div class="content">
