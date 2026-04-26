@@ -4,6 +4,25 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-04-26
+
+### Added
+- **DDB Content Embedding Pipeline** (`scripts/embed-ddb-content.js`) — new 3-phase pipeline to embed all D&D Beyond and rulebook content into pgvector for RAG search and DM AI
+  - **Phase 1: Structured DDB data** — downloads and embeds races (91), classes (257), feats (185), and backgrounds (115) from `books-extracted` Azure Blob container; flattens JSON into embeddable prose with traits, features, and descriptions
+  - **Phase 2: DB table descriptions** — embeds `description_text` from existing `spells`, `monsters`, and `magic_items` PostgreSQL tables
+  - **Phase 3: Full book prose** — downloads and embeds 108 D&D rulebooks from `books-text` Azure Blob container; chapter-aware chunking produces ~23,000 chunks covering all rulebook content
+  - Supports `--phase 1|2|3|all`, `--mode full|incremental|dry-run`, `--verbose` flags
+  - Hash-based incremental indexing (same pattern as campaign embed pipeline) — only re-embeds changed content on rerun
+  - Full mode preserves campaign embeddings (only clears DDB source types)
+  - IVFFlat index auto-rebuild after significant inserts
+  - Azure Blob access via managed identity (`DefaultAzureCredential`)
+  - Designed for rerun as new DDB content is added to the storage account
+- **New source types in search** — `ddb_race`, `ddb_class`, `ddb_feat`, `ddb_background`, `ddb_spell`, `ddb_monster`, `ddb_magic_item`, `dnd_book` all mapped to DM AI with book-style breadcrumbs (`D&D 5e > Races > PHB 2024`)
+
+### Changed
+- **Search breadcrumbs** — DDB content shows `D&D 5e > Category > Source` style paths; book prose shows `D&D 5e > Books > book-code`
+- **Category labels** — added Race, Class, Feat, Background, D&D Rulebook to search result labels
+
 ## [3.4.2] - 2026-04-26
 
 ### Fixed

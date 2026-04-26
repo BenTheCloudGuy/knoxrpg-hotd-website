@@ -33,6 +33,15 @@ function resolveHref(r) {
       return null;
     }
     case 'lore_json': return null;
+    // DDB content types all link to DM AI for full details
+    case 'ddb_race':       return '/dungeon-master';
+    case 'ddb_class':      return '/dungeon-master';
+    case 'ddb_feat':       return '/dungeon-master';
+    case 'ddb_background': return '/dungeon-master';
+    case 'ddb_spell':      return '/dungeon-master';
+    case 'ddb_monster':    return '/dungeon-master';
+    case 'ddb_magic_item': return '/dungeon-master';
+    case 'dnd_book':       return '/dungeon-master';
     default: return null;
   }
 }
@@ -44,12 +53,28 @@ function categoryLabel(type) {
     handout: 'Handout', calendar: 'Calendar Event', character: 'Player Character',
     journal: 'Adventure Journal', lore: 'Campaign Lore', lore_json: 'Campaign Data',
     spell: 'Spell', monster: 'Monster', magic_item: 'Magic Item',
+    ddb_race: 'Race', ddb_class: 'Class', ddb_feat: 'Feat',
+    ddb_background: 'Background', ddb_spell: 'Spell', ddb_monster: 'Monster',
+    ddb_magic_item: 'Magic Item', dnd_book: 'D&D Rulebook',
   };
-  return labels[type] || 'Campaign';
+  return labels[type] || 'D&D Reference';
 }
 
-// ── Breadcrumb path from href ─────────────────────────────────
-function breadcrumb(href) {
+// ── Breadcrumb path from href and metadata ────────────────────
+function breadcrumb(href, sourceType, metadata) {
+  if (sourceType && sourceType.startsWith('ddb_')) {
+    const source = (metadata && metadata.source) || 'D&D 5e';
+    const typeLabels = {
+      ddb_race: 'Races', ddb_class: 'Classes', ddb_feat: 'Feats',
+      ddb_background: 'Backgrounds', ddb_spell: 'Spells',
+      ddb_monster: 'Monsters', ddb_magic_item: 'Magic Items',
+    };
+    return `D&D 5e > ${typeLabels[sourceType] || 'Reference'} > ${source}`;
+  }
+  if (sourceType === 'dnd_book') {
+    const book = (metadata && metadata.book) || 'Unknown';
+    return `D&D 5e > Books > ${book}`;
+  }
   if (!href || href === '#') return '';
   return 'hotd.knoxrpg.com' + href;
 }
@@ -177,7 +202,7 @@ async function searchCampaign(query) {
           category: categoryLabel(r.source_type),
           body: (r.chunk_text || '').slice(0, 400),
           score: Math.round(r.score * 100),
-          breadcrumb: breadcrumb(href),
+          breadcrumb: breadcrumb(href, r.source_type, r.metadata),
           source_type: r.source_type,
         });
       }
