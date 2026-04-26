@@ -4,17 +4,19 @@
 // when App Insights is not configured.
 // ══════════════════════════════════════════════════════════════
 
-let client = null;
+let _appInsights = null;
+try { _appInsights = require("applicationinsights"); } catch (_) {}
 
-try {
-  const appInsights = require("applicationinsights");
-  client = appInsights.defaultClient || null;
-} catch (_) {}
+// Lazy getter — App Insights may be late-initialized from Key Vault
+function getClient() {
+  return _appInsights ? _appInsights.defaultClient : null;
+}
 
 /**
  * Track a custom event with properties and optional metrics.
  */
 function trackEvent(name, properties = {}, measurements = {}) {
+  const client = getClient();
   if (!client) return;
   try {
     client.trackEvent({ name, properties, measurements });
@@ -25,6 +27,7 @@ function trackEvent(name, properties = {}, measurements = {}) {
  * Track a numeric metric.
  */
 function trackMetric(name, value) {
+  const client = getClient();
   if (!client) return;
   try {
     client.trackMetric({ name, value });
