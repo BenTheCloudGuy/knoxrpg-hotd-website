@@ -188,36 +188,44 @@ const toolDefinitions = [
 
 // ── Tool implementations ────────────────────────────────────
 
-async function executeTool(name, args, openaiClient) {
+async function executeTool(name, args, openaiClient, isDM = false) {
   switch (name) {
 
     case "lookup_npc": {
       const pattern = `%${args.name}%`;
+      const columns = isDM
+        ? 'id, name, race, npc_class, location, status, alignment_tag, portrait_url, description, dm_notes'
+        : 'id, name, race, npc_class, location, status, alignment_tag, portrait_url, description';
+      const filter = isDM ? '' : ' AND is_hidden = FALSE';
       const res = await pgPool.query(
-        `SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description
-         FROM hotd_npcs WHERE name ILIKE $1 ORDER BY sort_order, name LIMIT 5`, [pattern]
+        `SELECT ${columns} FROM hotd_npcs WHERE name ILIKE $1${filter} ORDER BY sort_order, name LIMIT 5`, [pattern]
       );
       if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No NPC found matching "${args.name}"` });
       return JSON.stringify({
         found: true,
-        npcs: res.rows.map(n => ({
-          id: n.id, name: n.name, race: n.race, class: n.npc_class,
-          location: n.location, status: n.status, alignment: n.alignment_tag,
-          portrait_url: n.portrait_url || null,
-          description: n.description || "",
-          profile_url: `https://hotd.knoxrpg.com/npcs/${n.id}`,
-        })),
+        npcs: res.rows.map(n => {
+          const npc = {
+            id: n.id, name: n.name, race: n.race, class: n.npc_class,
+            location: n.location, status: n.status, alignment: n.alignment_tag,
+            portrait_url: n.portrait_url || null,
+            description: n.description || "",
+            profile_url: `https://hotd.knoxrpg.com/npcs/${n.id}`,
+          };
+          if (isDM && n.dm_notes) npc.dm_notes = n.dm_notes;
+          return npc;
+        }),
       });
     }
 
     case "search_npcs": {
       const pattern = `%${args.query}%`;
       const limit = args.limit || 10;
+      const filter = isDM ? '' : ' AND is_hidden = FALSE';
       const res = await pgPool.query(
         `SELECT id, name, race, npc_class, location, status, alignment_tag, portrait_url, description
          FROM hotd_npcs
-         WHERE name ILIKE $1 OR location ILIKE $1 OR status ILIKE $1 OR race ILIKE $1
-               OR npc_class ILIKE $1 OR description ILIKE $1
+         WHERE (name ILIKE $1 OR location ILIKE $1 OR status ILIKE $1 OR race ILIKE $1
+               OR npc_class ILIKE $1 OR description ILIKE $1)${filter}
          ORDER BY sort_order, name LIMIT $2`, [pattern, limit]
       );
       return JSON.stringify({
@@ -249,7 +257,7 @@ async function executeTool(name, args, openaiClient) {
         );
         return JSON.stringify({
           count: res.rows.length,
-          sessions: res.rows.map(s => ({ number: s.session_number, title: s.title, summary: (s.summary || "").slice(0, 500), game_date: s.game_date })),
+          sessions: res.rows.map(s => ({ number: s.session_number, title: s.title, summary: (s.summary || "").slice(0, 1000), game_date: s.game_date })),
         });
       }
       // No params — return the latest session with full summary, plus recent list
@@ -270,7 +278,27 @@ async function executeTool(name, args, openaiClient) {
                   save_ability, description_text, source, source_page
            FROM spells WHERE name ILIKE $1 LIMIT 3`, [pattern]);
         if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No spell found matching "${args.name}"` });
-        return JSON.stringify({ found: true, spells: res.rows });
+        const ordSuffix = (n) => { const s = ['th','st','nd','rd']; const v = n % 100; return n + (s[(v-20)%10]||s[v]||s[0]); };
+        return JSON.stringify({
+          found: true,
+          spells: res.rows.map(s => ({
+            name: s.name,
+            level: s.level === 0 ? 'Cantrip' : `${ordSuffix(s.level)}-level`,
+            school: s.school,
+            casting_time: s.activation_type,
+            range: s.range_field,
+            components: s.components,
+            duration: s.requires_concentration
+              ? `Concentration, ${s.duration_field || s.duration_type}`
+              : s.duration_field || s.duration_type,
+            area: s.aoe_type ? `${s.aoe_size}-foot ${s.aoe_type}` : null,
+            saving_throw: s.save_ability || null,
+            ritual: s.can_cast_as_ritual || false,
+            description: s.description_text,
+            at_higher_levels: s.can_cast_at_higher_level || false,
+            source: s.source_page ? `${s.source}, p. ${s.source_page}` : s.source,
+          })),
+        });
       } catch (_) {
         return JSON.stringify({ found: false, message: "Spells table not available" });
       }
@@ -279,15 +307,23 @@ async function executeTool(name, args, openaiClient) {
     case "lookup_monster": {
       const pattern = `%${args.name}%`;
       try {
-        const res = await pgPool.query(
-          `SELECT name, size, type, sub_types, alignment, challenge_rating, challenge_rating_display, xp,
-                  proficiency_bonus, armor_class, armor_class_type, hit_points, average_hit_points, hit_dice,
-                  ability_scores, speed, skills, saving_throws, senses, passive_perception,
-                  damage_resistances, damage_immunities, damage_vulnerabilities, condition_immunities,
-                  languages, environments, description_text, is_legendary, avatar_url, source
-           FROM monsters WHERE name ILIKE $1 LIMIT 3`, [pattern]);
-        if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No monster found matching "${args.name}"` });
-        return JSON.stringify({ found: true, monsters: res.rows });
+        if (isDM) {
+          const res = await pgPool.query(
+            `SELECT name, size, type, sub_types, alignment, challenge_rating, challenge_rating_display, xp,
+                    proficiency_bonus, armor_class, armor_class_type, hit_points, average_hit_points, hit_dice,
+                    ability_scores, speed, skills, saving_throws, senses, passive_perception,
+                    damage_resistances, damage_immunities, damage_vulnerabilities, condition_immunities,
+                    languages, environments, description_text, is_legendary, avatar_url, source
+             FROM monsters WHERE name ILIKE $1 LIMIT 3`, [pattern]);
+          if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No monster found matching "${args.name}"` });
+          return JSON.stringify({ found: true, monsters: res.rows });
+        } else {
+          const res = await pgPool.query(
+            `SELECT name, size, type, sub_types, alignment, description_text, environments, avatar_url, source
+             FROM monsters WHERE name ILIKE $1 LIMIT 3`, [pattern]);
+          if (res.rows.length === 0) return JSON.stringify({ found: false, message: `No monster found matching "${args.name}"` });
+          return JSON.stringify({ found: true, monsters: res.rows });
+        }
       } catch (_) {
         return JSON.stringify({ found: false, message: "Monsters table not available" });
       }
@@ -368,7 +404,7 @@ async function executeTool(name, args, openaiClient) {
 
     case "search_dnd_reference": {
       if (!openaiClient) return JSON.stringify({ found: false, message: "AI client not available for search" });
-      const results = await searchEmbeddings(openaiClient, args.query, { limit: 6, minScore: 0.3 });
+      const results = await searchEmbeddings(openaiClient, args.query, { limit: 6, minScore: 0.3, includeDmOnly: isDM });
       if (results.length === 0) return JSON.stringify({ found: false, message: "No reference material found" });
       const context = results.map(r => `## ${r.title}\n${r.chunk_text}`).join("\n\n---\n\n");
       return JSON.stringify({ found: true, content: context });
@@ -376,7 +412,7 @@ async function executeTool(name, args, openaiClient) {
 
     case "search_campaign_lore": {
       if (!openaiClient) return JSON.stringify({ found: false, message: "AI client not available for semantic search" });
-      const searchOpts = { limit: 8, minScore: 0.25 };
+      const searchOpts = { limit: 8, minScore: 0.25, includeDmOnly: isDM };
       if (args.source_type) searchOpts.sourceType = args.source_type;
       const results = await searchEmbeddings(openaiClient, args.query, searchOpts);
       if (results.length === 0) return JSON.stringify({ found: false, message: `No campaign lore found matching "${args.query}"` });
@@ -399,7 +435,7 @@ async function executeTool(name, args, openaiClient) {
 
 // ── Lightweight system prompt (no bulk data) ────────────────
 
-const SYSTEM_PROMPT_WITH_TOOLS = `You are the DM AI for "Halls of the Damned", a D&D 5th Edition campaign set in Barovia, hosted on KnoxRPG (https://hotd.knoxrpg.com).
+const SYSTEM_PROMPT_BASE = `You are the DM AI for "Halls of the Damned", a D&D 5th Edition campaign set in Barovia, hosted on KnoxRPG (https://hotd.knoxrpg.com).
 
 You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool before answering — do not guess or rely on general knowledge when a tool can provide accurate campaign-specific data.
 
@@ -421,23 +457,113 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 
 ## Response Formatting
 - Use markdown formatting (bold, headers, lists, tables). The chat client renders full markdown including images.
-- **Always include images** when available. If tool data includes a portrait_url, image_url, or any image URL, display it using markdown: \`![Name](url)\`
-- When showing a creature, NPC, or item stat block, format it in standard **5e stat block style** using markdown:
-  - Name as a bold header
-  - Type/size/alignment in italics
-  - Stats in a table (STR, DEX, CON, INT, WIS, CHA)
-  - Traits, Actions, Reactions as bold headers with descriptions
-  - Include the portrait/image at the top if one exists
-- When describing what something looks like, always include an image if one exists in the data.
 - Include links to KnoxRPG pages when tool data provides a URL (e.g. NPC profile link).
+
+## Formatting by Content Type
+
+### Spells
+Format as a spell card:
+- **Name** as header
+- Level, School on one line (e.g., "3rd-level Evocation")
+- **Casting Time / Range / Components / Duration** each on their own line, bolded label
+- Area of effect if applicable
+- Save type if applicable
+- Description text
+- "At Higher Levels" section if at_higher_levels is true
+- Source citation at bottom (e.g., "Source: Player's Handbook, p. 241")
+
+### NPCs
+- Portrait image at top (if portrait_url exists)
+- **Name** as header
+- Race, Class, Alignment on one line
+- **Location** and **Status** on their own lines
+- Description paragraph
+- Link to NPC profile page
+
+### Session Logs
+- **Session N: Title** as header
+- Game date and play date
+- Summary as bullet points for key events, not a wall of text
+
+### Magic Items
+- **Name** as header
+- Type, Rarity, Attunement requirement
+- Description
+- Charges/reset if applicable
+- Source citation
+
+### Player Characters
+- Avatar at top (if avatar_url exists)
+- **Name** (played by Player Name) as header
+- Level, Race, Class/Subclass
+- Ability scores in a 6-column table
+- AC, HP, Speed
+- Key features and notable equipment
+- Background summary
+
+## Image Rules (STRICT)
+- ONLY include an image if the tool result contains a non-null value in one of these fields: portrait_url, avatar_url, or image_url.
+- If a tool result does NOT contain any of those fields, or the field is null/empty, do NOT include any image markdown.
+- NEVER fabricate, guess, or construct image URLs. No image URL in the tool data means no image in the response.
+- When an image URL IS present in tool data, display it using: \`![Name](url)\`
 
 ## Response Guidelines
 - Be accurate, detailed, and conversational — answer like a knowledgeable DM at the table.
-- When asked "tell me about" or "what is" something, give a thorough answer with all relevant details and imagery.
+- When asked "tell me about" or "what is" something, give a thorough answer with all relevant details.
 - Always cite the source (book name and page) when referencing official D&D rules.
-- If a tool returns no results, say so honestly rather than guessing.
-- NEVER invent campaign facts. Only state what the tools return.
-- NEVER fabricate image URLs. Only use image URLs that appear in tool results (avatar_url, portrait_url, image_url fields). If no image URL is returned by the tool, do not include an image.`;
+- If a tool returns no results, say so honestly rather than guessing. You may supplement with general D&D knowledge from official sources, but explicitly note that it comes from general knowledge and not from the campaign's data. Never present general knowledge as if it came from a tool lookup.
+- NEVER invent campaign facts. Only state what the tools return.`;
+
+const SYSTEM_PROMPT_DM_ADDON = `
+
+## Your Role — Dungeon Master Mode
+You are speaking to the Dungeon Master (admin). You have full access to all campaign data, including hidden NPCs, DM notes, secret plot elements, and full monster stat blocks.
+
+### Monster Stat Blocks (DM only)
+Format as a standard 5e stat block:
+- **Name** as header
+- *Size Type, Alignment* in italics
+- **Armor Class** (with type), **Hit Points** (with hit dice), **Speed**
+- Ability scores in a 6-column table: STR | DEX | CON | INT | WIS | CHA
+- Saving throws, skills, senses, languages, CR each on their own line
+- Damage resistances/immunities/vulnerabilities and condition immunities
+- Traits, Actions, Legendary Actions as bold-headed sections
+
+### DM Notes
+When NPC tool results include dm_notes, present them in a clearly labeled **DM Notes** section so they stand out from player-visible information.`;
+
+const SYSTEM_PROMPT_PLAYER_ADDON = `
+
+## Your Role — Player Mode
+You are speaking to a player. Do not reveal:
+- Hidden NPCs or NPCs the party has not encountered.
+- DM notes or behind-the-screen information.
+- Full monster stat blocks (AC, HP, exact ability scores, legendary actions).
+- Secret plot points or upcoming story elements.
+
+When asked about a monster, describe what the character might know based on common knowledge or relevant skill checks (Arcana, Nature, History, Religion). Frame it as in-world knowledge, not game mechanics. You may mention the creature's general type, size, and known behaviors, but do not provide AC, HP, ability scores, or other stat block details.`;
+
+/**
+ * Build the full system prompt for the given role and user context.
+ */
+function buildSystemPrompt(opts = {}) {
+  let prompt = SYSTEM_PROMPT_BASE;
+  if (opts.isDM) {
+    prompt += SYSTEM_PROMPT_DM_ADDON;
+  } else {
+    prompt += SYSTEM_PROMPT_PLAYER_ADDON;
+  }
+  // Add user identity
+  if (opts.isDM) {
+    prompt += `\n\n## Current User\nYou are speaking with the Dungeon Master. Address them directly and provide full behind-the-screen information when relevant.`;
+  } else if (opts.username) {
+    prompt += `\n\n## Current User\nYou are speaking with ${opts.username}. Answer from an in-world perspective where appropriate.`;
+  }
+  return prompt;
+}
+
+// Keep the old export name for backward compat
+const SYSTEM_PROMPT_WITH_TOOLS = SYSTEM_PROMPT_BASE;
 
 // ── Max tool-call rounds to prevent infinite loops ───────────
 const MAX_TOOL_ROUNDS = 5;
@@ -448,22 +574,25 @@ const MAX_TOOL_ROUNDS = 5;
  * @param {object} openaiClient - The OpenAI SDK client
  * @param {string} model - Model name
  * @param {object[]} userMessages - Array of {role, content} from the user
- * @param {object} opts - { maxTokens, temperature }
+ * @param {object} opts - { maxTokens, temperature, isDM, username, userId }
  * @returns {{ reply: string, _debug: object }}
  */
 async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
-  const maxTokens = opts.maxTokens || 2048;
+  const isDM = opts.isDM || false;
+  const maxTokens = opts.maxTokens || (isDM ? 4096 : 2048);
   const temperature = opts.temperature != null ? opts.temperature : 0.7;
 
+  const systemPrompt = buildSystemPrompt(opts);
+
   const debug = {
-    model, maxTokens, temperature,
+    model, maxTokens, temperature, isDM,
     toolCalls: [],
     totalRounds: 0,
-    systemPromptLength: SYSTEM_PROMPT_WITH_TOOLS.length,
+    systemPromptLength: systemPrompt.length,
   };
 
   const chatMessages = [
-    { role: "system", content: SYSTEM_PROMPT_WITH_TOOLS },
+    { role: "system", content: systemPrompt },
     ...userMessages,
   ];
 
@@ -501,7 +630,7 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
         const callT0 = Date.now();
         let result;
         try {
-          result = await executeTool(fnName, fnArgs, openaiClient);
+          result = await executeTool(fnName, fnArgs, openaiClient, isDM);
         } catch (err) {
           result = JSON.stringify({ error: err.message });
         }
@@ -536,4 +665,4 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
 }
 
 
-module.exports = { toolDefinitions, executeTool, chatWithTools, SYSTEM_PROMPT_WITH_TOOLS };
+module.exports = { toolDefinitions, executeTool, chatWithTools, buildSystemPrompt, SYSTEM_PROMPT_WITH_TOOLS };

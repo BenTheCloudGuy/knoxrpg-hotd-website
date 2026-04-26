@@ -4,6 +4,34 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-04-26
+
+### Added
+- **Role-based DM AI access control** — DM AI now distinguishes between DM (admin) and Player roles, filtering responses accordingly
+- **Auth gate on DM AI** — `/dungeon-master` page and `/api/chat` endpoint now require login; unauthenticated users are redirected to login
+- **DM-only system prompt** — DM gets full access to hidden NPCs, DM notes, secret plot elements, and complete monster stat blocks
+- **Player-restricted system prompt** — players cannot access hidden NPCs, DM notes, full monster stat blocks, or secret story elements; monster queries return in-world flavor only
+- **User identity in prompt** — system prompt now includes the user's name and role for personalized, context-aware responses
+- **Content-type formatting guide** — system prompt includes per-type formatting rules for spells, NPCs, session logs, magic items, and player characters
+- **`buildSystemPrompt()` function** — dynamically assembles the system prompt based on role and user context
+
+### Changed
+- **`executeTool()` accepts `isDM` flag** — all tool queries now filter data based on user role
+- **NPC queries filter by visibility** — `lookup_npc` and `search_npcs` exclude `is_hidden = TRUE` NPCs for players; DM sees all NPCs including `dm_notes`
+- **Monster queries filter by role** — players get flavor-only data (name, type, size, alignment, description); DM gets full stat block
+- **RAG searches pass `includeDmOnly`** — `search_dnd_reference` and `search_campaign_lore` now surface `is_dm_only` content for DM only
+- **Spell lookup returns human-readable keys** — raw DB columns like `activation_type` mapped to `casting_time`, `range_field` to `range`, combined `source` + `source_page` into single citation
+- **Max tokens scaled by role** — DM gets 4096 max tokens (for full stat blocks), players get 2048
+- **Session summary search truncation** — increased from 500 to 1000 characters for better context
+- **`chatWithTools()` accepts session opts** — new `isDM`, `username`, `userId` parameters passed from API route
+- **Improved RAG fallback messaging** — model must explicitly label general D&D knowledge as such when tools return no results
+
+### Fixed
+- DM AI no longer exposes hidden NPCs or DM notes to players
+- DM AI no longer returns full monster stat blocks to players
+- DM notes (`dm_notes` column) now actually returned to DM when looking up NPCs (was never included in SELECT)
+- DM-only RAG content (`is_dm_only = TRUE` embeddings) now visible to DM (was hardcoded to exclude)
+
 ## [3.0.0] - 2026-04-25
 
 ### Added

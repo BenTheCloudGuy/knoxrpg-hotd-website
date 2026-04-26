@@ -16,6 +16,7 @@ async function handleApiRoutes(decoded, req, res, session, url) {
 
   // ── Chat API ───────────────────────────────────────────────
   if (decoded === "/api/chat" && req.method === "POST") {
+    if (!session) return sendJSON(res, { error: "Please log in to use the DM AI." }, 401), true;
     if (!azure.openaiClient) return sendJSON(res, { error: "Chat is not configured. No AI backend available." }, 503), true;
     try {
       const body = await readBody(req);
@@ -24,7 +25,12 @@ async function handleApiRoutes(decoded, req, res, session, url) {
         role: m.role === "assistant" ? "assistant" : "user", content: String(m.content).slice(0, 2000),
       }));
 
-      const { reply } = await chatWithTools(azure.openaiClient, azure.aiModel, userMessages);
+      const isDM = session.role === 'admin';
+      const { reply } = await chatWithTools(azure.openaiClient, azure.aiModel, userMessages, {
+        isDM,
+        username: session.firstName || session.username || 'Adventurer',
+        userId: session.userId,
+      });
       sendJSON(res, { reply });
       return true;
     } catch (err) {

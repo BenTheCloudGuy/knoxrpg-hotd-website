@@ -194,6 +194,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
       html = await renderJournalPage(session); break;
     case "/dungeon-master":
+      if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
       html = renderDungeonMasterPage(session); break;
     case "/search":
       if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
