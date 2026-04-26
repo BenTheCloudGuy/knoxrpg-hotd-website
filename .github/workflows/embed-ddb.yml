@@ -1,0 +1,162 @@
+name: DDB Content Embedding
+
+on:
+  # Daily check for new content at 6 AM UTC
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Manual trigger with full control
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Phases to run'
+        type: choice
+        options:
+          - all
+          - '1'
+          - '2'
+          - '3'
+        default: all
+      mode:
+        description: 'Pipeline mode'
+        type: choice
+        options:
+          - incremental
+          - full
+          - dry-run
+        default: incremental
+      skip_change_check:
+        description: 'Skip change detection (force run)'
+        type: boolean
+        default: false
+
+env:
+  PGHOST: localhost
+  PGPORT: "30432"
+  PGUSER: cortana
+  PGDATABASE: dnd_website
+  AZURE_STORAGE_ACCOUNT: cloudgeekcusgaming01
+
+jobs:
+  check-changes:
+    name: Detect Content Changes
+    runs-on: [self-hosted, linux, cortana]
+    # Skip check if manually forced
+    if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.skip_change_check }}
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+      phases: ${{ steps.check.outputs.phases }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install pg openai @azure/storage-blob @azure/identity --no-save --silent
+
+      - name: Check for content changes
+        id: check
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          set +e
+          OUTPUT=$(node scripts/check-ddb-changes.js 2>&1)
+          EXIT_CODE=$?
+          echo "$OUTPUT"
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            # Extract phases from the JSON output line
+            PHASES=$(echo "$OUTPUT" | grep '"changedPhases"' | python3 -c "import sys,json; d=json.load(sys.stdin); print(','.join(d['changedPhases']))" 2>/dev/null || echo "all")
+            echo "phases=$PHASES" >> $GITHUB_OUTPUT
+            echo "Changes detected in phases: $PHASES"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "phases=" >> $GITHUB_OUTPUT
+            echo "No changes detected."
+          fi
+
+  embed:
+    name: Run DDB Embedding Pipeline
+    runs-on: [self-hosted, linux, cortana]
+    needs: [check-changes]
+    # Run if: changes detected, OR manual trigger with skip_change_check, OR manual trigger always runs
+    if: |
+      always() && (
+        needs.check-changes.outputs.has_changes == 'true' ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_change_check == 'true')
+      )
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install pg openai @azure/storage-blob @azure/identity --no-save --silent
+
+      - name: Determine phases and mode
+        id: config
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PHASE="${{ github.event.inputs.phase || 'all' }}"
+            MODE="${{ github.event.inputs.mode || 'incremental' }}"
+          else
+            # Scheduled run: use detected phases, incremental mode
+            PHASES="${{ needs.check-changes.outputs.phases }}"
+            if [ -z "$PHASES" ] || [ "$PHASES" = "1,2,3" ]; then
+              PHASE="all"
+            else
+              PHASE="$PHASES"
+            fi
+            MODE="incremental"
+          fi
+          echo "phase=$PHASE" >> $GITHUB_OUTPUT
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+          echo "Phase: $PHASE, Mode: $MODE"
+
+      - name: Run Phase 1 (Structured DDB)
+        if: contains(steps.config.outputs.phase, '1') || steps.config.outputs.phase == 'all'
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Running Phase 1: Structured DDB data..."
+          node scripts/embed-ddb-content.js --phase 1 --mode ${{ steps.config.outputs.mode }} --verbose
+
+      - name: Run Phase 2 (DB Tables)
+        if: contains(steps.config.outputs.phase, '2') || steps.config.outputs.phase == 'all'
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Running Phase 2: DB table descriptions..."
+          node scripts/embed-ddb-content.js --phase 2 --mode ${{ steps.config.outputs.mode }} --verbose
+
+      - name: Run Phase 3 (Book Prose)
+        if: contains(steps.config.outputs.phase, '3') || steps.config.outputs.phase == 'all'
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Running Phase 3: Book prose..."
+          node scripts/embed-ddb-content.js --phase 3 --mode ${{ steps.config.outputs.mode }} --verbose
+
+      - name: Print summary
+        if: always()
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          echo "## DDB Embedding Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase | ${{ steps.config.outputs.phase }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Mode | ${{ steps.config.outputs.mode }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trigger | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Print embedding counts by type
+          echo "### Embedding Counts" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          PGHOST=localhost PGPORT=30432 PGUSER=cortana PGDATABASE=dnd_website psql -t -c "SELECT source_type, count(*) FROM hotd_embeddings GROUP BY source_type ORDER BY source_type" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Could not query counts" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

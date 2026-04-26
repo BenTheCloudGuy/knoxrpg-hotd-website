@@ -17,6 +17,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
   - IVFFlat index auto-rebuild after significant inserts
   - Azure Blob access via managed identity (`DefaultAzureCredential`)
   - Designed for rerun as new DDB content is added to the storage account
+- **DDB change detection** (`scripts/check-ddb-changes.js`) — compares Azure Blob timestamps and DB row counts against a manifest file (`embed-ddb-manifest.json`) stored in blob storage; detects which phases need rerun
+- **GitHub Actions workflow** (`.github/workflows/embed-ddb.yml`) — scheduled daily at 6 AM UTC + manual dispatch; runs change detection first, then only executes phases with new content; supports `--phase`, `--mode`, and `skip_change_check` inputs
+- **Manifest tracking** — after successful embedding, updates the manifest in `hotd-website-content/embed-ddb-manifest.json` with current blob timestamps and DB checksums; subsequent runs skip unchanged content
 - **New source types in search** — `ddb_race`, `ddb_class`, `ddb_feat`, `ddb_background`, `ddb_spell`, `ddb_monster`, `ddb_magic_item`, `dnd_book` all mapped to DM AI with book-style breadcrumbs (`D&D 5e > Races > PHB 2024`)
 
 ### Changed

@@ -667,6 +667,37 @@ async function main() {
   const embedded = await embedChunks(sanitized);
   await storeChunks(embedded);
 
+  // Update manifest after successful embedding (skip for dry-run)
+  if (MODE !== 'dry-run' && embedded.length > 0) {
+    try {
+      const { downloadManifest, uploadManifest, listBlobsWithTimestamps, getDbChecksum } = require('./check-ddb-changes');
+      heading('UPDATE MANIFEST');
+      const manifest = await downloadManifest();
+      manifest.lastRun = new Date().toISOString();
+      manifest.version = manifest.version || 1;
+
+      if (PHASE === 'all' || PHASE === '1') {
+        manifest.blobs = manifest.blobs || {};
+        manifest.blobs['books-extracted'] = await listBlobsWithTimestamps('books-extracted', '');
+        log('Updated books-extracted timestamps');
+      }
+      if (PHASE === 'all' || PHASE === '2') {
+        manifest.dbChecksums = await getDbChecksum();
+        log('Updated DB checksums');
+      }
+      if (PHASE === 'all' || PHASE === '3') {
+        manifest.blobs = manifest.blobs || {};
+        manifest.blobs['books-text'] = await listBlobsWithTimestamps('books-text', '');
+        log('Updated books-text timestamps');
+      }
+
+      await uploadManifest(manifest);
+      log('Manifest uploaded to Azure Blob Storage');
+    } catch (err) {
+      log(`WARN: Manifest update failed (embeddings were stored successfully): ${err.message}`);
+    }
+  }
+
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`\n${'═'.repeat(60)}`);
   console.log(`  DONE in ${elapsed}s`);
