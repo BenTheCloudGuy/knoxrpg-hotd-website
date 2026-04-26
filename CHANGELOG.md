@@ -4,6 +4,22 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-04-26
+
+### Added
+- **`describe_table` tool** — DM AI can now inspect any allowed table's column names and types on demand, enabling it to write accurate SQL queries without pre-loaded schemas
+- **`query_database` tool** — DM AI can now execute arbitrary read-only SELECT queries against the database for listing, filtering, counting, and aggregating data (e.g., "list all cantrips", "how many evocation spells are there", "which NPCs are in Vallaki")
+- **Table allowlist with role-based access** — `describe_table` and `query_database` enforce an allowlist of queryable tables; players are blocked from directly querying `hotd_npcs` and `monsters` (must use dedicated tools with filtering)
+- **Read-only transaction enforcement** — all generic queries execute inside a PostgreSQL `BEGIN READ ONLY` transaction, preventing any write operations even via SQL injection
+- **Query security validation** — blocks non-SELECT statements, semicolons (statement chaining), and access to sensitive tables (sessions, account_info, etc.)
+
+### Changed
+- **System prompt updated for hybrid query approach** — dedicated lookup tools for single-item lookups, `describe_table` + `query_database` for anything requiring listing, filtering, or aggregation
+- **Max tool rounds increased to 6** — accommodates the two-step describe → query pattern without hitting the loop limit
+
+### Removed
+- **`search_spells` tool** — replaced by the generic `query_database` tool which handles all listing/filtering use cases across all tables
+
 ## [3.1.0] - 2026-04-26
 
 ### Added

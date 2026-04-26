@@ -60,7 +60,7 @@ const toolDefinitions = [
     type: "function",
     function: {
       name: "lookup_spell",
-      description: "Look up a D&D spell by name. Returns all available spell data from the database.",
+      description: "Look up a D&D spell by name. Returns full spell data. Use for specific spell lookups by name.",
       parameters: {
         type: "object",
         properties: {
@@ -180,6 +180,34 @@ const toolDefinitions = [
           source_type: { type: "string", description: "Optional: filter by source type (lore, lore_json, npc, session, artifact, character, journal)", enum: ["lore", "lore_json", "npc", "session", "artifact", "character", "journal"] },
         },
         required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "describe_table",
+      description: "Get the column names and data types for a database table. Call this BEFORE query_database to learn the exact column names. Use when you need to list, filter, count, or aggregate data and the dedicated lookup tools are too narrow.",
+      parameters: {
+        type: "object",
+        properties: {
+          table: { type: "string", description: "Table name to describe (e.g. spells, monsters, magic_items, hotd_npcs, hotd_sessions, hotd_artifacts, hotd_handouts, hotd_calendar_events, hotd_config, hotd_player_characters)" },
+        },
+        required: ["table"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "query_database",
+      description: "Execute a read-only SQL SELECT query against the database. Call describe_table first to learn column names. Only SELECT queries allowed. Results capped at 100 rows. Use for listing, filtering, counting, or aggregating data when dedicated tools are insufficient.",
+      parameters: {
+        type: "object",
+        properties: {
+          sql: { type: "string", description: "A single SELECT query to execute" },
+        },
+        required: ["sql"],
       },
     },
   },
@@ -428,6 +456,126 @@ async function executeTool(name, args, openaiClient, isDM = false) {
       });
     }
 
+    case "describe_table": {
+      const ALLOWED_TABLES_ALL = {
+        spells: 'D&D spells from official sourcebooks',
+        monsters: 'D&D monsters and creatures with stat blocks',
+        magic_items: 'D&D magic items from official sourcebooks',
+        hotd_npcs: 'Campaign NPCs with descriptions, locations, and DM notes',
+        hotd_sessions: 'Campaign session logs with summaries and dates',
+        hotd_artifacts: 'Campaign-specific artifacts and special items',
+        hotd_handouts: 'Campaign handouts and documents',
+        hotd_calendar_events: 'In-game calendar events by month and day',
+        hotd_config: 'Campaign configuration key-value pairs (current date, etc.)',
+        hotd_player_characters: 'Player character sheets synced from D&D Beyond',
+      };
+      // Players cannot directly query tables that have role-based filtering
+      const PLAYER_BLOCKED = ['hotd_npcs', 'monsters'];
+
+      const table = args.table;
+      if (!ALLOWED_TABLES_ALL[table]) {
+        return JSON.stringify({
+          error: `Table "${table}" is not available. Available tables: ${Object.keys(ALLOWED_TABLES_ALL).join(', ')}`,
+        });
+      }
+      if (!isDM && PLAYER_BLOCKED.includes(table)) {
+        return JSON.stringify({
+          error: `Table "${table}" requires DM access. Use the dedicated lookup tools instead (lookup_npc, search_npcs, lookup_monster).`,
+        });
+      }
+
+      try {
+        const res = await pgPool.query(
+          `SELECT column_name, data_type FROM information_schema.columns
+           WHERE table_name = $1 AND column_name NOT IN ('raw_json', 'embedding', 'chunk_hash')
+           ORDER BY ordinal_position`, [table]
+        );
+        return JSON.stringify({
+          table,
+          description: ALLOWED_TABLES_ALL[table],
+          columns: res.rows.map(r => ({ name: r.column_name, type: r.data_type })),
+        });
+      } catch (err) {
+        return JSON.stringify({ error: `Failed to describe table: ${err.message}` });
+      }
+    }
+
+    case "query_database": {
+      const sql = (args.sql || '').trim();
+      if (!sql) return JSON.stringify({ error: 'No SQL query provided.' });
+
+      // ── Security: read-only validation ──
+      // Strip SQL comments for validation
+      const stripped = sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+      const upper = stripped.toUpperCase();
+
+      if (!upper.startsWith('SELECT')) {
+        return JSON.stringify({ error: 'Only SELECT queries are allowed.' });
+      }
+      if (sql.includes(';')) {
+        return JSON.stringify({ error: 'Multiple statements are not allowed. Send a single SELECT query.' });
+      }
+
+      // ── Security: table allowlist ──
+      const ALLOWED_TABLES = isDM
+        ? ['spells', 'monsters', 'magic_items', 'hotd_npcs', 'hotd_sessions',
+           'hotd_artifacts', 'hotd_handouts', 'hotd_calendar_events', 'hotd_config', 'hotd_player_characters']
+        : ['spells', 'magic_items', 'hotd_sessions', 'hotd_artifacts',
+           'hotd_handouts', 'hotd_calendar_events', 'hotd_config', 'hotd_player_characters'];
+
+      const BLOCKED_TABLES = ['sessions', 'account_info', 'hotd_embeddings', 'hotd_character_access',
+                              'hotd_character_journal', 'hotd_adventure_journal', 'hotd_generated_images'];
+
+      // Check for blocked tables
+      const lowerSql = sql.toLowerCase();
+      for (const blocked of BLOCKED_TABLES) {
+        if (lowerSql.includes(blocked)) {
+          return JSON.stringify({ error: `Access to table "${blocked}" is not allowed.` });
+        }
+      }
+
+      // Verify at least one allowed table is referenced
+      const referencesAllowed = ALLOWED_TABLES.some(t => lowerSql.includes(t));
+      if (!referencesAllowed) {
+        return JSON.stringify({
+          error: `Query must reference an allowed table. Available: ${ALLOWED_TABLES.join(', ')}`,
+        });
+      }
+
+      // ── Execute in read-only transaction ──
+      let client;
+      try {
+        client = await pgPool.connect();
+        await client.query('BEGIN READ ONLY');
+        const res = await client.query(sql);
+        await client.query('COMMIT');
+        client.release();
+
+        const rows = (res.rows || []).slice(0, 100);
+        // Strip large/binary columns from results to save tokens
+        const cleanRows = rows.map(row => {
+          const clean = {};
+          for (const [k, v] of Object.entries(row)) {
+            if (['raw_json', 'embedding', 'chunk_hash'].includes(k)) continue;
+            clean[k] = v;
+          }
+          return clean;
+        });
+
+        return JSON.stringify({
+          count: cleanRows.length,
+          total_rows: res.rowCount,
+          rows: cleanRows,
+        });
+      } catch (err) {
+        if (client) {
+          await client.query('ROLLBACK').catch(() => {});
+          client.release();
+        }
+        return JSON.stringify({ error: `Query failed: ${err.message}. Use describe_table to check column names.` });
+      }
+    }
+
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
@@ -445,7 +593,7 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 - For "list the party" or "who are the player characters": use \`get_player_character\` with a broad name like "%" or a common term.
 - For "what happened last session", "what happened recently", or session/event questions: use \`get_session_log\` WITHOUT a session_number to get the most recent sessions, then report from the HIGHEST session number returned. That is the latest session.
 - For "what day is it", "what is the current date", or any time/calendar question: use \`get_calendar\` with NO parameters to get the current in-game date.
-- For spell questions: use \`lookup_spell\`. For monster questions: use \`lookup_monster\`.
+- For a specific spell by name: use \`lookup_spell\`. For a specific monster by name: use \`lookup_monster\`.
 - For magic item questions: use \`lookup_magic_item\`. For campaign artifacts: use \`lookup_artifact\`.
 - For player character questions: use \`get_player_character\`.
 - For handouts or documents: use \`get_handout\`.
@@ -454,6 +602,14 @@ You have tools to look up campaign and D&D data. ALWAYS use the appropriate tool
 - For campaign world-building, stat blocks, factions, realm info, or campaign notes: use \`search_campaign_lore\`.
 - You may call multiple tools in parallel if the question requires data from different sources.
 - When asked about an NPC, creature, or location: call BOTH \`lookup_npc\` AND \`search_campaign_lore\` in parallel to get the database profile AND any stat block or lore.
+
+## Database Query Tools (for listing, filtering, counting, or aggregating)
+When a question requires listing, filtering, counting, or aggregating data that the dedicated lookup tools cannot handle (e.g., "list all cantrips", "how many evocation spells are there", "show all CR 5+ monsters", "which NPCs are in Vallaki"):
+1. Call \`describe_table\` first to get the exact column names and types for the table you need.
+2. Then call \`query_database\` with a SELECT query written using those exact column names.
+3. Format the results cleanly using markdown tables or lists.
+Available tables: spells, monsters, magic_items, hotd_npcs, hotd_sessions, hotd_artifacts, hotd_handouts, hotd_calendar_events, hotd_config, hotd_player_characters.
+Always prefer the dedicated lookup tools for single-item lookups by name. Use \`describe_table\` + \`query_database\` for anything that requires listing, filtering, aggregation, or queries the dedicated tools cannot express.
 
 ## Response Formatting
 - Use markdown formatting (bold, headers, lists, tables). The chat client renders full markdown including images.
@@ -566,7 +722,7 @@ function buildSystemPrompt(opts = {}) {
 const SYSTEM_PROMPT_WITH_TOOLS = SYSTEM_PROMPT_BASE;
 
 // ── Max tool-call rounds to prevent infinite loops ───────────
-const MAX_TOOL_ROUNDS = 5;
+const MAX_TOOL_ROUNDS = 6;
 
 /**
  * Run the OpenAI chat completion loop with function calling.
