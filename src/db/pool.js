@@ -30,17 +30,27 @@ console.log(`  PG: password auth → ${process.env.PGHOST}`);
 
 async function getPgAccessToken() { return null; }
 
-// ── Local content URL rewriting ───────────────────────────────
+// ── URL rewriting ─────────────────────────────────────────────
 const { HOTD_CONTENT_DIR, STORAGE_ACCOUNT_NAME } = require("../config");
-if (HOTD_CONTENT_DIR) {
+const OLD_STORAGE_HOST = "knoxrpgwebsitestore.blob.core.windows.net";
+const NEW_STORAGE_HOST = `${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
+
+{
   const blobPrefix = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/hotd-website-content/`;
+  const localRewrite = HOTD_CONTENT_DIR ? true : false;
   const originalQuery = pgPool.query.bind(pgPool);
   pgPool.query = async function (...args) {
     const result = await originalQuery(...args);
     if (result && result.rows) {
       for (const row of result.rows) {
         for (const key of Object.keys(row)) {
-          if (typeof row[key] === "string" && row[key].includes(blobPrefix)) {
+          if (typeof row[key] !== "string") continue;
+          // Rewrite old deleted storage account → current storage account
+          if (row[key].includes(OLD_STORAGE_HOST)) {
+            row[key] = row[key].replace(OLD_STORAGE_HOST, NEW_STORAGE_HOST);
+          }
+          // Rewrite blob URLs → local content path (dev mode)
+          if (localRewrite && row[key].includes(blobPrefix)) {
             row[key] = row[key].replace(blobPrefix, "/hotd-content/");
           }
         }
@@ -48,7 +58,8 @@ if (HOTD_CONTENT_DIR) {
     }
     return result;
   };
-  console.log(`  Content URLs: rewriting blob → /hotd-content/ (${HOTD_CONTENT_DIR})`);
+  if (localRewrite) console.log(`  Content URLs: rewriting blob → /hotd-content/ (${HOTD_CONTENT_DIR})`);
+  console.log(`  Storage URLs: rewriting ${OLD_STORAGE_HOST} → ${NEW_STORAGE_HOST}`);
 }
 
 // ── bcrypt (optional) ─────────────────────────────────────────
