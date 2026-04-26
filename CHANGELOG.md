@@ -4,6 +4,18 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.2] - 2026-04-26
+
+### Fixed
+- **Raw JSON in search results** — filtered out `lore_json` source type entirely (raw `JSON.stringify` of NPC/data objects that duplicate DB-sourced embeddings)
+- **Non-clickable search results** — results with no valid site URL are now excluded instead of showing with dead `#` links
+- **Persistent duplicates** — title normalization now strips chunk markers `(1/2)` and `(DM Notes)` suffixes, uses case-insensitive dedup across all merge layers
+
+### Added
+- **D&D reference search** — site search now queries `spells`, `monsters`, and `magic_items` DB tables directly via keyword `ILIKE` matching, returning results with source book breadcrumbs (`D&D 5e > Spells > PHB`) and links to DM AI for full details
+- **Three-layer search merge** — results now merge: local page index + pgvector campaign RAG + DB keyword reference, deduplicated by normalized title
+- **AI Overview includes D&D reference** — GPT summary draws from both campaign RAG and DB reference results, distinguishing between campaign-specific and general D&D content
+
 ## [3.4.1] - 2026-04-26
 
 ### Fixed
