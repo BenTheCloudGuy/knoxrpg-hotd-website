@@ -6,6 +6,8 @@ const { esc } = require("../lib/utils");
 const { navCss } = require("../components/css");
 const { renderNav } = require("../components/nav");
 const { pageShell, renderFooter } = require("../components/shell");
+const { pgPool } = require("../db/pool");
+const { markdownToHtml } = require("../lib/markdown");
 
 // ── DM AI — STANDALONE (does NOT use pageShell) ──────────────
 function renderDungeonMasterPage(session) {
@@ -327,6 +329,48 @@ function renderSearchPage(session, query) {
 </html>`;
 }
 
+// ── Reference page (dynamic from embeddings) ─────────────────
+const REF_CATEGORY_LABELS = {
+  ddb_race: 'Race', ddb_class: 'Class', ddb_feat: 'Feat',
+  ddb_background: 'Background', ddb_spell: 'Spell', ddb_monster: 'Monster',
+  ddb_magic_item: 'Magic Item', dnd_book: 'D&D Rulebook',
+};
+
+async function renderReferencePage(hash, session) {
+  try {
+    const { rows } = await pgPool.query(
+      'SELECT title, chunk_text, source_type, metadata FROM hotd_embeddings WHERE chunk_hash = $1 LIMIT 1',
+      [hash]
+    );
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+    const category = REF_CATEGORY_LABELS[row.source_type] || 'Reference';
+    const source = (row.metadata && row.metadata.source) || (row.metadata && row.metadata.book) || '';
+    const cleanTitle = (row.title || 'Reference')
+      .replace(/\s*\(\d+\/\d+\)\s*$/, '')
+      .replace(/\s*\(DM Notes\)\s*$/i, '')
+      .trim();
+
+    // Convert chunk text to HTML (it's structured like markdown)
+    const htmlContent = markdownToHtml(row.chunk_text || '');
+
+    const body = `
+    <div class="content">
+      <a href="javascript:history.back()" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Search</a>
+      <div style="margin-top:8px;margin-bottom:16px;">
+        <span style="color:#888;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.3px;">${esc(category)}</span>
+        ${source ? `<span style="color:#555;font-size:0.78rem;"> &bull; ${esc(source)}</span>` : ''}
+      </div>
+      <div class="history-content">${htmlContent}</div>
+    </div>`;
+    return pageShell(`${cleanTitle} — Halls of the Damned`, '/reference', body, session);
+  } catch (err) {
+    console.error('Reference page error:', err.message);
+    return null;
+  }
+}
+
 // ── 404 page ──────────────────────────────────────────────────
 function render404Page() {
   const body = `
@@ -341,5 +385,6 @@ function render404Page() {
 module.exports = {
   renderDungeonMasterPage,
   renderSearchPage,
+  renderReferencePage,
   render404Page,
 };

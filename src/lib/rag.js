@@ -61,7 +61,7 @@ async function searchEmbeddings(openai, query, opts = {}) {
   if (hasTsQuery) {
     params.push(tsQuery);
     sql = `
-      SELECT title, chunk_text, source_type, source_id, source_path, metadata,
+      SELECT title, chunk_text, chunk_hash, source_type, source_id, source_path, metadata,
              (1 - (embedding <=> $1::vector)) +
              CASE WHEN to_tsvector('english', chunk_text) @@ to_tsquery('english', $${paramIdx}) THEN 0.05 ELSE 0 END
              AS score
@@ -73,7 +73,7 @@ async function searchEmbeddings(openai, query, opts = {}) {
     paramIdx++;
   } else {
     sql = `
-      SELECT title, chunk_text, source_type, source_id, source_path, metadata,
+      SELECT title, chunk_text, chunk_hash, source_type, source_id, source_path, metadata,
              1 - (embedding <=> $1::vector) AS score
       FROM hotd_embeddings
       ${whereClause}
@@ -86,6 +86,7 @@ async function searchEmbeddings(openai, query, opts = {}) {
   return rows.filter(r => r.score >= minScore).map(r => ({
     title: r.title,
     chunk_text: r.chunk_text,
+    chunk_hash: r.chunk_hash,
     source_type: r.source_type,
     source_id: r.source_id,
     source_path: r.source_path,

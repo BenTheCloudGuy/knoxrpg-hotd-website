@@ -33,15 +33,15 @@ function resolveHref(r) {
       return null;
     }
     case 'lore_json': return null;
-    // DDB content types all link to DM AI for full details
-    case 'ddb_race':       return '/dungeon-master';
-    case 'ddb_class':      return '/dungeon-master';
-    case 'ddb_feat':       return '/dungeon-master';
-    case 'ddb_background': return '/dungeon-master';
-    case 'ddb_spell':      return '/dungeon-master';
-    case 'ddb_monster':    return '/dungeon-master';
-    case 'ddb_magic_item': return '/dungeon-master';
-    case 'dnd_book':       return '/dungeon-master';
+    // DDB content has no dedicated page — shown inline in search results
+    case 'ddb_race':       return null;
+    case 'ddb_class':      return null;
+    case 'ddb_feat':       return null;
+    case 'ddb_background': return null;
+    case 'ddb_spell':      return null;
+    case 'ddb_monster':    return null;
+    case 'ddb_magic_item': return null;
+    case 'dnd_book':       return null;
     default: return null;
   }
 }
@@ -182,9 +182,11 @@ async function searchCampaign(query) {
       minScore: 0.2,
     });
 
-    // Filter out lore_json (raw JSON duplicates DB-sourced content) and results with no valid page
+    // Filter out lore_json and unresolvable lore files (but keep DDB content which shows inline)
+    const ddbInlineTypes = new Set(['ddb_race', 'ddb_class', 'ddb_feat', 'ddb_background', 'ddb_spell', 'ddb_monster', 'ddb_magic_item', 'dnd_book']);
     const usable = ragResults.filter(r => {
       if (r.source_type === 'lore_json') return false;
+      if (ddbInlineTypes.has(r.source_type)) return true;
       return resolveHref(r) !== null;
     });
 
@@ -192,17 +194,20 @@ async function searchCampaign(query) {
     const deduped = new Map();
     for (const r of usable) {
       const href = resolveHref(r);
+      const isDdb = ddbInlineTypes.has(r.source_type);
+      // DDB content links to /reference/:hash for a dynamically generated page
+      const finalHref = isDdb && r.chunk_hash ? `/reference/${r.chunk_hash}` : href;
       const normTitle = (r.title || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').replace(/\s*\(DM Notes\)\s*$/i, '').trim();
       const key = normTitle.toLowerCase();
       const existing = deduped.get(key);
       if (!existing || r.score > existing.score) {
         deduped.set(key, {
           title: normTitle,
-          href,
+          href: finalHref,
           category: categoryLabel(r.source_type),
           body: (r.chunk_text || '').slice(0, 400),
           score: Math.round(r.score * 100),
-          breadcrumb: breadcrumb(href, r.source_type, r.metadata),
+          breadcrumb: breadcrumb(finalHref, r.source_type, r.metadata),
           source_type: r.source_type,
         });
       }

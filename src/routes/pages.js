@@ -28,7 +28,7 @@ const {
 const { renderUserAccountPage, renderAdminAccountPage } = require("../pages/auth");
 
 // Special pages
-const { renderDungeonMasterPage, renderSearchPage, render404Page } = require("../pages/special");
+const { renderDungeonMasterPage, renderSearchPage, renderReferencePage, render404Page } = require("../pages/special");
 
 // DM Management Interface
 const { renderDmAdminPage } = require("../pages/dm-admin");
@@ -136,6 +136,17 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     if (slug) {
       const detailHtml = renderGroupDetailPage(slug, session);
       if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
+    }
+    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
+    return true;
+  }
+
+  // ── Reference page (dynamic from embeddings) ───────────────
+  if (decoded.startsWith("/reference/") && decoded !== "/reference") {
+    const hash = decoded.split("/")[2];
+    if (hash && /^[a-f0-9]{64}$/.test(hash)) {
+      const html = await renderReferencePage(hash, session);
+      if (html) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(html); return true; }
     }
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
     return true;
