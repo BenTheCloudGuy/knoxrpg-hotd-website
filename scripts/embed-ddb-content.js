@@ -286,7 +286,9 @@ async function phase2ExtractDbTables() {
         stripHtml(s.description_text),
       ].filter(Boolean).join('\n');
       sources.push({
-        type: 'ddb_spell', id: s.id, title: s.name, content: text,
+        type: 'ddb_spell', id: /^\d+$/.test(String(s.id)) ? parseInt(s.id) : null,
+        title: s.name, content: text,
+        source_path: `db:spells:${s.id}`,
         metadata: { source: s.source, level: s.level, school: s.school },
       });
     }
@@ -309,7 +311,9 @@ async function phase2ExtractDbTables() {
         stripHtml(m.description_text),
       ].filter(Boolean).join('\n');
       sources.push({
-        type: 'ddb_monster', id: m.id, title: m.name, content: text,
+        type: 'ddb_monster', id: /^\d+$/.test(String(m.id)) ? parseInt(m.id) : null,
+        title: m.name, content: text,
+        source_path: `db:monsters:${m.id}`,
         metadata: { source: m.source, cr: m.challenge_rating_display, type: m.type },
       });
     }
@@ -332,7 +336,9 @@ async function phase2ExtractDbTables() {
         stripHtml(i.description_text),
       ].filter(Boolean).join('\n');
       sources.push({
-        type: 'ddb_magic_item', id: i.id, title: i.name, content: text,
+        type: 'ddb_magic_item', id: /^\d+$/.test(String(i.id)) ? parseInt(i.id) : null,
+        title: i.name, content: text,
+        source_path: `db:magic_items:${i.id}`,
         metadata: { source: i.source, rarity: i.rarity },
       });
     }
@@ -552,10 +558,17 @@ async function storeChunks(chunks) {
     return;
   }
 
-  // In full mode for DDB content, only delete DDB source types (preserve campaign data)
+  // In full mode, only delete source types this phase produces (preserve other phases)
   if (MODE === 'full') {
-    const ddbTypes = ['ddb_race', 'ddb_class', 'ddb_feat', 'ddb_background', 'ddb_spell', 'ddb_monster', 'ddb_magic_item', 'dnd_book'];
-    for (const t of ddbTypes) {
+    const phaseTypes = {
+      '1': ['ddb_race', 'ddb_class', 'ddb_feat', 'ddb_background'],
+      '2': ['ddb_spell', 'ddb_monster', 'ddb_magic_item'],
+      '3': ['dnd_book'],
+    };
+    // Determine which types to clear based on what's in the chunks
+    const typesInChunks = [...new Set(chunks.map(c => c.source_type))];
+    const typesToClear = typesInChunks.length > 0 ? typesInChunks : (phaseTypes[PHASE] || []);
+    for (const t of typesToClear) {
       const r = await pgPool.query('DELETE FROM hotd_embeddings WHERE source_type = $1', [t]);
       if (r.rowCount > 0) log(`  Cleared ${t}: ${r.rowCount} rows`);
     }
