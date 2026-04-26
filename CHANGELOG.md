@@ -4,6 +4,24 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.2] - 2026-04-26
+
+### Added
+- **Dynamic reference pages** (`/reference/:hash`) — DDB search results now link to dynamically generated pages that render embedding content on the fly from `hotd_embeddings`; pages show category label, source book, back-to-search link, and full styled content via `markdownToHtml()`
+- **Ephemeral page routing** — validates 64-char hex hash format before querying DB; no storage needed, content generated per request
+
+### Changed
+- **DDB search results link to reference pages** — spells, monsters, races, classes, feats, backgrounds, and book chapters now link to `/reference/<chunk_hash>` instead of `/dungeon-master`
+- **Campaign results unchanged** — NPCs, groups, realms, sessions still link to their dedicated pages
+- **`rag.js` returns `chunk_hash`** — search results now include the embedding hash for URL construction
+
+## [3.5.1] - 2026-04-26
+
+### Fixed
+- **Phase full mode wiping other phases** — `storeChunks()` was clearing ALL DDB source types regardless of which phase was running; Phase 1 re-run was deleting Phase 3 book embeddings (23,349 chunks lost); now only clears source types present in the current batch
+- **Homebrew monster storage failures** — `monsters.id` is TEXT but `hotd_embeddings.source_id` is INTEGER; 6+ homebrew monsters with slug IDs (e.g. `hotd-hotd-arrigal-vanduva`) failed to store; now stores non-numeric IDs in `source_path` with `source_id` set to NULL
+- **Total embeddings restored to 37,624** (was 16,197 with broken book storage)
+
 ## [3.5.0] - 2026-04-26
 
 ### Added
