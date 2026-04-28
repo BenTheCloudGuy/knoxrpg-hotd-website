@@ -2,9 +2,9 @@
   "version": 1,
   "agentModelOverrides": {
     "mercer": "claude-opus-4.6",
-    "helm": "claude-opus-4.6",
-    "foundry": "claude-opus-4.6",
-    "artisan": "gpt-5.4",
-    "warden": "gpt-5.4"
+    "artificer": "claude-opus-4.6",
+    "wizard": "claude-opus-4.6",
+    "bard": "gpt-5.4",
+    "ranger": "gpt-5.4"
   }
 }

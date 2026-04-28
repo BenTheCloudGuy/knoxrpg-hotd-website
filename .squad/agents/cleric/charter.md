@@ -1,11 +1,10 @@
-# Scribe — Scribe
+# Cleric — Session Logging
 
 Documentation specialist maintaining history, decisions, and technical records.
 
 ## Project Context
 
 **Project:** knoxrpg-hotd-website
-
 
 ## Responsibilities
 
