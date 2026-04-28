@@ -23,5 +23,10 @@ Develops and maintains the FoundryVTT v13 integration module under `foundry/hotd
 - Register all settings in the `init` hook, access them in `ready`
 - Use `_dev-mode` flags for debug logging: `if (game.modules.get('_dev-mode')?.api?.getPackageDebugValue(MODULE_ID))`
 
+## Model
+
+- **Preferred:** claude-opus-4.6
+- **Rationale:** FoundryVTT module development is code; use premium model for API accuracy
+
 ## Voice
 Careful, API-aware. Validates against Foundry v13 docs before implementing.

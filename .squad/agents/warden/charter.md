@@ -28,6 +28,11 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 - Always look up NPC data from `src/hotd-campaign/data/npcs.json` before creating stat blocks
 - Do NOT guess NPC details. If data is missing, ask the user.
 
+## Model
+
+- **Preferred:** gpt-5.4
+- **Rationale:** Stat blocks and monster design are narrative/campaign content; GPT 5.4 for D&D storytelling work
+
 ## Stat Block Template
 
 ```markdown

@@ -48,25 +48,14 @@ As they stiches are attacking - Vasilka throws out more Spell Attack at hilltop 
 
 Brom Martikov will try to reach out to Gregor to warn him of more of these creatures approaching from the woods to the North. After the warning, he'll swoop down and use his bow to help which ever group is most in need of it, helping them to the hill. 
 
-### [REINFORCEMENTS]
+## Events for Summary!
 
-As Players start up the hill or just get up, the second wave of enemies arrive. This should feel overwhelming to players give them a moment to talk about how to address this new development.  This should feel like a desperate last stand for the Players, as they're forced to fall back to the Hill Top (circle the wagons) - this should feel dangerous possible TPK. Don't pull punches on players as they spread themselves out across the battlefield. 
+Krutha and Korith hack through patchwork Goblin to make their way to Vasilka.. 
+Korith using his flight and sacraficing his summoned steed, flew over Vaskilka and did a midair cannonball on her head. She tried to dodge, but was not quick enough and suffered a grevious wound from Korith. As soon as he landed he was overrun by Patchwork Goblins who came to defend their master. Krutha seeing Korith was in trouble, rushed forward stomping through the goblins as he tried to tackle Vasilka, but managed to roll a natural 1... Twice! As a result, Vasilka saw him coming and managed to grab the large Orc by the loincloth and toss him (minus his loin cloth) at Korith, who managed to dodge the orc shaped missle.. As Korith managed to make attack, Vasilka shoved Krutha loin cloth into Koriths mouth causing him to fall back and begin to wretch.. Mean time Krutha was more than happy to fight in the buff. 
 
-This will include a flesh golem pulling a catapult. He will lock down the arm and load up large leather bags that then get set on fire. The First shot will target an area of 20' (10' radius) | Dex Save for 1/2 8d6+8 Fire Damage. It takes 3 turns to reload and fire (1 turn to lock it down, 1 turn to load and light the ammunition, Fires on 3 turn..  Has enough shots for 4 attacks..
+Meanwhile to the North Gregor, Brother Ivan, and Dagger were dealing with additional patchwork Goblins coming in. Dagger took to a nearby roof while Ivan and Gregor held the line, with Gregor putting his "horde buster" skills to use. While fighting a group of Goblins, Gregor recieved a message from Brom Martikov warning of more creatuers approaching from the woods, he then dropped from the sky and tranformed to his human form and fired shots at the Goblins attacking Ivan. Eventually Gregor was able to move up to support Ivan and Dagger fell back into the defensive ring of the wagons. Ivan was able to cast Wall of Fire between the larger horde and the defenders on the hill, keeping them safe and from being overrun. 
 
-### [WOLF PACK ARRIVES]
+Thorian and Merrick continued to whip spells at Vasilka and the Goblin hordes. A fireball nuked a large group of the Goblains, while Merricks firestorm was dispelled by Vasilka. Both casters are starting to run on fumes but between their damage and the damage done by Krutha and Korith forced her to retreat back under invisibility.. Just as she fell back, the defenders were starting to finally make headway against the endless patchwork Goblins as their numbers were getting reduced. 
 
-The Werewolves lead by Emil Toranescu joins the fray and jumps archers and outliers. Players will hear the howl of wolves, just as they burst out of the high grass attacking the ranged goblins and casters. She'll make her way to the players on the hill.. She will tell the players about the Tser Raven Encampment and that they followed the trail here.. They'll attack the Catapult and suffer casualties while 'Emil Toranescu' pushes past the stitches to let the players know she is here to help.. They players will recognize her as the Werewolf that jumped from the Wizards tower, she has healing magic and will cast healing on any players that might need it.  This will take 2-3 turns before the [END PHASE] begins. 
+It was about this time that a large group of Mongelfolk and a huge halking beast carrying a catapult emerged from the woods.. The catapult is loaded and ready to fire, as the monglefolk begin charging up the hill.. that is where we ended the session - Vasilka running around invisible to the players, Krutha nude below the waste continues to smite beside his brother in arms Korith. Merrick and Thorian are catching their second wind and readying themselves.. Dagger, Ivan, and Gregor are holding the northern part of the battlefield.  
 
-### [END PHASE]
-
-Skanders open dimensional door to Tser Hill to send Reinforcements at the same time that Barovian Forces arrive under Ismark, Father Donavich, and Doru and 25 members of the Brovian Militia.
-- Players can make a Perception Check to see the DemDoor open up behind the baddies as Skands and Others tear into the rear of the baddies.
-- Have them see Dozens of arrows shoot out across the sky and land on top of the baddies, just as Barovian Forces come riding in hard.
-- Vasilka teleports to safety leaving the Stitches to their own fate as they retreat back to the Abbey...
-
-## WRAP UP
-
-Message from van Richten they managed to take that crazy old fool and restored him with a greater restoration spell. Ezmerelda is tending to him in the back of wagon - as he is still confused about what happened but appears to be his same stubborn self.. We are heading back to town and should arrive in two days - maybe less if we take shifts on the wagon and move at night.
-
-The Various parties will have a summit allowing the players and Key Persons to have their first strategy session against Strahd.. This starts the end phase of Curse of Strahd.
