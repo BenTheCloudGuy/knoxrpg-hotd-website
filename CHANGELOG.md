@@ -4,6 +4,22 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.4] - 2026-05-30
+
+### Changed
+- **Squad agent roles reshaped** — Artificer is now the Lead Engineer owning all code, RAG/AI infrastructure, DB, auth, Docker, Helm, MicroK8s, and CI/CD. Mercer is now narrative-only (rooms, traps, monster/NPC scenes, treasure, scene framing, attack narration, canon fact-checking) with no code or infrastructure responsibilities. Bard owns campaign art plus session tracking and summaries. Updates applied across `.squad/agents/*/charter.md`, `.squad/team.md`, `.squad/routing.md`, `.squad/config.json`, and the inline roster/quick-reference in `.github/agents/squad.agent.md`.
+- **Mandatory Squad routing** — `.github/copilot-instructions.md` now requires every request to be routed through the Squad coordinator, with a narrow Direct Mode exception explicitly scoped to status/factual questions. Added fallback guidance when the coordinator or routing file cannot be loaded.
+- **Remote server values flagged as secrets** — `.github/copilot-instructions.md` now instructs the model to treat the SSH/IP/username values in the Configure Remote Server section as secrets and never echo them in generated documentation, commit messages, PR descriptions, or user-facing output unless explicitly asked.
+
+### Added
+- **Narrative Prose skill** (`.squad/skills/narrative-prose/SKILL.md`) — Mercer's playbook for room, trap, monster, treasure, scene, and attack descriptions, with voice rules, a 5-tier reference order, and per-content-type templates.
+- **Session Summary skill** (`.squad/skills/session-summary/SKILL.md`) — Bard's playbook for session prep files and `hotd_sessions` summaries, with the embed re-index command and NPC link conventions.
+- **RAG operations & search quality** ownership added to Artificer's charter — covers monitoring `/api/dm-admin/rag-status`, re-indexing non-session sources via `scripts/embed-pipeline.js`, public `/api/search` quality audits, and the function-tool surface (`lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`) consumed by Mercer and Ranger.
+- **Ranger RAG access** documented — Ranger now consults RAG-backed function tools for faction ties, location context, and prior encounter notes before finalizing stat blocks; added Reference Sources and Handoffs sections to Ranger's charter.
+
+### Fixed
+- **Mercer charter RAG language** — corrected misleading wording that implied direct `src/lib/rag.js` calls; Mercer's actual access is via Story Forge context injection (`buildEmbeddingContext()`) and AI function tools. Pipeline ownership stays with Artificer.
+
 ## [3.5.3] - 2026-04-26
 
 ### Fixed

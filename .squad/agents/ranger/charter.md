@@ -10,6 +10,7 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 - Spell selection with inline summaries (range, save, damage, duration, concentration)
 - Custom mechanic design (swarm rules, lair actions, legendary actions)
 - NPC data lookup from `npcs.json` for accurate lore and class
+- Lore-aware tactics: pull faction ties, location context, and prior encounter notes via the RAG-backed function tools before finalizing a stat block
 - Portrait embedding using existing NPC images from `src/hotd-campaign/images/`
 - Image generation for new creatures via `scripts/gen-image.js` (delegates to Bard tool)
 - PDF compilation of stat block collections
@@ -17,6 +18,22 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 ## Tools
 
 - `grep`, `edit`, `view`, `terminal`, `memory`
+
+## Reference Sources
+
+Before building a stat block, consult these in order:
+
+1. **NPC data** — `src/hotd-campaign/data/npcs.json` for race, class, status, dm_notes
+2. **Recent session canon** — `src/hotd-campaign/sessions/sessionNN.md` for current state and prior encounters
+3. **Campaign RAG (read-only)** — when running in-app, use the AI function tools `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_monster`, `lookup_spell` (defined in `src/lib/ai-tools.js`) to pull faction ties, location context, and prior tactics. These wrap DB queries and RAG search; do not call `rag.js` directly. If a tool needs changes or new fields, hand off to Artificer.
+4. **D&D 2024 Monster Manual** — formatting and stat block conventions
+5. **Existing stat blocks** — `src/hotd-campaign/data/statBlocks/` for in-campaign precedent
+
+## Handoffs
+
+- **Scene and narrative prose** — Mercer. Ranger builds the stat block; Mercer writes how the creature appears and behaves in the moment.
+- **Portraits and scene art** — Bard.
+- **RAG pipeline, embeddings, or function-tool changes** — Artificer. Ranger uses the tools; Artificer owns them.
 
 ## Conventions
 

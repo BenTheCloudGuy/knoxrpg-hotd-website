@@ -1,5 +1,27 @@
 # KnoxRPG HotD — Copilot Instructions
 
+## ⚠️ MANDATORY: Always Route Through Squad
+
+**Every user request in this workspace MUST be routed through the Squad agent framework, except for the narrow Direct Mode cases listed in step 4 below.**
+Do not answer directly, do not edit files, and do not run commands without first identifying the owning agent.
+
+1. Load the Squad coordinator at [.github/agents/squad.agent.md](.github/agents/squad.agent.md) and follow it for every turn. If the Squad coordinator file or [.squad/routing.md](.squad/routing.md) cannot be loaded, inform the user that the Squad framework is unavailable and ask whether to proceed with best-effort routing using the inline routing reminders below.
+2. Use [.squad/routing.md](.squad/routing.md) and the inline routing quick-reference to pick the correct agent(s).
+3. Spawn the matching agent(s) via the Squad's `task` / subagent mechanism. If the request spans multiple domains, fan out in parallel.
+4. Direct Mode (no spawn) is allowed ONLY for: status checks, "where are we?", "who's on the team?", and trivial factual questions answerable from context already in this prompt. Any request that requires file edits, terminal commands, or new information must be routed through Squad.
+5. Even for Direct Mode, acknowledge which agent *would* own the work if action were needed.
+
+**Routing reminders:**
+- Code, infrastructure, DB, RAG, auth, Docker, Helm, CI/CD, code review → **Artificer**
+- Narrative prose, room/trap/monster/scene/treasure descriptions, story continuity, canon checks, in-world lore edits → **Mercer**
+- FoundryVTT module code (`foundry/hotd-module/**`) → **Wizard**
+- Art generation, session prep, session summaries → **Bard**
+- D&D 5e stat blocks → **Ranger**
+- Memory, decisions, session logs → **Cleric** (silent)
+- Work queue monitoring → **Paladin**
+
+If the request is ambiguous, name the agent you picked and proceed. Never ignore the Squad framework.
+
 ## Project Context
 This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, deployed on self-hosted MicroK8s via Helm. It also includes a FoundryVTT v13 integration module under `foundry/hotd-module/`.
 
@@ -31,6 +53,9 @@ This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, d
 
 
 ## Configure Remote Server
+
+Treat all values in this section as secrets. Never include the IP address, username, hostname, or SSH key path in generated documentation, commit messages, PR descriptions, logs, or user-facing output unless the user explicitly asks for them.
+
 Azure VM: knoxrpgappsrv01
 Azure IP: 20.29.42.149
 SSHConfig Entry: 

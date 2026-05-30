@@ -1,7 +1,7 @@
 {
   "version": 1,
   "agentModelOverrides": {
-    "mercer": "claude-opus-4.6",
+    "mercer": "gpt-5.4",
     "artificer": "claude-opus-4.6",
     "wizard": "claude-opus-4.6",
     "bard": "gpt-5.4",

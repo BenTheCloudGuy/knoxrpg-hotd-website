@@ -6,20 +6,33 @@ How to decide who handles what.
 
 | Work Type                  | Route To  | Examples                                             |
 | -------------------------- | --------- | ---------------------------------------------------- |
-| Server code, routes, pages | Mercer    | Node.js server, API endpoints, pages, components     |
-| Database, schema, queries  | Mercer    | PostgreSQL schema, migrations, pool config           |
-| AI/RAG, OpenAI integration | Mercer    | Embeddings, chat completions, RAG pipeline           |
-| Campaign data management   | Mercer    | npcs.json, session summaries, history, DM tools      |
-| Authentication, secrets    | Mercer    | Auth routes, Azure Key Vault, OAuth                  |
+| Server code, routes, pages | Artificer | Node.js server, API endpoints, pages, components     |
+| Database, schema, queries  | Artificer | PostgreSQL schema, migrations, pool config           |
+| AI/RAG, OpenAI integration | Artificer | Embeddings, chat completions, RAG pipeline           |
+| Campaign data infrastructure | Artificer | Schema, load paths, validators for `hotd-campaign/data/` |
+| Authentication, secrets    | Artificer | Auth routes, Azure Key Vault, OAuth                  |
+| Code review, architecture  | Artificer | Review PRs, check quality, architectural decisions   |
+| Codebase strategy & refactor | Artificer | Read code, propose fixes, map dependencies         |
+| Scope & priorities (technical) | Artificer | What to build next, trade-offs, decisions        |
 | Docker builds, containers  | Artificer | Dockerfile changes, image builds, container testing  |
 | Helm charts, K8s manifests | Artificer | Chart templates, values, deployment config           |
 | MicroK8s deployment        | Artificer | helm upgrade, ingress, PVC, namespace                |
+| CI/CD workflows            | Artificer | `.github/workflows/`, deploy automation              |
+| Room / location descriptions | Mercer  | Keyed-area read-aloud, features, DM notes            |
+| Trap write-ups             | Mercer    | Trigger, effect, DCs, countermeasures                |
+| Monster / NPC scenes       | Mercer    | Appearance, behavior narration, tactical notes       |
+| Treasure descriptions      | Mercer    | Sensory + mechanical + lore hook                     |
+| Scene framing & transitions| Mercer    | In-world prose between encounters                    |
+| Attack / combat narration  | Mercer    | Grounded action prose for the table                  |
+| Story continuity, canon check | Mercer | Fact-check against NPCs, sessions, lore              |
+| Campaign data content edits | Mercer   | `realms/*.md` lore, notebook entries, `npcs.json` text |
 | FoundryVTT module code     | Wizard    | Hooks, settings, module.json, ES module scripts      |
 | FoundryVTT integration     | Wizard    | Website-to-Foundry sync, module features             |
 | NPC portraits, AI art      | Bard      | Portrait generation, style consistency, image review |
-| Campaign content writing   | Bard      | NPC descriptions, session summaries, lore writing    |
-| Code review, architecture  | Mercer    | Review PRs, check quality, architectural decisions   |
-| Scope & priorities         | Mercer    | What to build next, trade-offs, decisions            |
+| Campaign scene & item art  | Bard      | Scenes, locations, magic items, handouts             |
+| Session files & summaries  | Bard      | `sessions/sessionNN.md`, `hotd_sessions.summary` row |
+| Post-session player recap  | Bard      | Player-safe narrative recap, no DM spoilers          |
+| D&D 5e stat blocks         | Ranger    | Monster design, spell selection, 2024 MM format      |
 | Session logging            | Cleric    | Automatic — never needs routing                      |
 
 ## Issue Routing

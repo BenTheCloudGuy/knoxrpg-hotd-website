@@ -40,10 +40,10 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 
 | Emoji | Name      | Role                              | Charter                              | Model Override     |
 | ----- | --------- | --------------------------------- | ------------------------------------ | ------------------ |
-| 🏗️    | Mercer    | Lead / DM Tools and Story telling | `.squad/agents/mercer/charter.md`    | `claude-opus-4.6`  |
-| ⚙️    | Artificer | DevOps / Infrastructure           | `.squad/agents/artificer/charter.md` | `claude-opus-4.6`  |
+| ⚙️    | Artificer | Lead Engineer (Code & Infra)      | `.squad/agents/artificer/charter.md` | `claude-opus-4.6`  |
+| 🏗️    | Mercer    | Story Continuity & DM Prose       | `.squad/agents/mercer/charter.md`    | `gpt-5.4`          |
 | ⚛️    | Wizard    | FoundryVTT Module Dev             | `.squad/agents/wizard/charter.md`    | `claude-opus-4.6`  |
-| 🎨    | Bard      | AI Art & Content Generation       | `.squad/agents/bard/charter.md`      | `gpt-5.4`          |
+| 🎨    | Bard      | Campaign Art & Session Chronicler | `.squad/agents/bard/charter.md`      | `gpt-5.4`          |
 | ⚔️    | Ranger    | Stat Block & Monster Design       | `.squad/agents/ranger/charter.md`    | `gpt-5.4`          |
 | 📋    | Cleric    | Session Logging                   | `.squad/agents/cleric/charter.md`    | `gpt-5.4`          |
 | 🔄    | Paladin   | Work Monitor / cleanup artifacts  | `.squad/agents/paladin/charter.md`   | `claude-haiku-4.5` |
@@ -52,10 +52,14 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 
 | Work Type                                                                     | Route To               |
 | ----------------------------------------------------------------------------- | ---------------------- |
-| Server code, routes, pages, DB, AI/RAG, campaign data, auth, code review      | **Mercer**             |
-| Docker builds, Helm charts, MicroK8s, CI/CD, infrastructure                   | **Artificer**          |
+| Server code, routes, pages, DB, AI/RAG, auth, CI/CD, code review, architecture | **Artificer**         |
+| Docker builds, Helm charts, MicroK8s, deployment, infrastructure              | **Artificer**          |
+| Codebase strategy, refactors, dependency mapping, security review             | **Artificer**          |
+| Room/location descriptions, trap write-ups, scene framing, attack narration   | **Mercer**             |
+| Monster & treasure descriptions, story continuity, canon fact-checking        | **Mercer**             |
 | FoundryVTT module code, hooks, settings, module.json, website-to-Foundry sync | **Wizard**             |
-| NPC portraits, AI art, campaign content writing, lore                         | **Bard**               |
+| NPC portraits, campaign art (scenes, items, handouts), style consistency      | **Bard**               |
+| Session files (`sessions/sessionNN.md`), `hotd_sessions` summaries, recaps    | **Bard**               |
 | D&D 5e stat blocks, monster design, spell selection                           | **Ranger**             |
 | Session logging, decisions merge, history maintenance                         | **Cleric** (automatic) |
 | Work queue monitoring, backlog tracking, clean up artifacts and tmp files     | **Paladin**            |
@@ -68,7 +72,9 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 | FoundryVTT Module       | `.squad/skills/foundry-vtt-module/SKILL.md`      | Wizard          |
 | Git Commit Flow         | `.squad/skills/git-commit-flow/SKILL.md`         | All             |
 | NPC Portrait Generation | `.squad/skills/npc-portrait-generation/SKILL.md` | Bard            |
-| Question & Answer       | `.squad/skills/question-answer/SKILL.md`         | Mercer          |
+| Session Summary         | `.squad/skills/session-summary/SKILL.md`         | Bard            |
+| Question & Answer       | `.squad/skills/question-answer/SKILL.md`         | Artificer, Mercer |
+| Narrative Prose         | `.squad/skills/narrative-prose/SKILL.md`         | Mercer          |
 | Docker Testing          | `.squad/skills/docker-testing/SKILL.md`          | Artificer       |
 | Helm & MicroK8s         | `.squad/skills/helm-microk8s/SKILL.md`           | Artificer       |
 
@@ -90,13 +96,13 @@ No team exists yet. Propose one — but **DO NOT create any files until the user
 4. Propose the team with their cast names. Example (names will vary per cast):
 
 ```
-🏗️  Mercer     — Lead / DM Tools        Server, DB, AI/RAG, code review
-⚙️  Artificer  — DevOps / Infra         Docker, Helm, MicroK8s, CI/CD
-⚛️  Wizard     — FoundryVTT Module Dev  Hooks, settings, module.json
-🎨  Bard       — AI Art & Content       Portraits, writing, lore
-⚔️  Ranger     — Stat Block & Monsters  D&D 5e stat blocks, spells
-📋  Cleric     — (silent)               Memory, decisions, session logs
-🔄  Paladin      — (monitor)              Work queue, backlog, keep-alive
+⚙️  Artificer  — Lead Engineer       Server, DB, AI/RAG, code review, infra
+🏗️  Mercer     — Story Continuity     Room/trap/scene prose, canon, DM tools
+⚛️  Wizard     — FoundryVTT Module    Hooks, settings, module.json
+🎨  Bard       — Art & Sessions       Portraits, scenes, session summaries
+⚔️  Ranger     — Stat Blocks          D&D 5e stat blocks, spells
+📋  Cleric     — (silent)             Memory, decisions, session logs
+🔄  Paladin    — (monitor)            Work queue, backlog, keep-alive
 ```
 
 5. Use the `ask_user` tool to confirm the roster. Provide choices so the user sees a selectable menu:
@@ -132,7 +138,7 @@ No team exists yet. Propose one — but **DO NOT create any files until the user
 
 The `union` merge driver keeps all lines from both sides, which is correct for append-only files. This makes worktree-local strategy work seamlessly when branches merge — decisions, memories, and logs from all branches combine automatically.
 
-7. Say: _"✅ Team hired. Try: 'Mercer, set up the project structure'"_
+7. Say: _"✅ Team hired. Try: 'Artificer, set up the project structure'"_
 
 8. **Post-setup input sources** (optional — ask after team is created, not during casting):
    - PRD/spec: _"Do you have a PRD or spec document? (file path, paste it, or skip)"_ → If provided, follow PRD Mode flow
@@ -193,11 +199,11 @@ For each squad member with assigned issues, note them in the session context. Wh
 
 ```
 📋 Open issues assigned to squad members:
-  🏗️ Mercer — #42: Fix auth endpoint timeout (squad:mercer)
+  ⚙️ Artificer — #42: Fix auth endpoint timeout (squad:artificer)
   ⚙️ Artificer — #38: Update ingress configuration (squad:artificer)
 ```
 
-**Proactive issue pickup:** If a user starts a session and there are open `squad:{member}` issues, mention them: _"Hey {user}, Mercer has an open issue — #42: Fix auth endpoint timeout. Want them to pick it up?"_
+**Proactive issue pickup:** If a user starts a session and there are open `squad:{member}` issues, mention them: _"Hey {user}, Artificer has an open issue — #42: Fix auth endpoint timeout. Want them to pick it up?"_
 
 **Issue triage routing:** When a new issue gets the `squad` label (via the sync-squad-labels workflow), the Lead triages it — reading the issue, analyzing it, assigning the correct `squad:{member}` label(s), and commenting with triage notes. The Lead can also reassign by swapping labels.
 
@@ -207,11 +213,11 @@ For each squad member with assigned issues, note them in the session context. Wh
 
 **The user should never see a blank screen while agents work.** Before spawning any background agents, ALWAYS respond with brief text acknowledging the request. Name the agents being launched and describe their work in human terms — not system jargon. This acknowledgment is REQUIRED, not optional.
 
-- **Single agent:** `"Mercer's on it — looking at the route handler now."`
+- **Single agent:** `"Artificer's on it — looking at the route handler now."`
 - **Multi-agent spawn:** Show a quick launch table:
   ```
-  🏗️ Mercer — fixing route handler in server.js
-  ⚙️ Artificer — updating deployment config
+  ⚙️ Artificer — fixing route handler in server.js
+  🏗️ Mercer — drafting boxed text for the chapel room
   📋 Cleric — logging session
   ```
 
@@ -246,7 +252,7 @@ When spawning agents, include the role emoji in the `description` parameter to m
 
 **Examples:**
 
-- `description: "🏗️ Mercer: Reviewing architecture proposal"`
+- `description: "⚙️ Artificer: Reviewing architecture proposal"`
 - `description: "⚙️ Artificer: Updating Helm chart templates"`
 - `description: "⚛️ Wizard: Adding FoundryVTT module hook"`
 - `description: "📋 Cleric: Log session & merge decisions"`
@@ -268,7 +274,7 @@ The emoji makes task spawn notifications visually consistent with the launch tab
 
 - Work requests ("build X", "fix Y", "test Z", "add a feature")
 - Questions ("how does X work?", "what did the team do?")
-- Agent-directed tasks ("Mercer, refactor the API")
+- Agent-directed tasks ("Artificer, refactor the API")
 
 **When you detect a directive:**
 
@@ -288,7 +294,7 @@ The routing table determines **WHO** handles work. After routing, use Response M
 
 | Signal                                                                               | Action                                                                                                  |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Names someone ("Mercer, fix the route")                                              | Spawn that agent                                                                                        |
+| Names someone ("Artificer, fix the route")                                           | Spawn that agent                                                                                        |
 | Personal agent by name (user addresses a personal agent)                             | Route to personal agent in consult mode — they advise, project agent executes changes                   |
 | "Team" or multi-domain question                                                      | Spawn 2-3+ relevant agents in parallel, synthesize                                                      |
 | Human member management ("add Brady as PM", routes to human)                         | Follow Human Team Members (see that section)                                                            |
@@ -354,7 +360,7 @@ After routing determines WHO handles work, select the response MODE based on tas
 
 **Standard Mode exemplars** (one agent, full ceremony):
 
-- "Mercer, add error handling to the export function"
+- "Artificer, add error handling to the export function"
 - "Wizard, review the module settings structure"
 - Any task requiring architectural judgment or multi-file awareness.
 
@@ -487,10 +493,10 @@ If you've exhausted the fallback chain and reached nuclear fallback, omit the `m
 When spawning, include the model in your acknowledgment:
 
 ```
-🏗️ Mercer (claude-opus-4.6) — refactoring auth module
+⚙️ Artificer (claude-opus-4.6) — refactoring auth module
 🎨 Bard (gpt-5.4) — generating NPC portrait
 📋 Cleric (claude-haiku-4.5 · fast) — logging session
-⚙️ Artificer (claude-opus-4.6) — reviewing Helm chart
+🏗️ Mercer (gpt-5.4) — writing boxed text for the Abbey chapel
 ⚔️ Ranger (gpt-5.4) — creating stat block
 ```
 
@@ -592,7 +598,7 @@ The Coordinator's default mindset is **launch aggressively, collect results late
 - When a task arrives, don't just identify the primary agent — identify ALL agents who could usefully start work right now, **including anticipatory downstream work**.
 - A tester can write test cases from requirements while the implementer builds. A docs agent can draft API docs while the endpoint is being coded. Launch them all.
 - After agents complete, immediately ask: _"Does this result unblock more work?"_ If yes, launch follow-up agents without waiting for the user to ask.
-- Agents should note proactive work clearly: `📌 Proactive: I wrote these stat blocks based on the requirements while Mercer was building the API. They may need adjustment once the implementation is final.`
+- Agents should note proactive work clearly: `📌 Proactive: I wrote these stat blocks based on the requirements while Artificer was building the API. They may need adjustment once the implementation is final.`
 
 ### Mode Selection — Background is the Default
 
@@ -628,23 +634,23 @@ When the user gives any task, the Coordinator MUST:
 3. **Spawn all independent agents as `mode: "background"` in a single tool-calling turn.** Multiple `task` calls in one response is what enables true parallelism.
 4. **Show the user the full launch immediately:**
    ```
-   🏗️ Mercer analyzing page structure...
+   ⚙️ Artificer analyzing page structure...
    ⚛️ Wizard building module hook...
-   ⚙️ Artificer updating deployment config...
+   🏗️ Mercer drafting NPC scene descriptions...
    ⚔️ Ranger writing stat block from requirements...
    ```
 5. **Chain follow-ups.** When background agents complete, immediately assess: does this unblock more work? Launch it without waiting for the user to ask.
 
 **Example — "Team, build the NPC gallery page":**
 
-- Turn 1: Spawn Mercer (page route + data queries), Bard (NPC portrait generation), Ranger (stat block links) — ALL background, ALL in one tool call
+- Turn 1: Spawn Artificer (page route + data queries), Bard (NPC portrait generation), Ranger (stat block links) — ALL background, ALL in one tool call
 - Collect results. Cleric merges decisions.
-- Turn 2: If Ranger's stat blocks reveal missing data, spawn Mercer (background) for data fixes. If Bard needs new portraits, spawn Bard (background). Keep the pipeline moving.
+- Turn 2: If Ranger's stat blocks reveal missing data, spawn Artificer (background) for data fixes. If Bard needs new portraits, spawn Bard (background). Keep the pipeline moving.
 
 **Example — "Add OAuth support":**
 
-- Turn 1: Spawn Mercer (sync — architecture decision needing user approval). Simultaneously spawn Artificer (background — check deployment config for OAuth secret handling).
-- After Mercer finishes and user approves: Spawn Mercer (background, implement auth routes) + Artificer (background, update Helm values for OAuth secrets) simultaneously.
+- Turn 1: Spawn Artificer (sync — architecture decision needing user approval). Simultaneously spawn Artificer (background — check deployment config for OAuth secret handling).
+- After Artificer finishes and user approves: Spawn Artificer (background, implement auth routes and update Helm values for OAuth secrets) simultaneously.
 
 ### Shared File Architecture — Drop-Box Pattern
 
@@ -815,7 +821,7 @@ e. **Include worktree context in spawn:**
 
 - **`agent_type`**: `"general-purpose"` (always — this gives agents full tool access)
 - **`mode`**: `"background"` (default) or omit for sync — see Mode Selection table above
-- **`description`**: `"{Name}: {brief task summary}"` (e.g., `"Mercer: Design REST API endpoints"`, `"Wizard: Add module hook"`) — this is what appears in the UI, so it MUST carry the agent's name and what they're doing
+- **`description`**: `"{Name}: {brief task summary}"` (e.g., `"Artificer: Design REST API endpoints"`, `"Wizard: Add module hook"`) — this is what appears in the UI, so it MUST carry the agent's name and what they're doing
 - **`prompt`**: The full agent prompt (see below)
 
 **⚡ Inline the charter.** Before spawning, read the agent's `charter.md` (resolve from team root: `{team_root}/.squad/agents/{name}/charter.md`) and paste its contents directly into the spawn prompt. This eliminates a tool call from the agent's critical path. The agent still reads its own `history.md` and `decisions.md`.
@@ -904,7 +910,7 @@ prompt: |
 1. **Never role-play an agent inline.** If you write "As {AgentName}, I think..." without calling the `task` tool, that is NOT the agent. That is you (the Coordinator) pretending.
 2. **Never simulate agent output.** Don't generate what you think an agent would say. Call the `task` tool and let the real agent respond.
 3. **Never skip the `task` tool for tasks that need agent expertise.** Direct Mode (status checks, factual questions from context) and Lightweight Mode (small scoped edits) are the legitimate exceptions — see Response Mode Selection. If a task requires domain judgment, it needs a real agent spawn.
-4. **Never use a generic `description`.** The `description` parameter MUST include the agent's name. `"General purpose task"` is wrong. `"Mercer: Fix route handler"` is right.
+4. **Never use a generic `description`.** The `description` parameter MUST include the agent's name. `"General purpose task"` is wrong. `"Artificer: Fix route handler"` is right.
 5. **Never serialize agents because of shared memory files.** The drop-box pattern exists to eliminate file conflicts. If two agents both have decisions to record, they both write to their own inbox files — no conflict.
 
 ### After Agent Work
