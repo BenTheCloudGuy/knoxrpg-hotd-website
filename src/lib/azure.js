@@ -31,16 +31,19 @@ async function initOpenAI() {
 // ── Local filesystem asset writer ─────────────────────────────
 const fs = require("fs");
 const path = require("path");
-const { HOTD_CONTENT_DIR } = require("../config");
+const { HOTD_CONTENT_DIR, HOTD_UPLOADS_DIR } = require("../config");
 
 async function uploadBlobToStorage(filename, dataBuffer, mimeType, container = "hotd-website-content", directory = "") {
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-  if (!HOTD_CONTENT_DIR) {
-    throw new Error("Asset upload not configured: HOTD_CONTENT_DIR is not set");
+  // Prefer the writable uploads PVC; fall back to HOTD_CONTENT_DIR for dev
+  // installs that only mount the legacy content dir (and make it writable).
+  const writeRoot = HOTD_UPLOADS_DIR || HOTD_CONTENT_DIR;
+  if (!writeRoot) {
+    throw new Error("Asset upload not configured: set HOTD_UPLOADS_DIR (writable PVC) or HOTD_CONTENT_DIR");
   }
 
-  const dir = directory ? path.join(HOTD_CONTENT_DIR, directory) : HOTD_CONTENT_DIR;
+  const dir = directory ? path.join(writeRoot, directory) : writeRoot;
   fs.mkdirSync(dir, { recursive: true });
   const filePath = path.join(dir, safeName);
   fs.writeFileSync(filePath, dataBuffer);

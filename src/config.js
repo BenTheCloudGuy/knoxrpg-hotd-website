@@ -10,6 +10,11 @@ const STORAGE_ACCOUNT_NAME = process.env.STORAGE_ACCOUNT_NAME || "cloudgeekcusga
 // hosting so auth cookies can scope to the public domain.
 const isAzure = process.env.NODE_ENV === "production";
 const HOTD_CONTENT_DIR = process.env.HOTD_CONTENT_DIR || "";
+// Writable overlay for user-uploaded assets. When set, the server serves
+// `/hotd-content/*` from this directory first and falls back to
+// HOTD_CONTENT_DIR (which is mounted read-only from the NAS in prod).
+// All uploads from `uploadBlobToStorage` land here.
+const HOTD_UPLOADS_DIR = process.env.HOTD_UPLOADS_DIR || "";
 
 // ── Harptos Calendar Data ─────────────────────────────────────
 const HARPTOS_MONTHS = [
@@ -97,6 +102,7 @@ module.exports = {
   STATIC_ROOT,
   STORAGE_ACCOUNT_NAME,
   HOTD_CONTENT_DIR,
+  HOTD_UPLOADS_DIR,
   isAzure,
   HARPTOS_MONTHS,
   ordinal,

@@ -43,6 +43,18 @@ notebookImages:
   storageClass: microk8s-hostpath
   mountPath: /app/hotd-campaign/images/notebook
 
+# -- Uploads (PVC, writable overlay over the NAS hostPath) --------------------
+# User-uploaded assets (NPC portraits, art, artifacts, handouts, maps, plus
+# DALL-E image-studio outputs) land here. The application overlay-reads the
+# `/hotd-content/*` URL space: writes always go to this PVC, reads check the
+# PVC first and fall back to the read-only NAS hostPath. This keeps shipped
+# legacy assets in the NAS and lets uploads succeed without making the NAS
+# RW. Bump `size` if the campaign accumulates more user uploads.
+uploads:
+  size: 5Gi
+  storageClass: microk8s-hostpath
+  mountPath: /data/hotd-uploads
+
 # -- Reports (PDF output, ephemeral) ------------------------------------------
 # PDFs are regenerable from the markdown stored in `hotd_sessions`, so an
 # emptyDir is sufficient. Bump sizeLimit if the DM keeps a backlog of large

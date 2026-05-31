@@ -8,7 +8,7 @@ const http = require("http");
 const crypto = require("crypto");
 const path = require("path");
 
-const { PORT, STATIC_ROOT, HOTD_CONTENT_DIR } = require("./config");
+const { PORT, STATIC_ROOT, HOTD_CONTENT_DIR, HOTD_UPLOADS_DIR } = require("./config");
 const { ensureSessionsTable, ensureHotdTables } = require("./db/schema");
 const { serveFile, serveStaticFile, sendJSON, mimeType } = require("./lib/utils");
 const { getSession } = require("./lib/auth");
@@ -40,12 +40,21 @@ async function dispatch(req, res) {
   if (decoded.startsWith("/images/") || decoded.startsWith("/css/") || decoded.startsWith("/js/")) {
     return serveStaticFile(decoded.slice(1), res);
   }
-  // ── Local HOTD content from NAS ─────────────────────────────
-  if (HOTD_CONTENT_DIR && decoded.startsWith("/hotd-content/")) {
+  // ── Local HOTD content (writable uploads PVC overlayed over read-only NAS) ─
+  if ((HOTD_UPLOADS_DIR || HOTD_CONTENT_DIR) && decoded.startsWith("/hotd-content/")) {
     const relative = decodeURIComponent(decoded.slice("/hotd-content/".length));
-    const fullPath = require("path").join(HOTD_CONTENT_DIR, relative);
-    if (!fullPath.startsWith(HOTD_CONTENT_DIR)) { res.writeHead(403); return res.end("Forbidden"); }
-    return serveFile(res, fullPath);
+    // Try the writable uploads PVC first, then the NAS read-only mount.
+    const roots = [HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR].filter(Boolean);
+    for (const root of roots) {
+      const fullPath = require("path").join(root, relative);
+      if (!fullPath.startsWith(root)) { res.writeHead(403); return res.end("Forbidden"); }
+      if (require("fs").existsSync(fullPath)) {
+        return serveFile(res, fullPath);
+      }
+    }
+    // Fall through to the last root so serveFile can emit a clean 404.
+    const lastRoot = roots[roots.length - 1];
+    return serveFile(res, require("path").join(lastRoot, relative));
   }
   if (decoded === "/health" || decoded === "/healthz") {
     return sendJSON(res, { status: "ok", app: "hotd-campaign", ts: new Date().toISOString() });

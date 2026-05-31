@@ -62,6 +62,8 @@ spec:
               value: {{ .Values.postgres.database | quote }}
             - name: HOTD_CONTENT_DIR
               value: "/data/hotd-content"
+            - name: HOTD_UPLOADS_DIR
+              value: {{ .Values.uploads.mountPath | quote }}
             - name: STORAGE_ACCOUNT_NAME
               value: {{ .Values.storage.accountName | quote }}
             {{- if or .Values.openai.apiKey .Values.openai.existingSecret }}
@@ -125,6 +127,8 @@ spec:
             - name: hotd-content
               mountPath: /data/hotd-content
               readOnly: true
+            - name: hotd-uploads
+              mountPath: {{ .Values.uploads.mountPath }}
             - name: notebook-images
               mountPath: {{ .Values.notebookImages.mountPath }}
             - name: reports
@@ -140,6 +144,9 @@ spec:
           hostPath:
             path: {{ .Values.nas.hotdContent }}
             type: Directory
+        - name: hotd-uploads
+          persistentVolumeClaim:
+            claimName: hotd-uploads
         - name: notebook-images
           persistentVolumeClaim:
             claimName: hotd-notebook-images
