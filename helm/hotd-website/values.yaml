@@ -44,8 +44,13 @@ notebookImages:
   mountPath: /app/hotd-campaign/images/notebook
 
 # -- OpenAI -------------------------------------------------------------------
+# If `apiKey` is set, the chart renders an Opaque Secret and the Deployment
+# reads OPENAI_API_KEY via secretKeyRef. To use a pre-existing Secret instead,
+# leave `apiKey` empty and set `existingSecret` (and optionally `existingSecretKey`).
 openai:
   apiKey: ""                 # Optional fallback — managed identity preferred
+  existingSecret: ""
+  existingSecretKey: "openai-api-key"
 
 # -- Azure Arc Managed Identity -----------------------------------------------
 arcIdentity:
@@ -61,8 +66,14 @@ keyVault:
   openaiSecretName: openai-api-key
 
 # -- Application Insights ------------------------------------------------------
+# If `connectionString` is set, the chart renders an Opaque Secret and the
+# Deployment reads APPLICATIONINSIGHTS_CONNECTION_STRING via secretKeyRef. To
+# use a pre-existing Secret instead, leave `connectionString` empty and set
+# `existingSecret` (and optionally `existingSecretKey`).
 appInsights:
   connectionString: ""   # Set via --set or loaded from Key Vault at startup
+  existingSecret: ""
+  existingSecretKey: "appinsights-connection-string"
   kvSecretName: appinsights-connection-string
 
 # -- Host Network (required for Arc identity) ----------------------------------
