@@ -138,11 +138,22 @@ async function stageExtract() {
   // ── DB: Calendar events ─────────────────────────────────────
   if (!SOURCE_FILTER || SOURCE_FILTER === "calendar") {
     const { rows } = await pgPool.query("SELECT id, day, month_idx, title, description FROM hotd_calendar_events");
+    // Skip per-session headline events ("Session 5", "Session 11: ...",
+    // "Session 08 & 09"). These are deterministic stubs the canon-applier
+    // writes for each published session and the legacy seed equivalents.
+    // Their tiny bodies dominate cosine similarity for queries that look
+    // like "Session 28" and push the actual session-log chunks (which are
+    // longer and split across multiple parts) off the top of RAG results.
+    // The calendar VIEW still renders them; they are only excluded from
+    // the vector index.
+    const SESSION_HEADLINE_RE = /^\s*Session\s+\d+/i;
+    let skippedHeadlines = 0;
     for (const r of rows) {
+      if (SESSION_HEADLINE_RE.test(r.title || "")) { skippedHeadlines++; continue; }
       const text = [`# ${r.title}`, `Date: Day ${r.day}, Month ${r.month_idx}`, r.description || null].filter(Boolean).join("\n");
       sources.push({ type: "calendar", id: r.id, title: r.title, content: text, is_dm_only: false, metadata: { day: r.day, month_idx: r.month_idx } });
     }
-    log(`Calendar events: ${rows.length} extracted`);
+    log(`Calendar events: ${rows.length - skippedHeadlines} extracted (${skippedHeadlines} session-headline stubs skipped for RAG)`);
   }
 
   // ── DB: Player characters ───────────────────────────────────
@@ -355,6 +366,20 @@ async function stageSanitize(chunks) {
   const sanitized = [];
   const rejected = [];
   const warnings = [];
+  // Per-source hash set covering EVERY chunk that should remain in the
+  // vector index after this run (sanitized + skipped-unchanged). Used by
+  // stageStore to delete stale chunks for sources whose content shrunk or
+  // whose chunks shifted between runs (e.g. a session edit that changed
+  // (1/2)/(2/2) split boundaries left old rows behind under the previous
+  // incremental flow). Keyed by `${source_type}:${source_id}`.
+  const validHashesBySource = new Map();
+  const noteValid = (chunk) => {
+    if (!chunk || chunk.source_id == null) return;
+    const key = `${chunk.source_type}:${chunk.source_id}`;
+    let set = validHashesBySource.get(key);
+    if (!set) { set = new Set(); validHashesBySource.set(key, set); }
+    set.add(chunk.content_hash);
+  };
 
   // Load existing hashes for incremental mode
   let existingHashes = new Set();
@@ -403,10 +428,12 @@ async function stageSanitize(chunks) {
     // ── Incremental: skip unchanged ──────────────────────────
     if (MODE === "incremental" && existingHashes.has(cleanHash)) {
       skippedUnchanged++;
+      noteValid(chunk);
       continue;
     }
 
     sanitized.push(chunk);
+    noteValid(chunk);
   }
 
   log(`Sanitized: ${sanitized.length} ready to embed`);
@@ -428,8 +455,16 @@ async function stageSanitize(chunks) {
     rejected_details: rejected,
     warnings: warnings.length,
     warning_details: warnings,
+    sources_with_valid_hashes: validHashesBySource.size,
   };
 
+  // Attach the per-source hash set so stageStore can prune stale chunks.
+  // Using a non-enumerable property keeps existing log/snapshot code from
+  // accidentally serialising the Map.
+  Object.defineProperty(sanitized, "validHashesBySource", {
+    value: validHashesBySource,
+    enumerable: false,
+  });
   return sanitized;
 }
 
@@ -508,7 +543,7 @@ async function stageEmbed(chunks) {
 // ══════════════════════════════════════════════════════════════
 // STAGE 5: STORE — upsert into pgvector, clean orphans
 // ══════════════════════════════════════════════════════════════
-async function stageStore(chunks) {
+async function stageStore(chunks, validHashesBySource) {
   heading("5 — STORE");
 
   if (MODE === "dry-run") {
@@ -519,11 +554,21 @@ async function stageStore(chunks) {
 
   if (chunks.length === 0) {
     log("Nothing to store.");
-    report.stages.store = { upserted: 0, deleted_orphans: 0 };
-    // Still clean orphans in full mode
+    // Still run incremental cleanup so stale chunks for sources whose
+    // content was fully unchanged this run (but had old rows lingering
+    // from a previous boundary-shifted run) get removed.
+    let deletedOrphans = 0;
+    let deletedStale = 0;
+    if (MODE === "incremental") {
+      deletedOrphans = await cleanOrphans();
+      if (validHashesBySource && validHashesBySource.size) {
+        deletedStale = await cleanStaleChunks(validHashesBySource);
+      }
+    }
     if (MODE === "full") {
       await cleanOrphans();
     }
+    report.stages.store = { upserted: 0, deleted_orphans: deletedOrphans, deleted_stale: deletedStale };
     return;
   }
 
@@ -565,8 +610,12 @@ async function stageStore(chunks) {
 
   // Clean orphans in incremental mode
   let deletedOrphans = 0;
+  let deletedStale = 0;
   if (MODE === "incremental") {
     deletedOrphans = await cleanOrphans();
+    if (validHashesBySource && validHashesBySource.size) {
+      deletedStale = await cleanStaleChunks(validHashesBySource);
+    }
   }
 
   // Get totals
@@ -581,6 +630,7 @@ async function stageStore(chunks) {
 
   log(`Upserted: ${upserted}`);
   log(`Deleted orphans: ${deletedOrphans}`);
+  log(`Deleted stale chunks: ${deletedStale}`);
   log(`Total vectors: ${totals.total} (${totals.dm_only} DM-only)`);
   for (const r of byType) log(`  ${r.source_type}: ${r.count}`);
 
@@ -599,10 +649,46 @@ async function stageStore(chunks) {
   report.stages.store = {
     upserted,
     deleted_orphans: deletedOrphans,
+    deleted_stale: deletedStale,
     total_vectors: parseInt(totals.total),
     dm_only_count: parseInt(totals.dm_only),
     by_type: Object.fromEntries(byType.map(r => [r.source_type, parseInt(r.count)])),
   };
+}
+
+// Delete chunks belonging to sources we processed this run whose hash is
+// not in the current valid set. Catches the case where a source's content
+// changed in a way that shifted chunk boundaries (e.g. session markdown
+// grew long enough to re-split (1/2)/(2/2) differently), which the
+// hash-based incremental skip alone cannot detect. Scoped per source_id
+// so we never touch a source the current run did not extract.
+async function cleanStaleChunks(validHashesBySource) {
+  let deleted = 0;
+  for (const [key, hashes] of validHashesBySource.entries()) {
+    const sep = key.indexOf(":");
+    if (sep < 0) continue;
+    const sourceType = key.slice(0, sep);
+    const sourceId = key.slice(sep + 1);
+    if (!sourceId || sourceId === "null") continue;
+    const hashArr = Array.from(hashes);
+    if (hashArr.length === 0) continue;
+    try {
+      const r = await pgPool.query(
+        `DELETE FROM hotd_embeddings
+          WHERE source_type = $1
+            AND source_id::text = $2
+            AND chunk_hash <> ALL($3::text[])`,
+        [sourceType, sourceId, hashArr]
+      );
+      if (r.rowCount > 0) {
+        log(`  Stale (${sourceType} ${sourceId}): ${r.rowCount} deleted`);
+        deleted += r.rowCount;
+      }
+    } catch (e) {
+      log(`  WARN stale cleanup ${sourceType} ${sourceId}: ${e.message}`);
+    }
+  }
+  return deleted;
 }
 
 async function cleanOrphans() {
@@ -777,7 +863,9 @@ async function main() {
     const chunks = stageChunk(sources);
     const sanitized = await stageSanitize(chunks);
     const embedded = await stageEmbed(sanitized);
-    await stageStore(embedded);
+    // stageEmbed returns a filtered subset (chunks with embeddings), so
+    // carry the full per-source hash map separately to stageStore.
+    await stageStore(embedded, sanitized.validHashesBySource);
 
     report.completed_at = new Date().toISOString();
     report.success = true;
