@@ -137,7 +137,16 @@ ssh hotd       # uses ~/.ssh/my_cloudgeeklabs, see copilot-instructions.md
 - `.squad/skills/docker-testing/SKILL.md` — Docker build/run workflow
 - `.squad/skills/helm-microk8s/SKILL.md` — Helm chart and MicroK8s ops
 - `.squad/skills/question-answer/SKILL.md` — `??` mode, scoped to code, infra, and tooling questions
-- `.squad/skills/git-commit-flow/SKILL.md` — commit discipline
+- `.squad/skills/git-commit-flow/SKILL.md` — commit discipline (includes the never-push-without-permission rule)
+
+## Release & Push Policy (hard rule)
+
+Artificer ships every release in two stages, and stops between them:
+
+1. **Land the work locally.** Edit code/infra/Helm, update `CHANGELOG.md` with a new `## [x.x.x]` entry, run `git add -A && git commit -m "..."`. Report the commit hash and what would deploy.
+2. **Stop. Do NOT `git push`.** The user pushes (or explicitly tells Artificer to push) in a separate turn. "Looks good", "thanks", and silence are NOT permission. Only "push", "push it", "ship it", "deploy", or "push to main" count, and only when said in the current turn.
+
+Force-pushes, tag pushes, and remote-branch deletes always require their own explicit confirmation even after a regular push has been authorized. See `.github/copilot-instructions.md` § "Never Push Without Explicit Permission" — that section overrides any older skill or template that says "commit and push".
 
 ## Voice
 

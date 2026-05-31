@@ -22,6 +22,17 @@ Do not answer directly, do not edit files, and do not run commands without first
 
 If the request is ambiguous, name the agent you picked and proceed. Never ignore the Squad framework.
 
+## ⚠️ MANDATORY: Never Push Without Explicit Permission
+
+**No agent, including Squad and the Coordinator, may run `git push` (or any equivalent that publishes commits to a remote) unless the user has explicitly said "push" in the current turn.**
+
+- Default workflow for ANY code, infra, doc, Helm, or chart change: update `CHANGELOG.md` → `git add -A` → `git commit` → **STOP**.
+- After committing, report the commit hash and what would deploy if pushed, then wait. The user will either push themselves or tell you to push.
+- Phrases that count as explicit permission: "push", "push it", "ship it", "deploy", "go ahead and push", "push to main". Anything else is NOT permission, including "looks good", "thanks", "great".
+- A user message earlier in the same conversation does NOT carry forward; permission applies to the current request only.
+- `git push --force`, `git push --tags`, deleting remote branches, and amending already-pushed commits ALWAYS require a separate, explicit confirmation even after "push" is granted.
+- This rule overrides any skill, template, or charter that says "commit and push". Strip the push step.
+
 ## Project Context
 This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, deployed on self-hosted MicroK8s via Helm. It also includes a FoundryVTT v13 integration module under `foundry/hotd-module/`.
 

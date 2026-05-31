@@ -4,6 +4,19 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Squad framework: operator-gated push policy.** Codified the rule "never `git push` without explicit user permission in the current turn" across every entry point so no agent can ship a release on its own initiative.
+  - `.github/copilot-instructions.md` gains a top-level `## ⚠️ MANDATORY: Never Push Without Explicit Permission` section directly under the Squad routing block. Default workflow for any change is now: update `CHANGELOG.md` → `git add -A` → `git commit` → **STOP**, report the hash, wait. Lists the exact phrases that count as permission (`push`, `push it`, `ship it`, `deploy`, `push to main`) and the ones that do not (`looks good`, `thanks`, `great`). Permission does NOT carry across turns. Force-pushes, tag pushes, and remote-branch deletes require their own separate confirmation even after a regular push is granted. This section overrides any older skill, template, or charter that said "commit and push".
+  - `.github/agents/squad.agent.md` Coordinator refusal rules add a fourth bullet forbidding `git push` without current-turn permission, and the worktree spawn block changes "Commit and push from the worktree" to "Commit from the worktree. Do NOT `git push` unless the user explicitly said push in the current turn."
+  - `.squad/skills/git-commit-flow/SKILL.md` rewritten: step 5 was "Show the commit, then ask if the user wants to push"; new step 6 is hard-stop "Do NOT run `git push`. Wait for the user." CHANGELOG update is hoisted to step 2 so it precedes the commit. New `Critical rules` section enumerates the permission phrases and the always-confirm operations.
+  - `.squad/agents/artificer/charter.md` gains a `Release & Push Policy (hard rule)` section. Artificer (the most likely pusher, owning all code/infra/Helm/CI) is now explicitly two-stage: land locally, then stop. Pointers back to the canonical copilot-instructions section.
+  - `/memories/repo/commit-discipline.md` updated so the rule auto-loads into every new session for this workspace.
+
+### Notes
+- This is a behavioral change only. No code, schema, Helm, or runtime artifact moved. No version bump on `## [3.9.0]` — the deploy workflow ignores `## [Unreleased]`. When the next code change ships, this entry rolls into that version's release notes.
+
 ## [3.9.0] - 2026-05-31
 
 ### Removed
