@@ -5,8 +5,17 @@
 
 const { pgPool } = require("../db/pool");
 const { trackAiEmbedding } = require("./telemetry");
+const metrics = require("./metrics");
 
 const EMBED_MODEL = "text-embedding-3-small";
+
+function recordRagResult(result) {
+  try {
+    if (metrics && metrics._metrics && metrics._metrics.ragQueriesTotal) {
+      metrics._metrics.ragQueriesTotal.labels(result).inc();
+    }
+  } catch (_) { /* metrics disabled */ }
+}
 
 /**
  * Embed a query string using OpenAI's embedding model.
@@ -57,7 +66,13 @@ async function embedQuery(openai, text) {
 async function searchEmbeddings(openai, query, opts = {}) {
   const { includeDmOnly = false, limit = 10, minScore = 0.3, sourceType } = opts;
 
-  const vector = await embedQuery(openai, query);
+  let vector;
+  try {
+    vector = await embedQuery(openai, query);
+  } catch (err) {
+    recordRagResult("error");
+    throw err;
+  }
   const vectorStr = `[${vector.join(",")}]`;
 
   let whereClause = "WHERE 1=1";
@@ -103,8 +118,16 @@ async function searchEmbeddings(openai, query, opts = {}) {
     `;
   }
 
-  const { rows } = await pgPool.query(sql, params);
-  return rows.filter(r => r.score >= minScore).map(r => ({
+  let rows;
+  try {
+    ({ rows } = await pgPool.query(sql, params));
+  } catch (err) {
+    recordRagResult("error");
+    throw err;
+  }
+  const hits = rows.filter(r => r.score >= minScore);
+  recordRagResult(hits.length > 0 ? "hit" : "empty");
+  return hits.map(r => ({
     title: r.title,
     chunk_text: r.chunk_text,
     chunk_hash: r.chunk_hash,

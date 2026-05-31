@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.11.1] - 2026-05-31
+
+### Fixed
+- **`hotd_rag_queries_total{result}` was dead-counter code.** The counter was declared and exported by `src/lib/metrics.js` (line 151) and the Grafana panel `Embedding search rate (by result)` queried it, but nothing in the codebase ever called `.inc()`. The panel was guaranteed to show "No data" forever regardless of how much RAG traffic flowed. `src/lib/rag.js#searchEmbeddings` now records `result="hit"` when the post-`minScore` filter returns at least one row, `result="empty"` when zero rows survive, and `result="error"` when either `embedQuery` or the pgvector `SELECT` throws (the throw is then re-raised so call-site error handling is unchanged).
+
+### Notes
+- The other AI panels (`Chat request rate by is_dm,model`, `Tokens per minute`, `Chat latency p95`, `Image generation rate`, `Image latency p95`, `Embedding tokens per minute`) are correctly wired at every in-pod call site (`src/lib/ai-tools.js`, `src/lib/canon-extractor.js`, `src/lib/search.js`, `src/lib/rag.js`, `src/routes/dm-admin-api.js`, `src/routes/admin-test.js`). They are showing "No data" because **(a)** the live pod is still running 3.10.0 — 3.11.0 hasn't been pushed yet, and **(b)** the site has been idle for AI requests since the 16:56 UTC restart. They will populate the moment a DM chats, a player triggers semantic search, or Image Studio fires.
+- **Out-of-pod AI traffic is not captured by Grafana and won't be.** `scripts/embed-pipeline.js`, `scripts/embed-ddb-content.js`, `scripts/gen-image.js`, `scripts/expand-realms.js`, and `src/mcp/story-forge.mjs` all call OpenAI but run as separate Node processes with no `prom-client` listener on `:9464`. To surface their work in Grafana the cleanest path is to either (1) have them write a one-shot summary line via `LOKI_PUSH_URL` so the data lands in Loki even if not Prometheus, or (2) ship a `node_exporter`-style sidecar / textfile collector for batch jobs. Out of scope for this patch.
+
 ## [3.11.0] - 2026-05-31
 
 ### Added
