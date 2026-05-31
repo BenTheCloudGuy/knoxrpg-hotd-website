@@ -28,7 +28,7 @@ async function renderDmAdminPage(session) {
         <div class="dmc-nav-section">
           <div class="dmc-nav-label">Campaign</div>
           <button class="dmc-nav-btn" onclick="dmc('notes')">Notebook</button>
-          <button class="dmc-nav-btn" onclick="dmc('characters')">Characters</button>
+          <a class="dmc-nav-btn" href="/characters/admin" style="display:block;text-decoration:none;">Characters &rarr;</a>
           <button class="dmc-nav-btn" onclick="dmc('npcs')">NPCs</button>
           <button class="dmc-nav-btn" onclick="dmc('sessions')">Sessions</button>
         </div>
@@ -310,37 +310,15 @@ async function renderDmAdminPage(session) {
       </section>
 
       <!-- ╔══ CHARACTERS ══╗ -->
+      <!-- Player Characters now live in the GM Player Workspace at /characters/admin.
+           The sidebar Characters link navigates directly there; this panel is
+           intentionally empty so an old bookmarked dmc('characters') call from
+           an active tab still resolves to a defined section. -->
       <section class="dmc-panel" id="dmc-characters" style="display:none;">
-        <div class="dmc-panel-bar"><h2>Player Characters</h2>
-          <div class="dmc-bar-actions"><button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="ddbSyncAll()">Sync All from D&amp;D Beyond</button></div>
-        </div>
-        <div id="chars-status" class="dmc-alert" style="display:none;"></div>
-        <table class="dmc-table"><thead><tr><th>ID</th><th>Character</th><th>Player</th><th>Lv</th><th>Race</th><th>Class</th><th>STR</th><th>DEX</th><th>CON</th><th>INT</th><th>WIS</th><th>CHA</th><th>AC</th><th>HP</th><th>Actions</th></tr></thead>
-        <tbody id="chars-body"><tr><td colspan="15" class="dmc-empty">Loading...</td></tr></tbody></table>
-        <div id="char-edit" class="dmc-edit" style="display:none;">
-          <h4 id="char-edit-title">Edit Character</h4>
-          <form onsubmit="saveChar(event)">
-            <input type="hidden" id="char-id" />
-            <div class="dmc-form-row">
-              <label>Name<input id="char-name" /></label><label>Player<input id="char-player" /></label>
-              <label>Level<input type="number" id="char-level" min="1" max="20" /></label><label>Race<input id="char-race" /></label>
-              <label>Class<input id="char-class" /></label><label>Background<input id="char-bg" /></label>
-              <label>Alignment<input id="char-align" /></label><label>DDB ID<input id="char-ddb" /></label>
-            </div>
-            <div class="dmc-form-row">
-              <label>STR<input type="number" id="char-str" /></label><label>DEX<input type="number" id="char-dex" /></label>
-              <label>CON<input type="number" id="char-con" /></label><label>INT<input type="number" id="char-int" /></label>
-              <label>WIS<input type="number" id="char-wis" /></label><label>CHA<input type="number" id="char-cha" /></label>
-            </div>
-            <div class="dmc-form-row">
-              <label>AC<input type="number" id="char-ac" /></label><label>HP<input type="number" id="char-hp" /></label>
-              <label>Max HP<input type="number" id="char-maxhp" /></label><label>Speed<input type="number" id="char-speed" /></label>
-            </div>
-            <div class="dmc-form-actions">
-              <button type="submit" class="dmc-btn dmc-btn-primary">Save</button>
-              <button type="button" class="dmc-btn" onclick="el('char-edit').style.display='none'">Cancel</button>
-            </div>
-          </form>
+        <div class="dmc-panel-bar"><h2>Player Characters</h2></div>
+        <div class="dmc-empty" style="padding:24px;text-align:center;">
+          The Player Characters workspace has moved.
+          <div style="margin-top:12px;"><a class="dmc-btn dmc-btn-primary" href="/characters/admin">Open GM Player Workspace &rarr;</a></div>
         </div>
       </section>
 
@@ -1759,68 +1737,11 @@ async function renderDmAdminPage(session) {
   }
 
   // ═══ CHARACTERS ═══
-  let _charsCache = [];
-  async function loadChars() {
-    const r = await fetch('/api/dm-admin/characters');
-    const d = await r.json();
-    _charsCache = d.characters || [];
-    const tb = el('chars-body');
-    if(!_charsCache.length) { tb.innerHTML='<tr><td colspan="15" class="dmc-empty">No characters.</td></tr>'; return; }
-    tb.innerHTML = _charsCache.map(c => '<tr><td>'+c.id+'</td><td style="color:#e8b923;font-weight:600;">'+esc(c.character_name)+'</td>'+
-      '<td>'+esc(c.player_name)+'</td><td>'+c.level+'</td><td>'+esc(c.race)+'</td><td style="font-size:0.72rem;">'+esc(c.class_summary)+'</td>'+
-      '<td>'+c.strength+'</td><td>'+c.dexterity+'</td><td>'+c.constitution+'</td><td>'+c.intelligence+'</td><td>'+c.wisdom+'</td><td>'+c.charisma+'</td>'+
-      '<td>'+c.armor_class+'</td><td>'+c.hit_points+'/'+c.max_hit_points+'</td>'+
-      '<td><button class="dmc-btn dmc-btn-sm" onclick="editChar('+c.id+')">Edit</button> '+(c.ddb_character_id?'<button class="dmc-btn dmc-btn-sm" onclick="ddbSync('+c.id+')">Sync</button>':'')+
-      '</td></tr>').join('');
-  }
-
-  function editChar(id) {
-    const c = _charsCache.find(x=>x.id===id);
-    if(!c) return;
-    el('char-edit').style.display = 'block';
-    el('char-edit-title').textContent = 'Edit: ' + c.character_name;
-    el('char-id').value = c.id;
-    el('char-name').value=c.character_name||''; el('char-player').value=c.player_name||''; el('char-level').value=c.level||1;
-    el('char-race').value=c.race||''; el('char-class').value=c.class_summary||''; el('char-bg').value=c.background||'';
-    el('char-align').value=c.alignment||''; el('char-ddb').value=c.ddb_character_id||'';
-    el('char-str').value=c.strength; el('char-dex').value=c.dexterity; el('char-con').value=c.constitution;
-    el('char-int').value=c.intelligence; el('char-wis').value=c.wisdom; el('char-cha').value=c.charisma;
-    el('char-ac').value=c.armor_class; el('char-hp').value=c.hit_points; el('char-maxhp').value=c.max_hit_points; el('char-speed').value=c.speed;
-  }
-
-  async function saveChar(e) {
-    e.preventDefault();
-    const id = el('char-id').value;
-    const body = {
-      character_name:el('char-name').value, player_name:el('char-player').value, level:+el('char-level').value,
-      race:el('char-race').value, class_summary:el('char-class').value, background:el('char-bg').value,
-      alignment:el('char-align').value, ddb_character_id:el('char-ddb').value||null,
-      strength:+el('char-str').value, dexterity:+el('char-dex').value, constitution:+el('char-con').value,
-      intelligence:+el('char-int').value, wisdom:+el('char-wis').value, charisma:+el('char-cha').value,
-      armor_class:+el('char-ac').value, hit_points:+el('char-hp').value, max_hit_points:+el('char-maxhp').value, speed:+el('char-speed').value,
-    };
-    const r = await fetch('/api/dm-admin/characters/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const st = el('chars-status');
-    if(r.ok) { showAlert(st,'Saved.','ok'); el('char-edit').style.display='none'; loadChars(); }
-    else { const d=await r.json(); showAlert(st,'Error: '+(d.error||''),'err'); }
-  }
-
-  async function ddbSync(id) {
-    const st = el('chars-status');
-    showAlert(st,'Syncing...','info');
-    const r = await fetch('/api/dm-admin/characters/'+id+'/sync',{method:'POST'});
-    const d = await r.json();
-    if(r.ok) { showAlert(st,d.message||'Synced','ok'); loadChars(); }
-    else showAlert(st,'Failed: '+(d.error||''),'err');
-  }
-  async function ddbSyncAll() {
-    const st = el('chars-status');
-    showAlert(st,'Syncing all...','info');
-    const r = await fetch('/api/dm-admin/characters/sync-all',{method:'POST'});
-    const d = await r.json();
-    if(r.ok) { showAlert(st,d.message||'Done','ok'); loadChars(); }
-    else showAlert(st,'Failed: '+(d.error||''),'err');
-  }
+  // The full Player Characters workspace lives at /characters/admin.
+  // The sidebar link navigates straight there; this loader is a no-op kept
+  // so the dmc() panel router still has a registered handler for the
+  // 'characters' key (the Characters <section> renders a permanent CTA).
+  function loadChars() {}
 
   function showAlert(el,msg,type) { el.style.display='block'; el.className='dmc-alert '+type; el.textContent=msg; if(type==='ok')setTimeout(()=>el.style.display='none',4000); }
 
