@@ -69,6 +69,29 @@ async function ensureHotdTables() {
       );
       -- backfill: add play_date if missing (idempotent)
       ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS play_date TIMESTAMPTZ DEFAULT NULL;
+      -- DM workflow columns: full editor markdown blob, publish gating, and
+      -- generated PDF tracking. The single markdown column is the source of
+      -- truth for the editor; the existing summary column is the
+      -- player-facing snapshot written by the Publish action.
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS markdown TEXT DEFAULT '';
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS published BOOLEAN DEFAULT FALSE;
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ DEFAULT NULL;
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS pdf_path TEXT DEFAULT '';
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS pdf_generated_at TIMESTAMPTZ DEFAULT NULL;
+      ALTER TABLE hotd_sessions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+      -- One-time seed: pre-existing rows with no markdown but a non-empty
+      -- summary get a starter markdown blob so the new editor has content to
+      -- open. Treats legacy summaries as already-published.
+      UPDATE hotd_sessions
+         SET markdown = '# Session Summary' || E'\n\n' || summary
+       WHERE (markdown IS NULL OR markdown = '')
+         AND summary IS NOT NULL
+         AND summary <> '';
+      UPDATE hotd_sessions
+         SET published = TRUE, published_at = COALESCE(published_at, NOW())
+       WHERE published = FALSE
+         AND summary IS NOT NULL
+         AND summary <> '';
       CREATE TABLE IF NOT EXISTS hotd_artifacts (
         id           SERIAL PRIMARY KEY,
         name         TEXT NOT NULL,

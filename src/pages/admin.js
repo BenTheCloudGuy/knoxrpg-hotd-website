@@ -260,60 +260,379 @@ async function renderNpcsAdminPage(session) {
 }
 
 // ── Sessions Admin ────────────────────────────────────────────
+// Two-pane workspace: 30% session list on the left, 70% markdown editor on
+// the right. Drives the JSON API at /api/dm-admin/sessions/* for all
+// mutations (save, generate summary, create PDF, publish, delete).
 async function renderSessionsAdminPage(session) {
   if (!session || session.role !== "admin") return null;
-  let sessions = [];
-  try { const r = await pgPool.query("SELECT * FROM hotd_sessions ORDER BY session_number"); sessions = r.rows; } catch (_) {}
-
-  const sessRows = sessions.map(s => {
-    const pdVal = s.play_date ? new Date(s.play_date).toISOString().slice(0,16) : "";
-    return `
-    <tr>
-      <td>${s.id}</td><td>${s.session_number}</td><td>${esc(s.title)}</td><td>${esc(s.game_date || "")}</td>
-      <td>${pdVal ? esc(new Date(s.play_date).toLocaleDateString()) : ""}</td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.summary || "")}</td>
-      <td>
-        <button class="edit-btn-inline" onclick="toggleEdit(this)">Edit</button>
-        <form method="POST" action="/admin/sessions/delete" style="display:inline;"><input type="hidden" name="id" value="${s.id}" /><button type="submit" class="delete-btn-inline" onclick="return confirm('Delete?')">Delete</button></form>
-      </td>
-    </tr>
-    <tr class="edit-row" style="display:none;">
-      <td colspan="7">
-        <form method="POST" action="/admin/sessions/update" class="admin-campaign-form" style="margin:0;padding:12px;">
-          <input type="hidden" name="id" value="${s.id}" />
-          <div class="form-row"><div><label>Session #</label><input type="number" name="session_number" value="${s.session_number}" required /></div><div><label>Title</label><input type="text" name="title" value="${esc(s.title)}" required /></div></div>
-          <div class="form-row"><div><label>In-Game Date</label><input type="text" name="game_date" value="${esc(s.game_date || "")}" /></div><div><label>Play Date</label><input type="datetime-local" name="play_date" value="${pdVal}" /></div></div>
-          <div class="form-row full"><div><label>Summary (line breaks &amp; indentation preserved)</label><textarea name="summary" rows="10" style="white-space:pre-wrap;font-family:inherit;">${esc(s.summary || "")}</textarea></div></div>
-          <button type="submit">Save</button>
-        </form>
-      </td>
-    </tr>`;
-  }).join("");
 
   const body = `
-  <div class="content">
-    <h2 class="section-title">&#9881; Sessions Admin</h2>
-    <p style="color:#888;margin-bottom:16px;"><a href="/sessions" style="color:#e8b923;text-decoration:none;">&larr; Back to Sessions</a></p>
-
-    <div class="admin-campaign-form">
-      <h3>&#10133; Add Session Log</h3>
-      <form method="POST" action="/admin/sessions/add">
-        <div class="form-row"><div><label>Session Number</label><input type="number" name="session_number" min="0" required /></div><div><label>Title</label><input type="text" name="title" required /></div></div>
-        <div class="form-row"><div><label>In-Game Date</label><input type="text" name="game_date" placeholder="e.g. 25th of Mirtul" /></div><div><label>Play Date</label><input type="datetime-local" name="play_date" /></div></div>
-        <div class="form-row full"><div><label>Summary (line breaks &amp; indentation preserved)</label><textarea name="summary" rows="10" style="white-space:pre-wrap;font-family:inherit;"></textarea></div></div>
-        <button type="submit">Add Session</button>
-      </form>
+  <div class="content" style="max-width:none;width:100%;padding:0 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2 class="section-title" style="margin:0;">&#9881; Sessions Workspace</h2>
+      <a href="/sessions" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Sessions</a>
     </div>
+    <p style="color:#888;font-size:0.85rem;margin:0 0 12px 0;">Drafts stay private until you click <strong>Publish Summary</strong>. The GM Guide PDF excludes the <code># Session Summary</code> section.</p>
 
-    <div class="admin-campaign-form" style="margin-top:16px;">
-      <h3>Existing Sessions (${sessions.length})</h3>
-      ${sessions.length > 0 ? `<div style="overflow-x:auto;"><table class="account-table"><thead><tr><th>ID</th><th>#</th><th>Title</th><th>In-Game</th><th>Played</th><th>Summary</th><th>Actions</th></tr></thead><tbody>${sessRows}</tbody></table></div>` : "<p style=\"color:#888;\">No sessions yet.</p>"}
+    <div id="sessions-workspace" style="display:grid;grid-template-columns:30% 70%;gap:12px;height:calc(100vh - 200px);min-height:600px;">
+
+      <!-- LEFT: session list -->
+      <aside style="background:#1a1a1a;border:1px solid #333;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:10px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:#e8b923;">Sessions</strong>
+          <button id="btn-new" type="button" style="background:#2d5a2d;color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:0.85rem;">+ New</button>
+        </div>
+        <div id="session-list" style="flex:1;overflow-y:auto;padding:4px;">
+          <p style="color:#888;padding:12px;font-size:0.85rem;">Loading...</p>
+        </div>
+      </aside>
+
+      <!-- RIGHT: editor -->
+      <section id="editor-pane" style="background:#1a1a1a;border:1px solid #333;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="editor-empty" style="flex:1;display:flex;align-items:center;justify-content:center;color:#666;text-align:center;padding:40px;">
+          <div>
+            <div style="font-size:3rem;margin-bottom:12px;">&#128221;</div>
+            <p>Select a session from the left, or click <strong>+ New</strong> to create one.</p>
+          </div>
+        </div>
+
+        <div id="editor-active" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <div id="editor-meta" style="padding:10px;border-bottom:1px solid #333;background:#202020;">
+            <div style="display:grid;grid-template-columns:80px 1fr 160px 200px;gap:8px;align-items:end;">
+              <div>
+                <label style="font-size:0.7rem;color:#888;display:block;">Session #</label>
+                <input id="f-session-number" type="number" min="0" style="width:100%;background:#0e0e0e;color:#eee;border:1px solid #444;padding:6px;border-radius:3px;" />
+              </div>
+              <div>
+                <label style="font-size:0.7rem;color:#888;display:block;">Title</label>
+                <input id="f-title" type="text" style="width:100%;background:#0e0e0e;color:#eee;border:1px solid #444;padding:6px;border-radius:3px;" />
+              </div>
+              <div>
+                <label style="font-size:0.7rem;color:#888;display:block;">In-Game Date</label>
+                <input id="f-game-date" type="text" placeholder="25th of Mirtul" style="width:100%;background:#0e0e0e;color:#eee;border:1px solid #444;padding:6px;border-radius:3px;" />
+              </div>
+              <div>
+                <label style="font-size:0.7rem;color:#888;display:block;">Play Date</label>
+                <input id="f-play-date" type="datetime-local" style="width:100%;background:#0e0e0e;color:#eee;border:1px solid #444;padding:6px;border-radius:3px;" />
+              </div>
+            </div>
+            <div id="status-row" style="display:flex;gap:12px;align-items:center;margin-top:8px;font-size:0.78rem;color:#888;flex-wrap:wrap;">
+              <span id="badge-published"></span>
+              <span id="badge-pdf"></span>
+              <span id="badge-updated" style="margin-left:auto;"></span>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow:hidden;padding:8px;">
+            <textarea id="md-editor"></textarea>
+          </div>
+
+          <div id="editor-buttons" style="padding:10px;border-top:1px solid #333;background:#202020;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button id="btn-save" type="button" style="background:#2d4a7a;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#128190; Save</button>
+            <button id="btn-pdf" type="button" style="background:#5a3a7a;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#128196; Create PDF</button>
+            <button id="btn-summary" type="button" style="background:#7a5a2d;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#129302; Generate Summary</button>
+            <button id="btn-publish" type="button" style="background:#2d7a2d;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#128226; Publish Summary</button>
+            <button id="btn-unpublish" type="button" style="background:#444;color:#ccc;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;display:none;">Unpublish</button>
+            <span style="flex:1;"></span>
+            <button id="btn-delete" type="button" style="background:#7a2222;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#128465; Delete</button>
+          </div>
+
+          <div id="status-line" style="padding:6px 12px;background:#0e0e0e;color:#888;font-size:0.78rem;min-height:24px;border-top:1px solid #222;"></div>
+        </div>
+      </section>
     </div>
   </div>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+  <style>
+    /* EasyMDE dark theme tweaks */
+    .EasyMDEContainer { height:100%; display:flex; flex-direction:column; }
+    .EasyMDEContainer .CodeMirror { background:#0e0e0e; color:#eee; border-color:#333; flex:1; min-height:200px; }
+    .EasyMDEContainer .CodeMirror-cursor { border-color:#e8b923; }
+    .editor-toolbar { background:#1a1a1a; border-color:#333; }
+    .editor-toolbar button { color:#bbb !important; }
+    .editor-toolbar button:hover, .editor-toolbar button.active { background:#333 !important; border-color:#444 !important; }
+    .editor-statusbar { color:#666; }
+    .editor-preview, .editor-preview-side { background:#0a0a0a; color:#ddd; border-color:#333; }
+    .editor-preview h1, .editor-preview h2, .editor-preview-side h1, .editor-preview-side h2 { color:#e8b923; border-bottom:1px solid #444; }
+    .session-row { padding:8px 10px; border-radius:4px; cursor:pointer; margin-bottom:2px; border:1px solid transparent; }
+    .session-row:hover { background:#2a2a2a; }
+    .session-row.active { background:#2d4a7a; border-color:#4a6a9a; }
+    .session-row strong { color:#e8b923; }
+    .session-row.draft strong::after { content:" [DRAFT]"; color:#c66; font-size:0.7rem; font-weight:normal; }
+    .session-row .meta { color:#888; font-size:0.75rem; margin-top:2px; }
+    @media (max-width:900px) {
+      #sessions-workspace { grid-template-columns:1fr !important; height:auto !important; }
+      #sessions-workspace aside { max-height:300px; }
+    }
+  </style>
+
   <script>
-  function toggleEdit(btn){var r=btn.closest('tr').nextElementSibling;r.style.display=r.style.display==='none'?'table-row':'none';}
+  (function() {
+    var STARTER_MD = "# Session Notes\\n\\n_Raw DM notes go here. Bullet points, ad-libs, anything you want the AI to read when generating the summary._\\n\\n# Session Summary\\n\\n_This is what players will see when you click Publish Summary. You can write it by hand or use Generate Summary to draft it from the notes above._\\n";
+
+    var state = {
+      list: [],
+      currentId: null,
+      dirty: false,
+      mde: null,
+    };
+
+    var $list = document.getElementById('session-list');
+    var $empty = document.getElementById('editor-empty');
+    var $active = document.getElementById('editor-active');
+    var $status = document.getElementById('status-line');
+
+    function setStatus(msg, isError) {
+      $status.textContent = msg || '';
+      $status.style.color = isError ? '#f88' : '#888';
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleString(); } catch(_) { return iso; }
+    }
+
+    function renderList() {
+      if (state.list.length === 0) {
+        $list.innerHTML = '<p style="color:#888;padding:12px;font-size:0.85rem;">No sessions yet. Click + New.</p>';
+        return;
+      }
+      $list.innerHTML = state.list.map(function(s) {
+        var cls = 'session-row' + (s.id === state.currentId ? ' active' : '') + (s.published ? '' : ' draft');
+        var safeTitle = String(s.title || 'Untitled').replace(/[<>&"']/g, function(c){return '&#' + c.charCodeAt(0) + ';';});
+        var meta = [];
+        if (s.game_date) meta.push('In-game: ' + String(s.game_date).replace(/[<>&"']/g, function(c){return '&#' + c.charCodeAt(0) + ';';}));
+        if (s.play_date) meta.push('Played: ' + new Date(s.play_date).toLocaleDateString());
+        return '<div class="' + cls + '" data-id="' + s.id + '">' +
+          '<strong>#' + s.session_number + ' &mdash; ' + safeTitle + '</strong>' +
+          (meta.length ? '<div class="meta">' + meta.join(' &middot; ') + '</div>' : '') +
+          '</div>';
+      }).join('');
+      Array.prototype.forEach.call($list.querySelectorAll('.session-row'), function(el) {
+        el.addEventListener('click', function() { loadSession(parseInt(el.getAttribute('data-id'), 10)); });
+      });
+    }
+
+    function refreshList(selectId) {
+      return fetch('/api/dm-admin/sessions').then(function(r) { return r.json(); }).then(function(d) {
+        state.list = d.sessions || [];
+        if (selectId != null) state.currentId = selectId;
+        renderList();
+      });
+    }
+
+    function ensureMDE() {
+      if (state.mde) return state.mde;
+      state.mde = new EasyMDE({
+        element: document.getElementById('md-editor'),
+        autofocus: false,
+        spellChecker: false,
+        status: ['lines', 'words'],
+        sideBySideFullscreen: false,
+        previewClass: ['editor-preview', 'editor-preview-side'],
+        renderingConfig: { singleLineBreaks: false },
+        previewRender: function(plainText) {
+          try {
+            var html = marked.parse(plainText || '');
+            return DOMPurify.sanitize(html);
+          } catch(e) { return '<pre>' + e.message + '</pre>'; }
+        },
+      });
+      state.mde.codemirror.on('change', function() { state.dirty = true; });
+      return state.mde;
+    }
+
+    function fillMeta(s) {
+      document.getElementById('f-session-number').value = s.session_number == null ? '' : s.session_number;
+      document.getElementById('f-title').value = s.title || '';
+      document.getElementById('f-game-date').value = s.game_date || '';
+      document.getElementById('f-play-date').value = s.play_date ? new Date(s.play_date).toISOString().slice(0,16) : '';
+      var pub = document.getElementById('badge-published');
+      if (s.published) {
+        pub.innerHTML = '<span style="background:#2d7a2d;color:#fff;padding:2px 8px;border-radius:3px;">PUBLISHED</span> <span style="color:#aaa;">' + fmtDate(s.published_at) + '</span>';
+        document.getElementById('btn-unpublish').style.display = '';
+      } else {
+        pub.innerHTML = '<span style="background:#7a2222;color:#fff;padding:2px 8px;border-radius:3px;">DRAFT</span>';
+        document.getElementById('btn-unpublish').style.display = 'none';
+      }
+      var pdf = document.getElementById('badge-pdf');
+      if (s.pdf_path && s.id) {
+        pdf.innerHTML = '<a href="/api/dm-admin/sessions/' + s.id + '/pdf" target="_blank" style="background:#5a3a7a;color:#fff;padding:2px 8px;border-radius:3px;text-decoration:none;">&#128196; Download PDF</a> <span style="color:#aaa;">' + fmtDate(s.pdf_generated_at) + '</span>';
+      } else {
+        pdf.innerHTML = '<span style="color:#666;">No PDF yet</span>';
+      }
+      document.getElementById('badge-updated').textContent = s.updated_at ? ('Updated ' + fmtDate(s.updated_at)) : '';
+    }
+
+    function showEditor() {
+      $empty.style.display = 'none';
+      $active.style.display = 'flex';
+      ensureMDE();
+    }
+
+    function loadSession(id) {
+      if (state.dirty && !confirm('You have unsaved changes. Discard and load another session?')) return;
+      setStatus('Loading...');
+      fetch('/api/dm-admin/sessions/' + id).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function(s) {
+        state.currentId = s.id;
+        showEditor();
+        fillMeta(s);
+        state.mde.value(s.markdown || '');
+        state.dirty = false;
+        renderList();
+        setStatus('Loaded session ' + s.session_number);
+      }).catch(function(e) { setStatus('Load failed: ' + e.message, true); });
+    }
+
+    function newSession() {
+      if (state.dirty && !confirm('Discard unsaved changes?')) return;
+      var nextNum = state.list.length ? (Math.max.apply(null, state.list.map(function(s){return s.session_number||0;})) + 1) : 0;
+      showEditor();
+      state.currentId = null;
+      fillMeta({ session_number: nextNum, title: '', game_date: '', play_date: null, published: false, pdf_path: '' });
+      state.mde.value(STARTER_MD);
+      state.dirty = true;
+      setStatus('New session (unsaved)');
+      renderList();
+    }
+
+    function collectMeta() {
+      return {
+        session_number: parseInt(document.getElementById('f-session-number').value, 10),
+        title: document.getElementById('f-title').value.trim(),
+        game_date: document.getElementById('f-game-date').value.trim(),
+        play_date: document.getElementById('f-play-date').value || null,
+        markdown: state.mde.value(),
+      };
+    }
+
+    function save() {
+      var meta = collectMeta();
+      if (!Number.isFinite(meta.session_number)) { alert('Session # is required'); return; }
+      if (!meta.title) { alert('Title is required'); return; }
+      setStatus('Saving...');
+      var url = state.currentId ? ('/api/dm-admin/sessions/' + state.currentId) : '/api/dm-admin/sessions';
+      var method = state.currentId ? 'PUT' : 'POST';
+      return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(meta) })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.d.error || 'Save failed');
+          state.dirty = false;
+          var newId = state.currentId || res.d.id;
+          setStatus('Saved.');
+          return refreshList(newId).then(function() { return loadSession(newId); });
+        })
+        .catch(function(e) { setStatus('Save failed: ' + e.message, true); });
+    }
+
+    function withSave(label, fn) {
+      var p = state.dirty ? save() : Promise.resolve();
+      return p.then(function() {
+        if (!state.currentId) { setStatus('Save first', true); return; }
+        setStatus(label + '...');
+        return fn(state.currentId);
+      });
+    }
+
+    function createPdf() {
+      withSave('Building PDF', function(id) {
+        return fetch('/api/dm-admin/sessions/' + id + '/pdf', { method: 'POST' })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+          .then(function(res) {
+            if (!res.ok) throw new Error(res.d.error || 'PDF failed');
+            setStatus('PDF ready.');
+            return refreshList(id).then(function() { return loadSession(id); });
+          })
+          .catch(function(e) { setStatus('PDF failed: ' + e.message, true); });
+      });
+    }
+
+    function generateSummary() {
+      if (!confirm('Generate a new summary from the # Session Notes section? This will overwrite the # Session Summary section.')) return;
+      withSave('Generating summary', function(id) {
+        return fetch('/api/dm-admin/sessions/' + id + '/generate-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+          .then(function(res) {
+            if (!res.ok) throw new Error(res.d.error || 'Generation failed');
+            state.mde.value(res.d.markdown || '');
+            state.dirty = false;
+            setStatus('Summary generated (' + (res.d.usage ? res.d.usage.total_tokens + ' tokens' : 'ok') + '). Review, then click Publish Summary.');
+          })
+          .catch(function(e) { setStatus('Generation failed: ' + e.message, true); });
+      });
+    }
+
+    function publishSummary() {
+      if (!confirm('Publish the # Session Summary to players?')) return;
+      withSave('Publishing', function(id) {
+        return fetch('/api/dm-admin/sessions/' + id + '/publish', { method: 'POST' })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+          .then(function(res) {
+            if (!res.ok) throw new Error(res.d.error || 'Publish failed');
+            setStatus('Published!');
+            return refreshList(id).then(function() { return loadSession(id); });
+          })
+          .catch(function(e) { setStatus('Publish failed: ' + e.message, true); });
+      });
+    }
+
+    function unpublish() {
+      if (!confirm('Unpublish? Players will no longer see this session.')) return;
+      fetch('/api/dm-admin/sessions/' + state.currentId + '/unpublish', { method: 'POST' })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.d.error || 'Unpublish failed');
+          setStatus('Unpublished.');
+          return refreshList(state.currentId).then(function() { return loadSession(state.currentId); });
+        })
+        .catch(function(e) { setStatus('Unpublish failed: ' + e.message, true); });
+    }
+
+    function del() {
+      if (!state.currentId) return;
+      var s = state.list.find(function(x){return x.id===state.currentId;});
+      if (!s) return;
+      if (!confirm('Delete session #' + s.session_number + ' "' + s.title + '"? This cannot be undone.')) return;
+      fetch('/api/dm-admin/sessions/' + state.currentId, { method: 'DELETE' })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.d.error || 'Delete failed');
+          state.currentId = null;
+          state.dirty = false;
+          $empty.style.display = 'flex';
+          $active.style.display = 'none';
+          setStatus('Deleted.');
+          return refreshList();
+        })
+        .catch(function(e) { setStatus('Delete failed: ' + e.message, true); });
+    }
+
+    document.getElementById('btn-new').addEventListener('click', newSession);
+    document.getElementById('btn-save').addEventListener('click', save);
+    document.getElementById('btn-pdf').addEventListener('click', createPdf);
+    document.getElementById('btn-summary').addEventListener('click', generateSummary);
+    document.getElementById('btn-publish').addEventListener('click', publishSummary);
+    document.getElementById('btn-unpublish').addEventListener('click', unpublish);
+    document.getElementById('btn-delete').addEventListener('click', del);
+    window.addEventListener('beforeunload', function(e) {
+      if (state.dirty) { e.preventDefault(); e.returnValue = 'You have unsaved changes.'; return e.returnValue; }
+    });
+
+    refreshList().then(function() {
+      // Auto-load most recent (top of list, since DESC).
+      if (state.list.length > 0) loadSession(state.list[0].id);
+    });
+  })();
   </script>`;
-  return pageShell("Sessions Admin — Halls of the Damned", "/sessions", body, session);
+  return pageShell("Sessions Workspace — Halls of the Damned", "/sessions", body, session);
 }
 
 // ── Artifacts Admin ───────────────────────────────────────────

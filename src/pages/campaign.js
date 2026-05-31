@@ -577,14 +577,23 @@ async function renderNpcDetailPage(npcId, session) {
 
 // ── Sessions Page (DB-backed) ─────────────────────────────────
 async function renderSessionsPage(session) {
+  // Admins see every session (drafts + published) so they can navigate to the
+  // editor. Everyone else only sees rows that have been explicitly published.
+  const isAdmin = session && session.role === "admin";
+  const sql = isAdmin
+    ? "SELECT * FROM hotd_sessions ORDER BY session_number DESC"
+    : "SELECT * FROM hotd_sessions WHERE published = TRUE ORDER BY session_number DESC";
   let sessions = [];
-  try { const r = await pgPool.query("SELECT * FROM hotd_sessions ORDER BY session_number DESC"); sessions = r.rows; } catch (_) {}
+  try { const r = await pgPool.query(sql); sessions = r.rows; } catch (_) {}
 
   const sessionList = sessions.length > 0 ? sessions.map(s => {
     const playDateStr = s.play_date ? new Date(s.play_date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "";
+    const draftBadge = (isAdmin && !s.published)
+      ? ` <span style="background:#7a2222;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:3px;vertical-align:middle;">DRAFT</span>`
+      : "";
     return `
     <li>
-      <strong>Session ${s.session_number} &mdash; ${esc(s.title)}</strong>
+      <strong>Session ${s.session_number} &mdash; ${esc(s.title)}</strong>${draftBadge}
       ${s.game_date ? `<div style="color:#e8b923;font-size:0.8rem;margin-top:2px;">&#128197; In-Game: ${esc(s.game_date)}</div>` : ""}
       ${playDateStr ? `<div style="color:#888;font-size:0.75rem;margin-top:2px;">&#128197; Played: ${esc(playDateStr)}</div>` : ""}
       ${renderRichTextBlock(s.summary, "Summary coming soon...", "color:#aaa;margin-top:8px;line-height:1.6;")}

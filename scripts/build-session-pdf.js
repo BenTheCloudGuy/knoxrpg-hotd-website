@@ -28,11 +28,13 @@ const REPORTS_DIR = path.join(ROOT, 'reports');
 const CSS_PATH = path.join(__dirname, 'session-pdf.css');
 
 function parseArgs(argv) {
-  const args = { session: null, out: null, statblocks: [], includeAllies: false, includeMonsters: false, size: null, keepMd: false, engine: 'weasyprint', notes: 4 };
+  const args = { session: null, out: null, inputFile: null, title: null, statblocks: [], includeAllies: false, includeMonsters: false, size: null, keepMd: false, engine: 'weasyprint', notes: 4 };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--session') args.session = argv[++i];
     else if (a === '--out') args.out = argv[++i];
+    else if (a === '--input-file') args.inputFile = argv[++i];
+    else if (a === '--title') args.title = argv[++i];
     else if (a === '--statblocks') args.statblocks = argv[++i].split(',').map(s => s.trim()).filter(Boolean);
     else if (a === '--include-allies') args.includeAllies = true;
     else if (a === '--include-monsters') args.includeMonsters = true;
@@ -45,7 +47,7 @@ function parseArgs(argv) {
     else if (a === '--help' || a === '-h') { printHelp(); process.exit(0); }
     else { console.error(`Unknown arg: ${a}`); printHelp(); process.exit(1); }
   }
-  if (!args.session) { printHelp(); process.exit(1); }
+  if (!args.session && !args.inputFile) { printHelp(); process.exit(1); }
   if (!['weasyprint', 'wkhtmltopdf'].includes(args.engine)) {
     console.error(`Unknown engine: ${args.engine}. Use weasyprint or wkhtmltopdf.`);
     process.exit(1);
@@ -59,10 +61,17 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage: node scripts/build-session-pdf.js <sessionNumber> [options]
+       node scripts/build-session-pdf.js --input-file PATH --out OUT [--title TITLE]
 
 Options:
-  --session N            Session number (also accepted as positional arg)
-  --out PATH             Output PDF path (default reports/sessionNN-dm-guide.pdf)
+  --session N            Session number (also accepted as positional arg). Reads
+                         src/hotd-campaign/sessions/sessionN.md.
+  --input-file PATH      Render an arbitrary markdown file (used by the DM admin
+                         API to drive PDFs from the DB editor content).
+  --title TITLE          Override the document title. Defaults to the first H1
+                         in the source markdown.
+  --out PATH             Output PDF path (default reports/sessionNN-dm-guide.pdf
+                         when --session is used, required for --input-file).
   --statblocks a,b,c     Comma list of statBlock filenames (without .md) to append
   --include-allies       Auto-include all ally-*.md files in data/statBlocks
   --include-monsters     Auto-include non-ally stat block files (monsters)
@@ -116,16 +125,27 @@ function listStatBlocks() {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const n = String(parseInt(args.session, 10));
-  if (!/^\d+$/.test(n)) { console.error(`Invalid session number: ${args.session}`); process.exit(1); }
 
-  const sessionFile = path.join(SESSIONS_DIR, `session${n}.md`);
-  if (!fs.existsSync(sessionFile)) { console.error(`Session file not found: ${sessionFile}`); process.exit(1); }
+  // Resolve the input markdown file. Two modes:
+  //   --session N         → src/hotd-campaign/sessions/sessionN.md, conventional naming for the output
+  //   --input-file PATH   → arbitrary file, --out is required, --title may override
+  let sessionFile, n;
+  if (args.inputFile) {
+    sessionFile = path.resolve(args.inputFile);
+    if (!fs.existsSync(sessionFile)) { console.error(`Input file not found: ${sessionFile}`); process.exit(1); }
+    if (!args.out) { console.error(`--input-file requires --out`); process.exit(1); }
+    n = args.session ? String(parseInt(args.session, 10)) : 'custom';
+  } else {
+    n = String(parseInt(args.session, 10));
+    if (!/^\d+$/.test(n)) { console.error(`Invalid session number: ${args.session}`); process.exit(1); }
+    sessionFile = path.join(SESSIONS_DIR, `session${n}.md`);
+    if (!fs.existsSync(sessionFile)) { console.error(`Session file not found: ${sessionFile}`); process.exit(1); }
+  }
 
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
 
   const sessionContent = resolveImagePaths(readMd(sessionFile));
-  const sessionTitle = getTitle(sessionContent);
+  const sessionTitle = args.title || getTitle(sessionContent);
   console.log(`Building PDF for: ${sessionTitle}`);
 
   // Resolve which stat blocks to append

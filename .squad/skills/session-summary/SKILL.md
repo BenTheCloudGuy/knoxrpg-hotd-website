@@ -137,6 +137,48 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 
 Same as post-session summary, except step 6 also requires confirming the `game_date` and `title` match what was actually played. If `play_date` is unknown, leave it NULL.
 
+## The Sessions Workspace UI (`/sessions/admin`)
+
+The DM also has a web UI at `/sessions/admin` (rendered by `src/pages/admin.js` `renderSessionsAdminPage`, JSON API in `src/routes/dm-admin-api.js`). It stores one markdown blob per session in `hotd_sessions.markdown`, split into H1 sections.
+
+### Required H1 sections
+
+Two H1 headings are load-bearing. Other H1s are allowed but the API ignores them.
+
+- `# Session Notes` — raw DM notes. Input to the AI when the DM clicks **Generate Summary**.
+- `# Session Summary` — player-facing recap. What the publish step copies into `hotd_sessions.summary` and what `Create PDF` strips out for the GM Guide.
+
+When creating a fresh session, the UI seeds the blob with both H1s and placeholder text.
+
+### Generate Summary contract
+
+`POST /api/dm-admin/sessions/:id/generate-summary` does the following:
+
+1. Reads the `# Session Notes` body. Returns 400 if empty.
+2. Pulls RAG context with `buildEmbeddingContext(openai, query, { limit: 10 })`. Query is built from session number + title + first ~1500 chars of notes.
+3. Loads the last 3 prior **published** sessions and includes their summaries inline for continuity.
+4. Calls the configured AI model (`hotd_config.ai_model`, default `gpt-5.4-mini`) with `temperature: 0.6, max_completion_tokens: 2048`.
+5. The system prompt enforces: voice rules (no em-dashes, no flowery prose, 3rd person past tense), "do not invent events not in the notes or prior summaries", "4 to 8 short paragraphs", "no heading — the section wrapper provides it".
+6. Replaces the `# Session Summary` body with the generated text (creates the section if missing).
+7. Saves the new markdown back to the DB, returns the full blob plus token usage.
+
+The DM is expected to review and edit before clicking **Publish Summary**. Generate Summary is a draft helper, not a publish step.
+
+### Publish contract
+
+`POST /api/dm-admin/sessions/:id/publish` extracts the `# Session Summary` body, writes it to `hotd_sessions.summary`, sets `published = TRUE`, sets `published_at = NOW()`. Until this is clicked, the public `/sessions` page hides the session from non-admins. The Bard never publishes silently — only on explicit DM request.
+
+### GM Guide PDF contract
+
+`POST /api/dm-admin/sessions/:id/pdf` writes the markdown to a tmpfile **with `# Session Summary` stripped out**, then runs `scripts/build-session-pdf.js --input-file TMP --out reports/sessionNN-gm-guide.pdf --title "Session N: Title" --session N`. The summary is excluded because the GM Guide is for the DM at the table, not for players. Records `pdf_path` and `pdf_generated_at` on the row.
+
+### When the Bard should use the UI vs. the legacy flow
+
+- **Prep files** (`src/hotd-campaign/sessions/sessionNN.md`) remain the source of truth for DM prep that lives in git. The UI is for sessions where the DM wants the editor + AI assist instead.
+- If the user says "write the summary in the Sessions Workspace" or "use the admin portal", call the JSON API endpoints above and let the website own the persistence.
+- If the user says "update the prep file" or names a `sessionNN.md` path, use the legacy file-based workflow.
+- The voice rules and reference order above apply equally to both paths. The AI system prompt baked into the `/generate-summary` endpoint is a guard rail, not a substitute for hand-checking against `npcs.json` and the prior session.
+
 ## Rules
 
 - Never invent events. If the user's notes don't cover a beat, ask.

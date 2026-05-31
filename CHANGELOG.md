@@ -4,6 +4,30 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.6] - 2026-05-31
+
+### Added
+- **Sessions Workspace** — `/sessions/admin` rewritten as a two-pane editor (30% session list, 70% markdown editor). Drives EasyMDE 2.18.0 with marked + DOMPurify preview. Buttons: **Save**, **Create PDF**, **Generate Summary**, **Publish Summary**, **Unpublish**, **Delete**. List is newest-first. Auto-loads the most recent session on open. Drafts get a `[DRAFT]` badge inline. Beforeunload guard on unsaved changes.
+- **Publish / Draft gating** — new `hotd_sessions` columns: `markdown TEXT`, `published BOOLEAN`, `published_at TIMESTAMPTZ`, `pdf_path TEXT`, `pdf_generated_at TIMESTAMPTZ`, `updated_at TIMESTAMPTZ`. Public `/sessions` page now filters to `published = TRUE` for non-admin viewers; admins see drafts with a red `[DRAFT]` badge. One-time seed: every existing row with a non-empty `summary` is backfilled into `markdown` and marked `published = TRUE` so legacy content is preserved exactly as players have always seen it.
+- **JSON API endpoints** for the Sessions Workspace (`src/routes/dm-admin-api.js`, all admin-gated):
+  - `GET /api/dm-admin/sessions` — list (without the heavy `markdown` blob).
+  - `GET /api/dm-admin/sessions/:id` — single session including `markdown`.
+  - `POST /api/dm-admin/sessions` / `PUT /api/dm-admin/sessions/:id` — create / save (whitelisted to `session_number`, `title`, `markdown`, `game_date`, `play_date`; `published`, `summary`, `pdf_path` mutated only by their dedicated endpoints).
+  - `POST /api/dm-admin/sessions/:id/pdf` — strips `# Session Summary` from the markdown, writes a tmpfile, runs `scripts/build-session-pdf.js --input-file TMP --out reports/sessionNN-gm-guide.pdf`, records `pdf_path` / `pdf_generated_at`.
+  - `GET /api/dm-admin/sessions/:id/pdf` — streams the generated PDF (path-traversal guarded; must resolve under `reports/`).
+  - `POST /api/dm-admin/sessions/:id/generate-summary` — reads `# Session Notes`, pulls RAG context via `buildEmbeddingContext()` (limit 10) plus the last 3 prior published summaries, calls the configured AI model (`hotd_config.ai_model`) with a system prompt that bakes in the writing-style rules (no em-dashes, no flowery prose, 4-8 short paragraphs, third-person past tense, no invented events), overwrites the `# Session Summary` H1 body.
+  - `POST /api/dm-admin/sessions/:id/publish` — extracts the `# Session Summary` body, writes it to the `summary` column, sets `published = TRUE`, sets `published_at = NOW()`.
+  - `POST /api/dm-admin/sessions/:id/unpublish` — flips `published = FALSE` so the row drops back into draft state.
+- **PDF script flags** (`scripts/build-session-pdf.js`) — new `--input-file PATH` and `--title TITLE` so the API can drive the existing WeasyPrint pipeline from a DB markdown blob without needing a file under `src/hotd-campaign/sessions/`. Backward-compatible: `--session N` still works.
+
+### Changed
+- **`session-summary` skill** (`.squad/skills/session-summary/SKILL.md`) — added a "Sessions Workspace UI" section documenting the H1 section contract (`# Session Notes`, `# Session Summary`), the Generate Summary AI contract, the Publish contract, and the GM Guide PDF contract. Clarifies when Bard should use the UI vs. the legacy file-based prep flow.
+- **Public `/sessions` page** (`src/pages/campaign.js`) — query is now role-aware: admins see all rows with a `[DRAFT]` badge on unpublished entries; everyone else only sees `published = TRUE`.
+
+### Notes
+- The GM Guide PDF deliberately excludes the `# Session Summary` section: it is for the DM at the table, not for players.
+- The legacy `/admin/sessions/{add,update,delete}` POST routes in `src/routes/admin.js` are retained for any external integrations but the new UI uses the JSON API exclusively.
+
 ## [3.5.5] - 2026-05-30
 
 ### Added

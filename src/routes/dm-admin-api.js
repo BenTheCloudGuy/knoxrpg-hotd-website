@@ -10,7 +10,80 @@ const azure = require("../lib/azure");
 const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
 const fs = require("fs");
+const os = require("os");
+const childProc = require("child_process");
 const notebookPath = require("path");
+
+const REPO_ROOT = notebookPath.join(__dirname, "..", "..");
+const PDF_SCRIPT = notebookPath.join(REPO_ROOT, "scripts", "build-session-pdf.js");
+const PDF_REPORTS_DIR = notebookPath.join(REPO_ROOT, "reports");
+
+// ── Markdown section helpers (H1-delimited) ─────────────────
+// Sessions are stored as one markdown blob; "Publish", "Generate Summary",
+// and "Create PDF" all operate on H1-delimited sections like
+// "# Session Summary" and "# Session Notes".
+
+function splitMarkdownByH1(md) {
+  const text = String(md || "");
+  const lines = text.split(/\r?\n/);
+  const sections = [];
+  let preamble = [];
+  let current = null;
+  for (const line of lines) {
+    const m = /^#\s+(.+?)\s*$/.exec(line);
+    if (m) {
+      if (current) sections.push(current);
+      current = { heading: m[1].trim(), body: [] };
+    } else if (current) {
+      current.body.push(line);
+    } else {
+      preamble.push(line);
+    }
+  }
+  if (current) sections.push(current);
+  return {
+    preamble: preamble.join("\n").trimEnd(),
+    sections: sections.map(s => ({ heading: s.heading, body: s.body.join("\n").replace(/^\s+|\s+$/g, "") })),
+  };
+}
+
+function serializeMarkdown(parts) {
+  const chunks = [];
+  if (parts.preamble) chunks.push(parts.preamble);
+  for (const s of parts.sections) {
+    chunks.push(`# ${s.heading}\n\n${s.body}`.replace(/\s+$/, ""));
+  }
+  return chunks.join("\n\n") + "\n";
+}
+
+function getSectionBody(md, headingName) {
+  const { sections } = splitMarkdownByH1(md);
+  const target = headingName.trim().toLowerCase();
+  const found = sections.find(s => s.heading.toLowerCase() === target);
+  return found ? found.body : "";
+}
+
+function upsertSection(md, headingName, newBody) {
+  const parts = splitMarkdownByH1(md);
+  const target = headingName.trim().toLowerCase();
+  const idx = parts.sections.findIndex(s => s.heading.toLowerCase() === target);
+  if (idx >= 0) parts.sections[idx].body = newBody;
+  else parts.sections.push({ heading: headingName, body: newBody });
+  return serializeMarkdown(parts);
+}
+
+function stripSection(md, headingName) {
+  const parts = splitMarkdownByH1(md);
+  const target = headingName.trim().toLowerCase();
+  parts.sections = parts.sections.filter(s => s.heading.toLowerCase() !== target);
+  return serializeMarkdown(parts);
+}
+
+function safeSessionSlug(n) {
+  const num = parseInt(n, 10);
+  if (!Number.isInteger(num) || num < 0 || num > 9999) return null;
+  return String(num);
+}
 
 function requireAdmin(session, res) {
   if (!session || session.role !== "admin") {
@@ -154,10 +227,27 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
   }
 
   // ── Sessions: list ─────────────────────────────────────────
+  // Excludes the heavy `markdown` blob; that is fetched per-session via the
+  // detail endpoint below to keep the left-pane list snappy.
   if (decoded === "/api/dm-admin/sessions" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const r = await pgPool.query("SELECT id, session_number, title, summary, game_date, play_date FROM hotd_sessions ORDER BY session_number DESC");
+    const r = await pgPool.query(
+      "SELECT id, session_number, title, summary, game_date, play_date, published, published_at, pdf_path, pdf_generated_at, updated_at FROM hotd_sessions ORDER BY session_number DESC"
+    );
     sendJSON(res, { sessions: r.rows });
+    return true;
+  }
+
+  // ── Sessions: get one (full markdown) ──────────────────────
+  const sessGetOne = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)$/);
+  if (sessGetOne && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const r = await pgPool.query(
+      "SELECT id, session_number, title, summary, markdown, game_date, play_date, published, published_at, pdf_path, pdf_generated_at, updated_at, created_at FROM hotd_sessions WHERE id = $1",
+      [sessGetOne[1]]
+    );
+    if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
+    sendJSON(res, r.rows[0]);
     return true;
   }
 
@@ -167,24 +257,40 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     try {
       const b = JSON.parse(await readBody(req));
       const r = await pgPool.query(
-        "INSERT INTO hotd_sessions (session_number,title,summary,game_date,play_date) VALUES ($1,$2,$3,$4,$5) RETURNING id",
-        [parseInt(b.session_number), b.title, b.summary||"", b.game_date||"", b.play_date||null]
+        "INSERT INTO hotd_sessions (session_number,title,summary,markdown,game_date,play_date) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
+        [parseInt(b.session_number), b.title, b.summary||"", b.markdown||"", b.game_date||"", b.play_date||null]
       );
       sendJSON(res, { id: r.rows[0].id });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 
-  // ── Sessions: update ──────────────────────────────────────
+  // ── Sessions: update (SAVE button) ─────────────────────────
   const sessUpdate = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)$/);
   if (sessUpdate && req.method === "PUT") {
     if (!requireAdmin(session, res)) return true;
     try {
       const b = JSON.parse(await readBody(req));
-      await pgPool.query(
-        "UPDATE hotd_sessions SET session_number=$1,title=$2,summary=$3,game_date=$4,play_date=$5 WHERE id=$6",
-        [parseInt(b.session_number), b.title, b.summary||"", b.game_date||"", b.play_date||null, sessUpdate[1]]
-      );
+      // Whitelist of mutable columns. `published`, `summary`, `pdf_path` are
+      // intentionally NOT in this list — they are mutated only by the
+      // /publish and /pdf endpoints respectively.
+      const fields = ["session_number", "title", "markdown", "game_date", "play_date"];
+      const sets = [];
+      const vals = [];
+      let idx = 1;
+      for (const f of fields) {
+        if (b[f] !== undefined) {
+          let v = b[f];
+          if (f === "session_number" && v !== null && v !== "") v = parseInt(v, 10);
+          if (f === "play_date" && v === "") v = null;
+          sets.push(`${f} = $${idx++}`);
+          vals.push(v);
+        }
+      }
+      if (sets.length === 0) { sendJSON(res, { error: "No fields to update" }, 400); return true; }
+      sets.push(`updated_at = NOW()`);
+      vals.push(sessUpdate[1]);
+      await pgPool.query(`UPDATE hotd_sessions SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
       sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
@@ -195,6 +301,260 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     if (!requireAdmin(session, res)) return true;
     try {
       await pgPool.query("DELETE FROM hotd_sessions WHERE id = $1", [sessUpdate[1]]);
+      sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Sessions: generate GM Guide PDF ────────────────────────
+  // POST /api/dm-admin/sessions/:id/pdf
+  // Renders the session markdown (with `# Session Summary` stripped) to a
+  // PDF using scripts/build-session-pdf.js, then records the path on the row.
+  const sessPdfGen = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)\/pdf$/);
+  if (sessPdfGen && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const r = await pgPool.query(
+        "SELECT id, session_number, title, markdown FROM hotd_sessions WHERE id = $1",
+        [sessPdfGen[1]]
+      );
+      if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
+      const row = r.rows[0];
+      const sessSlug = safeSessionSlug(row.session_number);
+      if (sessSlug === null) { sendJSON(res, { error: "Invalid session_number" }, 400); return true; }
+      if (!row.markdown || !row.markdown.trim()) { sendJSON(res, { error: "Session markdown is empty — nothing to render" }, 400); return true; }
+
+      // GM Guide = the whole markdown minus the player-facing summary section.
+      const gmGuideMd = stripSection(row.markdown, "Session Summary");
+      const tmpFile = notebookPath.join(os.tmpdir(), `hotd-session-${row.id}-${Date.now()}.md`);
+      fs.writeFileSync(tmpFile, gmGuideMd, "utf8");
+
+      fs.mkdirSync(PDF_REPORTS_DIR, { recursive: true });
+      const outRelative = `session${sessSlug}-gm-guide.pdf`;
+      const outAbsolute = notebookPath.join(PDF_REPORTS_DIR, outRelative);
+      const docTitle = `Session ${sessSlug}: ${row.title || "Untitled"}`;
+
+      await new Promise((resolve, reject) => {
+        const child = childProc.spawn(
+          process.execPath,
+          [PDF_SCRIPT, "--input-file", tmpFile, "--out", outAbsolute, "--title", docTitle, "--session", sessSlug],
+          { cwd: REPO_ROOT, stdio: ["ignore", "pipe", "pipe"] }
+        );
+        let stderr = "";
+        child.stderr.on("data", (d) => { stderr += d.toString(); });
+        child.on("error", reject);
+        child.on("exit", (code) => {
+          try { fs.unlinkSync(tmpFile); } catch (_) {}
+          if (code === 0) resolve();
+          else reject(new Error(`PDF script exited ${code}: ${stderr.slice(0, 500)}`));
+        });
+      });
+
+      const pdfRelativeForDb = `reports/${outRelative}`;
+      await pgPool.query(
+        "UPDATE hotd_sessions SET pdf_path = $1, pdf_generated_at = NOW(), updated_at = NOW() WHERE id = $2",
+        [pdfRelativeForDb, row.id]
+      );
+      sendJSON(res, {
+        ok: true,
+        pdf_path: pdfRelativeForDb,
+        download_url: `/api/dm-admin/sessions/${row.id}/pdf`,
+      });
+    } catch (e) {
+      console.error("Session PDF generation error:", e);
+      sendJSON(res, { error: e.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Sessions: download generated PDF ───────────────────────
+  // GET /api/dm-admin/sessions/:id/pdf  (admin only, streams the file)
+  if (sessPdfGen && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const r = await pgPool.query(
+        "SELECT session_number, title, pdf_path FROM hotd_sessions WHERE id = $1",
+        [sessPdfGen[1]]
+      );
+      if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
+      const row = r.rows[0];
+      if (!row.pdf_path) { sendJSON(res, { error: "No PDF generated yet for this session" }, 404); return true; }
+      // Guard against path traversal: pdf_path must live under reports/.
+      const resolved = notebookPath.resolve(REPO_ROOT, row.pdf_path);
+      if (!resolved.startsWith(PDF_REPORTS_DIR + notebookPath.sep) && resolved !== PDF_REPORTS_DIR) {
+        sendJSON(res, { error: "Invalid PDF path" }, 400);
+        return true;
+      }
+      if (!fs.existsSync(resolved)) { sendJSON(res, { error: "PDF file missing on disk" }, 404); return true; }
+      const stat = fs.statSync(resolved);
+      const downloadName = `session${row.session_number}-gm-guide.pdf`;
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Length": stat.size,
+        "Content-Disposition": `attachment; filename="${downloadName}"`,
+        "Cache-Control": "no-store",
+      });
+      fs.createReadStream(resolved).pipe(res);
+    } catch (e) {
+      console.error("Session PDF download error:", e);
+      sendJSON(res, { error: e.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Sessions: AI-generate the Session Summary ──────────────
+  // POST /api/dm-admin/sessions/:id/generate-summary
+  // Reads `# Session Notes`, pulls RAG context from prior sessions/lore, and
+  // writes the result into `# Session Summary` (overwriting whatever was
+  // there). The full markdown is returned so the editor can refresh.
+  const sessGenSummary = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)\/generate-summary$/);
+  if (sessGenSummary && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const r = await pgPool.query(
+        "SELECT id, session_number, title, markdown, game_date FROM hotd_sessions WHERE id = $1",
+        [sessGenSummary[1]]
+      );
+      if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
+      const row = r.rows[0];
+
+      const notes = getSectionBody(row.markdown, "Session Notes");
+      if (!notes || !notes.trim()) {
+        sendJSON(res, { error: 'No `# Session Notes` section found. Add a "# Session Notes" H1 with your raw notes before generating a summary.' }, 400);
+        return true;
+      }
+
+      // Optional extra instructions from the request body (for re-runs with
+      // refinement prompts like "make this shorter" or "emphasize the betrayal").
+      let promptOverride = "";
+      try {
+        const raw = await readBody(req);
+        if (raw) {
+          const b = JSON.parse(raw);
+          if (typeof b.prompt === "string") promptOverride = b.prompt.slice(0, 2000);
+        }
+      } catch (_) {}
+
+      // RAG context: prior session summaries + relevant lore.
+      const ragQuery = `Session ${row.session_number} ${row.title || ""} ${notes.slice(0, 1500)}`;
+      let ragContext = "";
+      try {
+        ragContext = await buildEmbeddingContext(azure.openaiClient, ragQuery, {
+          includeDmOnly: false, limit: 10, minScore: 0.25,
+        });
+      } catch (e) {
+        console.warn("Session summary RAG lookup failed (continuing without):", e.message);
+      }
+
+      const prevR = await pgPool.query(
+        "SELECT session_number, title, summary FROM hotd_sessions WHERE session_number < $1 AND published = TRUE ORDER BY session_number DESC LIMIT 3",
+        [row.session_number]
+      );
+      const priorBlock = prevR.rows.length
+        ? "Previous published summaries (most recent first):\n" + prevR.rows.map(p => `- Session ${p.session_number}: ${p.title}\n${(p.summary || "").slice(0, 800)}`).join("\n\n")
+        : "(No prior published summaries.)";
+
+      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
+      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
+
+      const systemPrompt = `You are the campaign chronicler for "Halls of the Damned", a D&D 5e game.
+
+Your job is to convert the Dungeon Master's raw post-session notes into a polished narrative summary the players will read on the campaign website.
+
+Voice rules (strict):
+- Match the DM's grounded, direct voice. Plain prose. No flowery language.
+- Do NOT use em-dashes. Use commas, periods, or semicolons instead.
+- Past tense, third-person. Refer to the party by their character names where known.
+- Do not invent events, NPCs, locations, or outcomes that are not in the notes or prior published summaries.
+- If something is ambiguous in the notes, write around it rather than making it up.
+- 4 to 8 short paragraphs is the typical length. Keep it tight.
+- Do not include a heading; the website wraps the text under "Session Summary".
+- Do not include meta commentary like "In this session..." — just tell the story.
+
+Campaign context follows. Use it for consistency; do not contradict it.
+
+${priorBlock}
+
+${ragContext}`.trim();
+
+      const userPrompt = `Session ${row.session_number}${row.game_date ? ` (in-game: ${row.game_date})` : ""}: ${row.title || "Untitled"}
+
+Raw DM notes:
+${notes}
+
+${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""}`.trim();
+
+      const completion = await azure.openaiClient.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        max_completion_tokens: 2048,
+        temperature: 0.6,
+      });
+
+      const generated = (completion.choices[0]?.message?.content || "").trim();
+      if (!generated) { sendJSON(res, { error: "AI returned an empty summary" }, 502); return true; }
+
+      const newMarkdown = upsertSection(row.markdown, "Session Summary", generated);
+      await pgPool.query(
+        "UPDATE hotd_sessions SET markdown = $1, updated_at = NOW() WHERE id = $2",
+        [newMarkdown, row.id]
+      );
+      sendJSON(res, {
+        ok: true,
+        markdown: newMarkdown,
+        generated_summary: generated,
+        usage: completion.usage,
+        rag_chunks: ragContext ? ragContext.split("---").length : 0,
+      });
+    } catch (e) {
+      console.error("Session summary generation error:", e);
+      sendJSON(res, { error: e.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Sessions: publish (copies `# Session Summary` to summary col) ──
+  // POST /api/dm-admin/sessions/:id/publish
+  const sessPublish = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)\/publish$/);
+  if (sessPublish && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const r = await pgPool.query(
+        "SELECT id, markdown FROM hotd_sessions WHERE id = $1",
+        [sessPublish[1]]
+      );
+      if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
+      const summaryBody = getSectionBody(r.rows[0].markdown, "Session Summary").trim();
+      if (!summaryBody) {
+        sendJSON(res, { error: 'Nothing to publish. Add a "# Session Summary" section with content first.' }, 400);
+        return true;
+      }
+      await pgPool.query(
+        "UPDATE hotd_sessions SET summary = $1, published = TRUE, published_at = NOW(), updated_at = NOW() WHERE id = $2",
+        [summaryBody, r.rows[0].id]
+      );
+      sendJSON(res, { ok: true, summary: summaryBody });
+    } catch (e) {
+      console.error("Session publish error:", e);
+      sendJSON(res, { error: e.message }, 500);
+    }
+    return true;
+  }
+
+  // ── Sessions: unpublish (revert to draft) ──────────────────
+  // POST /api/dm-admin/sessions/:id/unpublish
+  const sessUnpublish = decoded.match(/^\/api\/dm-admin\/sessions\/(\d+)\/unpublish$/);
+  if (sessUnpublish && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      await pgPool.query(
+        "UPDATE hotd_sessions SET published = FALSE, updated_at = NOW() WHERE id = $1",
+        [sessUnpublish[1]]
+      );
       sendJSON(res, { ok: true });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
