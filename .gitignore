@@ -19,6 +19,12 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Generated reports (embed pipeline output, session PDFs, intermediate markdown)
+reports/embed-report-*.json
+reports/session*-dm-guide.pdf
+reports/session*-combined.md
+reports/session*-combined.html
+
 # Helm release overrides (may contain passwords)
 helm/**/values-local.yaml
 helm/**/secrets.yaml

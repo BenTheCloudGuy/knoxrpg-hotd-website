@@ -5,12 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js --port 3001"
+    "dev": "node server.js --port 3001",
+    "mcp": "node mcp/server.mjs",
+    "mcp:http": "node mcp/server.mjs --transport http"
   },
   "dependencies": {
     "@azure/identity": "^4.6.0",
     "@azure/keyvault-secrets": "^4.10.0",
     "@azure/storage-blob": "^12.26.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "applicationinsights": "^3.4.0",
     "bcryptjs": "^2.4.3",
     "openai": "^6.34.0",

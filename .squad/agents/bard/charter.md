@@ -24,7 +24,7 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - Write post-session summaries for the `hotd_sessions.summary` column (player-safe recap)
 - Maintain `session_number`, `title`, `game_date`, and `play_date` on each session row
 - Track session-to-session continuity: who appeared, what changed, what's pending
-- Cross-reference NPCs by `npcid` and link to `https://hotd.knoxrpg.com/npcs/{id}` in markdown
+- Cross-reference NPCs by `npcid` in DM notes (canon identifier). For website URLs, link to `https://hotd.knoxrpg.com/npcs/{id}` where `{id}` is the **`hotd_npcs.id`** column (DB primary key), NOT `npcid`. See [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) for the lookup query.
 - Trigger embedding re-index via `scripts/embed-pipeline.js --source session` after summary updates
 - PDF builds for individual sessions via `scripts/build-session27-pdf.js` (template)
 
@@ -83,8 +83,8 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 
 ### Database session row
 - `session_number` — required, unique, integer
-- `title` — short, evocative, no em-dashes (e.g. "The Battle of Tser Hill", "The risk is real")
-- `summary` — player-safe recap, 2–5 paragraphs, no DM secrets, no spoilers for upcoming plot
+- `title` — short, evocative, no em-dashes (e.g. "The Battle of Tser Hill", "The Gathering of Allies")
+- `summary` — player-safe recap, 4 to 5 dense paragraphs (~300-550 words), 3rd person past tense, no DM secrets, no spoilers for upcoming plot. **Voice and structure rules are locked in [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) under "Locked voice rules" — follow them on every summary.**
 - `game_date` — in-world date (string)
 - `play_date` — real-world session timestamp
 - After updating `summary`, run `node scripts/embed-pipeline.js --source session` so RAG search reflects the change

@@ -1,9 +1,0 @@
-{
-  "mode": "incremental",
-  "source_filter": null,
-  "started_at": "2026-04-20T02:07:58.376Z",
-  "stages": {},
-  "completed_at": "2026-04-20T02:07:58.387Z",
-  "success": false,
-  "error": "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string"
-}

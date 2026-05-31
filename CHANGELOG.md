@@ -4,6 +4,29 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.5] - 2026-05-30
+
+### Added
+- **Custom MCP server** (`src/mcp/`) exposing 16 tools to MCP-aware AI agents (Claude Desktop, VS Code Copilot, future cluster agents). Built on `@modelcontextprotocol/sdk` ^1.29 with both `stdio` (default) and `http`/`sse` transports. Wraps the website's existing AI function tools (`lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`, `lookup_magic_item`, `lookup_artifact`, `get_player_character`, `get_handout`, `get_calendar`, `search_dnd_reference`, `search_campaign_lore`) and adds four custom tools: `search_embeddings` (raw pgvector hybrid), `rag_status` (coverage + freshness report), `trigger_reindex` (spawn `scripts/embed-pipeline.js` for any source, 5min timeout), `story_forge_generate` (in-process port of the DM-admin Story Forge endpoint, 9 templates).
+- **MCP entry guard** — `src/mcp/server.mjs` redirects all `console.log` and stray non-JSON `process.stdout.write` to stderr in stdio mode so init-time logs from `src/db/pool.js` and `src/lib/azure.js` cannot corrupt the JSON-RPC frame stream.
+- **Bearer auth** (`MCP_AUTH_TOKEN`) for the HTTP transport (`src/mcp/auth.mjs`). If unset, HTTP is open and must be bound to 127.0.0.1.
+- **MCP scripts** in `src/package.json`: `npm run mcp` (stdio) and `npm run mcp:http` (HTTP/SSE on 127.0.0.1:7456).
+- **MCP README** (`src/mcp/README.md`) — tool reference, env requirements, VS Code `.vscode/mcp.json` example, Claude Desktop config example, remote HTTP curl example. Helm deployment for the HTTP transport is noted as deferred.
+- **Session PDF skill & script** — `.squad/skills/session-pdf/SKILL.md` plus `scripts/build-session-pdf.js` and `scripts/session-pdf.css`. Generalizes the hardcoded `scripts/build-session27-pdf.js`. Defaults to the WeasyPrint engine for proper CSS3 paged-media (no mid-bullet page splits, headings stay with content, tables never break mid-row), with `wkhtmltopdf` as a fallback via `--engine wkhtmltopdf`. Options: `--statblocks`, `--include-allies`, `--include-monsters`, `--size`, `--notes N` (default 4 trailing blank pages with a `# Notes` heading for Kindle Scribe handwriting), `--no-notes`. Output format matches the established session27 PDF (sans-serif, A4, 15mm margins, dark-red blockquote rule).
+- **Session 29 prep file** (`src/hotd-campaign/sessions/session29.md`) — full NPC roster (allies, Vallaki council, off-screen enemies), Krezk and the Abbot history (Markovia, fallen deva, Vasilka, recent Tser Raven / Tser Hill assault), Allied Werewolves pack roster, Kiril Stoyanovich and the renegade Blood Hunters, and a Strategic Briefing covering Castle Ravenloft defenses, allies of Strahd, the Amber Temple, the Sun Sword reforge requirements, and the likely party split.
+
+### Changed
+- **Voice rules locked into the session-summary skill** — `.squad/skills/session-summary/SKILL.md` gained 14 non-negotiable voice rules (no em-dashes, no "not X but Y" constructions, no flowery AI-fantasy prose, concrete nouns and verbs, etc.) with a "Would a real person say this out loud?" test. `.squad/agents/bard/charter.md` now points to the skill as the canonical voice authority.
+- **Vallaki canon update** — `src/hotd-campaign/data/npcs.json`: Mordenkainen (id 93), Rudolph Van Richten (id 5), and Ezmerelda d'Avenir (id 6) all relocated to Vallaki / Blue Water Inn after the Battle of Tser Hill. Van Richten dropped the Rictavio disguise. DB synced via `scripts/sync-npcs.js` (81 upserted), RAG re-embedded via `scripts/embed-pipeline.js --source npc` (3 new vectors, 195 NPC chunks total).
+- **NPC URL documentation patched** — `.squad/skills/session-summary/SKILL.md` and `.squad/agents/bard/charter.md` now correctly state that `https://hotd.knoxrpg.com/npcs/{id}` resolves against `hotd_npcs.id` (DB primary key), **not** the `npcid` field in `npcs.json`. The two differ (e.g. Mordenkainen is `npcid=93` but `id=669`). Added the canonical lookup SQL and the MCP `search_campaign_lore` alternative; clarified that `npcid` is still the correct identifier for in-DM-notes citations.
+- **Session 28 title** (`src/hotd-campaign/sessions/session28.md`) — added missing `# Session 28 - Battle of Tser Hill #` H1 heading for parity with other session files.
+
+### Notes
+- `query_database` and `describe_table` are deliberately NOT exposed via MCP — only typed lookups are.
+- All MCP tool calls run in DM mode (`isDM = true`); treat the MCP surface as privileged.
+- `scripts/build-session27-pdf.js` is retained for historical reproducibility; new sessions should use `scripts/build-session-pdf.js`.
+- `reports/embed-report-*.json`, `reports/session*-dm-guide.pdf`, and `reports/session*-combined.md|html` are now `.gitignore`d as build artifacts. Three previously-tracked `embed-report-*.json` files were untracked in this commit.
+
 ## [3.5.4] - 2026-05-30
 
 ### Changed
