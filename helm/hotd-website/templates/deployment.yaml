@@ -74,15 +74,6 @@ spec:
                   name: {{ .Values.openai.existingSecret | default (printf "%s-app-secrets" (include "hotd-website.fullname" .)) }}
                   key: {{ .Values.openai.existingSecretKey | default "openai-api-key" }}
             {{- end }}
-            {{- if or .Values.appInsights.connectionString .Values.appInsights.existingSecret }}
-            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.appInsights.existingSecret | default (printf "%s-app-secrets" (include "hotd-website.fullname" .)) }}
-                  key: {{ .Values.appInsights.existingSecretKey | default "appinsights-connection-string" }}
-            {{- end }}
-            - name: APPINSIGHTS_KV_SECRET_NAME
-              value: {{ .Values.appInsights.kvSecretName | quote }}
             - name: HOTD_REPO_ROOT
               value: "/app"
             - name: HOTD_PDF_SCRIPT

@@ -4,6 +4,21 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1] - 2026-05-31
+
+### Removed
+- **Azure Application Insights.** The app is deployed on self-hosted MicroK8s, not Azure, so shipping telemetry to App Insights has no destination and adds a hard dependency on a connection string that will never exist in this environment.
+  - Dropped `applicationinsights@3.14.0` from `src/package.json` (and `src/package-lock.json` via `npm uninstall`).
+  - Removed early App Insights bootstrap from `src/server.js` (the block that called `appInsights.setup().start()` if `APPLICATIONINSIGHTS_CONNECTION_STRING` was set).
+  - Removed late App Insights Key Vault load from `src/lib/azure.js` (the block that pulled `appinsights-connection-string` and lazily started the SDK after OpenAI init).
+  - Rewrote `src/lib/telemetry.js` as a no-op shim. The public API (`trackEvent`, `trackMetric`, `trackLogin`, `trackSignup`, `trackLogout`, `trackAiChat`, `trackDbQuery`) is preserved so the seven call sites in `src/routes/auth.js` and `src/lib/ai-tools.js` keep compiling without edits. Set `HOTD_TELEMETRY_LOG=1` to mirror events to stdout for local debugging.
+  - Removed the `appInsights` block from `helm/hotd-website/values.yaml`.
+  - Removed the `APPLICATIONINSIGHTS_CONNECTION_STRING` and `APPINSIGHTS_KV_SECRET_NAME` env vars from `helm/hotd-website/templates/deployment.yaml`.
+  - Simplified `helm/hotd-website/templates/secret-app.yaml` to render only the OpenAI key (when inline).
+
+### Notes
+- Logging is now console-only: `console.log/warn/error` to pod stdout, captured by `kubectl logs`. No other telemetry sink is wired in. If structured event aggregation becomes useful later, the natural fits for this stack are Loki (logs) or the cluster-local Prometheus, both of which can be added without changing the application code paths.
+
 ## [3.6.0] - 2026-05-31
 
 ### Added

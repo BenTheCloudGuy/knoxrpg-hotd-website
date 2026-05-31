@@ -1,66 +1,56 @@
 // ══════════════════════════════════════════════════════════════
-// ── Telemetry — App Insights custom event tracking ────────────
-// Provides trackEvent/trackMetric wrappers. No-ops gracefully
-// when App Insights is not configured.
+// ── Telemetry shim ────────────────────────────────────────────
+// This codebase no longer ships to Azure Application Insights. The
+// helpers below preserve the public API so existing call sites in
+// auth.js and ai-tools.js do not need to change, but they are no-ops
+// by default. Set HOTD_TELEMETRY_LOG=1 to mirror events to stdout for
+// local debugging; in production rely on `kubectl logs` for ordinary
+// console output instead.
 // ══════════════════════════════════════════════════════════════
 
-let _appInsights = null;
-try { _appInsights = require("applicationinsights"); } catch (_) {}
+const DEBUG = process.env.HOTD_TELEMETRY_LOG === "1";
 
-// Lazy getter — App Insights may be late-initialized from Key Vault
-function getClient() {
-  return _appInsights ? _appInsights.defaultClient : null;
+function log(kind, payload) {
+  if (!DEBUG) return;
+  try {
+    console.log(`[telemetry:${kind}] ${JSON.stringify(payload)}`);
+  } catch (_) {
+    console.log(`[telemetry:${kind}] (unserializable payload)`);
+  }
 }
 
-/**
- * Track a custom event with properties and optional metrics.
- */
 function trackEvent(name, properties = {}, measurements = {}) {
-  const client = getClient();
-  if (!client) return;
-  try {
-    client.trackEvent({ name, properties, measurements });
-  } catch (_) {}
+  log("event", { name, properties, measurements });
 }
 
-/**
- * Track a numeric metric.
- */
 function trackMetric(name, value) {
-  const client = getClient();
-  if (!client) return;
-  try {
-    client.trackMetric({ name, value });
-  } catch (_) {}
+  log("metric", { name, value });
 }
-
-// ── Specific event helpers ───────────────────────────────────
 
 function trackLogin(username, success, ip, userAgent) {
-  trackEvent("AuthLogin", {
+  log("auth.login", {
     username,
-    success: String(success),
+    success: !!success,
     ip: ip || "",
     userAgent: (userAgent || "").slice(0, 200),
   });
 }
 
 function trackSignup(username, ip) {
-  trackEvent("AuthSignup", { username, ip: ip || "" });
+  log("auth.signup", { username, ip: ip || "" });
 }
 
 function trackLogout(username) {
-  trackEvent("AuthLogout", { username });
+  log("auth.logout", { username });
 }
 
 function trackAiChat(opts = {}) {
-  trackEvent("DmAiChat", {
+  log("ai.chat", {
     username: opts.username || "",
-    isDM: String(opts.isDM || false),
+    isDM: !!opts.isDM,
     model: opts.model || "",
     finishReason: opts.finishReason || "",
     toolCalls: opts.toolCalls || "",
-  }, {
     latencyMs: opts.latencyMs || 0,
     promptTokens: opts.promptTokens || 0,
     completionTokens: opts.completionTokens || 0,
@@ -70,12 +60,11 @@ function trackAiChat(opts = {}) {
 }
 
 function trackDbQuery(sql, rowCount, latencyMs, userRole) {
-  trackEvent("GenericDbQuery", {
+  log("db.query", {
     sql: (sql || "").slice(0, 500),
-    userRole: userRole || "",
-  }, {
     rowCount: rowCount || 0,
     latencyMs: latencyMs || 0,
+    userRole: userRole || "",
   });
 }
 

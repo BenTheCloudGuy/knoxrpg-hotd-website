@@ -1,22 +1,5 @@
 #!/usr/bin/env node
 
-// ── Application Insights — must be initialized before all other imports ──
-let appInsightsClient = null;
-process.env.OTEL_SERVICE_NAME = process.env.OTEL_SERVICE_NAME || 'hotd-website';
-if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
-  const appInsights = require("applicationinsights");
-  appInsights.setup()
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true, true)
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true, true)
-    .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
-    .setSendLiveMetrics(true)
-    .start();
-  appInsightsClient = appInsights.defaultClient;
-}
-
 const http = require("http");
 const path = require("path");
 

@@ -32,36 +32,6 @@ async function initOpenAI() {
       const secret = await kvClient.getSecret(OPENAI_KV_SECRET_NAME);
       apiKey = secret.value || "";
       if (apiKey) console.log(`  AI: OpenAI key loaded from Key Vault (${OPENAI_KV_SECRET_NAME})`);
-
-      // Load App Insights connection string from KV if not already set
-      if (!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
-        const aiSecretName = process.env.APPINSIGHTS_KV_SECRET_NAME || "appinsights-connection-string";
-        try {
-          const aiSecret = await kvClient.getSecret(aiSecretName);
-          if (aiSecret.value) {
-            process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = aiSecret.value;
-            // Late-init App Insights if not already started
-            try {
-              const appInsights = require("applicationinsights");
-              if (!appInsights.defaultClient) {
-                process.env.OTEL_SERVICE_NAME = process.env.OTEL_SERVICE_NAME || 'hotd-website';
-                appInsights.setup()
-                  .setAutoCollectRequests(true)
-                  .setAutoCollectPerformance(true, true)
-                  .setAutoCollectExceptions(true)
-                  .setAutoCollectDependencies(true)
-                  .setAutoCollectConsole(true, true)
-                  .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
-                  .setSendLiveMetrics(true)
-                  .start();
-                console.log(`  AI: App Insights loaded from Key Vault (${aiSecretName})`);
-              }
-            } catch (_) {}
-          }
-        } catch (aiErr) {
-          console.warn(`  AI: App Insights KV fetch skipped: ${aiErr.message}`);
-        }
-      }
     } catch (err) {
       console.warn(`  AI: Key Vault fetch failed: ${err.message}`);
     }

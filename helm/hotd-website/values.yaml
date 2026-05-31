@@ -74,17 +74,6 @@ keyVault:
   name: cloudgeek-cus-keyvault
   openaiSecretName: openai-api-key
 
-# -- Application Insights ------------------------------------------------------
-# If `connectionString` is set, the chart renders an Opaque Secret and the
-# Deployment reads APPLICATIONINSIGHTS_CONNECTION_STRING via secretKeyRef. To
-# use a pre-existing Secret instead, leave `connectionString` empty and set
-# `existingSecret` (and optionally `existingSecretKey`).
-appInsights:
-  connectionString: ""   # Set via --set or loaded from Key Vault at startup
-  existingSecret: ""
-  existingSecretKey: "appinsights-connection-string"
-  kvSecretName: appinsights-connection-string
-
 # -- Host Network (required for Arc identity) ----------------------------------
 hostNetwork: true
 
