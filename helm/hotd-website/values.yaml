@@ -88,9 +88,12 @@ ingress:
   host: hotd.knoxrpg.com
   tls:
     secretName: tls-hotd-website
-  # Block /metrics from the public host. Prometheus on the obs host scrapes
-  # the cortana host port directly (see observability.metrics below).
-  blockMetricsAtIngress: true
+  # /metrics is served on a SEPARATE port (:9464) that the public ingress never
+  # routes to (backend is :3000). Leaving this on injects a server-snippet
+  # annotation, which recent nginx-ingress builds reject as risky and drop the
+  # whole Ingress (causing fallback to the controller's fake TLS cert). Keep
+  # off unless you also pin a controller that allows the snippet.
+  blockMetricsAtIngress: false
 
 # -- Observability ------------------------------------------------------------
 # Application instrumentation. The metrics listener binds on a SEPARATE port

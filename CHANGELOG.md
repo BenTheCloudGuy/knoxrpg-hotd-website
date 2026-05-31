@@ -4,6 +4,11 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.2] - 2026-05-31
+
+### Fixed
+- **TLS regression after ingress controller restart.** The chart was injecting `nginx.ingress.kubernetes.io/server-snippet` (via `ingress.blockMetricsAtIngress: true`) to 404 `/metrics` on the public host. Recent nginx-ingress builds flag any `server-snippet` value as risky and drop the entire Ingress on reload (`annotation group ServerSnippet contains risky annotation`). When the controller restarted today at 12:34 UTC it discarded the hotd-website Ingress and started serving its built-in `Kubernetes Ingress Controller Fake Certificate` for `hotd.knoxrpg.com`, producing `ERR_CERT_AUTHORITY_INVALID` in browsers. The snippet was defense-in-depth only: the app backend on `:3000` does not expose `/metrics` (prom-client binds a separate `:9464` listener that the public Ingress never routes to). Defaulted `blockMetricsAtIngress` to `false` so the Ingress is accepted and the real Let's Encrypt secret `tls-hotd-website` is served again.
+
 ## [3.7.1] - 2026-05-31
 
 ### Added
