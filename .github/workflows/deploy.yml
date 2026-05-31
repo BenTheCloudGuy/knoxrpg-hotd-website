@@ -27,7 +27,22 @@ jobs:
       - name: Extract version from CHANGELOG.md
         id: version
         run: |
-          VERSION=$(grep -m1 '^\## \[' CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+          # First heading in CHANGELOG.md drives the image tag.
+          # When the top heading is [Unreleased] (i.e. we're shipping
+          # accumulated work without bumping a release), we append the
+          # short commit SHA to the most-recent released version so the
+          # image tag is unique per commit. A unique tag forces helm to
+          # render a different Deployment spec, which triggers a real
+          # rolling restart (otherwise K8s sees no change and the new
+          # image is built but never rolled out).
+          TOP=$(grep -m1 '^\## \[' CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+          if [ "$TOP" = "Unreleased" ]; then
+            LAST_RELEASED=$(grep -m1 '^\## \[[0-9]' CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            VERSION="${LAST_RELEASED:-0.0.0}-dev.${SHORT_SHA}"
+          else
+            VERSION="$TOP"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
 
