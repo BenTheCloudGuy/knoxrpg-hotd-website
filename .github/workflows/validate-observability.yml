@@ -1,0 +1,78 @@
+name: Validate Observability
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'observability/**'
+      - 'helm/hotd-website/**'
+      - 'src/lib/metrics.js'
+      - 'src/lib/telemetry.js'
+      - 'src/lib/loki-shipper.js'
+      - 'src/lib/tracing.js'
+      - '.github/workflows/validate-observability.yml'
+  pull_request:
+    paths:
+      - 'observability/**'
+      - 'helm/hotd-website/**'
+      - 'src/lib/metrics.js'
+      - 'src/lib/telemetry.js'
+      - 'src/lib/loki-shipper.js'
+      - 'src/lib/tracing.js'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate dashboards, chart, and instrumentation
+    runs-on: [self-hosted, linux, cortana]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate dashboard JSON
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          fail=0
+          for f in observability/dashboards/*.json; do
+            echo "::group::$f"
+            if ! jq empty "$f"; then
+              echo "::error file=$f::Invalid JSON"
+              fail=1
+            else
+              uid=$(jq -r '.uid // empty' "$f")
+              title=$(jq -r '.title // empty' "$f")
+              if [ -z "$uid" ] || [ -z "$title" ]; then
+                echo "::error file=$f::dashboard must have uid and title"
+                fail=1
+              fi
+              # Every panel must reference an allowed datasource UID.
+              bad=$(jq -r '[.panels[]? | select(.type!="row") | (.datasource.uid // .datasource // "")] | map(select(. != "prometheus" and . != "loki" and . != "grafana" and . != "")) | length')
+              if [ "$bad" != "0" ]; then
+                echo "::error file=$f::$bad panel(s) reference an unknown datasource UID (allowed: prometheus, loki, grafana)"
+                fail=1
+              fi
+            fi
+            echo "::endgroup::"
+          done
+          exit $fail
+
+      - name: Render Helm chart
+        run: |
+          set -euo pipefail
+          microk8s helm template hotd-website helm/hotd-website/ \
+            --set postgres.password=test \
+            > /tmp/hotd-rendered.yaml
+          # Required pieces from the observability wire-up:
+          grep -q 'name: metrics' /tmp/hotd-rendered.yaml || (echo "::error::missing metrics containerPort"; exit 1)
+          grep -q 'METRICS_PORT' /tmp/hotd-rendered.yaml || (echo "::error::missing METRICS_PORT env"; exit 1)
+          grep -q 'POD_NAMESPACE' /tmp/hotd-rendered.yaml || (echo "::error::missing POD_NAMESPACE downward API"; exit 1)
+          grep -q 'server-snippet' /tmp/hotd-rendered.yaml || (echo "::error::ingress missing /metrics block snippet"; exit 1)
+
+      - name: Syntax-check instrumentation
+        run: |
+          set -euo pipefail
+          node --check src/server.js
+          node --check src/lib/metrics.js
+          node --check src/lib/telemetry.js
+          node --check src/lib/loki-shipper.js
+          node --check src/lib/tracing.js

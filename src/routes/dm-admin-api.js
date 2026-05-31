@@ -11,6 +11,7 @@ const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
 const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
+const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const fs = require("fs");
 const os = require("os");
 const childProc = require("child_process");
@@ -516,6 +517,7 @@ ${notes}
 
 ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""}`.trim();
 
+      const t0 = Date.now();
       const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: [
@@ -524,6 +526,13 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
         ],
         max_completion_tokens: 2048,
         temperature: 0.6,
+      });
+      recordChatCompletion(completion, {
+        model,
+        username: session.username || "",
+        isDM: true,
+        source: "dm-admin.session-summary",
+        latencyMs: Date.now() - t0,
       });
 
       const generated = (completion.choices[0]?.message?.content || "").trim();
@@ -754,12 +763,39 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       const tags = body.tags || [];
 
       // Call GPT Image
-      const imgResp = await azure.openaiClient.images.generate({
+      const imgT0 = Date.now();
+      let imgResp;
+      try {
+        imgResp = await azure.openaiClient.images.generate({
+          model: "gpt-image-1.5",
+          prompt: fullPrompt,
+          n: 1,
+          size,
+          quality,
+        });
+      } catch (imgErr) {
+        trackAiImage({
+          username: session.username || "",
+          model: "gpt-image-1.5",
+          size,
+          quality,
+          count: 1,
+          latencyMs: Date.now() - imgT0,
+          success: false,
+          source: "dm-admin.image-generate",
+          error: imgErr && imgErr.message ? imgErr.message : String(imgErr),
+        });
+        throw imgErr;
+      }
+      trackAiImage({
+        username: session.username || "",
         model: "gpt-image-1.5",
-        prompt: fullPrompt,
-        n: 1,
         size,
         quality,
+        count: 1,
+        latencyMs: Date.now() - imgT0,
+        success: true,
+        source: "dm-admin.image-generate",
       });
 
       const b64 = imgResp.data[0].b64_json;
@@ -923,6 +959,7 @@ ${ragContext}${entityContext}`;
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
       const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
 
+      const t0 = Date.now();
       const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: [
@@ -931,6 +968,13 @@ ${ragContext}${entityContext}`;
         ],
         max_completion_tokens: 4096,
         temperature: 0.8,
+      });
+      recordChatCompletion(completion, {
+        model,
+        username: session.username || "",
+        isDM: true,
+        source: "dm-admin.story-forge",
+        latencyMs: Date.now() - t0,
       });
 
       const content = completion.choices[0]?.message?.content || "";
@@ -1147,11 +1191,19 @@ ${ragContext}`;
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
       const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
 
+      const t0 = Date.now();
       const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: chatMessages,
         max_completion_tokens: 4096,
         temperature: 0.7,
+      });
+      recordChatCompletion(completion, {
+        model,
+        username: session.username || "",
+        isDM: true,
+        source: "dm-admin.chat",
+        latencyMs: Date.now() - t0,
       });
 
       const aiReply = completion.choices[0]?.message?.content || "No response.";

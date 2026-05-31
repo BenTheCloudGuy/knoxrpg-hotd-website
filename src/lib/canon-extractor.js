@@ -11,6 +11,7 @@
 // to match references by name first.
 
 const { pgPool } = require("../db/pool");
+const { recordChatCompletion } = require("./telemetry");
 
 // Names referenced via the canonical campaign URL pattern in summaries
 // (e.g. "[Bray Martikov](https://hotd.knoxrpg.com/npcs/343)"). When we see
@@ -215,6 +216,7 @@ async function extractCanonUpdates({ openaiClient, model, session }) {
 
 ${session.summary}`;
 
+  const t0 = Date.now();
   const completion = await openaiClient.chat.completions.create({
     model,
     messages: [
@@ -224,6 +226,11 @@ ${session.summary}`;
     response_format: { type: "json_object" },
     max_completion_tokens: 4096,
     temperature: 0.1,
+  });
+  recordChatCompletion(completion, {
+    model,
+    source: "canon-extractor",
+    latencyMs: Date.now() - t0,
   });
 
   const raw = completion.choices?.[0]?.message?.content || "";

@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// Tracing must be required before any other instrumented module so the OTel
+// auto-instrumentations can hook them. No-op until OTEL_EXPORTER_OTLP_ENDPOINT is set.
+require("./lib/tracing").start();
+
 const http = require("http");
 const path = require("path");
 
@@ -8,6 +12,8 @@ const { ensureSessionsTable, ensureHotdTables } = require("./db/schema");
 const { serveFile, serveStaticFile, sendJSON, mimeType } = require("./lib/utils");
 const { getSession } = require("./lib/auth");
 const { initOpenAI } = require("./lib/azure");
+const metrics = require("./lib/metrics");
+const { pgPool } = require("./db/pool");
 
 const { handleAuthRoutes }      = require("./routes/auth");
 const { handleApiRoutes }       = require("./routes/api");
@@ -20,7 +26,7 @@ const { handlePageRoutes }      = require("./routes/pages");
 // ── HTTP SERVER ───────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
 
-const server = http.createServer(async (req, res) => {
+async function dispatch(req, res) {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const decoded = decodeURIComponent(pathname);
@@ -72,11 +78,34 @@ const server = http.createServer(async (req, res) => {
 
   // ── Page routes ────────────────────────────────────────────
   await handlePageRoutes(decoded, req, res, session, url);
+}
+
+const server = http.createServer(async (req, res) => {
+  const startNs = process.hrtime.bigint();
+  try {
+    await dispatch(req, res);
+  } catch (err) {
+    if (!res.headersSent) {
+      try { res.writeHead(500, { "Content-Type": "text/plain" }); res.end("internal error"); } catch (_) {}
+    }
+    console.error(`[server] dispatch error: ${err && err.stack || err}`);
+  } finally {
+    if (metrics.ENABLED) {
+      try {
+        const durationSec = Number(process.hrtime.bigint() - startNs) / 1e9;
+        const u = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+        const pathname = u.pathname.replace(/\/+$/, "") || "/";
+        metrics.observeHttp(req.method || "GET", pathname, res.statusCode || 0, durationSec);
+      } catch (_) { /* never throw from telemetry */ }
+    }
+  }
 });
 
 server.listen(PORT, async () => {
   console.log(`\n  Halls of the Damned campaign server`);
   console.log(`  Listening on http://localhost:${PORT}`);
+  metrics.startMetricsServer();
+  metrics.startPgPoolPoll(pgPool);
   await ensureSessionsTable();
   await ensureHotdTables();
   await initOpenAI();

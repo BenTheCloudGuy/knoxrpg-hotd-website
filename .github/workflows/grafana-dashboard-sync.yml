@@ -1,0 +1,61 @@
+name: Sync Grafana Dashboards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'observability/dashboards/**'
+      - '.github/workflows/grafana-dashboard-sync.yml'
+  workflow_dispatch:
+
+# Requires the following GitHub secrets (already used by homenet-arr-stack
+# post-KB-074):
+#   GRAFANA_URL          e.g. http://grafana.mitchell-family.com:3000
+#   GRAFANA_API_TOKEN    service-account token with dashboards:write
+jobs:
+  sync:
+    name: POST dashboards to Grafana
+    runs-on: [self-hosted, linux, cortana]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for f in observability/dashboards/*.json; do
+            jq empty "$f"
+          done
+
+      - name: Push dashboards
+        env:
+          GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+          GRAFANA_API_TOKEN: ${{ secrets.GRAFANA_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GRAFANA_URL:-}" ] || [ -z "${GRAFANA_API_TOKEN:-}" ]; then
+            echo "::error::GRAFANA_URL and GRAFANA_API_TOKEN must be set as repo secrets"
+            exit 1
+          fi
+          shopt -s nullglob
+          fail=0
+          for f in observability/dashboards/*.json; do
+            echo "::group::$f"
+            # Wrap the dashboard JSON in the {dashboard, overwrite, message}
+            # envelope Grafana's /api/dashboards/db endpoint expects, and clear
+            # the id so Grafana matches by uid (idempotent across renames).
+            body=$(jq -c '{dashboard: (. + {id: null}), overwrite: true, message: "synced from knoxrpg-hotd-website"}' "$f")
+            if ! curl -fsS -X POST "$GRAFANA_URL/api/dashboards/db" \
+                  -H "Authorization: Bearer $GRAFANA_API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  --data "$body" \
+                  -o /tmp/resp.json; then
+              echo "::error file=$f::Grafana API rejected dashboard"
+              cat /tmp/resp.json || true
+              fail=1
+            else
+              echo "OK: $(jq -r '.uid + " v" + (.version|tostring)' /tmp/resp.json 2>/dev/null || cat /tmp/resp.json)"
+            fi
+            echo "::endgroup::"
+          done
+          exit $fail

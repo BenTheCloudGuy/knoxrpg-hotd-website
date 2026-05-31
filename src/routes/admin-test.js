@@ -7,6 +7,7 @@ const { readBody, sendJSON } = require("../lib/utils");
 const { searchCampaign, buildRagContext } = require("../lib/search");
 const azure = require("../lib/azure");
 const { chatWithTools } = require("../lib/ai-tools");
+const { trackAiImage } = require("../lib/telemetry");
 const { renderApiTestPage } = require("../pages/api-test");
 
 /**
@@ -182,14 +183,38 @@ async function handleAdminTestRoutes(decoded, req, res, session, url) {
       }
 
       const t0 = Date.now();
-      const response = await azure.openaiClient.images.generate({
+      let response;
+      try {
+        response = await azure.openaiClient.images.generate({
+          model: "gpt-image-1.5",
+          prompt: String(prompt).slice(0, 4000),
+          n: 1,
+          size: size || "1024x1024",
+          quality: quality || "medium",
+        });
+      } catch (imgErr) {
+        trackAiImage({
+          model: "gpt-image-1.5",
+          size: size || "1024x1024",
+          quality: quality || "medium",
+          count: 1,
+          latencyMs: Date.now() - t0,
+          success: false,
+          source: "admin.test-image",
+          error: imgErr && imgErr.message ? imgErr.message : String(imgErr),
+        });
+        throw imgErr;
+      }
+      const elapsed = Date.now() - t0;
+      trackAiImage({
         model: "gpt-image-1.5",
-        prompt: String(prompt).slice(0, 4000),
-        n: 1,
         size: size || "1024x1024",
         quality: quality || "medium",
+        count: 1,
+        latencyMs: elapsed,
+        success: true,
+        source: "admin.test-image",
       });
-      const elapsed = Date.now() - t0;
 
       const imageData = response.data[0];
       sendJSON(res, {

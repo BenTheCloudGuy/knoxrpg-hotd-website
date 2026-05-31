@@ -88,6 +88,43 @@ ingress:
   host: hotd.knoxrpg.com
   tls:
     secretName: tls-hotd-website
+  # Block /metrics from the public host. Prometheus on the obs host scrapes
+  # the cortana host port directly (see observability.metrics below).
+  blockMetricsAtIngress: true
+
+# -- Observability ------------------------------------------------------------
+# Application instrumentation. The metrics listener binds on a SEPARATE port
+# (default :9464) so /metrics never travels through the public ingress. The
+# pod runs hostNetwork: true (Arc identity requirement), so the port is
+# reachable on the cortana host IP at the same number.
+#
+# Loki shipping is an opt-in transitional path: until a cluster-wide log
+# collector (Grafana Alloy / Promtail DaemonSet) ships, the app pushes
+# JSON log lines directly to Loki when LOKI_PUSH_URL is set.
+observability:
+  metrics:
+    enabled: true
+    port: 9464
+    bindAddr: "0.0.0.0"
+  logs:
+    # "json" emits one JSON object per line on stdout (Alloy / Promtail can
+    # parse it with the json pipeline stage). Empty keeps the legacy shape.
+    format: "json"
+  loki:
+    # Set pushUrl to enable in-process push. Recommended only until a
+    # cluster log collector exists. Default off so dev installs stay quiet.
+    enabled: false
+    pushUrl: ""
+    # Extra labels merged into the stream. namespace + pod are added
+    # automatically from the downward API.
+    extraLabels: {}
+  tracing:
+    # When endpoint is set, the app starts an OTLP/HTTP trace exporter on boot.
+    # Requires @opentelemetry/sdk-node + auto-instrumentations to be installed;
+    # disabled (no-op) otherwise. Wire Grafana Tempo when ready.
+    enabled: false
+    endpoint: ""
+    serviceName: "hotd-website"
 
 # -- Resources ----------------------------------------------------------------
 resources:

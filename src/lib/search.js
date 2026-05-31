@@ -2,6 +2,7 @@ const { campaignPages } = require("../config");
 const { searchEmbeddings } = require("./rag");
 const { pgPool } = require("../db/pool");
 const azure = require("./azure");
+const { recordChatCompletion } = require("./telemetry");
 
 // ── Map source_type + source_id/source_path to site URLs ──────
 function resolveHref(r) {
@@ -236,6 +237,7 @@ async function searchCampaign(query) {
       try {
         const context = summaryChunks.join('\n\n');
 
+        const t0 = Date.now();
         const resp = await azure.openaiClient.chat.completions.create({
           model: azure.aiModel,
           max_completion_tokens: 300,
@@ -243,6 +245,11 @@ async function searchCampaign(query) {
             { role: 'system', content: 'You are a search assistant for a D&D campaign website called "Halls of the Damned". Given campaign data and D&D reference excerpts, write a 2-3 sentence summary that directly answers the search query. Distinguish between campaign-specific content and general D&D rules/lore when both are present. Be concise and factual. Do not use em-dashes. If the context does not clearly answer the query, say so briefly.' },
             { role: 'user', content: `Search query: "${query}"\n\nTop results:\n${context}` },
           ],
+        });
+        recordChatCompletion(resp, {
+          model: azure.aiModel,
+          source: "search.ai-summary",
+          latencyMs: Date.now() - t0,
         });
         aiSummary = resp.choices[0]?.message?.content || '';
       } catch (err) {

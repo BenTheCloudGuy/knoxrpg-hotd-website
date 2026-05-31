@@ -4,6 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const { pgPool } = require("../db/pool");
+const { trackAiEmbedding } = require("./telemetry");
 
 const EMBED_MODEL = "text-embedding-3-small";
 
@@ -14,10 +15,30 @@ const EMBED_MODEL = "text-embedding-3-small";
  * @returns {Promise<number[]>} Embedding vector
  */
 async function embedQuery(openai, text) {
-  const resp = await openai.embeddings.create({
+  const t0 = Date.now();
+  let resp;
+  try {
+    resp = await openai.embeddings.create({
+      model: EMBED_MODEL,
+      input: text.slice(0, 8000),
+      dimensions: 1536,
+    });
+  } catch (err) {
+    trackAiEmbedding({
+      model: EMBED_MODEL,
+      latencyMs: Date.now() - t0,
+      success: false,
+      source: "rag.embedQuery",
+      error: err && err.message ? err.message : String(err),
+    });
+    throw err;
+  }
+  trackAiEmbedding({
     model: EMBED_MODEL,
-    input: text.slice(0, 8000),
-    dimensions: 1536,
+    tokens: resp.usage ? (resp.usage.total_tokens || resp.usage.prompt_tokens || 0) : 0,
+    latencyMs: Date.now() - t0,
+    success: true,
+    source: "rag.embedQuery",
   });
   return resp.data[0].embedding;
 }
