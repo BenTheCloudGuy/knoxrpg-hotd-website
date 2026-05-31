@@ -4,6 +4,18 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.7] - 2026-05-31
+
+### Fixed
+- **PDF generation `EACCES /reports`** — `src/routes/dm-admin-api.js` now resolves the repo root by walking up from `__dirname` until it finds a `package.json`, instead of assuming a fixed two-level layout. In the production container `src/` is flattened into `/app`, so the old `path.join(__dirname, "..", "..")` resolved to `/` and the route then tried `mkdir /reports` as a non-root user. New resolver returns `/app` (where the container's `package.json` lives) or the dev repo root as appropriate. Env overrides `HOTD_REPO_ROOT`, `HOTD_PDF_SCRIPT`, and `HOTD_REPORTS_DIR` are honored when set.
+- **PDF route preflight errors** — POST `/api/dm-admin/sessions/:id/pdf` now returns a clear `501` with the missing-script path when `scripts/build-session-pdf.js` is not bundled in the image, and a `500` with the unwritable directory + `HOTD_REPORTS_DIR` hint when `mkdir` fails, instead of bubbling a raw `EACCES` to the UI.
+
+### Added
+- **Long-running op progress bar** — Sessions Workspace (`src/pages/admin.js`) shows an indeterminate gold-sweep progress bar with an elapsed-time counter while **Create PDF** or **Generate Summary** is running. All action buttons (Save, Create PDF, Generate Summary, Publish, Unpublish, Delete, + New) are disabled with a wait cursor for the duration. Final status reports the elapsed time, e.g. `PDF ready in 18s.` or `Summary generated in 42s (3,127 tokens).` Save and Publish remain on the plain status line since they are fast.
+
+### Notes
+- Production PDF generation on `hotd.knoxrpg.com` still requires Dockerfile and Helm changes (install `weasyprint` + `pandoc` + fonts, `COPY scripts/` into `/app/scripts/`, mount a writable reports volume). Tracked separately, not in this release.
+
 ## [3.5.6] - 2026-05-31
 
 ### Added

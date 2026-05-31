@@ -337,6 +337,17 @@ async function renderSessionsAdminPage(session) {
             <button id="btn-delete" type="button" style="background:#7a2222;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;">&#128465; Delete</button>
           </div>
 
+          <div id="progress-wrap" style="display:none;padding:6px 12px;background:#0e0e0e;border-top:1px solid #222;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;font-size:0.78rem;color:#ddd;">
+              <span id="progress-label">Working...</span>
+              <span id="progress-timer" style="color:#888;">0s</span>
+              <span style="flex:1;"></span>
+              <span style="color:#666;font-size:0.72rem;">Long-running operation, please wait</span>
+            </div>
+            <div id="progress-bar-track" style="position:relative;height:6px;background:#1a1a1a;border-radius:3px;overflow:hidden;">
+              <div id="progress-bar-fill" class="progress-bar-indeterminate"></div>
+            </div>
+          </div>
           <div id="status-line" style="padding:6px 12px;background:#0e0e0e;color:#888;font-size:0.78rem;min-height:24px;border-top:1px solid #222;"></div>
         </div>
       </section>
@@ -365,6 +376,15 @@ async function renderSessionsAdminPage(session) {
     .session-row strong { color:#e8b923; }
     .session-row.draft strong::after { content:" [DRAFT]"; color:#c66; font-size:0.7rem; font-weight:normal; }
     .session-row .meta { color:#888; font-size:0.75rem; margin-top:2px; }
+    .progress-bar-indeterminate {
+      position:absolute; top:0; left:0; height:100%; width:40%;
+      background:linear-gradient(90deg, transparent, #e8b923 50%, transparent);
+      animation: hotd-progress-slide 1.2s linear infinite;
+    }
+    @keyframes hotd-progress-slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
     @media (max-width:900px) {
       #sessions-workspace { grid-template-columns:1fr !important; height:auto !important; }
       #sessions-workspace aside { max-height:300px; }
@@ -390,6 +410,60 @@ async function renderSessionsAdminPage(session) {
     function setStatus(msg, isError) {
       $status.textContent = msg || '';
       $status.style.color = isError ? '#f88' : '#888';
+    }
+
+    var ACTION_BTN_IDS = ['btn-save','btn-pdf','btn-summary','btn-publish','btn-unpublish','btn-delete','btn-new'];
+    var progress = { wrap: null, label: null, timer: null, start: 0, intervalId: null };
+    function fmtElapsed(ms) {
+      var s = Math.floor(ms / 1000);
+      if (s < 60) return s + 's';
+      var m = Math.floor(s / 60);
+      var rem = s % 60;
+      return m + 'm ' + (rem < 10 ? '0' : '') + rem + 's';
+    }
+    function setActionsDisabled(disabled) {
+      ACTION_BTN_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = disabled;
+        el.style.opacity = disabled ? '0.5' : '';
+        el.style.cursor = disabled ? 'wait' : 'pointer';
+      });
+    }
+    function startProgress(label) {
+      if (!progress.wrap) {
+        progress.wrap = document.getElementById('progress-wrap');
+        progress.label = document.getElementById('progress-label');
+        progress.timer = document.getElementById('progress-timer');
+      }
+      progress.label.textContent = label || 'Working...';
+      progress.timer.textContent = '0s';
+      progress.wrap.style.display = '';
+      progress.start = Date.now();
+      if (progress.intervalId) clearInterval(progress.intervalId);
+      progress.intervalId = setInterval(function() {
+        progress.timer.textContent = fmtElapsed(Date.now() - progress.start);
+      }, 500);
+      setActionsDisabled(true);
+    }
+    function stopProgress() {
+      if (progress.intervalId) { clearInterval(progress.intervalId); progress.intervalId = null; }
+      if (progress.wrap) progress.wrap.style.display = 'none';
+      setActionsDisabled(false);
+    }
+    function runWithProgress(label, fn) {
+      startProgress(label);
+      var p;
+      try { p = Promise.resolve(fn()); }
+      catch (e) { stopProgress(); return Promise.reject(e); }
+      return p.then(function(v) {
+        var elapsed = fmtElapsed(Date.now() - progress.start);
+        stopProgress();
+        return { value: v, elapsed: elapsed };
+      }, function(err) {
+        stopProgress();
+        throw err;
+      });
     }
 
     function fmtDate(iso) {
@@ -544,11 +618,14 @@ async function renderSessionsAdminPage(session) {
 
     function createPdf() {
       withSave('Building PDF', function(id) {
-        return fetch('/api/dm-admin/sessions/' + id + '/pdf', { method: 'POST' })
-          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
-          .then(function(res) {
+        return runWithProgress('Building PDF (pandoc + WeasyPrint)...', function() {
+          return fetch('/api/dm-admin/sessions/' + id + '/pdf', { method: 'POST' })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); });
+        })
+          .then(function(result) {
+            var res = result.value;
             if (!res.ok) throw new Error(res.d.error || 'PDF failed');
-            setStatus('PDF ready.');
+            setStatus('PDF ready in ' + result.elapsed + '.');
             return refreshList(id).then(function() { return loadSession(id); });
           })
           .catch(function(e) { setStatus('PDF failed: ' + e.message, true); });
@@ -558,13 +635,17 @@ async function renderSessionsAdminPage(session) {
     function generateSummary() {
       if (!confirm('Generate a new summary from the # Session Notes section? This will overwrite the # Session Summary section.')) return;
       withSave('Generating summary', function(id) {
-        return fetch('/api/dm-admin/sessions/' + id + '/generate-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
-          .then(function(res) {
+        return runWithProgress('Generating summary with AI...', function() {
+          return fetch('/api/dm-admin/sessions/' + id + '/generate-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); });
+        })
+          .then(function(result) {
+            var res = result.value;
             if (!res.ok) throw new Error(res.d.error || 'Generation failed');
             state.mde.value(res.d.markdown || '');
             state.dirty = false;
-            setStatus('Summary generated (' + (res.d.usage ? res.d.usage.total_tokens + ' tokens' : 'ok') + '). Review, then click Publish Summary.');
+            var tokenInfo = res.d.usage ? res.d.usage.total_tokens + ' tokens' : 'ok';
+            setStatus('Summary generated in ' + result.elapsed + ' (' + tokenInfo + '). Review, then click Publish Summary.');
           })
           .catch(function(e) { setStatus('Generation failed: ' + e.message, true); });
       });

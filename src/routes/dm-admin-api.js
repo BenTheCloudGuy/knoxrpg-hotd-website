@@ -14,9 +14,26 @@ const os = require("os");
 const childProc = require("child_process");
 const notebookPath = require("path");
 
-const REPO_ROOT = notebookPath.join(__dirname, "..", "..");
-const PDF_SCRIPT = notebookPath.join(REPO_ROOT, "scripts", "build-session-pdf.js");
-const PDF_REPORTS_DIR = notebookPath.join(REPO_ROOT, "reports");
+const REPO_ROOT = (function resolveRepoRoot() {
+  // In dev this file lives at <repo>/src/routes/dm-admin-api.js, so the repo
+  // root is two levels up. In the Docker image the Dockerfile does
+  // `COPY src/ .` into /app, which flattens the layout to /app/routes/..., so
+  // the equivalent "root" is one level up. Pick the deepest ancestor that
+  // actually has a package.json. The HOTD_REPO_ROOT env var overrides both.
+  if (process.env.HOTD_REPO_ROOT) return process.env.HOTD_REPO_ROOT;
+  const candidates = [
+    notebookPath.join(__dirname, "..", ".."),
+    notebookPath.join(__dirname, ".."),
+  ];
+  for (const dir of candidates) {
+    try { if (fs.existsSync(notebookPath.join(dir, "package.json"))) return dir; } catch (_) {}
+  }
+  return candidates[0];
+})();
+const PDF_SCRIPT = process.env.HOTD_PDF_SCRIPT
+  || notebookPath.join(REPO_ROOT, "scripts", "build-session-pdf.js");
+const PDF_REPORTS_DIR = process.env.HOTD_REPORTS_DIR
+  || notebookPath.join(REPO_ROOT, "reports");
 
 // ── Markdown section helpers (H1-delimited) ─────────────────
 // Sessions are stored as one markdown blob; "Publish", "Generate Summary",
@@ -324,12 +341,24 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       if (sessSlug === null) { sendJSON(res, { error: "Invalid session_number" }, 400); return true; }
       if (!row.markdown || !row.markdown.trim()) { sendJSON(res, { error: "Session markdown is empty — nothing to render" }, 400); return true; }
 
+      if (!fs.existsSync(PDF_SCRIPT)) {
+        sendJSON(res, {
+          error: `PDF builder not available in this deployment. Missing ${PDF_SCRIPT}. ` +
+                 `Set HOTD_PDF_SCRIPT, or ship scripts/build-session-pdf.js (plus weasyprint + pandoc) in the container.`,
+        }, 501);
+        return true;
+      }
+
       // GM Guide = the whole markdown minus the player-facing summary section.
       const gmGuideMd = stripSection(row.markdown, "Session Summary");
       const tmpFile = notebookPath.join(os.tmpdir(), `hotd-session-${row.id}-${Date.now()}.md`);
       fs.writeFileSync(tmpFile, gmGuideMd, "utf8");
 
-      fs.mkdirSync(PDF_REPORTS_DIR, { recursive: true });
+      try { fs.mkdirSync(PDF_REPORTS_DIR, { recursive: true }); }
+      catch (e) {
+        sendJSON(res, { error: `Cannot create reports directory ${PDF_REPORTS_DIR}: ${e.message}. Set HOTD_REPORTS_DIR to a writable path.` }, 500);
+        return true;
+      }
       const outRelative = `session${sessSlug}-gm-guide.pdf`;
       const outAbsolute = notebookPath.join(PDF_REPORTS_DIR, outRelative);
       const docTitle = `Session ${sessSlug}: ${row.title || "Untitled"}`;
