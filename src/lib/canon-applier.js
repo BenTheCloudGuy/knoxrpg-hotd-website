@@ -277,7 +277,10 @@ async function applyPcNoteAppend(session, append, userId) {
   const target = await resolvePc(append.match);
   if (!target) return { applied: 0, skipped: 1 };
 
-  const before = (target.notes || "").toString();
+  // Writes target dm_notes (the GM-owned column). The DDB-sourced `notes`
+  // column is left untouched so a future DDB sync does not clobber
+  // canon-applied campaign history.
+  const before = (target.dm_notes || "").toString();
   // Dedupe: if the same first 80 chars already exist, skip.
   if (before.includes(note.slice(0, 80))) return { applied: 0, skipped: 1 };
 
@@ -285,13 +288,13 @@ async function applyPcNoteAppend(session, append, userId) {
 
   await pgPool.query("BEGIN");
   try {
-    await pgPool.query("UPDATE hotd_player_characters SET notes = $1, updated_at = NOW() WHERE id = $2", [after, target.id]);
+    await pgPool.query("UPDATE hotd_player_characters SET dm_notes = $1, updated_at = NOW() WHERE id = $2", [after, target.id]);
     await writeAudit({
       session_id: session.id,
       target_kind: "pc",
       target_id: target.id,
       operation: "append_note",
-      field: "notes",
+      field: "dm_notes",
       before_value: before,
       after_value: after,
       source_excerpt: append.source_excerpt || "",
@@ -396,12 +399,12 @@ async function resolveNpc(match) {
 async function resolvePc(match) {
   if (!match || typeof match !== "object") return null;
   if (Number.isFinite(match.id)) {
-    const { rows } = await pgPool.query("SELECT id, character_name, notes FROM hotd_player_characters WHERE id = $1 LIMIT 1", [match.id]);
+    const { rows } = await pgPool.query("SELECT id, character_name, dm_notes FROM hotd_player_characters WHERE id = $1 LIMIT 1", [match.id]);
     if (rows.length) return rows[0];
   }
   if (match.character_name) {
     const { rows } = await pgPool.query(
-      "SELECT id, character_name, notes FROM hotd_player_characters WHERE LOWER(character_name) = LOWER($1) LIMIT 1",
+      "SELECT id, character_name, dm_notes FROM hotd_player_characters WHERE LOWER(character_name) = LOWER($1) LIMIT 1",
       [match.character_name]
     );
     if (rows.length) return rows[0];

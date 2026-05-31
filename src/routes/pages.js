@@ -21,7 +21,7 @@ const {
   renderHomeAdminPage, renderCalendarAdminPage, renderMapsAdminPage,
   renderNpcsAdminPage, renderSessionsAdminPage, renderArtifactsAdminPage,
   renderHandoutsAdminPage, renderArtAdminPage, renderBulkUploadAdminPage,
-  renderMapAdminPage,
+  renderMapAdminPage, renderCharactersAdminPage,
 } = require("../pages/admin");
 
 // Auth pages
@@ -90,7 +90,8 @@ async function handlePageRoutes(decoded, req, res, session, url) {
   }
 
   // ── Character detail page → redirect to single page ────────
-  if (decoded.startsWith("/characters/") && decoded !== "/characters") {
+  // Skip /characters/admin so the GM Player Workspace renderer can run below.
+  if (decoded.startsWith("/characters/") && decoded !== "/characters" && decoded !== "/characters/admin") {
     const charId = parseInt(decoded.split("/")[2], 10);
     const anchor = !isNaN(charId) ? `#character-${charId}` : "";
     res.writeHead(302, { Location: `/characters${anchor}` }); res.end();
@@ -153,7 +154,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
   }
 
   // ── Admin pages ────────────────────────────────────────────
-  if (decoded.endsWith("/admin") && ["/home/admin","/calendar/admin","/maps/admin","/map/admin","/npcs/admin","/sessions/admin","/artifacts/admin","/handouts/admin","/art/admin","/bulk-upload/admin"].includes(decoded)) {
+  if (decoded.endsWith("/admin") && ["/home/admin","/calendar/admin","/maps/admin","/map/admin","/npcs/admin","/sessions/admin","/artifacts/admin","/handouts/admin","/art/admin","/bulk-upload/admin","/characters/admin"].includes(decoded)) {
     if (!session || session.role !== "admin") { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
     let adminHtml;
     switch (decoded) {
@@ -167,6 +168,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       case "/handouts/admin": adminHtml = await renderHandoutsAdminPage(session, "/handouts"); break;
       case "/art/admin": adminHtml = await renderArtAdminPage(session); break;
       case "/bulk-upload/admin": adminHtml = await renderBulkUploadAdminPage(session); break;
+      case "/characters/admin": adminHtml = await renderCharactersAdminPage(session); break;
     }
     if (adminHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(adminHtml); return true; }
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());

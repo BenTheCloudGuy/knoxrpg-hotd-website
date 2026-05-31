@@ -41,7 +41,7 @@ async function renderHomeAdminPage(session) {
 
     <div class="admin-campaign-form" style="margin-top:16px;">
       <h3>&#9876; Player Characters</h3>
-      <p style="color:#888;font-size:0.85rem;">Player characters are NPCs with alignment_tag set to <strong style="color:#e8b923;">player</strong>. Manage them via <a href="/npcs/admin" style="color:#e8b923;">NPCs Admin</a>.</p>
+      <p style="color:#888;font-size:0.85rem;">GM-only workspace for player character data. Read-only view of all D&amp;D Beyond synced fields plus an editable <strong style="color:#e8b923;">DM Notes</strong> column that survives DDB syncs. Click <strong>PUBLISH</strong> to write changes into the RAG index. <a href="/characters/admin" style="color:#e8b923;">Open GM Player Workspace &rarr;</a></p>
     </div>
 
     <div class="admin-campaign-form" style="margin-top:16px;">
@@ -1335,6 +1335,653 @@ async function renderMapAdminPage(session) {
   return pageShell("Map Admin — Halls of the Damned", "/", body, session);
 }
 
+// ── GM Player Workspace ───────────────────────────────────────
+// Two-pane GM-only character workbench. Mirrors the Sessions Workspace
+// layout but enforces the read-only-except-dm_notes contract:
+//   * All DDB-sourced fields (identity, stats, equipment, spells, attacks,
+//     features, backstory, ideals, bonds, flaws, DDB Other Notes) render
+//     display-only.
+//   * Only the `dm_notes` column is editable in this UI.
+//   * The single PUBLISH button persists dm_notes AND triggers
+//     `embed-pipeline.js --source character --mode incremental` so the RAG
+//     vector store catches up with both the new GM notes and any
+//     DDB-synced mechanical changes for the selected character.
+//   * "Sync from DDB" is a separate action that pulls fresh mechanical data
+//     from D&D Beyond; it does not write to dm_notes and does not reindex
+//     (the GM still has to click PUBLISH to push the new sheet into RAG).
+async function renderCharactersAdminPage(session) {
+  if (!session || session.role !== "admin") return null;
+
+  const body = `
+  <div class="content" style="max-width:none;width:100%;padding:0 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2 class="section-title" style="margin:0;">&#9876; GM Player Workspace</h2>
+      <a href="/characters" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Characters</a>
+    </div>
+    <p style="color:#888;font-size:0.85rem;margin:0 0 12px 0;">All D&amp;D Beyond data is <strong>read-only</strong> here (DDB sync owns those fields). Edit your campaign notes below, then click <strong>PUBLISH</strong> to save and refresh the RAG index.</p>
+
+    <div id="chars-workspace" style="display:grid;grid-template-columns:30% 70%;gap:12px;height:calc(100vh - 200px);min-height:600px;">
+
+      <!-- LEFT: roster -->
+      <aside style="background:#1a1a1a;border:1px solid #333;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:10px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:#e8b923;">Player Characters</strong>
+          <button id="btn-sync-all" type="button" style="background:#2d4a7a;color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:0.8rem;" title="Pull fresh mechanical data from D&amp;D Beyond for every PC. Does not reindex RAG.">&#128260; Sync All DDB</button>
+        </div>
+        <div id="char-list" style="flex:1;overflow-y:auto;padding:4px;">
+          <p style="color:#888;padding:12px;font-size:0.85rem;">Loading...</p>
+        </div>
+      </aside>
+
+      <!-- RIGHT: editor -->
+      <section id="editor-pane" style="background:#1a1a1a;border:1px solid #333;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="editor-empty" style="flex:1;display:flex;align-items:center;justify-content:center;color:#666;text-align:center;padding:40px;">
+          <div>
+            <div style="font-size:3rem;margin-bottom:12px;">&#9876;</div>
+            <p>Select a character from the left.</p>
+          </div>
+        </div>
+
+        <div id="editor-active" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <div id="char-header" style="padding:10px 14px;border-bottom:1px solid #333;background:#202020;display:flex;gap:12px;align-items:center;">
+            <img id="char-avatar" src="" alt="" style="width:64px;height:64px;border-radius:6px;object-fit:cover;background:#0a0a0a;border:1px solid #444;display:none;" />
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+                <h3 id="char-name" style="margin:0;color:#e8b923;font-size:1.1rem;"></h3>
+                <span id="char-summary" style="color:#bbb;font-size:0.85rem;"></span>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;margin-top:4px;font-size:0.75rem;color:#888;flex-wrap:wrap;">
+                <span id="char-player"></span>
+                <span id="char-ddb-id"></span>
+                <span id="char-updated"></span>
+              </div>
+            </div>
+            <button id="btn-sync-one" type="button" style="background:#2d4a7a;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:0.8rem;" title="Pull this character's mechanical data from D&amp;D Beyond.">&#128260; Sync from DDB</button>
+          </div>
+
+          <div id="char-body" style="flex:1;overflow-y:auto;padding:12px 14px;">
+            <!-- Read-only display sections render into here, followed by the
+                 dm_notes editor and the audit panel. -->
+          </div>
+
+          <div id="editor-buttons" style="padding:10px 14px;border-top:1px solid #333;background:#202020;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span id="dirty-flag" style="color:#c66;font-size:0.78rem;display:none;">&#9679; Unsaved changes</span>
+            <span style="flex:1;"></span>
+            <button id="btn-publish" type="button" style="background:#2d7a2d;color:#fff;border:none;padding:10px 22px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:0.95rem;" title="Save DM Notes and refresh the RAG index for this character.">&#128226; PUBLISH</button>
+          </div>
+
+          <div id="progress-wrap" style="display:none;padding:6px 12px;background:#0e0e0e;border-top:1px solid #222;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;font-size:0.78rem;color:#ddd;">
+              <span id="progress-label">Working...</span>
+              <span id="progress-timer" style="color:#888;">0s</span>
+              <span style="flex:1;"></span>
+              <span style="color:#666;font-size:0.72rem;">RAG reindex runs after save</span>
+            </div>
+            <div id="progress-bar-track" style="position:relative;height:6px;background:#1a1a1a;border-radius:3px;overflow:hidden;">
+              <div id="progress-bar-fill" class="progress-bar-indeterminate"></div>
+            </div>
+          </div>
+          <div id="status-line" style="padding:6px 12px;background:#0e0e0e;color:#888;font-size:0.78rem;min-height:24px;border-top:1px solid #222;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+  <style>
+    .EasyMDEContainer .CodeMirror { background:#0e0e0e; color:#eee; border-color:#333; min-height:280px; }
+    .EasyMDEContainer .CodeMirror-cursor { border-color:#e8b923; }
+    .editor-toolbar { background:#1a1a1a; border-color:#333; }
+    .editor-toolbar button { color:#bbb !important; }
+    .editor-toolbar button:hover, .editor-toolbar button.active { background:#333 !important; border-color:#444 !important; }
+    .editor-statusbar { color:#666; }
+    .editor-preview, .editor-preview-side { background:#0a0a0a; color:#ddd; border-color:#333; }
+    .editor-preview h1, .editor-preview h2 { color:#e8b923; border-bottom:1px solid #444; }
+    .char-row { padding:8px 10px; border-radius:4px; cursor:pointer; margin-bottom:2px; border:1px solid transparent; display:flex; gap:8px; align-items:center; }
+    .char-row:hover { background:#2a2a2a; }
+    .char-row.active { background:#2d4a7a; border-color:#4a6a9a; }
+    .char-row img { width:36px; height:36px; border-radius:4px; object-fit:cover; background:#0a0a0a; border:1px solid #333; flex-shrink:0; }
+    .char-row .name { color:#e8b923; font-weight:bold; font-size:0.9rem; }
+    .char-row .meta { color:#aaa; font-size:0.72rem; }
+    .char-section { background:#202020; border:1px solid #2e2e2e; border-radius:5px; margin-bottom:10px; }
+    .char-section summary { padding:8px 12px; cursor:pointer; color:#e8b923; font-weight:bold; font-size:0.9rem; user-select:none; }
+    .char-section[open] summary { border-bottom:1px solid #2e2e2e; }
+    .char-section .body { padding:10px 14px; color:#ddd; font-size:0.85rem; line-height:1.55; }
+    .char-section .body p { margin:0 0 8px 0; }
+    .char-section .stat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; text-align:center; margin-bottom:10px; }
+    .char-section .stat-grid .cell { background:#0e0e0e; border:1px solid #333; border-radius:4px; padding:6px 4px; }
+    .char-section .stat-grid .label { color:#888; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .char-section .stat-grid .val { color:#e8b923; font-weight:bold; font-size:1.05rem; }
+    .char-section .kv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:6px 12px; }
+    .char-section .kv-grid .kv { background:#0e0e0e; border:1px solid #2a2a2a; border-radius:3px; padding:6px 8px; }
+    .char-section .kv-grid .kv .k { color:#888; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .char-section .kv-grid .kv .v { color:#eee; font-size:0.9rem; }
+    .char-section ul { margin:4px 0 0 0; padding-left:18px; }
+    .char-section li { margin:2px 0; }
+    .audit-row { background:#0e0e0e; border:1px solid #2a2a2a; border-radius:3px; padding:8px 10px; margin-bottom:6px; font-size:0.8rem; }
+    .audit-row .head { color:#e8b923; font-size:0.78rem; margin-bottom:4px; }
+    .audit-row .excerpt { color:#aaa; font-style:italic; }
+    .progress-bar-indeterminate {
+      position:absolute; top:0; left:0; height:100%; width:40%;
+      background:linear-gradient(90deg, transparent, #e8b923 50%, transparent);
+      animation: hotd-progress-slide 1.2s linear infinite;
+    }
+    @keyframes hotd-progress-slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+    @media (max-width:900px) {
+      #chars-workspace { grid-template-columns:1fr !important; height:auto !important; }
+      #chars-workspace aside { max-height:300px; }
+    }
+  </style>
+
+  <script>
+  (function() {
+    var state = {
+      list: [],
+      currentId: null,
+      current: null,
+      audit: [],
+      dirty: false,
+      mde: null,
+    };
+
+    var $list = document.getElementById('char-list');
+    var $empty = document.getElementById('editor-empty');
+    var $active = document.getElementById('editor-active');
+    var $status = document.getElementById('status-line');
+    var $dirty = document.getElementById('dirty-flag');
+
+    function setStatus(msg, isError) {
+      $status.textContent = msg || '';
+      $status.style.color = isError ? '#f88' : '#888';
+    }
+
+    var ACTION_BTN_IDS = ['btn-publish','btn-sync-one','btn-sync-all'];
+    var progress = { wrap: null, label: null, timer: null, start: 0, intervalId: null };
+    function fmtElapsed(ms) {
+      var s = Math.floor(ms / 1000);
+      if (s < 60) return s + 's';
+      var m = Math.floor(s / 60);
+      var rem = s % 60;
+      return m + 'm ' + (rem < 10 ? '0' : '') + rem + 's';
+    }
+    function setActionsDisabled(disabled) {
+      ACTION_BTN_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = disabled;
+        el.style.opacity = disabled ? '0.5' : '';
+        el.style.cursor = disabled ? 'wait' : 'pointer';
+      });
+    }
+    function startProgress(label) {
+      if (!progress.wrap) {
+        progress.wrap = document.getElementById('progress-wrap');
+        progress.label = document.getElementById('progress-label');
+        progress.timer = document.getElementById('progress-timer');
+      }
+      progress.label.textContent = label || 'Working...';
+      progress.timer.textContent = '0s';
+      progress.wrap.style.display = '';
+      progress.start = Date.now();
+      if (progress.intervalId) clearInterval(progress.intervalId);
+      progress.intervalId = setInterval(function() {
+        progress.timer.textContent = fmtElapsed(Date.now() - progress.start);
+      }, 500);
+      setActionsDisabled(true);
+    }
+    function stopProgress() {
+      if (progress.intervalId) { clearInterval(progress.intervalId); progress.intervalId = null; }
+      if (progress.wrap) progress.wrap.style.display = 'none';
+      setActionsDisabled(false);
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+      });
+    }
+
+    // JSONB fields from DDB come back already-parsed by node-postgres; older
+    // rows may still be raw strings, so be defensive.
+    function jsonArray(v) {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      if (typeof v === 'string') {
+        try { var p = JSON.parse(v); return Array.isArray(p) ? p : []; }
+        catch (_) { return []; }
+      }
+      return [];
+    }
+    function itemName(x) {
+      if (typeof x === 'string') return x;
+      if (x && typeof x === 'object') return x.name || x.title || x.label || JSON.stringify(x);
+      return String(x);
+    }
+    function jsonObject(v) {
+      if (!v) return {};
+      if (typeof v === 'object' && !Array.isArray(v)) return v;
+      if (typeof v === 'string') { try { var p = JSON.parse(v); return (p && typeof p === 'object' && !Array.isArray(p)) ? p : {}; } catch (_) { return {}; } }
+      return {};
+    }
+
+    function setDirty(d) {
+      state.dirty = !!d;
+      $dirty.style.display = d ? '' : 'none';
+    }
+
+    window.addEventListener('beforeunload', function(e) {
+      if (state.dirty) { e.preventDefault(); e.returnValue = ''; return ''; }
+    });
+
+    // ── Roster ────────────────────────────────────────────────
+    function renderList() {
+      if (!state.list.length) {
+        $list.innerHTML = '<p style="color:#888;padding:12px;font-size:0.85rem;">No characters found. Use Sync All DDB to import.</p>';
+        return;
+      }
+      var html = state.list.map(function(c) {
+        var avatar = c.avatar_url ? '<img src="' + esc(c.avatar_url) + '" alt="">' : '<div style="width:36px;height:36px;background:#0a0a0a;border:1px solid #333;border-radius:4px;flex-shrink:0;"></div>';
+        var meta = 'L' + (c.level || '?') + ' ' + esc(c.race || '') + ' ' + esc(c.class_summary || '');
+        return '<div class="char-row' + (c.id === state.currentId ? ' active' : '') + '" data-id="' + c.id + '">' +
+          avatar +
+          '<div style="min-width:0;flex:1;">' +
+            '<div class="name">' + esc(c.character_name || '(unnamed)') + '</div>' +
+            '<div class="meta">' + meta + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      $list.innerHTML = html;
+      Array.prototype.forEach.call($list.querySelectorAll('.char-row'), function(el) {
+        el.addEventListener('click', function() {
+          var id = parseInt(el.getAttribute('data-id'), 10);
+          selectCharacter(id);
+        });
+      });
+    }
+
+    async function loadList() {
+      try {
+        var r = await fetch('/api/dm-admin/characters');
+        var j = await r.json();
+        state.list = j.characters || [];
+        renderList();
+      } catch (e) {
+        $list.innerHTML = '<p style="color:#f88;padding:12px;">Failed to load: ' + esc(e.message) + '</p>';
+      }
+    }
+
+    // ── Detail rendering ──────────────────────────────────────
+    function renderHeader(c) {
+      var img = document.getElementById('char-avatar');
+      if (c.avatar_url) { img.src = c.avatar_url; img.style.display = ''; }
+      else img.style.display = 'none';
+      document.getElementById('char-name').textContent = c.character_name || '(unnamed)';
+      var sub = 'Level ' + (c.level || '?') + ' ' + (c.race || '') + ' ' + (c.class_summary || '');
+      if (c.subclass) sub += ' (' + c.subclass + ')';
+      document.getElementById('char-summary').textContent = sub;
+      document.getElementById('char-player').textContent = c.player_name ? 'Player: ' + c.player_name : '';
+      document.getElementById('char-ddb-id').textContent = c.ddb_character_id ? 'DDB #' + c.ddb_character_id : 'No DDB ID';
+      document.getElementById('char-updated').textContent = c.updated_at ? 'Last sync: ' + new Date(c.updated_at).toLocaleString() : '';
+    }
+
+    function sectionStats(c) {
+      var stats = ['strength','dexterity','constitution','intelligence','wisdom','charisma'];
+      var labels = ['STR','DEX','CON','INT','WIS','CHA'];
+      var grid = '<div class="stat-grid">' + stats.map(function(k, i) {
+        var v = c[k] != null ? c[k] : '-';
+        return '<div class="cell"><div class="label">' + labels[i] + '</div><div class="val">' + esc(v) + '</div></div>';
+      }).join('') + '</div>';
+      var kv = '<div class="kv-grid">' +
+        '<div class="kv"><div class="k">Armor Class</div><div class="v">' + esc(c.armor_class || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Hit Points</div><div class="v">' + esc((c.hit_points != null ? c.hit_points : '-') + ' / ' + (c.max_hit_points != null ? c.max_hit_points : '-')) + '</div></div>' +
+        '<div class="kv"><div class="k">Speed</div><div class="v">' + esc(c.speed || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Proficiency</div><div class="v">' + esc(c.proficiency_bonus ? '+' + c.proficiency_bonus : '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Background</div><div class="v">' + esc(c.background || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Alignment</div><div class="v">' + esc(c.alignment || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Faith</div><div class="v">' + esc(c.faith || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Languages</div><div class="v">' + esc(c.languages || '-') + '</div></div>' +
+        '</div>';
+      return '<details class="char-section" open><summary>Identity &amp; Mechanics</summary><div class="body">' + grid + kv + '</div></details>';
+    }
+
+    function paraBlock(label, text) {
+      if (!text || !String(text).trim()) return '';
+      return '<p><strong style="color:#e8b923;">' + esc(label) + ':</strong><br>' + esc(text).replace(/\\n/g, '<br>') + '</p>';
+    }
+    function sectionStory(c) {
+      var inner = '' +
+        paraBlock('Backstory', c.backstory) +
+        paraBlock('Personality', c.personality_traits) +
+        paraBlock('Ideals', c.ideals) +
+        paraBlock('Bonds', c.bonds) +
+        paraBlock('Flaws', c.flaws);
+      if (!inner) inner = '<p style="color:#666;">No story fields synced from DDB.</p>';
+      return '<details class="char-section"><summary>Story (read-only, from DDB)</summary><div class="body">' + inner + '</div></details>';
+    }
+
+    function listBlock(label, arr) {
+      if (!arr.length) return '';
+      return '<p><strong style="color:#e8b923;">' + esc(label) + ':</strong></p><ul>' +
+        arr.map(function(x) { return '<li>' + esc(itemName(x)) + '</li>'; }).join('') +
+        '</ul>';
+    }
+
+    // ── Combat State (spell slots, hit dice, wealth, etc) ────
+    // These all come from D&D Beyond on every sync and reflect the
+    // player's last save state. Read-only by GM/Admin per the
+    // DDB-owned contract; only dm_notes is editable.
+    function sectionCombatState(c) {
+      var inner = '';
+
+      // Quick combat readouts.
+      var quick = '<div class="kv-grid">' +
+        '<div class="kv"><div class="k">Initiative</div><div class="v">' + esc(c.initiative != null ? (c.initiative >= 0 ? '+' + c.initiative : c.initiative) : '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Temp HP</div><div class="v">' + esc(c.temp_hit_points || 0) + '</div></div>' +
+        '<div class="kv"><div class="k">Passive Perception</div><div class="v">' + esc(c.passive_perception || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Passive Investigation</div><div class="v">' + esc(c.passive_investigation || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Passive Insight</div><div class="v">' + esc(c.passive_insight || '-') + '</div></div>' +
+        '<div class="kv"><div class="k">Senses</div><div class="v">' + esc(c.senses || '-') + '</div></div>' +
+        '</div>';
+      inner += quick;
+
+      // Spell slots.
+      var slots = jsonArray(c.spell_slots);
+      if (slots.length) {
+        inner += '<p style="margin-top:10px;"><strong style="color:#e8b923;">Spell Slots:</strong></p>';
+        inner += '<div class="stat-grid">' + slots.map(function(s) {
+          var rem = s.remaining != null ? s.remaining : (s.max - (s.used || 0));
+          return '<div class="cell"><div class="label">L' + esc(s.level) + (s.pact ? ' Pact' : '') + '</div><div class="val">' + esc(rem) + '/' + esc(s.max) + '</div></div>';
+        }).join('') + '</div>';
+      }
+
+      // Hit dice per class.
+      var hd = jsonArray(c.hit_dice);
+      if (hd.length) {
+        inner += '<p style="margin-top:10px;"><strong style="color:#e8b923;">Hit Dice:</strong></p><ul>';
+        inner += hd.map(function(h) {
+          var rem = h.remaining != null ? h.remaining : (h.max - (h.used || 0));
+          return '<li>' + esc(h.class) + ' ' + esc(h.die) + ': ' + esc(rem) + '/' + esc(h.max) + '</li>';
+        }).join('') + '</ul>';
+      }
+
+      // Currencies.
+      var cur = jsonObject(c.currencies);
+      var coinage = [];
+      ['pp','gp','ep','sp','cp'].forEach(function(k) { if (cur[k]) coinage.push(cur[k] + ' ' + k); });
+      if (coinage.length) {
+        inner += '<p style="margin-top:10px;"><strong style="color:#e8b923;">Wealth:</strong> ' + esc(coinage.join(', ')) + '</p>';
+      }
+
+      // Death saves.
+      var ds = jsonObject(c.death_saves);
+      if ((ds.success || 0) + (ds.fail || 0) > 0) {
+        inner += '<p><strong style="color:#e8b923;">Death Saves:</strong> ' + esc(ds.success || 0) + ' successes, ' + esc(ds.fail || 0) + ' failures</p>';
+      }
+
+      // Active conditions.
+      if (c.conditions && String(c.conditions).trim()) {
+        inner += '<p><strong style="color:#e8b923;">Active Conditions:</strong> ' + esc(c.conditions) + '</p>';
+      }
+
+      return '<details class="char-section"><summary>Combat State (read-only, from DDB)</summary><div class="body">' + inner + '</div></details>';
+    }
+
+    function spellLine(s) {
+      if (typeof s !== 'object' || !s) return esc(itemName(s));
+      var bits = [esc(s.name || '?')];
+      if (s.level != null) bits.push('<span style="color:#888;">(' + (s.level === 0 ? 'cantrip' : 'L' + s.level) + (s.school ? ' ' + esc(s.school) : '') + ')</span>');
+      var meta = [];
+      if (s.prepared || s.alwaysPrepared) meta.push(s.alwaysPrepared ? 'always prepared' : 'prepared');
+      if (s.concentration) meta.push('concentration');
+      if (s.ritual) meta.push('ritual');
+      if (meta.length) bits.push('<em style="color:#999;">' + esc(meta.join(', ')) + '</em>');
+      return bits.join(' ');
+    }
+    function equipmentLine(item) {
+      if (typeof item !== 'object' || !item) return esc(itemName(item));
+      var bits = [esc(item.name || '?')];
+      if (item.quantity && item.quantity > 1) bits.push('<span style="color:#888;">x' + esc(item.quantity) + '</span>');
+      if (item.type) bits.push('<span style="color:#888;">[' + esc(item.type) + ']</span>');
+      if (item.equipped) bits.push('<em style="color:#9c9;">equipped</em>');
+      if (item.attuned) bits.push('<em style="color:#c9c;">attuned</em>');
+      if (item.magical && !item.attuned) bits.push('<em style="color:#999;">magical</em>');
+      return bits.join(' ');
+    }
+    function sectionInventory(c) {
+      var equip = jsonArray(c.equipment);
+      var atks = jsonArray(c.attacks);
+      var spells = jsonArray(c.spells);
+      var feats = jsonArray(c.features);
+      var inner = '';
+      if (equip.length) {
+        inner += '<p><strong style="color:#e8b923;">Equipment:</strong></p><ul>' +
+          equip.map(function(x) { return '<li>' + equipmentLine(x) + '</li>'; }).join('') + '</ul>';
+      }
+      if (atks.length) inner += listBlock('Attacks', atks);
+      if (spells.length) {
+        inner += '<p><strong style="color:#e8b923;">Spells:</strong></p><ul>' +
+          spells.map(function(x) { return '<li>' + spellLine(x) + '</li>'; }).join('') + '</ul>';
+      }
+      if (feats.length) inner += listBlock('Features', feats);
+      if (!inner) inner = '<p style="color:#666;">No inventory data synced from DDB.</p>';
+      return '<details class="char-section"><summary>Inventory &amp; Abilities (read-only, from DDB)</summary><div class="body">' + inner + '</div></details>';
+    }
+
+    function sectionDdbNotes(c) {
+      var t = (c.notes || '').trim();
+      if (!t) return '';
+      // DDB "Other Notes" lives here; it gets overwritten on every DDB sync,
+      // so the GM should mirror anything they want to keep into DM Notes.
+      return '<details class="char-section"><summary>Player Notes (read-only, from D&amp;D Beyond)</summary><div class="body" style="white-space:pre-wrap;">' + esc(t) + '</div></details>';
+    }
+
+    function sectionDmNotes(c) {
+      // The single editable field. EasyMDE is mounted into the textarea
+      // below once the section is in the DOM.
+      return '<details class="char-section" open><summary>&#9999; DM Notes (editable, GM-only, DDB-safe)</summary>' +
+        '<div class="body">' +
+          '<p style="color:#888;font-size:0.78rem;margin:0 0 8px 0;">' +
+            'These notes are written by the canon auto-applier when you Publish a session, and you can edit them directly here. ' +
+            'D&amp;D Beyond sync never touches this column.' +
+          '</p>' +
+          '<textarea id="dm-notes-editor">' + esc(c.dm_notes || '') + '</textarea>' +
+        '</div></details>';
+    }
+
+    function sectionAudit() {
+      if (!state.audit.length) {
+        return '<details class="char-section"><summary>Canon Audit Log</summary><div class="body"><p style="color:#666;">No canon-applied changes recorded for this character.</p></div></details>';
+      }
+      var rows = state.audit.map(function(a) {
+        var when = a.applied_at ? new Date(a.applied_at).toLocaleString() : '';
+        var sess = a.session_number != null
+          ? 'Session ' + a.session_number + (a.session_title ? ' — ' + a.session_title : '')
+          : (a.session_id ? 'Session #' + a.session_id : 'Unknown session');
+        return '<div class="audit-row">' +
+          '<div class="head">' + esc(sess) + ' &middot; ' + esc(a.operation || '') + ' (' + esc(a.field || '') + ') &middot; ' + esc(when) + '</div>' +
+          (a.rationale ? '<div style="color:#bbb;margin-bottom:4px;">' + esc(a.rationale) + '</div>' : '') +
+          (a.source_excerpt ? '<div class="excerpt">&ldquo;' + esc(a.source_excerpt) + '&rdquo;</div>' : '') +
+        '</div>';
+      }).join('');
+      return '<details class="char-section"><summary>Canon Audit Log (' + state.audit.length + ')</summary><div class="body">' + rows + '</div></details>';
+    }
+
+    function mountEditor(initial) {
+      if (state.mde) { try { state.mde.toTextArea(); } catch (_) {} state.mde = null; }
+      var ta = document.getElementById('dm-notes-editor');
+      if (!ta) return;
+      state.mde = new EasyMDE({
+        element: ta,
+        autoDownloadFontAwesome: true,
+        spellChecker: false,
+        status: ['lines','words'],
+        minHeight: '280px',
+        previewRender: function(plain) {
+          try { return DOMPurify.sanitize(marked.parse(plain)); }
+          catch (_) { return esc(plain); }
+        },
+        toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','preview','side-by-side','fullscreen','|','guide'],
+      });
+      state.mde.value(initial || '');
+      state.mde.codemirror.on('change', function() { setDirty(true); });
+      setDirty(false);
+    }
+
+    function renderDetail(c) {
+      var body = document.getElementById('char-body');
+      body.innerHTML =
+        sectionStats(c) +
+        sectionCombatState(c) +
+        sectionStory(c) +
+        sectionInventory(c) +
+        sectionDdbNotes(c) +
+        sectionDmNotes(c) +
+        sectionAudit();
+      mountEditor(c.dm_notes || '');
+    }
+
+    async function selectCharacter(id) {
+      if (state.dirty && !confirm('You have unsaved DM Notes. Discard them?')) return;
+      setStatus('Loading character...');
+      state.currentId = id;
+      renderList();
+      try {
+        var [detailRes, auditRes] = await Promise.all([
+          fetch('/api/dm-admin/characters/' + id).then(function(r){ return r.json(); }),
+          fetch('/api/dm-admin/characters/' + id + '/audit').then(function(r){ return r.json(); }),
+        ]);
+        if (detailRes.error) throw new Error(detailRes.error);
+        state.current = detailRes.character;
+        state.audit = auditRes.audit || [];
+        $empty.style.display = 'none';
+        $active.style.display = 'flex';
+        renderHeader(state.current);
+        renderDetail(state.current);
+        setStatus('Loaded ' + state.current.character_name + '.');
+      } catch (e) {
+        setStatus('Load failed: ' + e.message, true);
+      }
+    }
+
+    // ── Publish (save dm_notes + reindex RAG) ────────────────
+    async function publish() {
+      if (!state.current) return;
+      var dm = state.mde ? state.mde.value() : '';
+      startProgress('Saving DM Notes and reindexing RAG...');
+      setStatus('Publishing ' + state.current.character_name + '...');
+      try {
+        var r = await fetch('/api/dm-admin/characters/' + state.currentId + '/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dm_notes: dm }),
+        });
+        var j = await r.json();
+        if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+        state.current.dm_notes = dm;
+        setDirty(false);
+        var elapsed = fmtElapsed(j.elapsed_ms || 0);
+        var reindexInfo = '';
+        if (Array.isArray(j.reindex) && j.reindex.length) {
+          var ok = j.reindex.filter(function(x){ return x.ok; }).length;
+          var total = j.reindex.length;
+          reindexInfo = ' RAG reindex: ' + ok + '/' + total + ' source' + (total === 1 ? '' : 's') + ' OK.';
+          var failed = j.reindex.filter(function(x){ return !x.ok; });
+          if (failed.length) {
+            reindexInfo += ' Failed: ' + failed.map(function(f){ return f.source + ' (exit ' + f.exitCode + ')'; }).join(', ');
+          }
+        }
+        setStatus('Published ' + j.character_name + ' in ' + elapsed + '.' + reindexInfo);
+        // Refresh audit log (canon-applier may have written rows since load).
+        try {
+          var ar = await fetch('/api/dm-admin/characters/' + state.currentId + '/audit');
+          var aj = await ar.json();
+          state.audit = aj.audit || [];
+          var auditEl = document.querySelector('#char-body details:last-child');
+          if (auditEl) {
+            var wasOpen = auditEl.open;
+            auditEl.outerHTML = sectionAudit();
+            if (wasOpen) document.querySelector('#char-body details:last-child').open = true;
+          }
+        } catch (_) {}
+      } catch (e) {
+        setStatus('Publish failed: ' + e.message, true);
+      } finally {
+        stopProgress();
+      }
+    }
+
+    // ── DDB sync (single + bulk) ─────────────────────────────
+    async function syncOne() {
+      if (!state.current) return;
+      if (!state.current.ddb_character_id) {
+        setStatus('No DDB character ID set for this PC.', true);
+        return;
+      }
+      if (state.dirty && !confirm('You have unsaved DM Notes. DDB sync only touches mechanical fields, your DM Notes will be preserved. Continue?')) return;
+      startProgress('Syncing ' + state.current.character_name + ' from D&D Beyond...');
+      setStatus('');
+      try {
+        var r = await fetch('/api/dm-admin/characters/' + state.currentId + '/sync', { method: 'POST' });
+        var j = await r.json();
+        if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+        setStatus(j.message + ' Click PUBLISH to push the updated sheet into RAG.');
+        // Reload roster and current detail so the new stats show.
+        await loadList();
+        var dmDraft = state.mde ? state.mde.value() : null;
+        await selectCharacter(state.currentId);
+        if (dmDraft != null && state.mde) {
+          state.mde.value(dmDraft);
+          setDirty(dmDraft !== (state.current && state.current.dm_notes || ''));
+        }
+      } catch (e) {
+        setStatus('Sync failed: ' + e.message, true);
+      } finally {
+        stopProgress();
+      }
+    }
+
+    async function syncAll() {
+      if (!confirm('Sync every PC with a DDB ID? This pulls fresh mechanical data from D&D Beyond. RAG is not reindexed until you PUBLISH each character.')) return;
+      startProgress('Syncing all characters from D&D Beyond...');
+      setStatus('');
+      try {
+        var r = await fetch('/api/dm-admin/characters/sync-all', { method: 'POST' });
+        var j = await r.json();
+        if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+        setStatus(j.message + ' Click PUBLISH on any updated PC to push the changes into RAG.');
+        await loadList();
+        if (state.currentId) {
+          var dmDraft = state.mde ? state.mde.value() : null;
+          await selectCharacter(state.currentId);
+          if (dmDraft != null && state.mde) {
+            state.mde.value(dmDraft);
+            setDirty(dmDraft !== (state.current && state.current.dm_notes || ''));
+          }
+        }
+      } catch (e) {
+        setStatus('Sync All failed: ' + e.message, true);
+      } finally {
+        stopProgress();
+      }
+    }
+
+    document.getElementById('btn-publish').addEventListener('click', publish);
+    document.getElementById('btn-sync-one').addEventListener('click', syncOne);
+    document.getElementById('btn-sync-all').addEventListener('click', syncAll);
+
+    loadList();
+  })();
+  </script>`;
+  return pageShell("GM Player Workspace — Halls of the Damned", "/", body, session);
+}
+
 module.exports = {
   renderHomeAdminPage,
   renderCalendarAdminPage,
@@ -1346,4 +1993,5 @@ module.exports = {
   renderArtAdminPage,
   renderBulkUploadAdminPage,
   renderMapAdminPage,
+  renderCharactersAdminPage,
 };

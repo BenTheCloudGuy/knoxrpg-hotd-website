@@ -4,6 +4,42 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] - 2026-05-31
+
+### Added
+- **`src/lib/ddb-sync.js` — single source of truth for D&D Beyond character sync.** Consolidates every extractor and the `UPDATE hotd_player_characters` write path into one library. Exports `syncCharacterFromDDB(ddbId, localId)`, `fetchDDBCharacter(ddbId)`, `buildSyncRowFromDDB(data)`, and a `DDB_OWNED_FIELDS` whitelist. Both the in-app GM Player Workspace `Sync from DDB` button (via `src/routes/dm-admin-api.js`) and the standalone CLI (`scripts/sync-ddb-characters.js`) now delegate here, so the two code paths can never drift apart again.
+- **New `hotd_player_characters` columns populated on every DDB sync:** `spell_slots JSONB` (per-level max/used/remaining plus pact-magic slots for Warlocks), `hit_dice JSONB` (per-class die size + remaining count for short rests), `currencies JSONB` ({cp, sp, ep, gp, pp}), `death_saves JSONB` ({success, fail}). All columns are added idempotently via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+- **Combat State section in the GM Player Workspace.** New collapsible section between Identity & Mechanics and Story showing initiative, temp HP, passives (Perception/Investigation/Insight), senses, spell-slot tracker, hit-dice tracker per class, wealth in mixed coinage, death-save counters, and active condition list. All read-only, sourced from DDB on each sync.
+- **Comprehensive DDB extractors.** `extractSpells` now captures school, casting time, range, components (V/S/M), duration, concentration, ritual, prepared/always-prepared flag, source (class/race/feat/item/background), and a truncated description per spell. `extractEquipment` now captures item type (Armor/Weapon/Wondrous Item/Potion/etc.), rarity, magical flag, attunement state, weight, and description. `extractFeatures` now captures source class/subclass/race/feat plus a truncated rules-text description. Five new top-level extractors: `extractSpellSlots`, `extractHitDice`, `extractCurrencies`, `extractDeathSaves`, `extractConditions`.
+
+### Changed
+- **GM Player Workspace `Sync from DDB` button is now comprehensive.** Previously it wrote only 17 mechanical fields (ability scores, AC, max HP, speed, alignment, background, avatar), so Story/Inventory/Spells/Attacks/Skills/Saving Throws/Features remained stale after the button was clicked. It now writes the same 49 DDB-owned columns the CLI script writes plus the four new combat-state columns, all in a single UPDATE.
+- **`scripts/sync-ddb-characters.js` reduced to a thin CLI wrapper.** Removed ~430 lines of duplicated extractor logic (it had drifted ahead of the in-app version, which was the proximate cause of the stale-UI bug). The script now imports `syncCharacterFromDDB` from the shared lib and adds CLI niceties: `--id <ddbId>` to target a single character and `--reindex` to spawn `embed-pipeline --source character --mode incremental` after a successful batch.
+- **PC RAG embeddings now include combat-state context.** `scripts/embed-pipeline.js` PC SELECT and text-builder add lines for current spell slots (`L1: 4/4, L2: 3/3`), hit dice per class, mixed-coinage wealth, and active conditions, so DM AI queries like "who has spell slots left?" or "how much gold does the party have?" can be answered from RAG context.
+- **Inventory & Abilities section in the GM Player Workspace** now renders each spell with school/level/casting flags and each item with type/rarity/equipped/attuned/magical badges, instead of bare names.
+
+### Fixed
+- DM Notes column remains untouched on every DDB sync. The shared lib's `DDB_OWNED_FIELDS` whitelist explicitly excludes `dm_notes`, `player_name`, `id`, `ddb_character_id`, and `created_at`. The contract from 3.8.0 (only `dm_notes` is GM-editable; everything else is DDB-owned and read-only) holds for both sync paths.
+
+## [3.8.0] - 2026-05-31
+
+### Added
+- **GM Player Workspace at `/characters/admin`.** New admin-only two-pane workbench (30/70 split, mirrors the Sessions Workspace pattern) that gives the DM a single place to view player character data and curate per-PC campaign notes. The left pane lists every PC with avatar, level, race, and class; the right pane renders the selected character as a read-only stat block (ability scores, AC/HP/Speed, background, alignment, faith, languages), plus collapsible read-only sections for Story (backstory/personality/ideals/bonds/flaws), Inventory (equipment/attacks/spells/features), and the DDB-sourced Other Notes. The only editable field is a new EasyMDE `dm_notes` column. A single green `[PUBLISH]` button persists `dm_notes` and immediately spawns `embed-pipeline.js --source character --mode incremental` so the RAG vector store reflects both the new GM notes and any DDB-synced mechanical changes for that character. Per-character `Sync from DDB` and global `Sync All DDB` buttons are wired to the existing DDB sync routes, which only touch mechanical/identity fields and leave `dm_notes` untouched. A canon audit log panel surfaces every `hotd_canon_audit` row targeting the selected PC so the DM can see which Session Publish wrote which notes. A `beforeunload` guard prevents accidental loss of unsaved DM Notes.
+- **`hotd_player_characters.dm_notes` column.** New GM-owned `TEXT DEFAULT ''` column managed exclusively by the GM Player Workspace and the canon auto-applier. DDB sync never writes to it, so canon-applied campaign history (and anything the GM types) survives indefinitely.
+- **API endpoints for the GM Player Workspace:** `GET /api/dm-admin/characters/:id` returns a single PC's full row, `POST /api/dm-admin/characters/:id/publish` accepts `{ dm_notes }` and atomically saves + reindexes, `GET /api/dm-admin/characters/:id/audit` returns up to 100 canon-applied audit rows for that PC joined with session number/title/game_date.
+
+### Changed
+- **Canon auto-applier now writes to `dm_notes` instead of `notes`.** `applyPcNoteAppend()` and `resolvePc()` in `src/lib/canon-applier.js` were retargeted to the new GM-owned column, and the audit row `field` value flipped from `"notes"` to `"dm_notes"` so the workspace audit log groups cleanly. This closes the v3.6.0 clobber hazard where a subsequent `scripts/sync-ddb-characters.js` run would overwrite canon-applied notes with the player's DDB Other Notes field.
+- **Embed pipeline includes both notes fields for each PC.** `scripts/embed-pipeline.js` now selects `dm_notes` alongside `notes` and labels them distinctly in the embedded text (`Player Notes (from D&D Beyond):` vs `DM Campaign Notes:`) so the RAG store can surface either source by semantic similarity.
+- **DM AI `get_player_character` tool returns `dm_notes`.** `src/lib/ai-tools.js` adds `dm_notes` to the SELECT used by the function-calling tool, so the DM AI can cite GM-curated campaign notes alongside the DDB-sourced data.
+- **Home Admin landing.** The misleading "manage them via NPCs Admin" copy under Player Characters is replaced with a direct link to `/characters/admin`.
+
+### Removed
+- `PUT /api/dm-admin/characters/:id` (the broad whitelist endpoint that exposed identity/mechanical/ability fields). Those columns are owned by D&D Beyond and would be clobbered on the next sync, so the UI no longer needs a path to edit them. `dm_notes` is the only writable field, and it goes through the new publish endpoint.
+
+### Notes
+- The `dm_notes` column is created empty on existing rows; no data migration is performed. If any v3.6.0 canon-applied content is currently stored in the `notes` column, the DM can copy it into the GM Player Workspace and publish to relocate it. After 3.8.0, DDB syncs may overwrite anything left in `notes` (DDB's "Other Notes" field is its source of truth).
+
 ## [3.7.2] - 2026-05-31
 
 ### Fixed

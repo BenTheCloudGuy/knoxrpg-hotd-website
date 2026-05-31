@@ -147,7 +147,7 @@ async function stageExtract() {
 
   // ── DB: Player characters ───────────────────────────────────
   if (!SOURCE_FILTER || SOURCE_FILTER === "character") {
-    const { rows } = await pgPool.query("SELECT id, character_name, player_name, level, race, class_summary, subclass, background, alignment, faith, languages, strength, dexterity, constitution, intelligence, wisdom, charisma, armor_class, max_hit_points, speed, backstory, personality_traits, ideals, bonds, flaws, notes, equipment, spells, attacks, features FROM hotd_player_characters");
+    const { rows } = await pgPool.query("SELECT id, character_name, player_name, level, race, class_summary, subclass, background, alignment, faith, languages, strength, dexterity, constitution, intelligence, wisdom, charisma, armor_class, max_hit_points, speed, backstory, personality_traits, ideals, bonds, flaws, notes, dm_notes, equipment, spells, spell_slots, hit_dice, currencies, conditions, attacks, features FROM hotd_player_characters");
     for (const r of rows) {
       // Flatten JSONB arrays to short readable lines so the embedding picks up
       // names like "Sun Sword Shard" or "fireball" rather than raw JSON.
@@ -184,7 +184,32 @@ async function stageExtract() {
         spells ? `\nSpells: ${spells}` : null,
         attacks ? `\nAttacks: ${attacks}` : null,
         features ? `\nFeatures: ${features}` : null,
-        r.notes ? `\nDM Campaign Notes:\n${r.notes}` : null,
+        (function() {
+          // Spell slots: "L1: 4/4, L2: 3/3"
+          const slots = Array.isArray(r.spell_slots) ? r.spell_slots : (r.spell_slots ? safeJsonArray(r.spell_slots) : []);
+          if (!slots.length) return null;
+          return "\nSpell Slots: " + slots.map(s => `L${s.level}: ${s.remaining}/${s.max}${s.pact ? " (pact)" : ""}`).join(", ");
+        })(),
+        (function() {
+          // Hit Dice: "Cleric d8: 5/5"
+          const hd = Array.isArray(r.hit_dice) ? r.hit_dice : (r.hit_dice ? safeJsonArray(r.hit_dice) : []);
+          if (!hd.length) return null;
+          return "\nHit Dice: " + hd.map(h => `${h.class} ${h.die}: ${h.remaining}/${h.max}`).join(", ");
+        })(),
+        (function() {
+          // Currencies: "123 gp, 5 pp" (skip zeroes)
+          const c = r.currencies && typeof r.currencies === "object" ? r.currencies : {};
+          const parts = [];
+          if (c.pp) parts.push(`${c.pp} pp`);
+          if (c.gp) parts.push(`${c.gp} gp`);
+          if (c.ep) parts.push(`${c.ep} ep`);
+          if (c.sp) parts.push(`${c.sp} sp`);
+          if (c.cp) parts.push(`${c.cp} cp`);
+          return parts.length ? "\nWealth: " + parts.join(", ") : null;
+        })(),
+        r.conditions ? `\nActive Conditions: ${r.conditions}` : null,
+        r.notes ? `\nPlayer Notes (from D&D Beyond):\n${r.notes}` : null,
+        r.dm_notes ? `\nDM Campaign Notes:\n${r.dm_notes}` : null,
       ].filter(Boolean).join("\n");
       sources.push({ type: "character", id: r.id, title: r.character_name, content: text, is_dm_only: false, metadata: { player: r.player_name, level: r.level, race: r.race } });
     }

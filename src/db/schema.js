@@ -245,10 +245,22 @@ async function ensureHotdTables() {
     `);
     await pgPool.query(`ALTER TABLE hotd_map_markers ADD COLUMN IF NOT EXISTS size NUMERIC NOT NULL DEFAULT 54`).catch(() => {});
 
-    // Add backstory columns if they don't exist (for existing tables)
+    // Add backstory columns if they don't exist (for existing tables).
+    // dm_notes is GM-curated and DDB-safe: DDB sync never writes to it, the
+    // canon auto-applier targets it, and the GM Player Workspace at
+    // /characters/admin is the only UI that edits it.
+    //
+    // spell_slots / hit_dice / currencies / death_saves are pulled on every
+    // DDB sync via `src/lib/ddb-sync.js` and reflect in-game state at the
+    // time of the player's last D&D Beyond save.
     const backstoryCols = [
       ["backstory", "TEXT DEFAULT ''"], ["personality_traits", "TEXT DEFAULT ''"],
       ["ideals", "TEXT DEFAULT ''"], ["bonds", "TEXT DEFAULT ''"], ["flaws", "TEXT DEFAULT ''"],
+      ["dm_notes", "TEXT DEFAULT ''"],
+      ["spell_slots", "JSONB DEFAULT '[]'"],
+      ["hit_dice", "JSONB DEFAULT '[]'"],
+      ["currencies", "JSONB DEFAULT '{}'"],
+      ["death_saves", "JSONB DEFAULT '{}'"],
     ];
     for (const [col, typedef] of backstoryCols) {
       await pgPool.query(`ALTER TABLE hotd_player_characters ADD COLUMN IF NOT EXISTS ${col} ${typedef}`).catch(() => {});

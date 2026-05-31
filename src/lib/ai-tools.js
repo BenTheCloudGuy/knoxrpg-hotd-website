@@ -390,7 +390,8 @@ async function executeTool(name, args, openaiClient, isDM = false) {
                 strength, dexterity, constitution, intelligence, wisdom, charisma,
                 proficiency_bonus, alignment, background, backstory,
                 personality_traits, ideals, bonds, flaws,
-                skills, equipment, spells, features, attacks, languages, senses, notes
+                skills, equipment, spells, features, attacks, languages, senses,
+                notes, dm_notes
          FROM hotd_player_characters
          WHERE character_name ILIKE $1 OR player_name ILIKE $1
          LIMIT 3`, [pattern]

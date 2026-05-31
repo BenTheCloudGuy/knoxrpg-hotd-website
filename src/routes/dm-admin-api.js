@@ -12,6 +12,7 @@ const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
 const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
+const { syncCharacterFromDDB } = require("../lib/ddb-sync");
 const fs = require("fs");
 const os = require("os");
 const childProc = require("child_process");
@@ -126,33 +127,76 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
     return true;
   }
 
-  // ── Characters: update ─────────────────────────────────────
-  const charUpdateMatch = decoded.match(/^\/api\/dm-admin\/characters\/(\d+)$/);
-  if (charUpdateMatch && req.method === "PUT") {
+  // ── Characters: get one (full row, including dm_notes) ────
+  // Used by the GM Player Workspace at /characters/admin to render the
+  // read-only display panes plus the editable dm_notes textarea.
+  const charGetMatch = decoded.match(/^\/api\/dm-admin\/characters\/(\d+)$/);
+  if (charGetMatch && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const id = parseInt(charUpdateMatch[1], 10);
-    const body = JSON.parse(await readBody(req));
-    const fields = [
-      "character_name", "player_name", "level", "race", "class_summary",
-      "background", "alignment", "ddb_character_id",
-      "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
-      "armor_class", "hit_points", "max_hit_points", "speed",
-    ];
-    const sets = [];
-    const vals = [];
-    let idx = 1;
-    for (const f of fields) {
-      if (body[f] !== undefined) {
-        sets.push(`${f} = $${idx}`);
-        vals.push(body[f]);
-        idx++;
+    const id = parseInt(charGetMatch[1], 10);
+    const r = await pgPool.query("SELECT * FROM hotd_player_characters WHERE id = $1 LIMIT 1", [id]);
+    if (r.rows.length === 0) { sendJSON(res, { error: "Character not found" }, 404); return true; }
+    sendJSON(res, { character: r.rows[0] });
+    return true;
+  }
+
+  // ── Characters: publish (save dm_notes + reindex RAG) ─────
+  // The single PUBLISH action: persists the GM-only dm_notes column and then
+  // spawns `embed-pipeline.js --source character --mode incremental` so the
+  // RAG vector store reflects the new GM notes plus any DDB-synced
+  // mechanical changes for this character. No other column is writable here.
+  const charPublishMatch = decoded.match(/^\/api\/dm-admin\/characters\/(\d+)\/publish$/);
+  if (charPublishMatch && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(charPublishMatch[1], 10);
+    const started = Date.now();
+    try {
+      const body = JSON.parse(await readBody(req));
+      if (typeof body.dm_notes !== "string") {
+        sendJSON(res, { error: "dm_notes (string) required" }, 400);
+        return true;
       }
+      const exists = await pgPool.query("SELECT id, character_name FROM hotd_player_characters WHERE id = $1", [id]);
+      if (exists.rows.length === 0) { sendJSON(res, { error: "Character not found" }, 404); return true; }
+      await pgPool.query(
+        "UPDATE hotd_player_characters SET dm_notes = $1, updated_at = NOW() WHERE id = $2",
+        [body.dm_notes, id]
+      );
+      const reindex = await reindexSources(["character"]);
+      sendJSON(res, {
+        ok: true,
+        character_name: exists.rows[0].character_name,
+        elapsed_ms: Date.now() - started,
+        reindex,
+      });
+    } catch (e) {
+      console.error("Character publish error:", e);
+      sendJSON(res, { error: e.message, elapsed_ms: Date.now() - started }, 500);
     }
-    if (sets.length === 0) { sendJSON(res, { error: "No fields to update" }, 400); return true; }
-    sets.push(`updated_at = NOW()`);
-    vals.push(id);
-    await pgPool.query(`UPDATE hotd_player_characters SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
-    sendJSON(res, { ok: true });
+    return true;
+  }
+
+  // ── Characters: audit log (canon-applied changes for this PC) ─
+  const charAuditMatch = decoded.match(/^\/api\/dm-admin\/characters\/(\d+)\/audit$/);
+  if (charAuditMatch && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const id = parseInt(charAuditMatch[1], 10);
+    try {
+      const r = await pgPool.query(
+        `SELECT a.id, a.session_id, a.operation, a.field, a.before_value, a.after_value,
+                a.source_excerpt, a.rationale, a.applied_at,
+                s.session_number, s.title AS session_title, s.game_date
+           FROM hotd_canon_audit a
+           LEFT JOIN hotd_sessions s ON s.id = a.session_id
+          WHERE a.target_kind = 'pc' AND a.target_id = $1
+          ORDER BY a.applied_at DESC
+          LIMIT 100`,
+        [id]
+      );
+      sendJSON(res, { audit: r.rows });
+    } catch (e) {
+      sendJSON(res, { error: e.message }, 500);
+    }
     return true;
   }
 
@@ -167,7 +211,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       const ddbId = r.rows[0].ddb_character_id;
       if (!ddbId) { sendJSON(res, { error: "No DDB character ID set" }, 400); return true; }
 
-      const result = await syncOneCharacterFromDDB(ddbId, id);
+      const result = await syncCharacterFromDDB(ddbId, id);
       sendJSON(res, result);
     } catch (err) {
       console.error("DDB sync error:", err);
@@ -184,7 +228,7 @@ async function handleDmAdminApiRoutes(decoded, req, res, session) {
       const results = [];
       for (const row of r.rows) {
         try {
-          const result = await syncOneCharacterFromDDB(row.ddb_character_id, row.id);
+          const result = await syncCharacterFromDDB(row.ddb_character_id, row.id);
           results.push({ name: row.character_name, ...result });
         } catch (err) {
           results.push({ name: row.character_name, error: err.message });
@@ -1618,128 +1662,6 @@ ${ragContext}`;
   }
 
   return false;
-}
-
-// ══════════════════════════════════════════════════════════════
-// ── DDB SYNC (inline — no child process needed) ──────────────
-// ══════════════════════════════════════════════════════════════
-
-const DDB_API = "https://character-service.dndbeyond.com/character/v5/character";
-const STAT_NAMES = { 1: "strength", 2: "dexterity", 3: "constitution", 4: "intelligence", 5: "wisdom", 6: "charisma" };
-
-function ddbMod(score) { return Math.floor((score - 10) / 2); }
-
-function ddbComputeAbilityScores(data) {
-  const scores = {};
-  for (const s of data.stats) scores[s.id] = s.value || 10;
-  for (const b of (data.bonusStats || [])) {
-    if (b.value) scores[b.id] = (scores[b.id] || 10) + b.value;
-  }
-  const categories = ["race", "class", "background", "item", "feat", "condition"];
-  for (const cat of categories) {
-    const mods = data.modifiers?.[cat] || [];
-    for (const m of mods) {
-      if (m.type === "bonus" && m.subType?.endsWith("-score")) {
-        const statName = m.subType.replace("-score", "");
-        const statId = Object.entries(STAT_NAMES).find(([, v]) => v === statName)?.[0];
-        if (statId) scores[parseInt(statId)] = (scores[parseInt(statId)] || 10) + (m.value || 0);
-      }
-      if (m.type === "set" && m.subType?.endsWith("-score")) {
-        const statName = m.subType.replace("-score", "");
-        const statId = Object.entries(STAT_NAMES).find(([, v]) => v === statName)?.[0];
-        if (statId && m.value > (scores[parseInt(statId)] || 0)) scores[parseInt(statId)] = m.value;
-      }
-    }
-  }
-  for (const o of (data.overrideStats || [])) {
-    if (o.value !== null && o.value !== undefined) scores[o.id] = o.value;
-  }
-  return scores;
-}
-
-function ddbComputeAC(data, scores) {
-  const dexMod = ddbMod(scores[2] || 10);
-  let baseAC = 10 + dexMod;
-  for (const item of (data.inventory || [])) {
-    if (!item.equipped) continue;
-    const def = item.definition;
-    if (!def?.armorTypeId) continue;
-    const ac = def.armorClass || 0;
-    switch (def.armorTypeId) {
-      case 1: baseAC = ac + dexMod; break;
-      case 2: baseAC = ac + Math.min(dexMod, 2); break;
-      case 3: baseAC = ac; break;
-      case 4: baseAC += 2; break; // shield
-    }
-  }
-  // AC bonuses from modifiers
-  for (const cat of ["race", "class", "item", "feat", "condition"]) {
-    for (const m of (data.modifiers?.[cat] || [])) {
-      if (m.type === "bonus" && m.subType === "armor-class") baseAC += (m.value || 0);
-    }
-  }
-  return baseAC;
-}
-
-function ddbComputeMaxHP(data, scores) {
-  const conMod = ddbMod(scores[3] || 10);
-  let level = 0;
-  for (const cls of (data.classes || [])) level += cls.level || 0;
-
-  let hp = (data.baseHitPoints || 0) + conMod * level;
-  for (const cat of ["race", "class", "feat", "item", "condition"]) {
-    for (const m of (data.modifiers?.[cat] || [])) {
-      if (m.type === "bonus" && m.subType === "hit-points-per-level") hp += (m.value || 0) * level;
-    }
-  }
-  return hp;
-}
-
-async function syncOneCharacterFromDDB(ddbId, localId) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-  const resp = await fetch(`${DDB_API}/${ddbId}`, { signal: controller.signal });
-  clearTimeout(timeout);
-
-  if (!resp.ok) throw new Error(`DDB API returned ${resp.status}`);
-  const json = await resp.json();
-  const data = json.data;
-  if (!data) throw new Error("No data in DDB response");
-
-  const scores = ddbComputeAbilityScores(data);
-  const ac = ddbComputeAC(data, scores);
-  const level = (data.classes || []).reduce((s, c) => s + (c.level || 0), 0);
-  const maxHp = ddbComputeMaxHP(data, scores);
-
-  const classSummary = (data.classes || []).map(c => {
-    const sub = c.subclassDefinition?.name ? ` (${c.subclassDefinition.name})` : "";
-    return `${c.definition?.name || "?"}${sub} ${c.level}`;
-  }).join(" / ");
-
-  await pgPool.query(`
-    UPDATE hotd_player_characters SET
-      character_name = $1, level = $2, race = $3, class_summary = $4,
-      strength = $5, dexterity = $6, constitution = $7,
-      intelligence = $8, wisdom = $9, charisma = $10,
-      armor_class = $11, max_hit_points = $12, hit_points = $12,
-      speed = $13, avatar_url = $14, alignment = $15, background = $16,
-      updated_at = NOW()
-    WHERE id = $17
-  `, [
-    data.name, level,
-    data.race?.fullName || data.race?.baseName || "",
-    classSummary,
-    scores[1] || 10, scores[2] || 10, scores[3] || 10,
-    scores[4] || 10, scores[5] || 10, scores[6] || 10,
-    ac, maxHp,
-    (data.race?.weightSpeeds?.normal?.walk || 30),
-    data.decorations?.avatarUrl || data.avatarUrl || "",
-    data.alignmentId ? ["", "LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"][data.alignmentId] || "" : "",
-    data.background?.definition?.name || "",
-    localId,
-  ]);
-
-  return { ok: true, message: `${data.name} synced (level ${level}, AC ${ac}, HP ${maxHp})` };
 }
 
 module.exports = { handleDmAdminApiRoutes };
