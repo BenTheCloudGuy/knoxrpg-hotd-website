@@ -68,6 +68,8 @@ jobs:
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${{ needs.version.outputs.version }} \
             --set postgres.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --set observability.loki.enabled=true \
+            --set observability.loki.pushUrl=http://192.168.10.20:3100/loki/api/v1/push \
             --set createNamespace=false
 
       - name: Wait for rollout
