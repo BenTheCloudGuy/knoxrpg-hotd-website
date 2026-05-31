@@ -4,6 +4,21 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.8] - 2026-05-31
+
+### Added
+- **Production PDF generation now actually runs.** The container image and Helm chart now ship the full PDF pipeline so `Create PDF` from the Sessions Workspace works on `hotd.knoxrpg.com`, not just in the devcontainer.
+  - `docker/Dockerfile` installs `pandoc`, `weasyprint`, `fonts-dejavu`, `fonts-liberation`, and `ca-certificates` via apt (with `--no-install-recommends`).
+  - `docker/Dockerfile` copies `scripts/` into `/app/scripts/` so `build-session-pdf.js` and `session-pdf.css` are on disk in the image.
+  - `docker/Dockerfile` creates `/app/reports` with `a+rwX` so the non-root `node` user (uid 1000) can write generated PDFs.
+  - `docker/Dockerfile` bakes in `HOTD_REPO_ROOT=/app`, `HOTD_PDF_SCRIPT=/app/scripts/build-session-pdf.js`, and `HOTD_REPORTS_DIR=/app/reports` so the route resolver is unambiguous.
+  - `helm/hotd-website/templates/deployment.yaml` mounts a writable `emptyDir` at `/app/reports` (PDFs are regenerable from the markdown stored in `hotd_sessions`, so no PVC needed) and exports the matching `HOTD_*` env vars to the pod.
+  - `helm/hotd-website/values.yaml` exposes a `reports` block (`mountPath`, `sizeLimit: 512Mi`, `pdfScript`) for operator overrides.
+
+### Notes
+- After this release deploys, retry `Create PDF` on `https://hotd.knoxrpg.com/sessions/admin`. The progress bar shipped in 3.5.7 will run until WeasyPrint finishes, then the status line should report `PDF ready in Xs.`
+- The `emptyDir` is wiped on pod restart. That is fine: the row's `pdf_path` is rebuilt on demand and the source-of-truth markdown lives in the database.
+
 ## [3.5.7] - 2026-05-31
 
 ### Fixed

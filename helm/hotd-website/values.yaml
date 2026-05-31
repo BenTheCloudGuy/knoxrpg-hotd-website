@@ -43,6 +43,15 @@ notebookImages:
   storageClass: microk8s-hostpath
   mountPath: /app/hotd-campaign/images/notebook
 
+# -- Reports (PDF output, ephemeral) ------------------------------------------
+# PDFs are regenerable from the markdown stored in `hotd_sessions`, so an
+# emptyDir is sufficient. Bump sizeLimit if the DM keeps a backlog of large
+# generated guides.
+reports:
+  mountPath: /app/reports
+  sizeLimit: 512Mi
+  pdfScript: /app/scripts/build-session-pdf.js
+
 # -- OpenAI -------------------------------------------------------------------
 # If `apiKey` is set, the chart renders an Opaque Secret and the Deployment
 # reads OPENAI_API_KEY via secretKeyRef. To use a pre-existing Secret instead,
