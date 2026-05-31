@@ -21,11 +21,16 @@ image:
 
 # -- PostgreSQL (reuse AI stack's pgvector instance) --------------------------
 # REQUIRED: Set postgres.password at deploy time via --set or a secrets file.
+# The chart creates a Kubernetes Secret to hold the password so it is not
+# exposed as a plain env var on the Pod. Alternatively, pre-create your own
+# Secret and set `existingSecret` (and optionally `existingSecretKey`).
 postgres:
   host: postgres-pgvector.ai.svc.cluster.local
   port: "5432"
   user: cortana
   password: ""               # REQUIRED — do NOT commit a real password here
+  existingSecret: ""         # optional: name of a pre-existing Secret with the password
+  existingSecretKey: "password"
   database: dnd_website
 
 # -- NAS Content Paths --------------------------------------------------------

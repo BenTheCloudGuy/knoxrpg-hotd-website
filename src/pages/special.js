@@ -122,7 +122,8 @@ function renderDungeonMasterPage(session) {
   </div>
   <div class="chat-disclaimer">AI responses are generated and may contain errors. Always verify rules with official source books.</div>
   ${renderFooter()}
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script>
   (function() {
     var msgs = document.getElementById('chatMessages');
@@ -133,6 +134,14 @@ function renderDungeonMasterPage(session) {
     // Configure marked for safe rendering
     marked.setOptions({ breaks: true, gfm: true });
 
+    function renderAssistant(text) {
+      var html = marked.parse(text || '');
+      if (typeof DOMPurify !== 'undefined') return DOMPurify.sanitize(html);
+      // Hard fallback if DOMPurify failed to load: escape everything.
+      return '<p>' + String(text || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+    }
+
     function addMessage(role, text) {
       var div = document.createElement('div');
       div.className = 'chat-msg ' + role;
@@ -141,7 +150,7 @@ function renderDungeonMasterPage(session) {
       if (role === 'user') {
         rendered = '<p>' + text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
       } else {
-        rendered = marked.parse(text);
+        rendered = renderAssistant(text);
       }
       div.innerHTML = '<div class="chat-avatar">' + avatar + '</div><div class="chat-bubble">' + rendered + '</div>';
       msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;

@@ -50,7 +50,16 @@ export async function runServer(args) {
   if (args.transport === 'http' || args.transport === 'sse') {
     const port = parseInt(args.port, 10);
     const host = args.host;
-    const authCheck = makeBearerAuth(process.env.MCP_AUTH_TOKEN);
+    const token = process.env.MCP_AUTH_TOKEN;
+    const isLoopback = host === '127.0.0.1' || host === '::1' || host === 'localhost';
+    if (!token && !isLoopback) {
+      console.error(
+        `[hotd-rag-mcp] REFUSING TO START: host=${host} is not loopback and MCP_AUTH_TOKEN is not set. ` +
+        `Set MCP_AUTH_TOKEN or bind to 127.0.0.1.`
+      );
+      process.exit(2);
+    }
+    const authCheck = makeBearerAuth(token);
 
     const transports = new Map();
 

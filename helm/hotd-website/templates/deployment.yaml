@@ -53,7 +53,10 @@ spec:
             - name: PGUSER
               value: {{ .Values.postgres.user | quote }}
             - name: PGPASSWORD
-              value: {{ .Values.postgres.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.existingSecret | default (printf "%s-postgres" (include "hotd-website.fullname" .)) }}
+                  key: {{ .Values.postgres.existingSecretKey | default "password" }}
             - name: PGDATABASE
               value: {{ .Values.postgres.database | quote }}
             - name: HOTD_CONTENT_DIR

@@ -25,6 +25,11 @@ reports/session*-dm-guide.pdf
 reports/session*-combined.md
 reports/session*-combined.html
 
+# Scratch / scrape working directory — never commit (may contain auth tokens,
+# third-party copyrighted content, or other sensitive captures)
+tmp/frhof-raw/
+tmp/menzo-raw/
+
 # Helm release overrides (may contain passwords)
 helm/**/values-local.yaml
 helm/**/secrets.yaml

@@ -14,22 +14,37 @@ function searchTypeaheadJs() {
   if (!input || !dropdown) return;
   var debounceTimer, lastQuery = '';
 
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  function safeHref(h) {
+    var s = String(h == null ? '#' : h).trim();
+    // Allow only same-origin / relative paths and explicit http(s)/mailto. Block javascript:, data:, etc.
+    if (/^(https?:|mailto:|\\/)/i.test(s)) return escHtml(s);
+    return '#';
+  }
+
   function renderDropdown(data, q) {
     if (!data.results || data.results.length === 0) {
-      dropdown.innerHTML = '<div class="search-dd-empty">No results for "' + q + '"</div>';
+      dropdown.innerHTML = '<div class="search-dd-empty">No results for "' + escHtml(q) + '"</div>';
       dropdown.classList.add('active');
       return;
     }
     var items = data.results.slice(0, 8).map(function(r) {
-      var href = r.href || '#';
+      var href = safeHref(r.href);
       return '<a class="search-dd-item" href="' + href + '">' +
         '<div class="search-dd-info">' +
-        '<div class="search-dd-title">' + r.title + '</div>' +
-        '<div class="search-dd-cat">' + (r.category || '') + '</div>' +
+        '<div class="search-dd-title">' + escHtml(r.title) + '</div>' +
+        '<div class="search-dd-cat">' + escHtml(r.category || '') + '</div>' +
         '</div></a>';
     }).join('');
     var footer = data.total > 8
-      ? '<div class="search-dd-footer" id="searchDdMore">View all ' + data.total + ' results \\u2192</div>'
+      ? '<div class="search-dd-footer" id="searchDdMore">View all ' + (Number(data.total) || 0) + ' results \\u2192</div>'
       : '';
     dropdown.innerHTML = items + footer;
     dropdown.classList.add('active');
