@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.11.0] - 2026-05-31
+
+### Added
+- **Visitor geography telemetry.** Every per-request log line emitted from `src/server.js` is now enriched with a `geo` block (`country`, `region`, `city`, `lat`, `lon`, `timezone`) resolved from the visitor IP via the new `src/lib/geoip.js` wrapper around `geoip-lite` (MaxMind GeoLite2 City dataset bundled with the npm package — no external HTTP calls, no license key, no rate limit). IPv6-mapped IPv4 (`::ffff:a.b.c.d`) is normalized; RFC1918 / loopback / CGNAT / IPv6 link-local / IPv6 ULA addresses are skipped so cluster-internal probes and local dev don't pollute the map. An in-memory LRU caches up to `GEOIP_CACHE_MAX=5000` IPs (overridable) so repeated visitors don't re-hit the lookup. Disable the whole thing with `GEOIP_ENABLED=false`.
+- **`hotd_requests_by_geo_total{country, route}` Prometheus counter.** Incremented once per `trackRequest` call. Country is ISO-3166-1 alpha-2 (`"US"`, `"GB"`, …) or `"unknown"` for private / unresolved IPs. Route reuses the existing `normalizeRoute` bucketing, so total cardinality stays bounded (~countries × ~routes).
+- **Visitor geography Grafana row (panels 80–83) in `observability/dashboards/hotd-website.json`.**
+  - **Visitor map by country (last 1h)** — geomap panel with country-centroid lookup (built-in `public/gazetteer/countries.json`) driven by `sum by(country) (increase(hotd_requests_by_geo_total{country!="unknown"}[1h]))`. Marker size scales with request volume; thresholds tier the colours blue/green/yellow/orange/red as traffic grows.
+  - **Top countries (last 1h)** — sorted table with a gradient-gauge column showing the same data in numeric form.
+  - **Recent visitor connections (with geo)** — Loki logs panel with a custom `line_format` that surfaces `{country}/{city} | {ip} | {method} {route} ({status}) {durationMs}ms | user={u} ua={ua}` so the running connection log requested by the operator is one click away. Filter further in Explore with `| geo_country = "US"` or `| route = "/dm-admin"` etc.
+
+### Fixed
+- **DB query metrics were stuck at zero in Grafana.** `hotd_db_queries_total` and `hotd_db_query_duration_seconds` had been wired into `src/lib/telemetry.js` and exported by `src/lib/metrics.js`, but the only call site that fired `trackDbQuery` was the function-calling tool path inside `src/lib/ai-tools.js` (line 559). The vast majority of DB traffic, including every page render, auth check, and admin write, went through the unwrapped-for-telemetry `pgPool.query` and was therefore invisible to Prometheus. Survey of the running pod confirmed only 6 `hotd_*` metric names had series at all (the 3 `pg_pool_*` gauges and the 3 `auth_*` counters that self-fire on signup / login), and the entire `hotd_db_*` / `hotd_openai_*` / `hotd_rag_*` family was absent. The pool wrapper in `src/db/pool.js` (which previously only did blob-URL rewriting) now also records a `trackDbQuery(sql, rowCount, latencyMs, "app")` for every query and a `trackDbQuery(sql, 0, latencyMs, "error")` for every failed query, while the existing `ai-tools.js` direct call still tags its queries with `"admin"` / `"player"` so the per-role split in the dashboard works correctly without double-counting. Telemetry is lazy-required to keep pool boot safe from any future import cycle.
+
+### Notes
+- The other "No data" panels visible in the 3.10.0 dashboard screenshot (AI usage, login failure ratio, error rate, images & embeddings) are **not** broken — they reflect a genuinely idle site since the 16:56 UTC pod restart. They will populate the moment a DM chats, a player logs in, a 5xx happens, or an Image Studio generation runs.
+- `geoip-lite` ships ~30 MB of MaxMind data inside the npm package, which is reflected in the image size. Dataset refresh happens whenever the package is bumped in `src/package.json`. ISP / ASN enrichment is **not** in this release; geoip-lite doesn't bundle the ASN database. If service-provider names are needed later, the cleanest add is `maxmind` + a separately mounted `GeoLite2-ASN.mmdb` (requires a free MaxMind account for the license key) wired into `lib/geoip.js` alongside the existing City lookup.
+
 ## [3.10.0] - 2026-05-31
 
 ### Fixed

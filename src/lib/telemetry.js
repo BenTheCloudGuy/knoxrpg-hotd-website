@@ -17,6 +17,7 @@
 
 const metrics = require("./metrics");
 const loki = require("./loki-shipper");
+const geoip = require("./geoip");
 
 const DEBUG_LEGACY = process.env.HOTD_TELEMETRY_LOG === "1";
 const JSON_LOGS = process.env.HOTD_LOG_FORMAT === "json";
@@ -238,6 +239,10 @@ function trackRequest(opts = {}) {
   const statusCode = opts.statusCode || 0;
   const success = statusCode > 0 && statusCode < 500;
   const lvl = statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
+  // Resolve visitor geo from the IP. opts.geo wins (callers may pre-resolve);
+  // otherwise we look it up via geoip-lite. lookup() returns null for private
+  // / loopback / unresolved IPs so the geomap panel can filter them out.
+  const geo = opts.geo || (opts.ip ? geoip.lookup(opts.ip) : null);
   const payload = {
     name: opts.name || `${opts.method || "GET"} ${opts.route || "/"}`,
     method: opts.method || "GET",
@@ -258,8 +263,18 @@ function trackRequest(opts = {}) {
     responseSize: opts.responseSize || 0,
     contentType: (opts.contentType || "").slice(0, 100),
     isStatic: !!opts.isStatic,
+    geo: geo || null,
   };
   emitLog("request", payload, lvl);
+  // Per-country Prometheus counter. Country defaults to "unknown" so private /
+  // unresolved IPs still count toward the route's traffic for the geo panel,
+  // they just don't get plotted on the map.
+  try {
+    const country = (geo && geo.country) || "unknown";
+    metrics._metrics.requestsByGeoTotal
+      .labels(country, opts.route || "/")
+      .inc();
+  } catch (_) {}
 }
 
 // ── Exception log (App Insights `exceptions` table equivalent) ────────────

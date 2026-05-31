@@ -21,8 +21,47 @@ const NEW_STORAGE_HOST = `${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
   const blobPrefix = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/hotd-website-content/`;
   const localRewrite = HOTD_CONTENT_DIR ? true : false;
   const originalQuery = pgPool.query.bind(pgPool);
+  // Lazy-required so a circular import (telemetry → ... → pool) can't
+  // deadlock module init. telemetry.js only depends on metrics.js and
+  // loki-shipper.js today, neither of which import this file, but
+  // future-proofing keeps the boot path safe.
+  let telemetry = null;
+  function getTelemetry() {
+    if (telemetry !== null) return telemetry;
+    try { telemetry = require("../lib/telemetry"); }
+    catch (_e) { telemetry = false; }
+    return telemetry;
+  }
   pgPool.query = async function (...args) {
-    const result = await originalQuery(...args);
+    const t0 = Date.now();
+    let result;
+    try {
+      result = await originalQuery(...args);
+    } catch (err) {
+      // Record the failed query so DB-error rates show in Grafana too.
+      const t = getTelemetry();
+      if (t) {
+        try {
+          const sql = typeof args[0] === "string" ? args[0]
+                    : (args[0] && args[0].text) || "";
+          t.trackDbQuery(sql, 0, Date.now() - t0, "error");
+        } catch (_) {}
+      }
+      throw err;
+    }
+    // Per-query metric so dashboards finally have data even when no
+    // DM-AI tool fired. Role label is "app" for the in-process pool
+    // (ai-tools.js still calls trackDbQuery directly with "admin" /
+    // "player" for its tool-driven lookups, so those keep their own
+    // series and aren't double-counted by source).
+    const t = getTelemetry();
+    if (t) {
+      try {
+        const sql = typeof args[0] === "string" ? args[0]
+                  : (args[0] && args[0].text) || "";
+        t.trackDbQuery(sql, (result && result.rows && result.rows.length) || 0, Date.now() - t0, "app");
+      } catch (_) {}
+    }
     if (result && result.rows) {
       for (const row of result.rows) {
         for (const key of Object.keys(row)) {

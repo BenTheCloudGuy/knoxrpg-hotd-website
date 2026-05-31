@@ -41,6 +41,7 @@ let ragQueriesTotal = noopMetric;
 let authAttemptsTotal = noopMetric;
 let authSignupsTotal = noopMetric;
 let authLogoutsTotal = noopMetric;
+let requestsByGeoTotal = noopMetric;
 
 if (ENABLED) {
   registry = new promClient.Registry();
@@ -169,6 +170,17 @@ if (ENABLED) {
     help: "Session logouts.",
     registers: [registry],
   });
+
+  // Visitor geography. Country is ISO-3166-1 alpha-2 ("US", "GB", ...) or
+  // "unknown" when the IP is private / unresolved. Route uses the same
+  // bounded normalizer as http_requests_total so total cardinality stays
+  // ~countries × ~routes (well under 5000).
+  requestsByGeoTotal = new promClient.Counter({
+    name: "hotd_requests_by_geo_total",
+    help: "HTTP requests by visitor country and normalized route.",
+    labelNames: ["country", "route"],
+    registers: [registry],
+  });
 }
 
 // ── Route normalizer (cardinality control) ────────────────────
@@ -290,5 +302,6 @@ module.exports = {
     authAttemptsTotal,
     authSignupsTotal,
     authLogoutsTotal,
+    requestsByGeoTotal,
   },
 };
