@@ -33,6 +33,17 @@ If the request is ambiguous, name the agent you picked and proceed. Never ignore
 - `git push --force`, `git push --tags`, deleting remote branches, and amending already-pushed commits ALWAYS require a separate, explicit confirmation even after "push" is granted.
 - This rule overrides any skill, template, or charter that says "commit and push". Strip the push step.
 
+## ⚠️ MANDATORY: Every CHANGELOG Entry Must Be Versioned
+
+**Never write under `## [Unreleased]`. Always add a new `## [X.Y.Z] - YYYY-MM-DD` section at the top.**
+
+The deploy workflow extracts the image tag from the first `## [...]` heading in `CHANGELOG.md`. An `[Unreleased]` tag produces a byte-identical Deployment spec across every push, which K8s treats as no change → no rolling restart → the new image is built and pushed to the registry but the running pod keeps serving the old code. The version-extract step in `.github/workflows/deploy.yml` now hard-fails the build if the top heading is `Unreleased` or missing.
+
+- Pick the semver bump from the change set: bug fix only → patch (`3.10.1`); new user-visible feature → minor (`3.11.0`); breaking change → major (`4.0.0`).
+- Insert the new section directly under the policy note at the top of `CHANGELOG.md`. Group entries by `### Added` / `### Changed` / `### Fixed` / `### Removed` / `### Notes`.
+- If a previous turn already added a versioned section that hasn't been pushed yet, append your new entries to that section (don't create a second one for the same version).
+- After committing, report the version number alongside the commit hash so the user knows what tag will roll out on push.
+
 ## Project Context
 This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, deployed on self-hosted MicroK8s via Helm. It also includes a FoundryVTT v13 integration module under `foundry/hotd-module/`.
 

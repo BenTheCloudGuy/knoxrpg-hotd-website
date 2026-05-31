@@ -4,10 +4,12 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+> **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
+
+## [3.10.0] - 2026-05-31
 
 ### Fixed
-- **Deploy workflow built new images but never rolled them out on `[Unreleased]` pushes.** `.github/workflows/deploy.yml` extracted the image tag from the first `## [...]` heading in `CHANGELOG.md`, which during active development is always literally `Unreleased`. Buildah pushed a fresh `localhost:32000/hotd-website:Unreleased` on every commit, but because the Helm-rendered Deployment spec was byte-identical to the previous apply (same image tag), Kubernetes saw no change and skipped the rolling restart. The running pod kept serving stale code (e.g. the home-page draft-filter fix from `6db932e` was built and pushed to the registry but never landed in the pod). The version-extract step now appends the short commit SHA to the most recent **released** version when the top heading is `[Unreleased]`, producing unique tags like `3.9.0-dev.6db932e` per commit. Unique tags force the Deployment spec to change, which triggers a real rolling restart and pulls the new image. Released-version pushes (e.g. `## [3.10.0]`) still get the clean `3.10.0` tag.
+- **Deploy workflow built new images but never rolled them out on un-versioned pushes.** `.github/workflows/deploy.yml` extracted the image tag from the first `## [...]` heading in `CHANGELOG.md`, which during active development was always literally `Unreleased`. Buildah pushed a fresh `localhost:32000/hotd-website:Unreleased` on every commit, but because the Helm-rendered Deployment spec was byte-identical to the previous apply (same image tag), Kubernetes saw no change and skipped the rolling restart. The running pod kept serving stale code (e.g. the home-page draft-filter fix from `6db932e` was built and pushed to the registry but never landed in the pod). Fixed in two parts: (1) the version-extract step now hard-fails the build when the top CHANGELOG heading is `Unreleased` (or missing), surfacing a clear error in the GitHub Actions log instead of silently producing a no-op rollout. (2) A new policy note at the top of `CHANGELOG.md` forbids `## [Unreleased]` entirely — every change must land under a real `## [X.Y.Z] - YYYY-MM-DD` heading. Together these guarantee that any push touching `src/**`, `docker/**`, `helm/**`, or `CHANGELOG.md` either deploys cleanly or fails loudly at the version step.
 - **Home page surfaced draft session summaries.** `renderHomePage` in `src/pages/campaign.js` picked the "Last Session" block from `SELECT * FROM hotd_sessions ORDER BY session_number DESC LIMIT 1` with no `published` filter, so the moment the DM started a new session row the half-written draft (or empty `summary`) replaced the previously-published summary on the landing page for every visitor. Query is now `WHERE published = TRUE ORDER BY session_number DESC LIMIT 1` so the home page only ever shows finalized writeups. `nextSessionNum` is split out into a separate `MAX(session_number)` query that still counts drafts, so the in-progress Session N row doesn't make the DM's next-game scheduler renumber itself.
 
 ### Changed
@@ -30,7 +32,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
   - `/memories/repo/commit-discipline.md` updated so the rule auto-loads into every new session for this workspace.
 
 ### Notes
-- This is a behavioral change only. No code, schema, Helm, or runtime artifact moved. No version bump on `## [3.9.0]` — the deploy workflow ignores `## [Unreleased]`. When the next code change ships, this entry rolls into that version's release notes.
+- This release rolls up six commits (`eb41ec4`, `8209e77`, `f36fdb4`, `710c39b`, `7ab54dd`, `6db932e`, `2d70208`) that had accumulated under the now-forbidden `## [Unreleased]` heading and therefore never deployed. The image-tag fix in the `## Fixed` section is the structural change that makes future un-versioned commits visibly fail (no rollout) rather than silently rebuild with the same tag.
 
 ## [3.9.0] - 2026-05-31
 
