@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ## [Unreleased]
 
+### Fixed
+- **Home page surfaced draft session summaries.** `renderHomePage` in `src/pages/campaign.js` picked the "Last Session" block from `SELECT * FROM hotd_sessions ORDER BY session_number DESC LIMIT 1` with no `published` filter, so the moment the DM started a new session row the half-written draft (or empty `summary`) replaced the previously-published summary on the landing page for every visitor. Query is now `WHERE published = TRUE ORDER BY session_number DESC LIMIT 1` so the home page only ever shows finalized writeups. `nextSessionNum` is split out into a separate `MAX(session_number)` query that still counts drafts, so the in-progress Session N row doesn't make the DM's next-game scheduler renumber itself.
+
 ### Changed
 - **DM Command Center → Characters: redirect to the canonical GM Player Workspace.** The `Characters` button in the `/dm-admin` left sidebar was opening an in-page panel whose `Save` posted to `PUT /api/dm-admin/characters/:id` — an endpoint that was **removed in 3.8.0** when player management moved to `/characters/admin`. The panel rendered rows but every edit failed silently, and the new `dm_notes` editor, Combat State, audit log, and per-character Publish-with-reindex were not present. The sidebar entry is now an `<a href="/characters/admin">` so a single click goes straight to the canonical workspace. The old in-page panel is reduced to an `Open GM Player Workspace →` call-to-action so any cached `dmc('characters')` invocation from a stale tab still resolves cleanly. The pre-3.8.0 edit form, `_charsCache`, `editChar`, `saveChar`, `ddbSync`, and `ddbSyncAll` JS were removed from `src/pages/dm-admin.js`; `loadChars` is now a no-op kept so the panel router still has a registered handler for the `characters` key. NPC management, which still lives in-page, is untouched.
 

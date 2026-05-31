@@ -48,11 +48,24 @@ function renderCircleMagicPage(session) {
 
 // ── Home / Landing Page ───────────────────────────────────────
 async function renderHomePage(session) {
-  // Fetch latest session
+  // Latest PUBLISHED session for the "Last Session" display block.
+  // Drafts are intentionally excluded so the home page never surfaces
+  // unfinished session writeups to players (or to the DM landing on /).
+  // nextSessionNum is derived from the highest session_number across
+  // ALL rows (drafts included) so a draft of Session N doesn't collide
+  // with itself when the DM schedules the next game.
   let lastSession = null, nextSessionNum = 1;
   try {
-    const r = await pgPool.query("SELECT * FROM hotd_sessions ORDER BY session_number DESC LIMIT 1");
-    if (r.rows.length > 0) { lastSession = r.rows[0]; nextSessionNum = lastSession.session_number + 1; }
+    const r = await pgPool.query(
+      "SELECT * FROM hotd_sessions WHERE published = TRUE ORDER BY session_number DESC LIMIT 1"
+    );
+    if (r.rows.length > 0) lastSession = r.rows[0];
+  } catch (_) {}
+  try {
+    const r = await pgPool.query(
+      "SELECT COALESCE(MAX(session_number), 0) AS max_n FROM hotd_sessions"
+    );
+    nextSessionNum = (r.rows[0] && r.rows[0].max_n ? r.rows[0].max_n : 0) + 1;
   } catch (_) {}
 
   // Fetch next scheduled game from config
