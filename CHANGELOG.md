@@ -4,6 +4,18 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.1] - 2026-05-31
+
+### Added
+- **App-Insights-equivalent per-request telemetry to Loki.** The outer HTTP handler in `src/server.js` now emits one structured log per request (`kind: "request"`) carrying `method`, `url`, `route` (low-cardinality, reuses `metrics.normalizeRoute`), `statusCode`, `success`, `durationMs`, `requestId`, `operationId` (W3C `traceparent` parent honored if present), `parentId`, `ip` (X-Forwarded-For aware), `userAgent`, `referer`, `username`, `role`, `queryString`, `responseSize`, `contentType`, and `isStatic`. Log level is `error` for 5xx, `warn` for 4xx, `info` otherwise. Health probes (`/health`, `/healthz`, `/metrics`) and successful static-asset reads are excluded so the stream stays signal-heavy; everything is still counted in Prometheus.
+- **Exception logging** via new `telemetry.trackException(err, ctx)` (`kind: "exception"`, App Insights `exceptions` table equivalent). Carries `type`, `message`, `stack` (truncated), `code`, `requestId` + `operationId` for correlation, `route`, `method`, `url`, `username`, `role`, and a free-form `source`. Wired into the `server.js` dispatch catch so every uncaught error during a request lands in Loki tied to its originating request.
+- `X-Request-Id` response header so client-side bug reports can be pasted straight into the Loki query `{app="hotd-website"} |~ "<id>"`.
+- Bytes-sent capture (`responseSize`) via lightweight `res.write` / `res.end` wrappers, with no behavior change for callers.
+
+### Internal
+- `src/lib/telemetry.js`: exports `trackRequest` and `trackException`.
+- `src/server.js`: requires `crypto` for `randomUUID`; assigns `req.session` so the per-request log can pick up the authenticated user; replaces the prior minimal metrics-only try/finally with a `res.on('close')` emission path that always runs even when handlers stream a long response.
+
 ## [3.7.0] - 2026-05-31
 
 ### Added

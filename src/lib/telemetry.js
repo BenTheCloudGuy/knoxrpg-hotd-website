@@ -230,6 +230,61 @@ function trackDbQuery(sql, rowCount, latencyMs, userRole) {
   } catch (_) {}
 }
 
+// ── Per-request log (App Insights `requests` table equivalent) ────────────
+// Called once per HTTP request from server.js. One JSON line per request goes
+// to stdout and Loki with a stable schema dashboards / Grafana Explore can
+// pivot on (operation_Id correlates with downstream dependencies + exceptions).
+function trackRequest(opts = {}) {
+  const statusCode = opts.statusCode || 0;
+  const success = statusCode > 0 && statusCode < 500;
+  const lvl = statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
+  const payload = {
+    name: opts.name || `${opts.method || "GET"} ${opts.route || "/"}`,
+    method: opts.method || "GET",
+    url: opts.url || "",
+    route: opts.route || "",
+    statusCode,
+    success,
+    durationMs: Math.round((opts.durationMs || 0) * 1000) / 1000,
+    requestId: opts.requestId || "",
+    operationId: opts.operationId || opts.requestId || "",
+    parentId: opts.parentId || "",
+    ip: opts.ip || "",
+    userAgent: (opts.userAgent || "").slice(0, 200),
+    referer: (opts.referer || "").slice(0, 200),
+    username: opts.username || "",
+    role: opts.role || "",
+    queryString: (opts.queryString || "").slice(0, 500),
+    responseSize: opts.responseSize || 0,
+    contentType: (opts.contentType || "").slice(0, 100),
+    isStatic: !!opts.isStatic,
+  };
+  emitLog("request", payload, lvl);
+}
+
+// ── Exception log (App Insights `exceptions` table equivalent) ────────────
+// `ctx` should carry whatever correlation IDs are available so the exception
+// can be joined back to the originating request in Loki.
+function trackException(err, ctx = {}) {
+  const e = err || {};
+  const payload = {
+    type: e.name || (typeof e === "string" ? "string" : typeof e),
+    message: (e.message || String(e) || "").slice(0, 2000),
+    stack: (e.stack || "").slice(0, 8000),
+    code: e.code || "",
+    severity: ctx.severity || "error",
+    requestId: ctx.requestId || "",
+    operationId: ctx.operationId || ctx.requestId || "",
+    route: ctx.route || "",
+    method: ctx.method || "",
+    url: ctx.url || "",
+    username: ctx.username || "",
+    role: ctx.role || "",
+    source: ctx.source || "",
+  };
+  emitLog("exception", payload, "error");
+}
+
 module.exports = {
   trackEvent,
   trackMetric,
@@ -241,6 +296,8 @@ module.exports = {
   trackAiImage,
   trackAiEmbedding,
   trackDbQuery,
+  trackRequest,
+  trackException,
   // Re-exports for callers that want to record richer metrics directly:
   registry: metrics.registry,
   _metrics: metrics._metrics,
