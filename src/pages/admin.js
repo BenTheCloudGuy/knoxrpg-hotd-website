@@ -652,13 +652,33 @@ async function renderSessionsAdminPage(session) {
     }
 
     function publishSummary() {
-      if (!confirm('Publish the # Session Summary to players?')) return;
+      if (!confirm('Publish the # Session Summary to players?\\n\\nThis will also auto-extract NPC/PC/calendar updates and reindex RAG. Takes 30-60s.')) return;
       withSave('Publishing', function(id) {
-        return fetch('/api/dm-admin/sessions/' + id + '/publish', { method: 'POST' })
-          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
-          .then(function(res) {
+        return runWithProgress('Publishing summary, extracting canon, reindexing RAG...', function() {
+          return fetch('/api/dm-admin/sessions/' + id + '/publish', { method: 'POST' })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); });
+        })
+          .then(function(result) {
+            var res = result.value;
             if (!res.ok) throw new Error(res.d.error || 'Publish failed');
-            setStatus('Published!');
+            var msg = 'Published in ' + result.elapsed + '.';
+            if (res.d.canon) {
+              var c = res.d.canon;
+              var bits = [];
+              if (c.summary.npcs_created.length) bits.push(c.summary.npcs_created.length + ' NPC(s) created');
+              if (c.summary.npcs_updated.length) bits.push(c.summary.npcs_updated.length + ' NPC(s) updated');
+              if (c.summary.pc_notes_appended.length) bits.push(c.summary.pc_notes_appended.length + ' PC note(s) appended');
+              if (c.summary.calendar_events_created.length) bits.push(c.summary.calendar_events_created.length + ' calendar event(s) added');
+              if (bits.length) msg += ' Canon: ' + bits.join(', ') + '.';
+              else msg += ' Canon: no changes proposed.';
+              if (c.errors && c.errors.length) msg += ' (' + c.errors.length + ' canon error(s) logged to server.)';
+              var reindexFailed = (c.reindex || []).filter(function(x){return !x.ok;});
+              if (reindexFailed.length) msg += ' RAG reindex: ' + reindexFailed.length + ' source(s) failed.';
+              else if (c.reindex && c.reindex.length) msg += ' RAG reindexed (' + c.reindex.length + ' source(s)).';
+            } else if (res.d.canon_error) {
+              msg += ' Canon pipeline failed: ' + res.d.canon_error;
+            }
+            setStatus(msg);
             return refreshList(id).then(function() { return loadSession(id); });
           })
           .catch(function(e) { setStatus('Publish failed: ' + e.message, true); });

@@ -63,6 +63,11 @@ const report = {
 function log(msg) { console.log(`  ${msg}`); }
 function heading(stage) { console.log(`\n${"═".repeat(60)}\n  STAGE ${stage}\n${"═".repeat(60)}`); }
 function sha256(text) { return crypto.createHash("sha256").update(text).digest("hex"); }
+function safeJsonArray(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch (_) { return []; }
+}
 
 // ══════════════════════════════════════════════════════════════
 // STAGE 1: EXTRACT — gather raw content from all sources
@@ -142,16 +147,44 @@ async function stageExtract() {
 
   // ── DB: Player characters ───────────────────────────────────
   if (!SOURCE_FILTER || SOURCE_FILTER === "character") {
-    const { rows } = await pgPool.query("SELECT id, character_name, player_name, level, race, class_summary, background, alignment, strength, dexterity, constitution, intelligence, wisdom, charisma, armor_class, max_hit_points, speed FROM hotd_player_characters");
+    const { rows } = await pgPool.query("SELECT id, character_name, player_name, level, race, class_summary, subclass, background, alignment, faith, languages, strength, dexterity, constitution, intelligence, wisdom, charisma, armor_class, max_hit_points, speed, backstory, personality_traits, ideals, bonds, flaws, notes, equipment, spells, attacks, features FROM hotd_player_characters");
     for (const r of rows) {
+      // Flatten JSONB arrays to short readable lines so the embedding picks up
+      // names like "Sun Sword Shard" or "fireball" rather than raw JSON.
+      const fmtList = (v) => {
+        if (!v) return null;
+        const arr = Array.isArray(v) ? v : (typeof v === "string" ? safeJsonArray(v) : []);
+        if (!arr.length) return null;
+        return arr.map(x => {
+          if (typeof x === "string") return x;
+          if (x && typeof x === "object") return x.name || x.title || x.label || JSON.stringify(x);
+          return String(x);
+        }).join(", ");
+      };
+      const equip = fmtList(r.equipment);
+      const spells = fmtList(r.spells);
+      const attacks = fmtList(r.attacks);
+      const features = fmtList(r.features);
       const text = [
         `# ${r.character_name}`,
         `Player: ${r.player_name}`,
-        `Level ${r.level} ${r.race} ${r.class_summary}`,
+        `Level ${r.level} ${r.race} ${r.class_summary}${r.subclass ? ` (${r.subclass})` : ""}`,
         r.background ? `Background: ${r.background}` : null,
         r.alignment ? `Alignment: ${r.alignment}` : null,
+        r.faith ? `Faith: ${r.faith}` : null,
+        r.languages ? `Languages: ${r.languages}` : null,
         `STR ${r.strength} DEX ${r.dexterity} CON ${r.constitution} INT ${r.intelligence} WIS ${r.wisdom} CHA ${r.charisma}`,
         `AC ${r.armor_class} HP ${r.max_hit_points} Speed ${r.speed}`,
+        r.personality_traits ? `Personality: ${r.personality_traits}` : null,
+        r.ideals ? `Ideals: ${r.ideals}` : null,
+        r.bonds ? `Bonds: ${r.bonds}` : null,
+        r.flaws ? `Flaws: ${r.flaws}` : null,
+        r.backstory ? `\nBackstory:\n${r.backstory}` : null,
+        equip ? `\nEquipment: ${equip}` : null,
+        spells ? `\nSpells: ${spells}` : null,
+        attacks ? `\nAttacks: ${attacks}` : null,
+        features ? `\nFeatures: ${features}` : null,
+        r.notes ? `\nDM Campaign Notes:\n${r.notes}` : null,
       ].filter(Boolean).join("\n");
       sources.push({ type: "character", id: r.id, title: r.character_name, content: text, is_dm_only: false, metadata: { player: r.player_name, level: r.level, race: r.race } });
     }

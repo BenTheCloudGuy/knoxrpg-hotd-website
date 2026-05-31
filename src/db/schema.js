@@ -368,6 +368,30 @@ async function ensureHotdTables() {
     // Seed DALL-E style prefix
     await pgPool.query("INSERT INTO hotd_config (key, value) VALUES ('dalle_style_prefix', 'Dark fantasy digital painting, dramatic chiaroscuro lighting, rich earth tones and deep crimsons, medieval Forgotten Realms aesthetic, highly detailed, cinematic composition, gothic atmosphere --') ON CONFLICT (key) DO NOTHING").catch(() => {});
 
+    // ── Canon Audit ─────────────────────────────────────────────
+    // Every canon write triggered by Publish is logged here so we have
+    // provenance back to the source session and a path to rollback later.
+    // The UNIQUE constraint makes the apply step idempotent: re-publishing
+    // the same session does not double-apply the same change.
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS hotd_canon_audit (
+        id              SERIAL PRIMARY KEY,
+        session_id      INTEGER NOT NULL REFERENCES hotd_sessions(id) ON DELETE CASCADE,
+        target_kind     TEXT NOT NULL,
+        target_id       INTEGER,
+        operation       TEXT NOT NULL,
+        field           TEXT,
+        before_value    TEXT,
+        after_value     TEXT,
+        source_excerpt  TEXT,
+        rationale       TEXT,
+        applied_at      TIMESTAMPTZ DEFAULT NOW(),
+        CONSTRAINT hotd_canon_audit_idem UNIQUE (session_id, target_kind, target_id, field, operation)
+      );
+      CREATE INDEX IF NOT EXISTS idx_canon_audit_session ON hotd_canon_audit (session_id);
+      CREATE INDEX IF NOT EXISTS idx_canon_audit_target  ON hotd_canon_audit (target_kind, target_id);
+    `).catch(() => {});
+
     console.log("  HOTD tables: ready");
   } catch (err) {
     console.warn("  WARN: Could not ensure HOTD tables:", err.message);

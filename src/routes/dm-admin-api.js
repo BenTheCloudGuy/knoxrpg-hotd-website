@@ -9,6 +9,8 @@ const { readBody, sendJSON, parseMultipart } = require("../lib/utils");
 const azure = require("../lib/azure");
 const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
+const { extractCanonUpdates } = require("../lib/canon-extractor");
+const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const fs = require("fs");
 const os = require("os");
 const childProc = require("child_process");
@@ -553,20 +555,63 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     if (!requireAdmin(session, res)) return true;
     try {
       const r = await pgPool.query(
-        "SELECT id, markdown FROM hotd_sessions WHERE id = $1",
+        "SELECT id, session_number, title, game_date, markdown FROM hotd_sessions WHERE id = $1",
         [sessPublish[1]]
       );
       if (r.rows.length === 0) { sendJSON(res, { error: "Session not found" }, 404); return true; }
-      const summaryBody = getSectionBody(r.rows[0].markdown, "Session Summary").trim();
+      const sessionRow = r.rows[0];
+      const summaryBody = getSectionBody(sessionRow.markdown, "Session Summary").trim();
       if (!summaryBody) {
         sendJSON(res, { error: 'Nothing to publish. Add a "# Session Summary" section with content first.' }, 400);
         return true;
       }
       await pgPool.query(
         "UPDATE hotd_sessions SET summary = $1, published = TRUE, published_at = NOW(), updated_at = NOW() WHERE id = $2",
-        [summaryBody, r.rows[0].id]
+        [summaryBody, sessionRow.id]
       );
-      sendJSON(res, { ok: true, summary: summaryBody });
+
+      // ── Canon extraction + apply + reindex ─────────────────
+      // Runs inline. If anything fails the publish still succeeds; the error
+      // is surfaced in the response so the UI can show it.
+      let canon = null;
+      let canonError = null;
+      try {
+        const cfgRows = await pgPool.query("SELECT key, value FROM hotd_config WHERE key = 'ai_model'");
+        const aiModel = cfgRows.rows[0]?.value || "gpt-5.4-mini";
+        const sessionForExtract = {
+          id: sessionRow.id,
+          session_number: sessionRow.session_number,
+          title: sessionRow.title,
+          game_date: sessionRow.game_date,
+          summary: summaryBody,
+        };
+        const { proposals, headline } = await extractCanonUpdates({
+          openaiClient: azure.openaiClient,
+          model: aiModel,
+          session: sessionForExtract,
+        });
+        const apply = await applyCanonUpdates({
+          session: sessionForExtract,
+          proposals,
+          headline,
+          userId: session.userId || null,
+        });
+        // Fire-and-await reindex of touched sources so the response only
+        // returns once RAG is consistent with the new canon.
+        const reindex = await reindexSources(apply.touched_sources);
+        canon = {
+          applied: apply.applied,
+          skipped: apply.skipped,
+          errors: apply.errors,
+          summary: apply.summary,
+          reindex,
+        };
+      } catch (e) {
+        console.error("Canon pipeline error during publish:", e);
+        canonError = e.message;
+      }
+
+      sendJSON(res, { ok: true, summary: summaryBody, canon, canon_error: canonError });
     } catch (e) {
       console.error("Session publish error:", e);
       sendJSON(res, { error: e.message }, 500);

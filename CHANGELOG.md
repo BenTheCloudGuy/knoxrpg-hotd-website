@@ -4,6 +4,23 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-05-31
+
+### Added
+- **Canon auto-update pipeline on Publish.** Publishing a session summary now extracts structured canon updates from the published prose and writes them straight into the campaign database, then reindexes the affected RAG sources. No human approval step.
+  - New module `src/lib/canon-extractor.js` calls the configured AI model (`hotd_config.ai_model`) with `response_format: json_object` and returns four typed arrays: `npc_updates`, `npc_creates`, `pc_note_appends`, `calendar_events`. The system prompt is strict: no inventions, no flowery prose, no em-dashes, every change must include a verbatim `source_excerpt` from the summary. The existing NPC roster, PC roster, and calendar events are baked into the prompt so the model matches against canonical IDs rather than inventing them.
+  - New module `src/lib/canon-applier.js` applies each proposal in its own try/catch (one bad row never aborts the others), with per-change DB-level dedupe: NPC name folds into existing NPCs, PC notes use substring-match to avoid double-appending, calendar events dedupe by `(day, month_idx, title)`. Allowed NPC update fields: `status`, `location`, `description`, `dm_notes`, `alignment_tag`. PC `notes` and NPC `dm_notes` are append-only and prefixed with `Session N (game_date):`. New NPCs are inserted `is_hidden=TRUE` so the DM can review before exposing.
+  - **Policy C calendar headline**: when `hotd_sessions.game_date` parses cleanly (`M/D[/Y]` or `Day N of Month M`), a deterministic `Session N: <title>` event is written for that date, in addition to any in-narrative dated events the LLM extracts.
+  - New table `hotd_canon_audit` in `src/db/schema.js` records every applied change with `session_id`, `target_kind`, `target_id`, `operation`, `field`, `before_value`, `after_value`, `source_excerpt`, `rationale`, `applied_by`. A `UNIQUE (session_id, target_kind, target_id, field, operation)` constraint guarantees re-publishing the same session never double-applies the same change.
+  - `src/routes/dm-admin-api.js` Publish handler runs extract → apply → reindex inline. If any stage fails the publish itself still succeeds; the error is surfaced in the response under `canon_error` and logged server-side.
+  - `src/pages/admin.js` Publish button now uses the progress bar and reports the applied counts in the status line, e.g. `Published in 47s. Canon: 1 NPC created, 3 NPCs updated, 2 PC notes appended, 1 calendar event added. RAG reindexed (3 sources).`
+- **PC character RAG chunks now include backstory, notes, equipment, spells, attacks, features, languages, faith, personality/ideals/bonds/flaws.** `scripts/embed-pipeline.js` was previously embedding only identity + stats, which meant the appended campaign-history notes (the destination for the new pipeline's PC writes) were not searchable. JSONB columns are flattened to readable name lists via a new `safeJsonArray` helper.
+
+### Notes
+- The applier spawns `scripts/embed-pipeline.js --source X --mode incremental` per touched source type in parallel after canon writes commit. Sources possible: `npc`, `character`, `calendar`, plus `session` (always, since the session itself was just republished). Reindex runs are awaited so the Publish response only returns once RAG is consistent with the new canon.
+- Audit log retention is unbounded; rows persist with the session via `ON DELETE CASCADE`. Rollback tooling is not part of this release; the audit table is structured to support it later (every row has both `before_value` and `after_value`).
+- The extractor's roster cap is 200 NPCs in the prompt. If the campaign exceeds that, the cap should be revisited or swapped for a similarity-based shortlist.
+
 ## [3.5.8] - 2026-05-31
 
 ### Added
