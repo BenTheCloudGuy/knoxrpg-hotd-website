@@ -57,8 +57,14 @@ reports:
 # reads OPENAI_API_KEY via secretKeyRef. To use a pre-existing Secret instead,
 # leave `apiKey` empty and set `existingSecret` (and optionally `existingSecretKey`).
 openai:
-  apiKey: ""                 # Optional fallback — managed identity preferred
-  existingSecret: ""
+  apiKey: ""                 # Optional fallback, managed identity preferred
+  # Fallback secret used when Arc managed identity cannot reach Key Vault
+  # (e.g. cert rotation issue). Provision with:
+  #   az keyvault secret show --vault-name cloudgeek-cus-keyvault \
+  #     --name openai-api-key --query value -o tsv \
+  #     | kubectl create secret generic openai-api-key \
+  #         -n hotd-website --from-literal=openai-api-key=-
+  existingSecret: "openai-api-key"
   existingSecretKey: "openai-api-key"
 
 # -- Azure Arc Managed Identity -----------------------------------------------

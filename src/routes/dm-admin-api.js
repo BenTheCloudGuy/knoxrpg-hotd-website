@@ -715,16 +715,24 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
   // ── RAG status check ───────────────────────────────────────
   if (decoded === "/api/dm-admin/rag-status" && req.method === "GET") {
     if (!requireAdmin(session, res)) return true;
-    const ragUrl = process.env.RAG_SERVICE_URL;
+    // Prefer the DB-stored value (set via the Search Configuration UI),
+    // fall back to the RAG_SERVICE_URL env var for deployments that
+    // wire it through Helm.
+    let ragUrl = "";
+    try {
+      const r = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'rag_service_url'");
+      ragUrl = (r.rows[0] && r.rows[0].value) || "";
+    } catch (_) {}
+    if (!ragUrl) ragUrl = process.env.RAG_SERVICE_URL || "";
     if (!ragUrl) { sendJSON(res, { status: "not_configured" }); return true; }
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3000);
-      const r = await fetch(ragUrl + "/health", { signal: controller.signal });
+      const r = await fetch(ragUrl.replace(/\/+$/, "") + "/health", { signal: controller.signal });
       clearTimeout(timeout);
-      sendJSON(res, { status: r.ok ? "ok" : "error", code: r.status });
+      sendJSON(res, { status: r.ok ? "ok" : "error", code: r.status, url: ragUrl });
     } catch (err) {
-      sendJSON(res, { status: "error", error: err.message });
+      sendJSON(res, { status: "error", error: err.message, url: ragUrl });
     }
     return true;
   }

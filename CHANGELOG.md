@@ -4,6 +4,16 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.2] - 2026-05-31
+
+### Fixed
+- **DM AI surfaces "OpenAI client not initialized" on every AI page.** Arc managed identity in the pod failed to acquire a token (`ChainedTokenCredential` returned 400 from the certificate exchange), so `src/lib/azure.js` could not fetch the OpenAI key from Key Vault, no `OPENAI_API_KEY` env var was wired as a fallback, and every call site in `src/routes/dm-admin-api.js` (DM Chat, Story Forge, session summary, Image Studio) short-circuited with a 500. The Helm chart now defaults `openai.existingSecret` to `openai-api-key`, so when the operator provisions a `Secret/openai-api-key` in the namespace (see provisioning recipe inlined in `values.yaml`) the deployment exports `OPENAI_API_KEY` via `secretKeyRef` and the fallback path in `azure.js` initialises the OpenAI client normally. The Arc identity path still runs first when it is healthy; this is purely defense-in-depth for cert-rotation outages.
+- **Search Configuration page reported `RAG STATUS: OFFLINE` even when `dnd-rag` was healthy.** `GET /api/dm-admin/rag-status` in `src/routes/dm-admin-api.js` was reading only `process.env.RAG_SERVICE_URL`, while the Search Configuration UI persists the URL to `hotd_config.rag_service_url` in the DB. The handler now reads the DB-stored value first and falls back to the env var, strips a trailing slash before appending `/health`, and returns the resolved `url` in the JSON response so the UI can show which endpoint it probed. Seeded `hotd_config.rag_service_url` with `http://dnd-rag.hotd-website.svc.cluster.local:3001` so existing installs get a working default.
+
+### Notes
+- The underlying Arc managed-identity 400 is most likely a rotated Arc node certificate. The fallback secret is the operational fix; the cert side should be investigated separately. The website behaves identically once either path returns a valid key.
+- `dnd-rag` is an auxiliary service surfaced only on the Search Configuration page; the in-app search uses pgvector directly via `src/lib/search.js` and `src/lib/rag.js` and was never impacted by the OFFLINE indicator.
+
 ## [3.8.1] - 2026-05-31
 
 ### Added
