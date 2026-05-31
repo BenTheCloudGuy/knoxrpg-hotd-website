@@ -6,11 +6,10 @@ const isDevSlot = (process.env.PG_MI_USER || "").includes("/slots/dev");
 const MAIN_SITE = isDevSlot ? "https://dev-web.knoxrpg.com" : "https://web.knoxrpg.com";
 const STATIC_ROOT = path.join(__dirname, "hotd-campaign");
 const STORAGE_ACCOUNT_NAME = process.env.STORAGE_ACCOUNT_NAME || "cloudgeekcusgaming01";
-const isAzure = !!(process.env.WEBSITE_INSTANCE_ID || process.env.IDENTITY_ENDPOINT);
+// Historically derived from Arc managed identity; now signals production
+// hosting so auth cookies can scope to the public domain.
+const isAzure = process.env.NODE_ENV === "production";
 const HOTD_CONTENT_DIR = process.env.HOTD_CONTENT_DIR || "";
-const KEY_VAULT_NAME = process.env.KEY_VAULT_NAME || "cloudgeek-cus-keyvault";
-const KEY_VAULT_URL = `https://${KEY_VAULT_NAME}.vault.azure.net`;
-const OPENAI_KV_SECRET_NAME = process.env.OPENAI_KV_SECRET_NAME || "openai-api-key";
 
 // ── Harptos Calendar Data ─────────────────────────────────────
 const HARPTOS_MONTHS = [
@@ -99,9 +98,6 @@ module.exports = {
   STORAGE_ACCOUNT_NAME,
   HOTD_CONTENT_DIR,
   isAzure,
-  KEY_VAULT_NAME,
-  KEY_VAULT_URL,
-  OPENAI_KV_SECRET_NAME,
   HARPTOS_MONTHS,
   ordinal,
   NAV_ITEMS,

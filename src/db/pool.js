@@ -1,21 +1,5 @@
 const { Pool } = require("pg");
 
-// ── Azure Credential (Arc managed identity on Cortana) ─────────
-let credential = null;
-let DefaultAzureCredential;
-try { ({ DefaultAzureCredential } = require("@azure/identity")); } catch (_e) {}
-
-if (DefaultAzureCredential && process.env.IDENTITY_ENDPOINT) {
-  try {
-    credential = new DefaultAzureCredential();
-    console.log(`  Azure: credential initialized (Arc managed identity)`);
-  } catch (err) {
-    console.warn(`  Azure: credential init failed: ${err.message}`);
-  }
-} else {
-  console.log(`  Azure: no managed identity (IDENTITY_ENDPOINT not set)`);
-}
-
 // ── PostgreSQL Pool ───────────────────────────────────────────
 const pgPool = new Pool({
   host: process.env.PGHOST,
@@ -27,8 +11,6 @@ const pgPool = new Pool({
   max: 5,
 });
 console.log(`  PG: password auth → ${process.env.PGHOST}`);
-
-async function getPgAccessToken() { return null; }
 
 // ── URL rewriting ─────────────────────────────────────────────
 const { HOTD_CONTENT_DIR, STORAGE_ACCOUNT_NAME } = require("../config");
@@ -66,4 +48,4 @@ const NEW_STORAGE_HOST = `${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
 let bcrypt;
 try { bcrypt = require("bcryptjs"); } catch (_e) { /* optional in dev */ }
 
-module.exports = { credential, getPgAccessToken, pgPool, bcrypt };
+module.exports = { pgPool, bcrypt };

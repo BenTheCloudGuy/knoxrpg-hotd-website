@@ -31,9 +31,6 @@ spec:
       securityContext:
         runAsUser: {{ .Values.securityContext.runAsUser }}
         fsGroup: {{ .Values.securityContext.fsGroup }}
-        {{- if .Values.arcIdentity.enabled }}
-        supplementalGroups: [984]
-        {{- end }}
       containers:
         - name: hotd-website
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -67,10 +64,6 @@ spec:
               value: "/data/hotd-content"
             - name: STORAGE_ACCOUNT_NAME
               value: {{ .Values.storage.accountName | quote }}
-            - name: KEY_VAULT_NAME
-              value: {{ .Values.keyVault.name | quote }}
-            - name: OPENAI_KV_SECRET_NAME
-              value: {{ .Values.keyVault.openaiSecretName | quote }}
             {{- if or .Values.openai.apiKey .Values.openai.existingSecret }}
             - name: OPENAI_API_KEY
               valueFrom:
@@ -84,12 +77,6 @@ spec:
               value: {{ .Values.reports.pdfScript | quote }}
             - name: HOTD_REPORTS_DIR
               value: {{ .Values.reports.mountPath | quote }}
-            {{- if .Values.arcIdentity.enabled }}
-            - name: IDENTITY_ENDPOINT
-              value: "http://localhost:40342/metadata/identity/oauth2/token"
-            - name: IMDS_ENDPOINT
-              value: "http://localhost:40342"
-            {{- end }}
             # ── Observability ───────────────────────────────────────
             {{- if .Values.observability.metrics.enabled }}
             - name: METRICS_ENABLED
@@ -142,11 +129,6 @@ spec:
               mountPath: {{ .Values.notebookImages.mountPath }}
             - name: reports
               mountPath: {{ .Values.reports.mountPath }}
-            {{- if .Values.arcIdentity.enabled }}
-            - name: arc-tokens
-              mountPath: /var/opt/azcmagent/tokens
-              readOnly: true
-            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           readinessProbe:
@@ -164,9 +146,3 @@ spec:
         - name: reports
           emptyDir:
             sizeLimit: {{ .Values.reports.sizeLimit }}
-        {{- if .Values.arcIdentity.enabled }}
-        - name: arc-tokens
-          hostPath:
-            path: /var/opt/azcmagent/tokens
-            type: Directory
-        {{- end }}

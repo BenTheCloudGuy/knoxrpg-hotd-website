@@ -4,6 +4,20 @@ All notable changes to the Halls of the Damned campaign website will be document
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-05-31
+
+### Removed
+- **Azure Arc managed identity removed from the boot path.** The chained identity probe in `src/db/pool.js` (and its `IDENTITY_ENDPOINT` env trigger) is gone; `pgPool` is now password-only via `PGPASSWORD`. The Key Vault fetch in `src/lib/azure.js` is gone; `initOpenAI` reads `OPENAI_API_KEY` (or `OPENAI_KEY`) directly. The Azure Storage SDK is gone; `uploadBlobToStorage` writes to the local filesystem under `HOTD_CONTENT_DIR` and throws a clear error when that env is unset. Removed exports: `credential`, `getPgAccessToken`. Removed config constants: `KEY_VAULT_NAME`, `KEY_VAULT_URL`, `OPENAI_KV_SECRET_NAME`. `isAzure` is rebased on `NODE_ENV === "production"` so the public-domain auth cookie still scopes correctly when deployed.
+- **`@azure/identity`, `@azure/keyvault-secrets`, `@azure/storage-blob`** dropped from `src/package.json` and `src/package-lock.json` (54 transitive packages removed). The container image no longer carries the Azure SDK.
+- **Helm `arcIdentity` block, `keyVault` block, and Arc volume mounts removed.** `helm/hotd-website/values.yaml` no longer renders `arcIdentity.enabled`, `keyVault.name`, or `keyVault.openaiSecretName`. `helm/hotd-website/templates/deployment.yaml` no longer emits `IDENTITY_ENDPOINT`, `IMDS_ENDPOINT`, `KEY_VAULT_NAME`, `OPENAI_KV_SECRET_NAME`, the `arc-tokens` volume/mount of `/var/opt/azcmagent/tokens`, or the `supplementalGroups: [984]` (azcmagent group). `hostNetwork: true` is retained, but its comment is reframed: it now exists solely so the metrics port (`:9464`) stays reachable on the cortana host IP for the existing UnRAID Prometheus scrape.
+
+### Changed
+- **Operator-provided OpenAI secret is now the only path.** The chart still wires `OPENAI_API_KEY` via `secretKeyRef` from `openai.existingSecret` (default `openai-api-key`) or from the inline-rendered Secret when `openai.apiKey` is set. Provisioning recipe is inlined in `values.yaml`. Pods that boot without a Secret log `AI: disabled (no OPENAI_API_KEY / OPENAI_KEY in environment)` and every AI route returns the existing `OpenAI client not initialized` 500.
+
+### Notes
+- This is a load-bearing simplification: the Arc cert rotation outage from 3.8.2 cannot recur because the code never tries to authenticate against AAD anymore. The DB password and the OpenAI key are both Kubernetes Secrets, end of story.
+- Image-upload routes (`scripts/gen-image.js` output, NPC portraits, art uploads, artifact images) need a writable mount at `HOTD_CONTENT_DIR`. The production NAS mount at `/data/hotd-content` is `readOnly: true`, so those routes will return EROFS until either a writable PVC is mounted at the same path or the upload path is repointed at `/app/hotd-campaign/images/notebook` (already a RW PVC). Not addressed in this release; previously the Azure Storage SDK path masked this, but with Arc dead it had been failing identically since the cert rotation. Tracking as a follow-up.
+
 ## [3.8.2] - 2026-05-31
 
 ### Fixed

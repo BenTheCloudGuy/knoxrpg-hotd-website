@@ -53,34 +53,27 @@ reports:
   pdfScript: /app/scripts/build-session-pdf.js
 
 # -- OpenAI -------------------------------------------------------------------
-# If `apiKey` is set, the chart renders an Opaque Secret and the Deployment
-# reads OPENAI_API_KEY via secretKeyRef. To use a pre-existing Secret instead,
-# leave `apiKey` empty and set `existingSecret` (and optionally `existingSecretKey`).
+# Provision the API key as a Kubernetes Secret in the release namespace.
+# Either inline `apiKey` (renders an Opaque Secret) or pre-create your own
+# Secret and point `existingSecret` at it. Provisioning example:
+#   kubectl create secret generic openai-api-key \
+#     -n hotd-website --from-literal=openai-api-key=sk-...
 openai:
-  apiKey: ""                 # Optional fallback, managed identity preferred
-  # Fallback secret used when Arc managed identity cannot reach Key Vault
-  # (e.g. cert rotation issue). Provision with:
-  #   az keyvault secret show --vault-name cloudgeek-cus-keyvault \
-  #     --name openai-api-key --query value -o tsv \
-  #     | kubectl create secret generic openai-api-key \
-  #         -n hotd-website --from-literal=openai-api-key=-
+  apiKey: ""
   existingSecret: "openai-api-key"
   existingSecretKey: "openai-api-key"
 
-# -- Azure Arc Managed Identity -----------------------------------------------
-arcIdentity:
-  enabled: true              # Enable Arc managed identity for KV + Storage
-
-# -- Azure Storage Account ----------------------------------------------------
+# -- Storage URL rewriting ----------------------------------------------------
+# Legacy `<account>.blob.core.windows.net` URLs in the DB are rewritten on
+# read to the current storage host (and to /hotd-content/ in dev when
+# nas.hotdContent is mounted). The chart no longer talks to Azure Storage.
 storage:
   accountName: cloudgeekcusgaming01
 
-# -- Azure Key Vault -----------------------------------------------------------
-keyVault:
-  name: cloudgeek-cus-keyvault
-  openaiSecretName: openai-api-key
-
-# -- Host Network (required for Arc identity) ----------------------------------
+# -- Host Network -------------------------------------------------------------
+# Keeps the metrics port (:9464) reachable directly on the cortana host IP
+# for the UnRAID Prometheus scrape (192.168.10.210:9464). Set false to bind
+# inside the pod network instead; an external scrape then needs a Service.
 hostNetwork: true
 
 # -- Ingress ------------------------------------------------------------------
@@ -103,9 +96,9 @@ ingress:
 
 # -- Observability ------------------------------------------------------------
 # Application instrumentation. The metrics listener binds on a SEPARATE port
-# (default :9464) so /metrics never travels through the public ingress. The
-# pod runs hostNetwork: true (Arc identity requirement), so the port is
-# reachable on the cortana host IP at the same number.
+# (default :9464) so /metrics never travels through the public ingress. When
+# hostNetwork is true (default) the port is reachable directly on the
+# cortana host IP at the same number.
 #
 # Loki shipping is an opt-in transitional path: until a cluster-wide log
 # collector (Grafana Alloy / Promtail DaemonSet) ships, the app pushes
