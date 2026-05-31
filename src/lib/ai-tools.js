@@ -757,6 +757,67 @@ async function chatWithTools(openaiClient, model, userMessages, opts = {}) {
     ...userMessages,
   ];
 
+  // ── Auto-RAG: pre-retrieve ALL relevant context for the DM ──
+  // For every DM turn, embed the latest user message and pull the top
+  // matches from across EVERY source_type in hotd_embeddings (campaign
+  // lore, NPCs, sessions, characters, artifacts, handouts, calendar,
+  // journal, DDB races/classes/feats/backgrounds/spells/monsters/magic
+  // items, dnd_book chunks). Inject them as a system-role "Relevant
+  // Context" block between the system prompt and the user messages so
+  // the model has the same broad context the operator implicitly asked
+  // for, without having to guess which lookup_* / search_* tool to call.
+  // The lookup_* tools remain available for precise DB rows; search_*
+  // tools remain available for explicit follow-up sub-queries.
+  // Gated on isDM because player chat already has stricter source_type
+  // guards; controlled by HOTD_AUTO_RAG=off to disable for cost tests.
+  if (isDM && openaiClient && process.env.HOTD_AUTO_RAG !== "off" && userMessages.length > 0) {
+    const lastUser = [...userMessages].reverse().find(m => m.role === "user");
+    const queryText = (lastUser && typeof lastUser.content === "string") ? lastUser.content.trim() : "";
+    if (queryText.length >= 4) {
+      const ragT0 = Date.now();
+      try {
+        const limit = parseInt(process.env.HOTD_AUTO_RAG_LIMIT || "12", 10);
+        const minScore = parseFloat(process.env.HOTD_AUTO_RAG_MIN_SCORE || "0.25");
+        const perChunkChars = parseInt(process.env.HOTD_AUTO_RAG_CHUNK_CHARS || "900", 10);
+        const ragResults = await searchEmbeddings(openaiClient, queryText, {
+          includeDmOnly: true,
+          limit,
+          minScore,
+          // No sourceType — search ALL RAG sources based on input context.
+        });
+        const typeCounts = {};
+        for (const r of ragResults) typeCounts[r.source_type] = (typeCounts[r.source_type] || 0) + 1;
+        debug.autoRag = {
+          queryLength: queryText.length,
+          results: ragResults.length,
+          latencyMs: Date.now() - ragT0,
+          types: typeCounts,
+          limit, minScore, perChunkChars,
+        };
+        if (ragResults.length > 0) {
+          const ctx = ragResults.map((r, i) => {
+            const body = (r.chunk_text || "").length > perChunkChars
+              ? r.chunk_text.slice(0, perChunkChars) + "…"
+              : r.chunk_text;
+            return `[${i + 1}] (${r.source_type}, score ${r.score}) ${r.title}\n${body}`;
+          }).join("\n\n---\n\n");
+          chatMessages.splice(1, 0, {
+            role: "system",
+            content:
+              `# Relevant Context (auto-retrieved from RAG)\n\n` +
+              `The following ${ragResults.length} passages were retrieved from the campaign and reference knowledge base based on the user's latest message. ` +
+              `Use them as ground truth when they are actually relevant; ignore any passage that does not relate to what the user asked. ` +
+              `Cite the bracketed reference numbers ([1], [2], …) when you draw on a passage. ` +
+              `You can still call lookup_* tools for precise database rows or search_* tools for narrower follow-up queries when needed.\n\n` +
+              ctx,
+          });
+        }
+      } catch (err) {
+        debug.autoRagError = err && err.message ? err.message : String(err);
+      }
+    }
+  }
+
   let rounds = 0;
   const t0 = Date.now();
 
