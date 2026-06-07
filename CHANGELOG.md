@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.11.2] - 2026-06-07
+
+### Fixed
+- **Public NPC profile links no longer require login.** The global auth gate now exempts `/npcs` and numeric `/npcs/:id` routes so campaign NPC links can open on the public site without DM credentials. Existing renderer-level protections still apply: hidden NPCs remain unavailable to anonymous users, DM notes only render for admins, `/npcs/admin` remains admin-only, and DM admin APIs are still protected.
+
+### Changed
+- **Session 29 council guide updated for current HOTD canon.** Clarified the Barovian force count, corrected Doru references, added council pacing sections, documented the Mordenkainen/Van Richten/Ezmerelda Amber Temple plan, and made Tser Luna's Wizard of Wines trade connection canonical while removing the old Radescu-only trade assumption.
+
 ## [3.11.1] - 2026-05-31
 
 ### Fixed

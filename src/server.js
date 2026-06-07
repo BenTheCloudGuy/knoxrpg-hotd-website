@@ -81,7 +81,8 @@ async function dispatch(req, res) {
   const AUTH_EXEMPT = ["/siteLogo.png", "/", "/index.html"];
   const isStaticAsset = decoded.startsWith("/images/") || decoded.startsWith("/css/");
   const isApiRoute = decoded.startsWith("/api/");
-  if (!session && !AUTH_EXEMPT.includes(decoded) && !isStaticAsset && !isApiRoute) {
+  const isPublicNpcPage = decoded === "/npcs" || /^\/npcs\/\d+$/.test(decoded);
+  if (!session && !AUTH_EXEMPT.includes(decoded) && !isStaticAsset && !isApiRoute && !isPublicNpcPage) {
     res.writeHead(302, { Location: "/login" });
     return res.end();
   }

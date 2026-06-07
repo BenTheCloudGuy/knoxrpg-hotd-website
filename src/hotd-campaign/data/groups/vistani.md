@@ -86,7 +86,7 @@ A smaller Vistani settlement near Krezk. The Tser Raven Vistani were the first t
 
 ### Tser Luna Encampment
 
-A quiet Vistani group along the Luna River to the south. The Tser Luna Vistani keep to themselves and are rarely mentioned by the other camps. They maintain a trade relationship with the Radescu werewolf pack, who live as humans in a nearby village and only turn on the full moon. The Radescu deal exclusively with the Tser Luna Vistani when they need supplies, and the arrangement appears to be built on mutual trust and discretion. The current status of this camp is unknown.
+A quiet Vistani group along the Luna River to the south, not far from the Wizard of Wines vineyard. The Tser Luna Vistani keep to themselves and are rarely mentioned by the other camps, but the Martikovs know them through regular vineyard trade. Their wagons are one of the few reliable ways wine, food, tools, and small luxuries move through the southern valley without drawing too much attention. The current status of this camp is unknown.
 
 ### The E'Tressa Family — Blood of the Vine Inn
 
