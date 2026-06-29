@@ -71,6 +71,41 @@ A radiant, beautiful, and increasingly unhinged angel. He speaks gently while he
 - At will: *detect evil and good*
 - 1/day each: *commune*, *raise dead*
 
+**Cleric Spellcasting (12th level).** The Abbot is a 12th-level cleric. Spellcasting ability is Wisdom (save DC 17, +9 to hit). Lean on the attack and debuff spells to grind the party down while the mongrelfolk screen him.
+
+**Cantrips (at will):**
+- *Sacred flame* — DC 17 Dex save, 3d8 radiant; ignores cover. Default snipe at a screened-off target.
+- *Toll the dead* — DC 17 Wis save, 3d12 necrotic vs. a wounded target (3d8 if at full HP).
+- *Guidance* — buff a mongrelfolk's next ability check; flavor for keeping the horde organized.
+
+**1st level (4 slots):**
+- *Bane* — three targets, DC 17 Cha save, each subtracts 1d4 from attacks and saves. Open with this to soften the party.
+- *Guiding bolt* — ranged spell attack, 4d6 radiant, next attacker has advantage. Sets up the mongrelfolk pile-on.
+- *Command* — DC 17 Wis save, one-word order ("flee," "grovel," "drop") to pull a striker out of position.
+
+**2nd level (3 slots):**
+- *Hold person* — DC 17 Wis save, paralyzes a humanoid; auto-crits while held. His best lockdown on the martials.
+- *Silence* — 20-ft. sphere, no verbal spells; drop it on the party casters.
+- *Spiritual weapon* — bonus action, 2d8 + 5 force, floats and follows. Free chip damage every turn.
+
+**3rd level (3 slots):**
+- *Spirit guardians* — radiant 4d8, DC 17 Wis half, halves speed. Core engine; keep it up while he hides behind mooks.
+- *Bestow curse* — DC 17 Wis save, disadvantage on attacks/saves vs. a key target or extra damage.
+- *Dispel magic* — strip a buff or summon off the party.
+
+**4th level (3 slots):**
+- *Banishment* — DC 17 Cha save, removes the biggest threat for up to a minute. Concentration.
+- *Guardian of faith* — 20 radiant to anyone entering; zones a doorway or the altar.
+
+**5th level (2 slots):**
+- *Flame strike* — 10-ft. radius, DC 17 Dex, 4d6 fire + 4d6 radiant. Punish a clustered party.
+- *Insect plague* — 20-ft. cube, DC 17 Con, 4d10 piercing, difficult terrain. Wall the party off and grind.
+
+**6th level (1 slot):**
+- *Harm* — DC 17 Con, 14d6 necrotic and caps max HP. Reserve for the front-liner.
+
+> Opening play: *bane* to soften, *spirit guardians* up, then *flame strike* / *insect plague* to zone, *hold person* and *banishment* to peel strikers, and *harm* to gut the tank. Keep the mongrelfolk between him and the casters.
+
 **Magic Resistance.** Advantage on saving throws against spells and other magical effects.
 
 #### Actions
@@ -82,15 +117,12 @@ A radiant, beautiful, and increasingly unhinged angel. He speaks gently while he
 #### Special Attacks
 
 - **Radiant Smite (Recharge 5–6).** As an action, the Abbot looses a blinding flare in a 30-foot cone. Each creature in the area takes 27 (6d8) radiant damage and must make a DC 17 Constitution save or be blinded until the end of its next turn (half damage and no blind on a success).
-- **Change Shape.** As an action he can shift to a humanoid form (looks the same in stats) or back; useful for slipping among the mongrelfolk.
 
 #### Reaction
 
 - **Shield of Faith Aura.** When hit by an attack, he can add +2 AC against that attack as celestial light wards him.
 
 #### Lair Actions
-
-On initiative count 20 (losing ties), the Abbot can take a lair action. The consecrated Abbey of Saint Markovia is steeped in old radiant power, and he draws on it to mend himself.
 
 - **Sanctified Renewal.** The Abbey's holy light gathers around the Abbot. He regains 22 (4d8 + 4) hit points. He cannot use this lair action two rounds in a row.
 - (Alternate, if he is at or near full HP) **Cleansing Flare.** Radiant light bursts from the altar; he ends one condition on himself and one mongrelfolk within 30 ft. heals 11 hit points.
