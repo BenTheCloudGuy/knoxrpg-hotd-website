@@ -1,0 +1,20 @@
+---
+title: "Talisman of the Sphere"
+category: Magic Item
+rarity: Legendary
+type: WondrousItem
+requires_attunement: Yes
+source: free-rules, dmg, pg. 315
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9229124.jpeg
+---
+
+# Talisman of the Sphere
+
+![Talisman of the Sphere](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9229124.jpeg)
+
+Wondrous Item, legendary (requires attunement)
+ 
+ 
+While holding or wearing this talisman, you have Advantage on any Intelligence (Arcana) check you make to control a Sphere of Annihilation. In addition, when you start your turn in control of a Sphere of Annihilation, you can take a Magic action to move it 10 feet plus a number of additional feet equal to 10 times your Intelligence modifier. This movement doesn’t have to be in a straight line.
+
+Dungeon Master’s Guide, pg. 315

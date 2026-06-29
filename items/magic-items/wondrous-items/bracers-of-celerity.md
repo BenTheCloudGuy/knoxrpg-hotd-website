@@ -1,0 +1,20 @@
+---
+title: "Bracers of Celerity"
+category: Magic Item
+rarity: Rare
+type: WondrousItem
+requires_attunement: Yes
+source: pbtso, pg. 217
+---
+
+# Bracers of Celerity
+
+Wondrous Item, rare (requires attunement)
+ 
+ 
+This pair of lightweight bronze bracers is lined with soft, purple velvet and engraved with swirling designs.
+ 
+
+While you’re wearing these bracers, all your speeds increase by 10 feet, and you have advantage on saving throws you make to avoid or end the paralyzed or restrained condition on yourself.
+
+Phandelver and Below: The Shattered Obelisk, pg. 217

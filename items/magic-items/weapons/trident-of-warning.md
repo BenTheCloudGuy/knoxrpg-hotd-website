@@ -1,0 +1,37 @@
+---
+title: "Trident of Warning"
+category: Magic Item
+rarity: Uncommon
+type: Weapon
+requires_attunement: Yes
+source: dmg-2024, dmg, pg. 324
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9229128.jpeg
+---
+
+# Trident of Warning
+
+![Trident of Warning](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9229128.jpeg)
+
+Weapon (trident), uncommon (requires attunement)
+ 
+ 
+As long as this weapon is within your reach and you are attuned to it, you and allies within 30 feet of you gain the following benefits.
+ 
+
+Alarm. The weapon magically awakens each subject who is sleeping naturally when combat begins. This benefit doesn’t wake a subject from magically induced sleep.
+ 
+
+Supernatural Readiness. Each subject has Advantage on its Initiative rolls.
+
+Proficiency with a Trident allows you to add your proficiency bonus to the attack roll for any attack you make with it.
+ 
+
+ 
+
+This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.
+ 
+
+Topple. If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.
+ 
+
+Dungeon Master’s Guide, pg. 324

@@ -1,0 +1,92 @@
+---
+title: "Arrow of Slaying"
+category: Magic Item
+rarity: Rare
+type: Weapon
+requires_attunement: No
+source: dmg-2024, dmg, pg. 228
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9228351.jpeg
+---
+
+# Arrow of Slaying
+
+![Arrow of Slaying](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9228351.jpeg)
+
+Weapon, rare 
+ 
+ 
+This magic ammunition is meant to slay creatures of a particular type, which the DM chooses or determines randomly by rolling on the table below. If a creature of that type takes damage from the ammunition, the creature makes a DC 17 Constitution saving throw, taking an extra 6d10 Force damage on a failed save or half as much extra damage on a successful one.
+ 
+
+After dealing its extra damage to a creature, the ammunition becomes nonmagical.
+ 
+ 
+
+ 
+1d100 
+Creature Type 
+1d100 
+Creature Type 
+
+ 
+ 
+ 
+
+ 
+01–10 
+Aberrations 
+51–60 
+Fey 
+
+ 
+
+ 
+11–15 
+Beasts 
+61–70 
+Fiends 
+
+ 
+
+ 
+16–20 
+Celestials 
+71–75 
+Giants 
+
+ 
+
+ 
+21–25 
+Constructs 
+76–80 
+Monstrosities 
+
+ 
+
+ 
+26–35 
+Dragons 
+81–85 
+Oozes 
+
+ 
+
+ 
+36–45 
+Elementals 
+86–90 
+Plants 
+
+ 
+
+ 
+46–50 
+Humanoids 
+91–00 
+Undead 
+
+ 
+ 
+
+Dungeon Master’s Guide, pg. 228

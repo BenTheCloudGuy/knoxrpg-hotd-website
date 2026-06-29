@@ -1,0 +1,34 @@
+---
+title: "Candleflame Light Crossbow"
+category: Magic Item
+rarity: Uncommon
+type: Weapon
+requires_attunement: Yes
+source: gsb2, pg. 56
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445030.png
+---
+
+# Candleflame Light Crossbow
+
+![Candleflame Light Crossbow](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445030.png)
+
+Weapon (crossbow, light), uncommon (requires attunement)
+ 
+ 
+Wrought from metal in the likeness of a brazier, this ranged weapon’s grip has been covered in wax and has a simple candle positioned in front of where the arrow or bolt is fired from. The candle is magic and never runs out of wax, nor can it be removed from the weapon. You can use a bonus action to speak the weapon’s command word to cause the candle to light itself, shedding light like a normal candle while ablaze. While the candle is lit, this magic weapon deals an extra 2 fire damage to any target it hits with a ranged attack. The candle’s flame lasts until you use a bonus action to speak the command word again or until you drop or stow the weapon.
+ 
+
+If you roll the same number on both d20s when you make a ranged attack roll with advantage or disadvantage using this weapon while its candle is lit, the ammunition becomes wreathed in a conflagration of uncontrollable flames. The arrow or bolt flies toward the target and explodes, destroying the ammunition and dealing 4d6 fire damage to the target (instead of the attack’s normal damage), or half as much damage if the total of the attack roll was less than the target’s AC. This fire ignites flammable objects within 5 feet of the target that aren’t being worn or carried. This property can’t be used again until the next dawn.
+
+Proficiency with a Light Crossbow allows you to add your proficiency bonus to the attack roll for any attack you make with it.
+ 
+
+ 
+
+This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.
+ 
+
+Slow. If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn’t exceed 10 feet.
+ 
+
+The Griffon’s Saddlebag: Book Two, pg. 56

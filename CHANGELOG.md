@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.11.3] - 2026-06-28
+
+### Added
+- **Session 30 Krezk assault content.** Added a portal-to-Krezk lead-in and a "Krezk Assault" section to Session 30: a full Abbot (fallen deva) stat block with spells, healing, special attacks (Radiant Smite, Change Shape, Shield of Faith aura), plus a mongrelfolk mook block and mook-screen rules so players can't focus-fire the Abbot.
+
 ## [3.11.2] - 2026-06-07
 
 ### Fixed

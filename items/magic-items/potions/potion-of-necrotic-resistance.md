@@ -1,0 +1,17 @@
+---
+title: "Potion of Necrotic Resistance"
+category: Magic Item
+rarity: Uncommon
+type: Potion
+requires_attunement: No
+source: free-rules
+---
+
+# Potion of Necrotic Resistance
+
+Potion, uncommon 
+ 
+ 
+When you drink this potion, you gain resistance to necrotic damage for 1 hour.
+
+Dungeon Master’s Guide

@@ -1,0 +1,43 @@
+---
+title: "Sunsword"
+category: Magic Item
+rarity: Legendary
+type: Weapon
+requires_attunement: Yes
+source: cos, pg. 223
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/5532.png
+---
+
+# Sunsword
+
+![Sunsword](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/5532.png)
+
+Weapon (longsword), legendary (requires attunement)
+ 
+ 
+The Sunsword is a unique blade once possessed by Strahd’s brother, Sergei von Zarovich. In its original form, it had a platinum hilt and guard, and a thin crystal blade as strong as steel.
+ 
+
+Strahd employed a powerful wizard named Khazan to destroy the weapon after Sergei’s death. The first part of the process required the hilt and the blade to be separated, which Khazan accomplished. While Khazan was busying himself destroying the blade, his apprentice stole the hilt and fled. Khazan later located his apprentice’s mutilated corpse in the Svalich Woods, but the hilt was nowhere to be found. To avoid the vampire’s wrath, Khazan told Strahd that the entire weapon had been destroyed.
+ 
+
+The hilt, which is sentient, knows that it can never be reunited with its original crystal blade. It has, however, gained the properties of a sun blade.
+ 
+
+Sentience. The Sunsword is a sentient chaotic good weapon with an Intelligence of 11, a Wisdom of 17, and a Charisma of 16. It has hearing and normal vision out to a range of 60 feet. The weapon communicates by transmitting emotions to the creature carrying or wielding it.
+ 
+
+Personality. The Sunsword’s special purpose is to destroy Strahd, not so much because it wants to free the land of Barovia from evil but because it wants revenge for the loss of its crystal blade. The weapon secretly fears its own destruction.
+
+Proficiency with a Longsword allows you to add your proficiency bonus to the attack roll for any attack you make with it.
+ 
+
+ 
+
+This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.
+ 
+
+Sap. If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.
+ 
+
+Curse of Strahd, pg. 223

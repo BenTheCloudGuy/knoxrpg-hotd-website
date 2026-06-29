@@ -1,0 +1,26 @@
+---
+title: "Chain Devil Gloves"
+category: Magic Item
+rarity: Rare
+type: WondrousItem
+requires_attunement: Yes
+source: gsb2, pg. 58
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445042.png
+---
+
+# Chain Devil Gloves
+
+![Chain Devil Gloves](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445042.png)
+
+Wondrous Item, rare (requires attunement)
+ 
+ 
+These leather gloves are fashioned from the hands of a slain chain devil. While wearing these gloves, an ethereal chain attaches itself to any weapon you throw that has the thrown property. The chain has a reach of 60 feet and breaks its connection to the weapon if the weapon is held by a creature or if you are ever more than 60 feet away from it. You can have up to 4 of these chains at any time.
+ 
+
+As an action, you can cause these chains to suddenly retract and pull any attached weapons with them. Any creature within the path of one or more of these weapons must make a DC 15 Dexterity saving throw. On a failed save, a creature takes force damage equal to the damage die of the thrown weapon. A solid object or wall blocks the path of the retracted chain and weapon.
+ 
+
+A retracted weapon lands harmlessly at your feet or in an open hand once it reaches you.
+
+The Griffon’s Saddlebag: Book Two, pg. 58

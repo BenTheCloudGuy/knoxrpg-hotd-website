@@ -1,0 +1,80 @@
+---
+title: "Webgrip Bow"
+category: Magic Item
+rarity: Rare
+type: Weapon
+requires_attunement: Yes
+source: gsb2, pg. 188
+image: https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445610.png
+---
+
+# Webgrip Bow
+
+![Webgrip Bow](https://cloudgeekcusgaming01.blob.core.windows.net/images/magic-items/9445610.png)
+
+Weapon (any bow), rare (requires attunement)
+ 
+ 
+This 8-armed bow uses the remains of a spindly spider’s legs and maw. The bow has 3 charges and regains all expended charges daily at dawn. When you make a ranged attack with the bow, you can expend 1 of its charges to lace it with sticky spider silk. On a hit, the arrow magically sheds the silk and releases it as a net-like web. If the target is a Medium or smaller creature, it and each Medium or smaller creature within 5 feet of it must succeed on a DC 15 Dexterity saving throw or be restrained until the end of your next turn. If the target is a Large creature, only it must succeed on the saving throw instead. Huge and larger creatures are unaffected by the web.
+ 
+
+Summon Spiders. While holding the weapon, you can use an action to speak its command word to summon 2 swarms of insects (spiders) or 1 giant spider, which appear in unoccupied spaces that you can see within 10 feet of you. The GM has the creatures’ statistics. The summoned creatures are friendly to you and your companions. Roll initiative for the summoned creatures as a group, which have their own turns. They obey any verbal commands that you issue to them (no action required by you). If you don’t issue any commands to them, they defend themselves from hostile creatures, but otherwise take no actions. A summoned creature disappears when it drops to 0 hit points, after 1 hour, or when you end the effect early as a bonus action. Once this property of the bow has been used, it can’t be used again until the next dawn.
+ 
+
+Applicable Weapons
+ 
+ 
+ 
+
+ 
+Name 
+Type 
+Damage 
+Properties 
+
+ 
+ 
+ 
+
+ 
+Shortbow 
+Simple Ranged 
+1d6 piercing 
+Ammunition (range 80/320), two-handed 
+
+ 
+
+ 
+Longbow 
+Martial Ranged 
+1d8 piercing 
+Ammunition (range 150/600), heavy, two-handed 
+
+ 
+
+ 
+Crossbow, light 
+Simple Ranged 
+1d8 piercing 
+Ammunition (range 80/320), loading, two-handed 
+
+ 
+
+ 
+Crossbow, hand 
+Martial Ranged 
+1d10 piercing 
+Ammunition (range 30/120), light, loading 
+
+ 
+
+ 
+Crossbow, heavy 
+Martial Ranged 
+1d10 piercing 
+Ammunition (range 100/400), heavy, loading, two-handed 
+
+ 
+ 
+
+The Griffon’s Saddlebag: Book Two, pg. 188
