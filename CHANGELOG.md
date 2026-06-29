@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ### Added
 - **Session 30 Krezk assault content.** Added a portal-to-Krezk lead-in and a "Krezk Assault" section to Session 30: a full Abbot (fallen deva) stat block with spells, healing, special attacks (Radiant Smite, Change Shape, Shield of Faith aura), plus a mongrelfolk mook block and mook-screen rules so players can't focus-fire the Abbot.
+- **Abbot lair self-heal.** Added a Lair Actions block: Sanctified Renewal heals the Abbot 4d8+4 each round (no back-to-back), with a Cleansing Flare alternate that clears a condition and tops off a mongrelfolk.
 
 ## [3.11.2] - 2026-06-07
 

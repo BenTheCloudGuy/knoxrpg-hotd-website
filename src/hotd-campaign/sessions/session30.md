@@ -88,6 +88,13 @@ A radiant, beautiful, and increasingly unhinged angel. He speaks gently while he
 
 - **Shield of Faith Aura.** When hit by an attack, he can add +2 AC against that attack as celestial light wards him.
 
+#### Lair Actions
+
+On initiative count 20 (losing ties), the Abbot can take a lair action. The consecrated Abbey of Saint Markovia is steeped in old radiant power, and he draws on it to mend himself.
+
+- **Sanctified Renewal.** The Abbey's holy light gathers around the Abbot. He regains 22 (4d8 + 4) hit points. He cannot use this lair action two rounds in a row.
+- (Alternate, if he is at or near full HP) **Cleansing Flare.** Radiant light bursts from the altar; he ends one condition on himself and one mongrelfolk within 30 ft. heals 11 hit points.
+
 ### Mongrelfolk (Mooks)
 
 Stitched-together patchwork people. Use them in numbers; they live to die for the Abbot.
