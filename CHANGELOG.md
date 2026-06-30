@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.12.2] - 2026-06-30
+
+### Fixed
+- **Sessions Workspace editor grew unbounded and pushed the button bar off-screen.** Even after the iframe was sized correctly in 3.12.1, the two-pane grid still had an implicit `auto`-sized row, so the EasyMDE editor expanded to its full content height (e.g. 50+ lines) and shoved the bottom button bar (**Create PDF**, **Generate Summary**, **Publish Summary**, **Unpublish**, **Delete**) below the fold — getting worse as the editor column widened. The workspace grid now pins its row with `grid-template-rows: minmax(0, 1fr)` (both standalone and embed), capping the editor to the available height so it scrolls internally and the button bar stays docked at the bottom.
+
 ## [3.12.1] - 2026-06-30
 
 ### Fixed

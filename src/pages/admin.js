@@ -275,8 +275,8 @@ async function renderSessionsAdminPage(session, opts) {
     ? "max-width:none;width:100%;padding:0 16px;height:100vh;display:flex;flex-direction:column;box-sizing:border-box;"
     : "max-width:none;width:100%;padding:0 16px;";
   const wsStyle = embed
-    ? "display:grid;grid-template-columns:30% 70%;gap:12px;flex:1;min-height:0;"
-    : "display:grid;grid-template-columns:30% 70%;gap:12px;height:calc(100vh - 200px);min-height:600px;";
+    ? "display:grid;grid-template-columns:30% 70%;grid-template-rows:minmax(0,1fr);gap:12px;flex:1;min-height:0;"
+    : "display:grid;grid-template-columns:30% 70%;grid-template-rows:minmax(0,1fr);gap:12px;height:calc(100vh - 200px);min-height:600px;";
 
   const body = `
   <div class="content" style="${contentStyle}">
