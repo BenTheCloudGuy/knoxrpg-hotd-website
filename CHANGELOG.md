@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.12.0] - 2026-06-30
+
+### Changed
+- **DM Command Center "Sessions" now hosts the full Sessions Workspace.** The legacy table-based "Session Logs" panel in `/dm-admin` (add/edit/delete rows via a small form) has been removed and replaced by the richer Sessions Workspace (two-pane markdown editor with Save / Create PDF / Generate Summary / Publish / Unpublish / Delete) embedded in an iframe. Clicking **Sessions** in the DM Command Center sidebar now opens the same tool that previously lived only at `/sessions/admin`. The workspace iframe is lazy-loaded the first time the panel is opened.
+- **`renderSessionsAdminPage` gained an embed mode.** `/sessions/admin?embed=1` renders the workspace with a chrome-free shell (no site nav/footer, via the new `embedShell` helper in `src/components/shell.js`) and a taller editor area so it fills the DM Command Center panel cleanly. The standalone `/sessions/admin` page is unchanged.
+- **DM Command Center supports hash deep-links.** Loading `/dm-admin#sessions` (or `#npcs`, `#notes`, etc.) now auto-opens that panel on page load.
+- **`/sessions` Admin link points to the DM Command Center.** The "⚙ Admin →" link on the player-facing Sessions page now targets `/dm-admin#sessions` instead of `/sessions/admin`, so session management flows through the DM Command Center.
+
+### Removed
+- **Legacy DMC session JS** (`loadSessions` table renderer, `newSession`, `editSess`, `saveSess`, `deleteSess`, `deleteSessDirect`, and the `_sessCache` state) replaced by a one-line iframe loader.
+
 ## [3.11.3] - 2026-06-28
 
 ### Added

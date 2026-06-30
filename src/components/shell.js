@@ -32,4 +32,23 @@ function pageShell(title, activePath, bodyHtml, session) {
 </html>`;
 }
 
-module.exports = { pageShell, renderFooter };
+// Minimal chrome-free shell for content embedded in an iframe (e.g. the
+// Sessions Workspace mounted inside the DM Command Center). Keeps the shared
+// page CSS so component classes still match, but drops the site nav + footer.
+function embedShell(title, bodyHtml) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(title)}</title>
+  <style>${pageCss()}</style>
+  <style>html,body{margin:0;padding:0;background:#111;min-height:100%;}</style>
+</head>
+<body>
+  ${bodyHtml}
+</body>
+</html>`;
+}
+
+module.exports = { pageShell, embedShell, renderFooter };

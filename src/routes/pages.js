@@ -163,7 +163,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       case "/maps/admin": adminHtml = await renderMapsAdminPage(session); break;
       case "/map/admin": adminHtml = await renderMapAdminPage(session); break;
       case "/npcs/admin": adminHtml = await renderNpcsAdminPage(session); break;
-      case "/sessions/admin": adminHtml = await renderSessionsAdminPage(session); break;
+      case "/sessions/admin": adminHtml = await renderSessionsAdminPage(session, { embed: url.searchParams.get("embed") === "1" }); break;
       case "/artifacts/admin": adminHtml = await renderArtifactsAdminPage(session, "/artifacts"); break;
       case "/handouts/admin": adminHtml = await renderHandoutsAdminPage(session, "/handouts"); break;
       case "/art/admin": adminHtml = await renderArtAdminPage(session); break;

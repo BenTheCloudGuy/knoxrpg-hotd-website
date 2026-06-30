@@ -615,7 +615,7 @@ async function renderSessionsPage(session) {
     <li><strong>Session 0 &mdash; Campaign Kickoff</strong><p>Character creation, world introduction, and the call to adventure. Coming soon...</p></li>`;
 
   const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/sessions/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
+    `<div style="text-align:right;margin-bottom:16px;"><a href="/dm-admin#sessions" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
 
   const body = `
   <div class="content">
