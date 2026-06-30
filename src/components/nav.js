@@ -147,6 +147,8 @@ function renderNav(activePath, session) {
         !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)))
       );
       const ddLinks = item.dropdown.filter(c => !c.adminOnly || (session && session.role === "admin")).map(c => {
+        // Section header (non-clickable label inside the dropdown)
+        if (c.header) return `<div class="nav-dropdown-header">${esc(c.header)}</div>`;
         // Session-aware Account/Login swap
         if (c.sessionAware) {
           const href = session ? "/account" : "/login";
@@ -187,6 +189,8 @@ function renderNav(activePath, session) {
   const mobileLinks = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => {
     if (item.dropdown) {
       const children = item.dropdown.filter(c => !c.adminOnly || (session && session.role === "admin")).map(c => {
+        // Section header (non-clickable label inside the dropdown)
+        if (c.header) return `<span class="mobile-dropdown-subheader">${esc(c.header)}</span>`;
         // Session-aware Account/Login swap
         if (c.sessionAware) {
           const href = session ? "/account" : "/login";

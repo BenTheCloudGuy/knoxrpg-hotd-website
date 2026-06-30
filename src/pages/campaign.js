@@ -141,13 +141,8 @@ async function renderHomePage(session) {
     </a>`;
   }).join("") : '<p style="color:#888;">Player characters will appear here once imported.</p>';
 
-  // Admin config link
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:4px;"><a href="/home/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Edit Dashboard &rarr;</a></div>` : "";
-
   const body = `
   <div class="content" style="width:95%;max-width:95%;margin:0 auto;">
-    ${adminLink}
 
     <div class="home-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:28px;align-items:start;">
       <!-- LEFT COLUMN (2/3) -->
@@ -357,15 +352,11 @@ async function renderCalendarPage(session, monthParam) {
   const nextMonth = viewMonth < 12 ? viewMonth + 1 : 1;
   const curMonthName = HARPTOS_MONTHS.find(m => m.idx === currentMonth)?.name || "?";
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/calendar/admin?month=${viewMonth}" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
-
   const body = `
   <div class="content">
     <h2 class="section-title">&#128197; Campaign Calendar</h2>
     <p style="color:#888;margin-bottom:16px;">The Calendar of Harptos &mdash; the standard reckoning of Faer&ucirc;n. Current date:
       <strong style="color:#e8b923;">${ordinal(currentDay)} of ${esc(curMonthName)}, ${currentYear} DR</strong></p>
-    ${adminLink}
     <div class="cal-month-nav">
       <a href="/calendar?month=${prevMonth}">&larr; ${esc(HARPTOS_MONTHS.find(m=>m.idx===prevMonth)?.name || "")}</a>
       <h2>${esc(monthData.name)} &mdash; ${esc(monthData.nickname)}</h2>
@@ -392,14 +383,10 @@ async function renderMapsPage(session) {
     </div>`
   ).join("") : `<div class="map-card"><div class="map-placeholder">&#128506;</div><div class="map-card-body"><h3>Maps Coming Soon</h3><p>As the party explores, acquired maps will appear here.</p></div></div>`;
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/maps/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
-
   const body = `
   <div class="content">
     <h2 class="section-title">&#128506; Acquired Maps</h2>
     <p style="color:#888;margin-bottom:24px;">Maps the party has found, purchased, or otherwise acquired. Click a map to view it in detail with zoom and pan.</p>
-    ${adminLink}
     <div class="map-grid" style="grid-template-columns:repeat(3,1fr);">${mapCards}</div>
   </div>
   ${mapOverlayBlock()}`;
@@ -478,14 +465,10 @@ async function renderNpcsPage(session) {
       </div>
     </div>`;
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/npcs/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
-
   const body = `
   <div class="content">
     <h2 class="section-title">&#128100; Notable NPCs</h2>
     <p style="color:#888;margin-bottom:24px;">Allies, enemies, and persons of interest the party has encountered. Click an NPC for their full profile.</p>
-    ${adminLink}
     ${filterBar}
     <div id="npcList">${npcRows}</div>
   </div>
@@ -574,8 +557,6 @@ async function renderNpcDetailPage(npcId, session) {
     </div>
 
     ${dmNotesBlock}
-
-    ${isAdmin ? `<div style="margin-top:32px;text-align:right;"><a href="/npcs/admin" style="color:#e8b923;text-decoration:none;font-weight:600;">&#9881; Edit in Admin &rarr;</a></div>` : ""}
   </div>
   <style>
     .npc-detail-portrait { flex-shrink:0; }
@@ -806,14 +787,10 @@ async function renderArtifactsPage(session) {
       </div>
     </div>`;
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/artifacts/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
-
   const body = `
   <div class="content">
     <h2 class="section-title">&#128142; Artifacts &amp; Legendary Items</h2>
     <p style="color:#888;margin-bottom:24px;">Items of power the party has encountered, acquired, or learned about. Click an artifact for details.</p>
-    ${adminLink}
     ${artifactRows}
   </div>
   ${artifactOverlayBlock("Artifact")}`;
@@ -841,14 +818,10 @@ async function renderHandoutsPage(session) {
       </div>
     </div>`;
 
-  const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/handouts/admin" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
-
   const body = `
   <div class="content">
     <h2 class="section-title">&#128220; Handouts</h2>
     <p style="color:#888;margin-bottom:24px;">Documents, letters, and notes the party has discovered. Click a handout for details.</p>
-    ${adminLink}
     ${handoutRows}
   </div>
   ${artifactOverlayBlock("Handout")}`;
