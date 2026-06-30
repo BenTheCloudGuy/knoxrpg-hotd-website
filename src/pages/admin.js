@@ -335,7 +335,7 @@ async function renderSessionsAdminPage(session, opts) {
             </div>
           </div>
 
-          <div style="flex:1;overflow:hidden;padding:8px;">
+          <div style="flex:1;min-height:0;overflow:hidden;padding:8px;display:flex;flex-direction:column;">
             <textarea id="md-editor"></textarea>
           </div>
 
@@ -373,8 +373,12 @@ async function renderSessionsAdminPage(session, opts) {
 
   <style>
     /* EasyMDE dark theme tweaks */
-    .EasyMDEContainer { height:100%; display:flex; flex-direction:column; }
-    .EasyMDEContainer .CodeMirror { background:#0e0e0e; color:#eee; border-color:#333; flex:1; min-height:200px; }
+    /* Pure-flex height chain (not height:100%) so the editor stays bounded and
+       the button bar below it is always visible, including inside the DMCC
+       iframe where percentage-height resolution is unreliable. */
+    .EasyMDEContainer { flex:1; min-height:0; display:flex; flex-direction:column; }
+    .EasyMDEContainer .CodeMirror { background:#0e0e0e; color:#eee; border-color:#333; flex:1; min-height:0; }
+    .EasyMDEContainer .CodeMirror-scroll { min-height:0; }
     .EasyMDEContainer .CodeMirror-cursor { border-color:#e8b923; }
     .editor-toolbar { background:#1a1a1a; border-color:#333; }
     .editor-toolbar button { color:#bbb !important; }
