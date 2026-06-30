@@ -1,0 +1,3 @@
+# Session Summary
+
+The fight at Old Bonegrinder ended fast and brutally. Merrick locked Offalia in place with Hold Person, and before she could escape, Thorian charged in and tore her apart with a devastating Lightning Bolt. With the hag dead, the runes powering the mill began to unravel. The party barely escaped as Old Bonegrinder collapsed inward and vanished entirely. The victory came with a warning—two hags still remain: the old woman and the young girl. And they will want revenge. Escorting Ireena and the rescued children—Arabelle, Riya, and Toma—the party pushed on through the mists and finally reached Vallaki. As they approached the gates, they saw the city preparing for some kind of celebration.

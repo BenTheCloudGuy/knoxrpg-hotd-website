@@ -1,4 +1,4 @@
-# Session 29 - Decisions Need to Be Made #
+# Session Notes
 
 ## NPCs
 
@@ -31,6 +31,7 @@
 - [Kiara Toranescu](https://hotd.knoxrpg.com/npcs/345)
 - [Duesius Toranescu](https://hotd.knoxrpg.com/npcs/346)
 
+
 ### Enemies / Off-Screen
 - [The Abbot](https://hotd.knoxrpg.com/npcs/34) — at the Abbey of Saint Markovia above Krezk
 - [Vasilka](https://hotd.knoxrpg.com/npcs/428) — back at the Abbey, wounded after Tser Hill
@@ -39,41 +40,38 @@
 
 ## Current Events
 
+
 ### Ravenkind Forces
 - Ravenkind represented at the meeting by Urwin and Danika Martikov
-    - Bray and Brom (their kids) are flying toward the two remaining Vistani Camps having left directly from Tser Hill. 
+    - Bray and Brom (their kids) are flying toward the two remaning Vistani Camps having left directly from Tser Hill. 
   - Tser Lake Vistani East of Lake Zarovich in the Southern hills of Mount Baratok. 
-    - While flying together toward the Vistani they see a large force moving North from the direction of Ravenloft. Bray is going to keep watch over this Army while Brom flew on to warn the Vistani. He will arrive about 2 hrs ahead of Strahd's Forces. 
+    - While flying together toward the Vistani they see a large force moving North from the direction of Ravenloft. Bray is going to keep watch over this Army while Brom flew on to warn the Vistani. He will arrive about 2 hrs ahead of Strahds Forces. 
     - During the Evacuation, Bray is struck by a power bolt of 'black' energy knocking him out of the sky.. He fell to the ground within eyesight of Brom.. Brom barely dodged another bolt before retreating.  
-  - Tser Luna Vistani to the South near the Wizard of Wines vineyard. The Martikovs know these Vistani well because they often trade with the vineyard. 
+  - Tser Luna Vistani to the South near the Wizards of Wine Vineyards. The Kinds know these Vistani well as they often trade with the Vineyards. 
   
+	
 ### Vistani Force
-- Tser Hill Vistani Luvash and Arrigal will attend the meeting to represent the surviving Vistani. He is very grateful to everyone for coming to their aid, considering many distrust the Vistani due the favor Strahd has shown them. 
+- Tser Hill Vistani Luvash and Arrigal will attend the meeting to represent the surviving Vistani. He is very greatful to everyone for coming to their aid, considering many distrust the Vistani due the favor Strahd has shown them. 
 
-> Keep in mind that Arrigal is loyal to Strahd and will betray the players. He pretends to be on the players side, play him in such a way to give clues to players (no rolls, only via RP)
+> Keep in mind that Arrigal is loyal to Strahd and will betray the players. He pretends to be on the players side, play him in such a way to give clues to players (no roils - only via RP)
 
 - Other Allies include Van Richten, Ezmerelda, and a very exhausted Mordenkainen. 
 
-> Mordenkainen will participate but remembers very little of what happened that day or over the last year. He'll recognize Ireena, Doru, and Ismark and apologize for the failure and his hubris. After a good night's sleep, his memory will begin returning in sharper pieces.
+> Mordenkainen will participate but remembers very little of what happened that day or over the last year. He'll recognize Ireena, Duro, and Ismark and apologize for the failure and his huberis. 
 
-### Mordenkainen, Van Richten, and Ezmerelda
-
-- Mordenkainen is present, but exhausted. During the council he remembers only fragments: Ireena, Doru, Ismark, the failed assault on Ravenloft, and the fall from the cliffs. After a real night's sleep, his mind begins to recover. He remembers the lost months in Barovia, the failed attack, and the fact that Strahd has been killed before and still returns.
-- Van Richten and Ezmerelda know each other well enough for the room to feel the strain between them. Van Richten trained her, protected her, failed her, and left wounds that never fully closed. Ezmerelda is not here because she forgave him. She is here because Strahd is still alive, and because Strahd destroyed her people.
-- Van Richten proposed the earlier attack after learning what Strahd ordered at the Druid Grove in Damara. Strahd had the Stormraven sisters wipe out Ezmerelda's Tser group and the d'Avenir people there. That made the war personal for her, but it also confirmed for Van Richten that Strahd was protecting something deeper than a vampire's body.
-- Van Richten has studied the Tome of Aurelian Thorne since the party recovered it. The book confirms that Strahd's Heart, the Necromantic Anchor tied to his pact, is at the Amber Temple. The players need to understand this clearly: someone must go there with Van Richten, or Strahd can return even if his body is destroyed.
-- Ezmerelda stays in Vallaki to keep an eye on Mordenkainen while his memory returns. She does not like being held back, but she understands that if Mordenkainen wakes with the missing pieces, someone capable needs to be there when he does.
 
 ### Barovian Forces
-- Barovian Forces under the leadership of Ismark Kolyanovich, with Doru acting as Captain of the forces and Father Donavich as Healer and Guidance to Ismark. The Barovian forces at Tser Hill included 25 men and women who arrived as the forward detachment, with roughly 50 more mustering at the Village of Barovia. 
-    - Ismark and Doru plan to head back in a day or so to finish final things and will be ready to march. 
+- Barovian Forces under the leadership of Ismark Koylanvich, with Duro acting as Captain of the forces and Father Donavich as Healer and Guidance to Ismark. The Barovian forces as of now are 15 Men at Arms and in total they have 50 more men and women getting ready at the Village of Barovia. 
+    - Ismark and Duro plan to head back in a day or so to finish final things and will be ready to march. 
     - Ireena will stay in Vallaki with Father Donavich to help heal Krutha from his bite. 
 
-### Vallaki Forces
-- Vallaki Forces under the leadership of Baron Vargas Vallakovich with the Skander Boys under the command of Yuri Skander. Nikolai Wachter joins the military in hopes of avenging the murder of his sister. Izek Strazni is acting Sergeant over the forces and will keep close to Vargas Vallakovich. 
-    - Vallaki has close to 120 men at arms. A mix of Pike, Infantry, and Archers. 
 
-> Players who pass a perception check will notice a resemblance between Izek and Ireena who are actually siblings and survivors of a werewolf attack that killed their parents. 
+### Vallaki Forces
+- Vallaki Forces under the leadership of Boron Vargas Vallakovich with the Skander Boys under the command of Yuri Skander. Nikolai Wachter joins the military in hopes of avenging the murder of his sister. Izek Strazni is acting Seargent over the forces and will keep close to Vargas Vallokovich. 
+    - Vallaki has close to 120 men at arms. A mix of Pike, Infintry, and Archers. 
+
+> Players who pass a perception check will notice a resembelance between Izek and Ireena who are actually Siblins and survivors of a Werewolf attach that killed their parents. 
+
 
 ### Krezk Forces
 - Krezk Forces under command of Dmitri Krezkov and his Wife who is just as capable warrior. He will want to head back to Krezk to deal with the Abbot and bring his forces to bear. He also wants to check on the Tser Raven Vistani survivors. 
@@ -87,6 +85,7 @@
 - His most recent project is Vasilka, a flesh golem he calls his daughter. He intends her as a bride for Strahd, believing that giving Strahd a perfect mate will end the curse on the land. Dmitri does not know the worst part: the Abbot used the body and essence of Dmitri's own daughter Ilya to build her. If Dmitri ever sees Vasilka's face, he will recognize it.
 - Recent history (last few weeks): Strahd attacked the Abbey himself, offended by the very notion that he would love such a thing. Vasilka was gravely wounded. The Abbot went mad with rage. He used the power of the Holy Symbol of Ravenkind to restore her, then sent her down the mountain with a horde of mongrelfolk, patchwork goblins, and direwolves. They burned the Vistani camp at Tser Raven in the night. Then she came for Tser Hill. The party just defeated her there and forced her back through the Abbot's portal, wounded again.
 - The Abbot is still up at the Abbey. He is the most powerful single asset Strahd has on this side of the lake, and Dmitri knows it. Dmitri is not eager to march on him alone. Anna will back any plan that gets the Abbot dealt with, but she will want the village protected first.
+
 
 ### Allied Werewolves
 - Under the command of Emil Toranescu with 6 other members of her pack. Currently in Human form to make everyone more comfortable. 
@@ -123,35 +122,25 @@ This is her real concern. She is risking the entire Den to back the players. She
 - **Emil hates Kiril personally.** He murdered her mate and her stepson. If the players ever bring her Kiril's head, she will owe them.
 - **Tactical:** the Blood Hunters use pack tactics, are stronger than typical werewolves, and Kiril himself fights with alpha-tier Legendary Actions. Assume any encounter with them is an ambush. If they show up at the wrong moment during a player operation, that is the point.
 
-> Emil is skeptical at first, but trusts her parents and will honor the deal they made with the players. She is impressed by the fact they defeated the Stormraven sisters, it would have taken her whole pack to take out that group, and not without casualties. Seeing the forces gathered, she begins to believe it might be possible. But she'll want to know what that means for her people. 
+> Emil is skeptical at first, but trusts her parents and will honor the deal they made with the players. She is impressed by the fact they defeated the Stormraven sisters, it would have taken her whole pack to take out that group, and not without casualties. Seeing the forces gathers, she begins to believe it might be possible. But she'll want to know what that means for her people? 
 
 
 ## The Session
 
-### [COUNCIL OPENS]
+- Open with the players and their allies formalizing a plan of attack. They need to figure out how to go about dealing with the Abbot and Strahd. Emil will also inform the players about Kiril Stoyanovich and his renegade wolves who are savage and have allied with Strahd. 
 
-- Open with the players and their allies formalizing a plan of attack. They need to figure out how to go about dealing with the Abbot and Strahd. Emil will also inform the players about Kiril Stoyanovich and his renegade wolves who are savage and have allied with Strahd.
-- Let the players feel the weight of the room: Barovia, Vallaki, Krezk, the Martikovs, the Vistani, Emil's pack, Van Richten, Ezmerelda, and a recovering Mordenkainen all need direction.
-
-### [FORCES REPORT]
-
-- Each faction gives the players a practical report: what they have, what they fear, and what they need. Keep this grounded in troop counts, known enemy movement, and immediate risks.
-- Use the Current Events notes above to answer player questions about who is present, who is missing, and which threats are already moving.
-
-### [STRATEGIC CHOICES]
-
-- Put the real decision in front of the party. They cannot cover every front at once. The pressure points are Castle Ravenloft, the Amber Temple, Krezk and the Abbey, the enemy column from Ravenloft, Kiril's Blood Hunters, and the remaining Vistani camps.
-- The Amber Temple is not optional if they want Strahd dead for good. The Heart/Anchor is there, and Van Richten will push this point hard after reading Aurelian Thorne's tome.
 
 ## Strategic Briefing — Notes for the War Council
 
 Material to seed into the council discussion. Drop each block as Mordenkainen, Van Richten, Dmitri, Emil, or whoever the room turns to. Each section is a few beats of canon plus a hook the players can chase.
+
 
 ### Castle Ravenloft (Mordenkainen and Van Richten lead)
 - Black fortress on the cliffs above the Village of Barovia. Strahd built it in honour of his mother Queen Ravenovia, before he ever made the pact that turned him.
 - It is his seat of power, his vault, his prison, and the center of his domain. The land itself is bound to it.
 - Layout the players already know: front gate over a chasm, drawbridge, central courtyard, the great hall, the chapel where Sergei was killed, the catacombs and family crypts below. The high tower is Strahd's personal sanctum.
 - Mordenkainen has been inside. His last visit ended with him broken on the rocks below the ramparts. He will not be cheerful about it, but he knows the floor plan.
+
 
 ### Castle Defenses
 - **Heart of Sorrow.** Strahd's primary defense. A massive crystalline shard hidden somewhere in the castle that absorbs damage meant for Strahd. As long as it stands, hitting Strahd directly is largely wasted effort. Van Richten knows it exists. Finding and shattering it is a primary objective before any direct confrontation.
@@ -160,6 +149,7 @@ Material to seed into the council discussion. Drop each block as Mordenkainen, V
 - **Brides.** Strahd has three vampire brides who lair in the castle. Lesser than him but still extremely dangerous. They are jealous of any new arrival, which the players can potentially leverage.
 - **Wolves and dire wolves** patrol the grounds and the surrounding cliffs.
 - **The land itself.** Fog, mist, and the curse make it harder to approach unseen. Strahd usually knows when the players enter his immediate domain.
+
 
 ### Allies of Strahd
 - **Rahadin** (chamberlain, ancient dusk elf assassin).
@@ -170,11 +160,13 @@ Material to seed into the council discussion. Drop each block as Mordenkainen, V
 - **The Werebats** that stole the tome from Van Richten at the Wizard's Tower. Strahd's aerial scouts.
 - **Spies in town.** Klara Vorovich at the Blood of the Vine Inn was one. Assume there are others, especially in Vallaki. Anything said openly in a tavern reaches Strahd within a day.
 
+
 ### Strahd's Forces (Emil should bring up Kiril here)
 - **Castle garrison:** spawn, brides, Rahadin, wolves.
 - **Field force moving north from Ravenloft** that Bray and Brom spotted from the air on their way to the Vistani. Composition unknown. Big enough to scare a wereraven. Bray was struck down by a black-energy bolt while shadowing it, so something powerful is travelling with that column.
 - **Kiril's Blood Hunters** (~30 werewolves). Emil delivers this brief with controlled hatred. See her notes above.
 - **Mongrelfolk and Patchwork Goblins** from the Abbey, while the Abbot remains hostile.
+
 
 ### The Amber Temple (Mordenkainen and Van Richten lead)
 - South of the lake, deep in the mountains. The locals know it as a place to avoid. Strahd's followers will not enter willingly. It is a Netherese ruin sitting on top of something much older and worse.
@@ -182,21 +174,23 @@ Material to seed into the council discussion. Drop each block as Mordenkainen, V
 - This is where Strahd made his pact and became the First Vampire. Whatever bound that pact is still down there.
 - **Strahd's Necromantic Anchor** is here. Van Richten believes it is in or under the Amber Temple. Until it is destroyed, Strahd will return no matter how many times the party kills him.
 - The temple itself is full of dark gifts. Some of the party may be tempted. Mordenkainen will warn against accepting anything offered.
-- The road south is long, mountainous, and watched. Splitting off a team to go after the Anchor is a real strategic option, and it is exactly what Van Richten is planning to do. He will ask the players to come with him. Ezmerelda will stay in Vallaki to watch Mordenkainen as his memory returns.
+- The road south is long, mountainous, and watched. Splitting off a team to go after the Anchor is a real strategic option, and it is exactly what Mordenkainen, Ezmerelda, and Van Richten are planning to do.
+
 
 ### Mordenkainen on Strahd's Heart (the immortality problem)
 - Mordenkainen has been quiet through most of the council, listening, occasionally muttering. When the conversation turns to actually killing Strahd, he speaks up.
-- The tome stolen from Van Richten at the Wizard's Tower and later recovered by the party (Aurelian Thorne's work) confirmed something Mordenkainen has long suspected. **Strahd has been killed before. Many times.** Always returns. He is not a normal vampire. The pact he signed at the Amber Temple bound something deeper than blood and undeath into him.
-- The theft chain matters: the werewolves got the book to Strahd's werebats during the battle at the Wizard's Tower. The werebats flew it to the Werewolf Den and handed it to one of the Stormraven sisters. The party later recovered it, which is why Van Richten now has enough information to identify the Amber Temple as the target.
+- The tome the party recovered from the Wizard's Tower (Aurelian Thorne's work) confirmed something Mordenkainen has long suspected. **Strahd has been killed before. Many times.** Always returns. He is not a normal vampire. The pact he signed at the Amber Temple bound something deeper than blood and undeath into him.
 - The "Heart" Mordenkainen refers to is whatever is left of Strahd's mortal humanity, anchored down at the Amber Temple. That is the Necromantic Anchor. Without breaking that anchor, killing Strahd just resets him.
 - Step-wise: find and shatter the Heart of Sorrow (kills the defensive proxy), reach Strahd in the castle, strike with the Sun Sword. Then, separately and ideally simultaneously, destroy the Anchor at the Amber Temple so he cannot return. Anything less and he comes back.
 - This is why Mordenkainen wants to split the party. One team for the castle. One team for the temple. Hitting both at once is the only sure ending.
 
+
 ### The Abbot (Dmitri leads, visibly uncomfortable)
-- Dmitri does not scare easily. He has fought wolves, vampires, and worse outside his walls. He scares of the Abbot.
+- Dmitri does not scare easily. He has fought wolves, vampires, and worse outside his walls. He is scared of the Abbot though, and that speaks volumes.
 - The Abbot is not a man. Dmitri does not know what he is, only that he has watched him heal a fatal wound with a touch, calm a maddened beast with a word, and pull a person back from the brink of death twice over. He has also watched him stitch together corpses in the Abbey courtyard like a man mending a coat.
 - With Vasilka wounded and back at the Abbey, the Abbot will be furious and unstable. He will not let her die. If the players move on Krezk and the Abbey, expect to fight him on his ground, surrounded by his creations, with Vasilka somewhere in the building.
 - Dmitri's preference: deal with the Abbot first. Take Krezk and the Abbey out as a threat before marching on Ravenloft. He will say it plainly. He does not want the Abbot at his back while his men are dying at Ravenloft's gate.
+
 
 ### Repairing the Sun Sword (Mordenkainen has a list, Yuri Skander steps up)
 - Mordenkainen has been making notes since he woke up. He produces a list. The Sun Sword shards the party already recovered from Argynvostholt can be reforged into a true weapon against Strahd, but only with the right components.
@@ -208,6 +202,7 @@ Material to seed into the council discussion. Drop each block as Mordenkainen, V
   - **Rare metals and reagents** for the rebinding (silver, sun-touched glass, gold-leaf, etc.).
 - **Yuri Skander's response:** "Whatever you need from the shop, take it. If we don't have it, we can portal somewhere that does. Iskander and Eskander can fetch from outside Barovia if needed. Don't waste this opportunity to make the sword right." He will not negotiate price.
 - Practical implication: Yuri quietly becomes the party's logistics chief for the Sun Sword reforging. Players can hand him a shopping list and he will deliver, within reason.
+
 
 ### Map at the Table
 On the TV / VTT, show the Barovia campaign map with:
@@ -221,14 +216,24 @@ On the TV / VTT, show the Barovia campaign map with:
 - Wizard's Tower marked as ruins.
 - Werewolf Den marked as allied (Emil).
 
+
 ### Likely Split
-- Van Richten will pitch heading south for the Amber Temple and Strahd's Heart. He will ask if any players are willing to come, because this objective decides whether Strahd can stay dead.
-- Ezmerelda will stay in Vallaki to keep an eye on Mordenkainen as he recovers his memory. If he wakes with more of the missing pieces, she needs to be there to capture them and keep him from wandering into danger.
+- Mordenkainen, Ezmerelda, and Van Richten will pitch heading south for the Amber Temple and Strahd's Heart. They will ask if any players want to come.
 - Dmitri (with Anna) will pitch heading west to Krezk and the Abbey to deal with the Abbot and Vasilka. He will ask for help.
 - The town is in for several days of recovery, regrouping, and rearming regardless. The party just hit Level 9. Mordenkainen needs the time to recover and gather supplies, including, in his words, "clean clothes."
 
 > On the VTT/TV will be a digital map of Barovia with known Forces and locations. Strategic places and possible ways to get into Ravenloft. 
 
-- There is a potential the party might split again as Van Richten heads toward the Amber Temple to the south and asks if some of the players are willing to join. Meanwhile Baron Dmitri will want help dealing with the Abbot, Vasilka, and what is left of his forces. 
+- There is a potential the party might split against as Modenkainen, Ezmerelda, and Van Richten are going to head toward the Amber Temple to the south and will ask if some of the players would be willing to join. Meanwhile Baron Dmitri will want some help dealing with the Abbot and Vasilka and what is left of his forces. 
 
 - The party will be in town for several days as they recover, regroup, and rearm. (Having just hit Level 9). Mordenkainen will need a few days more to recover and pick up some supplies - like clean clothes.
+
+
+
+# Session Summary
+
+The players having spent the day recovering and holding their first war council with everyone attending. You all have managed to get a full nights rest. The following evening Brom Maritkov returned with the body of his younger brother, having been attacked by Werebats. They had successfully warned the Vistani and were scouting the Armies of Strahd as they were moving North toward the Vistani and another detachment moving South. It was this group that the Martikov boys were watching from the skies when they were spotted and attacked. The players quickly wrapped the body of Bray in a magical spell to ward off decay as Urwin and Danika Martikov carried their son's body to his room with the hope that the curse would be broken in time to bring the boy back. 
+
+Dmitri made it clear that the threat the Abbot poses is to great and must be dealt with. The players had agreed with him and plan to deal with him and what is left of his minions first. The Werewolves under Emil attends to move South with Van Richten and Ezmerelda as they search for the Amber Temple and Strahds Heart. The portals can only get them to a few hours of the pass into the mountains. Mordenkanien and the Skanders are going to stay behind and continue working on what is required to reforge the Sun Sword. 
+
+This is where we left off, with the players war council wrapping up as Strahds forces are finally on the move and the final pieces moving into place as the end game starts.
