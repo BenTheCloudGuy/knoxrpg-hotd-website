@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.13.2] - 2026-06-30
+
+### Fixed
+- **Site logo no longer scales with viewport width; DMCC canvas no longer clips the Sessions Workspace buttons.** The header logo used `.site-brand img { width: 100% }`, so it stretched to ~1/3 of the screen width and grew **taller** on wider monitors (≈159px tall at 1920px wide). The DM Command Center sized its canvas with a static `.dmc { height: calc(100vh - 60px) }`, which assumed a 60px header — so on wide screens the canvas (and the Sessions Workspace iframe inside it) overflowed ~100px below the viewport and `html:has(.dmc){overflow:hidden}` clipped the editor's bottom button bar (Save / Create PDF / Generate Summary / Publish Summary / Delete). Two changes:
+  - **Logo is now a uniform fixed height** (`.site-brand img { height: 72px; width: auto; max-width: 100% }`), so the header is the same compact size at every width (mobile still capped at 48px via the existing media query).
+  - **The DMC canvas is now sized to the real space under the header** via JS (`sizeDmc()` measures the header height on load, on window `load`, on logo-image `load`, and on `resize`), so the canvas fills exactly to the viewport bottom regardless of header height.
+- Verified in a browser harness with the real logo and 80+ lines of content at 1280×1024, 1920×1080, and 2560×1440: the logo renders a uniform 72px, the header a uniform 75px, the canvas bottom lands exactly at the viewport bottom, and all action buttons stay visible.
+
 ## [3.13.1] - 2026-06-30
 
 ### Fixed

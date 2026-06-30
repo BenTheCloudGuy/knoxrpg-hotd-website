@@ -17,8 +17,8 @@ function navCss() {
       text-decoration: none; padding: 4px 0;
     }
     .site-brand img {
-      display: block; width: 100%;
-      height: auto; object-fit: contain;
+      display: block; height: 72px; width: auto; max-width: 100%;
+      object-fit: contain;
     }
     .site-brand:hover img { opacity: 0.85; }
     .site-nav .nav-links {

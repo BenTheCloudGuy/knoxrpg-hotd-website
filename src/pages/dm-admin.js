@@ -1897,6 +1897,23 @@ async function renderDmAdminPage(session) {
   }
 
   // ═══ INIT ═══
+  // Size the DMC canvas to the REAL space under the site header. The header
+  // contains the logo banner, which uses width:100% and therefore grows taller
+  // on wider viewports; the static .dmc height of calc(100vh - 60px) assumed a
+  // 60px header, so on wide screens .dmc (and the Sessions iframe inside it)
+  // overflowed below the viewport and overflow:hidden clipped the editor's
+  // bottom button bar. Measuring the header height fixes it at any size.
+  function sizeDmc() {
+    var d = document.querySelector('.dmc');
+    if (!d) return;
+    d.style.height = Math.max(320, window.innerHeight - d.getBoundingClientRect().top) + 'px';
+  }
+  sizeDmc();
+  window.addEventListener('resize', sizeDmc);
+  window.addEventListener('load', sizeDmc);
+  var _brandImg = document.querySelector('.site-brand img');
+  if (_brandImg && !_brandImg.complete) _brandImg.addEventListener('load', sizeDmc);
+
   // Panel selection is hash-driven so the top-menu dropdown can deep-link into
   // any tool (/dm-admin#sessions) and switch panels without a reload.
   window.addEventListener('hashchange', function() {
