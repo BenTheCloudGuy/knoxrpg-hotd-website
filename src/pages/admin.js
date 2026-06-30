@@ -268,15 +268,15 @@ async function renderSessionsAdminPage(session, opts) {
   const embed = !!(opts && opts.embed);
   const backLink = embed ? "" :
     `<a href="/sessions" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Sessions</a>`;
-  // Standalone fills the page below the nav. Embed mode (mounted in an iframe
-  // inside the DM Command Center) flexes to fill the iframe exactly so the
-  // editor grows/shrinks and the bottom button bar stays in view at any height.
-  const contentStyle = embed
-    ? "max-width:none;width:100%;padding:0 16px;height:100vh;display:flex;flex-direction:column;box-sizing:border-box;"
-    : "max-width:none;width:100%;padding:0 16px;";
-  const wsStyle = embed
-    ? "display:grid;grid-template-columns:30% 70%;grid-template-rows:minmax(0,1fr);gap:12px;flex:1;min-height:0;"
-    : "display:grid;grid-template-columns:30% 70%;grid-template-rows:minmax(0,1fr);gap:12px;height:calc(100vh - 200px);min-height:600px;";
+  // Both modes use a DEFINITE grid height so the row's minmax(0,1fr) cap
+  // propagates down to EasyMDE (a flex-resolved height does NOT propagate to
+  // the editor's `height:100%` chain, which is why the buttons clipped when
+  // embedded). Standalone subtracts the site nav; embed (inside the DMCC
+  // iframe, no nav) only subtracts this page's title/note header.
+  const contentStyle = "max-width:none;width:100%;padding:0 16px;";
+  const wsHeight = embed ? "calc(100vh - 100px)" : "calc(100vh - 200px)";
+  const wsMinHeight = embed ? "0" : "600px";
+  const wsStyle = `display:grid;grid-template-columns:30% 70%;grid-template-rows:minmax(0,1fr);gap:12px;height:${wsHeight};min-height:${wsMinHeight};`;
 
   const body = `
   <div class="content" style="${contentStyle}">

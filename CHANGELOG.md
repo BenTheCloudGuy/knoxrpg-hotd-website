@@ -18,6 +18,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 - **DMCC sidebar markup, CSS, and JS** (`.dmc-side`/`.dmc-nav`/`.dmc-nav-btn` styles, the `toggleSidebar()` function, and the click-based `dmc()` active-button logic) replaced by the hash-driven `showPanel()` navigation.
 - **Inline "⚙ Admin →" / "⚙ Edit Dashboard →" / "⚙ Edit in Admin →" links removed from the public pages** (home dashboard, calendar, maps, NPCs list, NPC detail, artifacts, handouts) now that those tools live in the DMCC dropdown. The Sessions page keeps its link (it points into the DMCC at `/dm-admin#sessions`).
 
+### Fixed
+- **Sessions Workspace buttons clipped on wide screens when embedded in the DMCC.** The embedded workspace had been switched to a `flex:1` (flex-resolved) grid height. That height does **not** propagate to the EasyMDE editor's `.EasyMDEContainer { height:100% }` chain, so CodeMirror fell back to growing with its content and pushed the bottom button bar (Save / Create PDF / Generate Summary / Publish Summary / Delete) off-screen. The embed now uses a **definite** grid height (`height: calc(100vh - 100px)`) exactly like the standalone `/sessions/admin` page (which uses `calc(100vh - 200px)`); the definite height cascades through the grid → flex → editor chain so CodeMirror scrolls internally and the buttons stay docked at the bottom.
+
 ## [3.12.2] - 2026-06-30
 
 ### Fixed
