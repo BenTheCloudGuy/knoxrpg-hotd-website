@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.12.1] - 2026-06-30
+
+### Fixed
+- **Sessions Workspace action buttons clipped when embedded in the DM Command Center.** In the new embedded (`?embed=1`) layout the workspace used a fixed `height: calc(100vh - 100px)` plus `min-height: 600px`, which made the editor pane taller than the host iframe on shorter panels and pushed the bottom button bar (**Create PDF**, **Generate Summary**, **Publish Summary**, **Unpublish**, **Delete**) below the visible/scrollable area. Embed mode now uses a flex-column layout (`.content` is `height:100vh; display:flex; flex-direction:column` and the workspace grid is `flex:1; min-height:0`) so the editor grows/shrinks to fit and the button bar always stays in view. The standalone `/sessions/admin` page is unchanged.
+
 ## [3.12.0] - 2026-06-30
 
 ### Changed

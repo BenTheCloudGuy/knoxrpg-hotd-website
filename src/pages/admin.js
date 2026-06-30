@@ -268,17 +268,25 @@ async function renderSessionsAdminPage(session, opts) {
   const embed = !!(opts && opts.embed);
   const backLink = embed ? "" :
     `<a href="/sessions" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Sessions</a>`;
-  const wsHeight = embed ? "calc(100vh - 100px)" : "calc(100vh - 200px)";
+  // Standalone fills the page below the nav. Embed mode (mounted in an iframe
+  // inside the DM Command Center) flexes to fill the iframe exactly so the
+  // editor grows/shrinks and the bottom button bar stays in view at any height.
+  const contentStyle = embed
+    ? "max-width:none;width:100%;padding:0 16px;height:100vh;display:flex;flex-direction:column;box-sizing:border-box;"
+    : "max-width:none;width:100%;padding:0 16px;";
+  const wsStyle = embed
+    ? "display:grid;grid-template-columns:30% 70%;gap:12px;flex:1;min-height:0;"
+    : "display:grid;grid-template-columns:30% 70%;gap:12px;height:calc(100vh - 200px);min-height:600px;";
 
   const body = `
-  <div class="content" style="max-width:none;width:100%;padding:0 16px;">
+  <div class="content" style="${contentStyle}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <h2 class="section-title" style="margin:0;">&#9881; Sessions Workspace</h2>
       ${backLink}
     </div>
     <p style="color:#888;font-size:0.85rem;margin:0 0 12px 0;">Drafts stay private until you click <strong>Publish Summary</strong>. The GM Guide PDF excludes the <code># Session Summary</code> section.</p>
 
-    <div id="sessions-workspace" style="display:grid;grid-template-columns:30% 70%;gap:12px;height:${wsHeight};min-height:600px;">
+    <div id="sessions-workspace" style="${wsStyle}">
 
       <!-- LEFT: session list -->
       <aside style="background:#1a1a1a;border:1px solid #333;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;">
