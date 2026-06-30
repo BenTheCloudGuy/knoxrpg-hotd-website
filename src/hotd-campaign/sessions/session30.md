@@ -121,9 +121,21 @@ A radiant, beautiful, and increasingly unhinged angel. He speaks gently while he
 #### Reaction
 
 - **Shield of Faith Aura.** When hit by an attack, he can add +2 AC against that attack as celestial light wards him.
+- **Sanctified Redirection (Recharge 5–6).** When the Abbot is targeted by a spell, he can use his reaction to cast *Spell Redirect* (below), turning the incoming spell back on its caster.
+
+#### Custom Spell — Spell Redirect
+
+*4th-level abjuration · Casting Time: 1 reaction (when targeted by a spell) · Range: 60 ft. · Components: V · Duration: Instantaneous*
+
+Celestial light snaps the incoming spell around and hurls it back. The triggering spell takes effect on its original caster as though they had cast it on themselves; for area effects, the burst recenters on the caster. The caster must make a saving throw using their own spellcasting ability modifier (their attack stat) against the Abbot's spell save DC 17. On a failure, the redirected spell resolves in full against them. On a success, the spell fizzles and is wasted. Only spells of 4th level or lower can be redirected at base.
+
+**At Higher Levels.** When cast with a 5th-level slot, the redirect DC increases by 1 (DC 18) and can catch spells up to 5th level. With a 6th-level slot, DC increases by 2 (DC 19), catches spells up to 6th level, and the redirected spell deals an extra die of its damage type.
 
 #### Lair Actions
 
+The Abbey grants the Abbot **3 lair action points per round** (refresh on initiative count 20). He spends them on the lair actions below, on his **Sanctified Redirection** reaction, or to fuel his **Sanctified Upcasting**. Any points spent on upcasting are gone for that round, so a heavy upcast leaves him without healing or redirection.
+
+- **Sanctified Upcasting.** As a free part of casting any leveled spell, the Abbot may spend lair action points to upcast it. Each point raises the spell's effective slot by one level, no slot required. He may spend up to all 3 points on a single spell (a 3rd-level *spirit guardians* becomes 6th, *flame strike* scales to 7d6/7d6, etc.). Points spent here cannot be used for the lair actions or reaction below this round.
 - **Sanctified Renewal.** The Abbey's holy light gathers around the Abbot. He regains 22 (4d8 + 4) hit points. He cannot use this lair action two rounds in a row.
 - (Alternate, if he is at or near full HP) **Cleansing Flare.** Radiant light bursts from the altar; he ends one condition on himself and one mongrelfolk within 30 ft. heals 11 hit points.
 

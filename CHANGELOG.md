@@ -10,8 +10,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ### Added
 - **Session 30 Krezk assault content.** Added a portal-to-Krezk lead-in and a "Krezk Assault" section to Session 30: a full Abbot (fallen deva) stat block with spells, healing, special attacks (Radiant Smite, Change Shape, Shield of Faith aura), plus a mongrelfolk mook block and mook-screen rules so players can't focus-fire the Abbot.
-- **Abbot lair self-heal.** Added a Lair Actions block: Sanctified Renewal heals the Abbot 4d8+4 each round (no back-to-back), with a Cleansing Flare alternate that clears a condition and tops off a mongrelfolk.
+- **Abbot Sanctified Renewal lair self-heal.** Added a Lair Actions block: Sanctified Renewal heals the Abbot 4d8+4 each round (no back-to-back), with a Cleansing Flare alternate that clears a condition and tops off a mongrelfolk.
 - **Abbot 12th-level cleric spell list.** Added attack/debuff-focused cleric spellcasting (DC 17): spirit guardians, flame strike, insect plague, harm, banishment, hold person, bane, plus a tactical opener note.
+- **Abbot Sanctified Redirection.** Added a custom 4th-level spell, *Spell Redirect*: the Abbot reflects an incoming spell back on its caster, who saves with their spellcasting modifier vs DC 17; upcasting raises the DC, caps, and damage.
+- **Abbot Sanctified Upcasting.** Lair now grants 3 lair-action points/round; the Abbot can spend them to upcast spells without slots (+1 level each, up to 3), sharing the pool with lair actions and the redirect reaction.
 
 ## [3.11.2] - 2026-06-07
 
