@@ -19,6 +19,16 @@ image:
   tag: "1.0.0"
   pullPolicy: Always
 
+# -- Rollout trigger ----------------------------------------------------------
+# Set to a unique value per deploy (the deploy workflow passes the git SHA).
+# It is rendered as a pod-template annotation so `helm upgrade` always produces
+# a changed Deployment spec, forcing a rolling restart even when image.tag is
+# unchanged. Prevents the "reused version tag -> no-op deploy" footgun.
+rolloutTrigger: ""
+
+# -- Extra pod annotations (optional) -----------------------------------------
+podAnnotations: {}
+
 # -- PostgreSQL (reuse AI stack's pgvector instance) --------------------------
 # REQUIRED: Set postgres.password at deploy time via --set or a secrets file.
 # The chart creates a Kubernetes Secret to hold the password so it is not

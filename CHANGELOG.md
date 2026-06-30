@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.13.1] - 2026-06-30
+
+### Fixed
+- **Deploys silently no-op'd when a version was reused across commits.** The deploy workflow runs `helm upgrade --set image.tag=<CHANGELOG version>`. When several commits shared the same version (e.g. multiple `3.13.0` fixes), each push rebuilt the `:3.13.0` image in the registry, but Helm rendered a **byte-identical** Deployment spec, so Kubernetes saw no change and never rolled the pod — it kept serving the old cached image even though `rollout status` reported success. This is exactly what hid the Sessions Workspace button fix: the corrected code was in the registry but the live pod ran the previous `3.13.0` build. The Deployment pod template now carries a `hotd.knoxrpg.com/rollout-trigger` annotation, and the deploy workflow sets it to the git SHA (`--set rolloutTrigger=${{ github.sha }}`), so **every commit produces a changed pod spec and a guaranteed rolling restart**, even if the image tag is unchanged.
+- **Sessions Workspace buttons now actually live.** Re-shipped under a fresh version tag so the pure-flex editor height fix (3.13.0) rolls out to the running pod. (Verified at 1920×1080 with 60+ lines of content: Save / Create PDF / Generate Summary / Publish Summary / Delete stay docked at the bottom and the editor scrolls internally.)
+
+### Changed
+- **Helm chart** (`helm/hotd-website`) gained `rolloutTrigger` and `podAnnotations` values; the Deployment template renders them as pod-template annotations (omitted entirely when both are empty).
+
 ## [3.13.0] - 2026-06-30
 
 ### Changed

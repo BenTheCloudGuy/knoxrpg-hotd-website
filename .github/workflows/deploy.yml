@@ -79,6 +79,7 @@ jobs:
           microk8s helm upgrade --install ${{ env.HELM_RELEASE }} helm/hotd-website/ \
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${{ needs.version.outputs.version }} \
+            --set rolloutTrigger=${{ github.sha }} \
             --set postgres.password="${{ secrets.POSTGRES_PASSWORD }}" \
             --set observability.loki.enabled=true \
             --set observability.loki.pushUrl=http://192.168.10.20:3100/loki/api/v1/push \

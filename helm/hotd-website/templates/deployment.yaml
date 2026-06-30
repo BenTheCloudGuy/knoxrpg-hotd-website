@@ -23,6 +23,15 @@ spec:
     metadata:
       labels:
         {{- include "hotd-website.selectorLabels" . | nindent 8 }}
+      {{- if or .Values.rolloutTrigger .Values.podAnnotations }}
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.rolloutTrigger }}
+        hotd.knoxrpg.com/rollout-trigger: {{ .Values.rolloutTrigger | quote }}
+        {{- end }}
+      {{- end }}
     spec:
       hostNetwork: {{ .Values.hostNetwork | default false }}
       {{- if .Values.hostNetwork }}
