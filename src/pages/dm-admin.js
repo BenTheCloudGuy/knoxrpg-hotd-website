@@ -12,37 +12,7 @@ async function renderDmAdminPage(session) {
 
   const body = `
   <div class="dmc">
-    <!-- ═══ SIDEBAR ═══ -->
-    <aside class="dmc-side" id="dmc-side">
-      <div class="dmc-side-head">
-        <span class="dmc-logo">DM Command Center</span>
-        <button class="dmc-collapse-btn" onclick="toggleSidebar()" title="Collapse">&#9776;</button>
-      </div>
-      <nav class="dmc-nav">
-        <div class="dmc-nav-section">
-          <div class="dmc-nav-label">AI Tools</div>
-          <button class="dmc-nav-btn active" onclick="dmc('chat')">DM Chat</button>
-          <button class="dmc-nav-btn" onclick="dmc('forge')">Story Forge</button>
-          <button class="dmc-nav-btn" onclick="dmc('images')">Image Studio</button>
-        </div>
-        <div class="dmc-nav-section">
-          <div class="dmc-nav-label">Campaign</div>
-          <button class="dmc-nav-btn" onclick="dmc('notes')">Notebook</button>
-          <a class="dmc-nav-btn" href="/characters/admin" style="display:block;text-decoration:none;">Characters &rarr;</a>
-          <button class="dmc-nav-btn" onclick="dmc('npcs')">NPCs</button>
-          <button class="dmc-nav-btn" onclick="dmc('sessions')">Sessions</button>
-        </div>
-        <div class="dmc-nav-section">
-          <div class="dmc-nav-label">Config</div>
-          <button class="dmc-nav-btn" onclick="dmc('ai')">AI Config</button>
-          <button class="dmc-nav-btn" onclick="dmc('search')">Search</button>
-          <button class="dmc-nav-btn" onclick="dmc('campaign')">Campaign Data</button>
-          <button class="dmc-nav-btn" onclick="dmc('users')">Users</button>
-        </div>
-      </nav>
-    </aside>
-
-    <!-- ═══ MAIN CONTENT ═══ -->
+    <!-- ═══ MAIN CONTENT (full canvas; navigation lives in the site top-menu "DM Command Center" dropdown, admin-only) ═══ -->
     <main class="dmc-main" id="dmc-main">
 
       <!-- ╔══ DM CHAT ══╗ -->
@@ -466,19 +436,6 @@ async function renderDmAdminPage(session) {
     html:has(.dmc) { overflow:hidden; }
     .dmc { display:flex; height:calc(100vh - 60px); background:#111; overflow:hidden; }
 
-    /* ── Sidebar ── */
-    .dmc-side { width:220px; min-width:220px; background:#0d0d0d; border-right:1px solid #222; display:flex; flex-direction:column; transition:width 0.2s,min-width 0.2s; overflow:hidden; }
-    .dmc-side.collapsed { width:0; min-width:0; border-right:none; }
-    .dmc-side-head { display:flex; align-items:center; justify-content:space-between; padding:14px 12px; border-bottom:1px solid #222; }
-    .dmc-logo { color:#c83232; font-weight:700; font-size:0.85rem; letter-spacing:0.5px; white-space:nowrap; }
-    .dmc-collapse-btn { background:none; border:none; color:#666; cursor:pointer; font-size:1.1rem; padding:4px; }
-    .dmc-nav { flex:1; overflow-y:auto; padding:8px 0; }
-    .dmc-nav-section { margin-bottom:8px; }
-    .dmc-nav-label { color:#555; font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; padding:8px 16px 4px; }
-    .dmc-nav-btn { display:block; width:100%; text-align:left; background:none; border:none; color:#888; padding:7px 16px; font-size:0.8rem; cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; }
-    .dmc-nav-btn:hover { color:#ccc; background:#1a1a1a; }
-    .dmc-nav-btn.active { color:#c83232; border-left-color:#c83232; background:#1a1111; }
-
     /* ── Main ── */
     .dmc-main { flex:1; overflow-y:auto; padding:0; min-width:0; }
     .dmc-panel { padding:20px 24px; }
@@ -726,13 +683,6 @@ async function renderDmAdminPage(session) {
     /* ── Responsive ── */
     @media (max-width:768px) {
       .dmc { flex-direction:column; }
-      .dmc-side { width:100%; min-width:100%; border-right:none; border-bottom:1px solid #222; }
-      .dmc-side.collapsed { height:0; min-height:0; }
-      .dmc-nav { display:flex; flex-wrap:wrap; padding:4px 8px; }
-      .dmc-nav-section { display:contents; }
-      .dmc-nav-label { display:none; }
-      .dmc-nav-btn { width:auto; padding:6px 10px; font-size:0.72rem; border-left:none; border-bottom:2px solid transparent; }
-      .dmc-nav-btn.active { border-bottom-color:#c83232; border-left:none; }
       .chat-layout { height:calc(100vh - 200px); }
       .chat-convlist { width:100%; min-width:100%; max-height:200px; border-right:none; border-bottom:1px solid #222; }
       .chat-layout { flex-direction:column; }
@@ -760,24 +710,29 @@ async function renderDmAdminPage(session) {
   }
 
   // ═══ NAVIGATION ═══
-  let _currentPanel = 'chat';
+  // The DM Command Center menu now lives in the site top-nav dropdown. Panels
+  // are selected via the URL hash (e.g. /dm-admin#sessions) so the dropdown
+  // works from any page and switches panels in-place when already here.
+  let _currentPanel = null;
   let _loaded = {};
-  function dmc(panel) {
+  const PANELS = ['chat','forge','images','notes','characters','npcs','sessions','ai','search','campaign','users'];
+  function showPanel(panel) {
+    if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.dmc-nav-btn').forEach(b => b.classList.remove('active'));
     el('dmc-' + panel).style.display = 'block';
-    event.target.classList.add('active');
     _currentPanel = panel;
     if (!_loaded[panel]) { _loaded[panel] = true; loadPanel(panel); }
+  }
+  // Back-compat shim for any legacy dmc('panel') call: drive selection via hash.
+  function dmc(panel) {
+    if (location.hash === '#' + panel) showPanel(panel);
+    else location.hash = panel;
   }
   function loadPanel(p) {
     const loaders = { chat:loadChat, forge:loadForge, images:loadImages, notes:loadNotes,
       characters:loadChars, npcs:loadNpcs, sessions:loadSessions, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
     if (loaders[p]) loaders[p]();
-  }
-  function toggleSidebar() {
-    el('dmc-side').classList.toggle('collapsed');
   }
 
   // ═══ DM CHAT ═══
@@ -1942,17 +1897,12 @@ async function renderDmAdminPage(session) {
   }
 
   // ═══ INIT ═══
-  _loaded.chat = true;
-  loadChat();
-  // Deep-link support: /dm-admin#sessions (or #npcs, #notes, ...) opens that
-  // panel on load by triggering a real click on the matching nav button.
-  (function() {
-    const h = (location.hash || '').replace('#', '');
-    if (!h || h === 'chat') return;
-    const btn = Array.prototype.slice.call(document.querySelectorAll('.dmc-nav-btn'))
-      .find(function(b) { return (b.getAttribute('onclick') || '').indexOf("dmc('" + h + "')") !== -1; });
-    if (btn) btn.click();
-  })();
+  // Panel selection is hash-driven so the top-menu dropdown can deep-link into
+  // any tool (/dm-admin#sessions) and switch panels without a reload.
+  window.addEventListener('hashchange', function() {
+    showPanel((location.hash || '').replace('#', ''));
+  });
+  showPanel((location.hash || '').replace('#', '') || 'chat');
   </script>`;
 
   return pageShell("DM Command Center — Halls of the Damned", "/dm-admin", body, session);

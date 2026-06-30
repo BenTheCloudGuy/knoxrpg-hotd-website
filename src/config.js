@@ -43,7 +43,6 @@ const NAV_ITEMS = [
     label: "Home", dropdown: [
       { label: "Dashboard", href: "/" },
       { label: "Account", href: "/account", sessionAware: true },
-      { label: "\u2699 DM Admin", href: "/dm-admin", adminOnly: true },
     ]
   },
   {
@@ -71,6 +70,21 @@ const NAV_ITEMS = [
       { label: "Handouts", href: "/handouts" },
       { label: "Journal", href: "/journal" },
       { label: "Search", href: "/search" },
+    ]
+  },
+  {
+    label: "\u2699 DM Command Center", adminOnly: true, dropdown: [
+      { label: "DM Chat", href: "/dm-admin#chat" },
+      { label: "Story Forge", href: "/dm-admin#forge" },
+      { label: "Image Studio", href: "/dm-admin#images" },
+      { label: "Notebook", href: "/dm-admin#notes" },
+      { label: "Characters", href: "/characters/admin" },
+      { label: "NPCs", href: "/dm-admin#npcs" },
+      { label: "Sessions", href: "/dm-admin#sessions" },
+      { label: "AI Config", href: "/dm-admin#ai" },
+      { label: "Search", href: "/dm-admin#search" },
+      { label: "Campaign Data", href: "/dm-admin#campaign" },
+      { label: "Users", href: "/dm-admin#users" },
     ]
   },
 ];

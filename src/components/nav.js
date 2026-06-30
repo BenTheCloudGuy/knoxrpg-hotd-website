@@ -139,8 +139,9 @@ function teleportOverlayHtml() {
 }
 
 function renderNav(activePath, session) {
+  const isAdmin = !!(session && session.role === "admin");
   // Desktop left links
-  const links = NAV_ITEMS.map((item) => {
+  const links = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => {
     if (item.dropdown) {
       const childActive = item.dropdown.some(c =>
         !c.external && (activePath === c.href || (c.href !== "/" && activePath.startsWith(c.href)))
@@ -183,7 +184,7 @@ function renderNav(activePath, session) {
   const searchBar = "";
 
   // Mobile drawer
-  const mobileLinks = NAV_ITEMS.map((item) => {
+  const mobileLinks = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => {
     if (item.dropdown) {
       const children = item.dropdown.filter(c => !c.adminOnly || (session && session.role === "admin")).map(c => {
         // Session-aware Account/Login swap

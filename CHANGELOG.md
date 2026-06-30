@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.13.0] - 2026-06-30
+
+### Changed
+- **DM Command Center moved from a left sidebar to a top-menu dropdown so panels use the full canvas.** The 220px `.dmc-side` sidebar in `/dm-admin` is gone; the panel area (`.dmc-main`) now spans the full width of the page. Navigation between tools (DM Chat, Story Forge, Image Studio, Notebook, Characters, NPCs, Sessions, AI Config, Search, Campaign Data, Users) lives in a new **⚙ DM Command Center** dropdown in the sticky site top-nav, available from any page. Panel selection is now driven entirely by the URL hash (`/dm-admin#sessions`, `/dm-admin#npcs`, etc.) via a `showPanel()` + `hashchange` handler, so dropdown links deep-link from anywhere and switch panels in-place without a reload when already on `/dm-admin`.
+- **The DM Command Center dropdown is admin-only.** `renderNav` (`src/components/nav.js`) now filters top-level nav items by a new `adminOnly` flag (desktop + mobile drawer), so the dropdown only appears after logging in as a DM/admin. The redundant "⚙ DM Admin" link was removed from the Home dropdown.
+
+### Removed
+- **DMCC sidebar markup, CSS, and JS** (`.dmc-side`/`.dmc-nav`/`.dmc-nav-btn` styles, the `toggleSidebar()` function, and the click-based `dmc()` active-button logic) replaced by the hash-driven `showPanel()` navigation.
+
 ## [3.12.2] - 2026-06-30
 
 ### Fixed
