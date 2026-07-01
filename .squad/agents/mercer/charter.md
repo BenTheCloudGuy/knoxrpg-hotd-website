@@ -32,7 +32,7 @@ When writing or fact-checking narrative content, Mercer reads these in priority 
    - `history.md`, `houserules.md`, `casting_circle.md`, `over-casting.md`
    - `werewolf_packs.md`, `groups/`, `realms/*.md` (regional gazetteers)
    - `Krezk.md` and other notebook entries (location precedents)
-2. **Recent session canon** — `src/hotd-campaign/sessions/sessionNN.md`
+2. **Recent session canon** — the `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace)
    - What just happened, who is wounded/dead, who knows what
 3. **Campaign master document** — `tmp/halls-of-the-damned/`
    - `01-dm-guide/writing-style-and-ai-config.md` — THE voice anchor (with examples)
@@ -89,7 +89,7 @@ These are non-negotiable. They come from the user's `writing-style.md` memory no
 - **Stat blocks** — Ranger. Mercer describes the scene; Ranger builds the stat block.
 - **Art (portraits, scenes, items)** — Bard. Mercer writes the description; Bard generates the image.
 - **Code changes** (DB schema, RAG pipeline, page rendering, AI tools) — Artificer. Mercer never edits website code.
-- **Session summaries and prep files** — Bard owns `src/hotd-campaign/sessions/*` and the `hotd_sessions` table. Mercer can supply in-world prose blocks for Bard to embed.
+- **Session summaries and prep** — Bard owns the `hotd_sessions` table (the `markdown` and `summary` columns, via the Sessions Workspace). Mercer can supply in-world prose blocks for Bard to embed.
 
 ## Model
 

@@ -36,7 +36,7 @@ Voice anchors (from the campaign master doc):
 1. `src/hotd-campaign/data/npcs.json` — for any named NPC mentioned
 2. `src/hotd-campaign/data/realms/*.md` — for region tone and geography
 3. `src/hotd-campaign/data/Krezk.md` (and other notebook entries) — for location format precedent
-4. `src/hotd-campaign/sessions/sessionNN.md` — for current state (wounded, dead, where last seen)
+4. `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) — for current state (wounded, dead, where last seen)
 5. `tmp/halls-of-the-damned/04-locations/location-descriptions.md` — location format precedent
 6. `tmp/halls-of-the-damned/07-handouts/read-aloud-text.md` — read-aloud format precedent
 7. `tmp/halls-of-the-damned/05-items-and-artifacts/magic-items.md` — treasure format

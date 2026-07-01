@@ -7,19 +7,23 @@
 
 Use this skill when the user asks to:
 
-- Convert a `sessionNN.md` prep file to a PDF for offline reading
+- Convert a session's prep notes (the `hotd_sessions.markdown` DB row) to a PDF for offline reading
 - Generate a DM reference PDF for the Kindle Scribe (or any e-reader)
 - Bundle a session's prep notes with selected stat blocks into one document
 - Produce a printable session guide
 
 ## Quick invocation
 
+> Session markdown now lives in the `hotd_sessions.markdown` DB column, not in files. The easiest path is the **Sessions Workspace "Create PDF" button** (`/dm-admin#sessions`), which exports the row's markdown and runs this script for you. To run the CLI directly, export the markdown to a tmpfile and pass `--input-file` (the old positional `sessionNN` form read the now-removed `src/hotd-campaign/sessions/sessionNN.md` files).
+
 ```bash
-# Minimum: just the session prep file
-node scripts/build-session-pdf.js 29
+# Export the session markdown from the DB, then build the PDF
+psql -h localhost -p 30432 -U cortana -d dnd_website -t -A \
+  -c "SELECT markdown FROM hotd_sessions WHERE session_number = 29" > /tmp/session29.md
+node scripts/build-session-pdf.js --input-file /tmp/session29.md --out reports/session29-dm-guide.pdf
 
 # Bundle specific stat blocks (file stems from src/hotd-campaign/data/statBlocks/)
-node scripts/build-session-pdf.js 29 --statblocks vasilka,stitches,ally-emil-toranescu
+node scripts/build-session-pdf.js --input-file /tmp/session29.md --statblocks vasilka,stitches,ally-emil-toranescu
 
 # Auto-include every ally and/or monster stat block in the data directory
 node scripts/build-session-pdf.js 29 --include-allies --include-monsters
@@ -45,7 +49,7 @@ Output defaults to `reports/sessionNN-dm-guide.pdf`.
 
 [scripts/build-session-pdf.js](../../../scripts/build-session-pdf.js) does the following:
 
-1. Reads `src/hotd-campaign/sessions/sessionNN.md` (errors if missing).
+1. Reads the session markdown — from `--input-file` (e.g. a tmpfile exported from `hotd_sessions.markdown`). The legacy positional form (`build-session-pdf.js 29`) read `src/hotd-campaign/sessions/sessionNN.md`, which no longer exists.
 2. Optionally reads stat block markdown from `src/hotd-campaign/data/statBlocks/`.
 3. Builds a combined intermediate markdown with a Table of Contents and explicit page breaks (`<div class="page">`).
 4. Rewrites relative `images/...` paths to absolute paths so `wkhtmltopdf` can load them.
@@ -83,7 +87,7 @@ All three are present in the devcontainer.
 
 - Script: [scripts/build-session-pdf.js](../../../scripts/build-session-pdf.js)
 - CSS: [scripts/session-pdf.css](../../../scripts/session-pdf.css)
-- Session sources: `src/hotd-campaign/sessions/sessionNN.md`
+- Session source: the `hotd_sessions.markdown` DB column (export to a tmpfile and pass `--input-file`; the Sessions Workspace "Create PDF" button does this automatically)
 - Stat block sources: `src/hotd-campaign/data/statBlocks/*.md`
 - Output: `reports/sessionNN-dm-guide.pdf`
 

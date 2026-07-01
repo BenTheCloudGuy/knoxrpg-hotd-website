@@ -7,7 +7,7 @@
 
 Use this skill when the user asks to:
 
-- Create or update a session prep file (`src/hotd-campaign/sessions/sessionNN.md`)
+- Create or update a session's prep + notes (the `hotd_sessions.markdown` column, edited via the Sessions Workspace at `/dm-admin#sessions`)
 - Write or revise a post-session summary (the `hotd_sessions.summary` column)
 - Generate a player-safe recap to share with the table
 - Backfill an older session that's missing a summary
@@ -15,8 +15,8 @@ Use this skill when the user asks to:
 
 ## Reference order (read before writing)
 
-1. **The previous session file** — `src/hotd-campaign/sessions/session{N-1}.md`. Continuity starts here.
-2. **The current session file (if exists)** — `src/hotd-campaign/sessions/sessionNN.md` for DM prep already captured.
+1. **The previous session** — the `hotd_sessions` row for `session_number = N-1` (the `markdown` column for prep + notes, `summary` for the published recap). Continuity starts here. Example: `psql -h localhost -p 30432 -U cortana -d dnd_website -c "SELECT markdown, summary FROM hotd_sessions WHERE session_number = <N-1>"` (PG password in `/memories/repo/cortana-db.md`).
+2. **The current session (if it exists)** — the `hotd_sessions` row for `session_number = N`, for prep already captured in its `markdown`.
 3. **`hotd_sessions` table** — confirm `session_number`, current `title`, current `summary`, `game_date`, `play_date`.
 4. **`src/hotd-campaign/data/npcs.json`** — confirm every NPC mentioned by name. `npcid` is the canon identifier used in DM notes and cross-references; the **website URL uses `hotd_npcs.id`** (DB primary key), which is different. See the linking rule below.
 5. **`src/hotd-campaign/data/campaign_notes.md`** — chapter/arc context.
@@ -34,12 +34,12 @@ Same rules as the rest of the campaign:
 - Concrete nouns and concrete verbs. Real human emphasis.
 - Past tense for recaps. Present or future tense for prep notes.
 
-## File format: `src/hotd-campaign/sessions/sessionNN.md`
+## Content format: the `hotd_sessions.markdown` column
 
-Use the existing files (`session27.md`, `session28.md`) as the template. Standard layout:
+Session prep, notes, and the player recap all live in the `markdown` column of the `hotd_sessions` row, edited through the Sessions Workspace (`/dm-admin#sessions`). Two H1 headings are load-bearing (see "Required H1 sections" below): `# Session Notes` holds DM prep, `# Session Summary` holds the player-facing recap. Put the rich prep layout under `# Session Notes`:
 
 ```markdown
-# Session N - Title #
+# Session Notes
 
 ## To-Do
 [DM prep checklist: maps, tokens, music, props]
@@ -59,12 +59,14 @@ Use the existing files (`session27.md`, `session28.md`) as the template. Standar
 
 ## WRAP UP
 [Post-session hooks, what carries into next session, message-from-NPC setups]
+
+# Session Summary
+[Player-facing recap. Written by hand or drafted with Generate Summary, then reviewed before publishing.]
 ```
 
 Rules:
 
-- File name: `sessionNN.md` matching the existing numeric convention. Check the directory before naming.
-- Title format: `# Session N - Title #` (trailing hash matches existing files).
+- The `# Session Notes` and `# Session Summary` H1 headings are required and load-bearing (the API keys off them). Other H1s are allowed but ignored.
 - NPC links use the public website pattern `https://hotd.knoxrpg.com/npcs/{id}` where `{id}` is the **`hotd_npcs.id` column** (DB primary key), **not** the `npcid` field in `npcs.json`. The two differ: e.g. Mordenkainen is `npcid=93` but `id=669`. The website route resolves `/npcs/:id` against `hotd_npcs.id` only.
   - **Lookup query** (preferred): `SELECT id, name FROM hotd_npcs WHERE name ILIKE ANY(ARRAY['%Name1%','%Name2%']);` (PG env: `PGHOST=localhost PGPORT=30432 PGUSER=cortana PGDATABASE=dnd_website`, password in `/memories/repo/cortana-db.md`).
   - **Via MCP:** `search_campaign_lore` with `source_type="npc"` returns `source_id` which equals `hotd_npcs.id`.
@@ -107,18 +109,18 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 
 ## Step-by-step workflow
 
-### Pre-session prep file
+### Pre-session prep (the `# Session Notes` section)
 
-1. Confirm next session number against the directory and the DB.
-2. Copy the section structure from the most recent prep file.
+1. Confirm next session number against the `hotd_sessions` table.
+2. Copy the section structure from the most recent session's `markdown` (its `# Session Notes` body).
 3. Pull the active NPCs from `npcs.json` (look up by current location, status, or arc).
 4. Block out phases the DM has called out (`[REINFORCEMENTS]`, `[END PHASE]`, etc.).
 5. Add `## To-Do` items for any prep that needs to happen before the session (maps, tokens, art).
-6. Hand back to the DM. Do NOT invent encounter beats the user didn't ask for.
+6. Save the `markdown` to the session row (create it if needed) via the Sessions Workspace / `/api/dm-admin/sessions`. Do NOT invent encounter beats the user didn't ask for.
 
 ### Post-session summary
 
-1. Read the prep file for the session and any DM notes the user gives you.
+1. Read the session's `markdown` (its `# Session Notes` body) and any DM notes the user gives you.
 2. Read the previous session's `summary` for continuity (where the party was, who was wounded, what was pending).
 3. Look up every NPC name in `npcs.json`. Confirm IDs, status, location.
 4. Draft a 2–5 paragraph player-safe recap using the format above.
@@ -172,12 +174,11 @@ The DM is expected to review and edit before clicking **Publish Summary**. Gener
 
 `POST /api/dm-admin/sessions/:id/pdf` writes the markdown to a tmpfile **with `# Session Summary` stripped out**, then runs `scripts/build-session-pdf.js --input-file TMP --out reports/sessionNN-gm-guide.pdf --title "Session N: Title" --session N`. The summary is excluded because the GM Guide is for the DM at the table, not for players. Records `pdf_path` and `pdf_generated_at` on the row.
 
-### When the Bard should use the UI vs. the legacy flow
+### How the Bard persists session content
 
-- **Prep files** (`src/hotd-campaign/sessions/sessionNN.md`) remain the source of truth for DM prep that lives in git. The UI is for sessions where the DM wants the editor + AI assist instead.
+- **The `hotd_sessions` table is the single source of truth** for session prep, notes, and summaries. The old `src/hotd-campaign/sessions/sessionNN.md` prep files were removed in favor of the DB; do not recreate them. Persist all session content through the Sessions Workspace JSON API (`/api/dm-admin/sessions`) so the website owns storage and RAG re-indexing.
 - If the user says "write the summary in the Sessions Workspace" or "use the admin portal", call the JSON API endpoints above and let the website own the persistence.
-- If the user says "update the prep file" or names a `sessionNN.md` path, use the legacy file-based workflow.
-- The voice rules and reference order above apply equally to both paths. The AI system prompt baked into the `/generate-summary` endpoint is a guard rail, not a substitute for hand-checking against `npcs.json` and the prior session.
+- The voice rules and reference order above still apply. The AI system prompt baked into the `/generate-summary` endpoint is a guard rail, not a substitute for hand-checking against `npcs.json` and the prior session.
 
 ## Rules
 
@@ -196,7 +197,7 @@ The DM is expected to review and edit before clicking **Publish Summary**. Gener
 
 ## Learned from
 
-- `src/hotd-campaign/sessions/session27.md` and `session28.md` (existing format)
+- The `hotd_sessions.markdown` H1 contract (`# Session Notes` / `# Session Summary`) and the Sessions Workspace (`src/pages/admin.js`)
 - `src/db/schema.js` (the `hotd_sessions` schema)
 - `scripts/embed-pipeline.js` (the `--source session` re-index path)
 - `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` (voice)

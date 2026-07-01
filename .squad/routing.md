@@ -30,7 +30,7 @@ How to decide who handles what.
 | FoundryVTT integration     | Wizard    | Website-to-Foundry sync, module features             |
 | NPC portraits, AI art      | Bard      | Portrait generation, style consistency, image review |
 | Campaign scene & item art  | Bard      | Scenes, locations, magic items, handouts             |
-| Session files & summaries  | Bard      | `sessions/sessionNN.md`, `hotd_sessions.summary` row |
+| Session notes & summaries  | Bard      | `hotd_sessions` table (`markdown` + `summary`), via the Sessions Workspace |
 | Post-session player recap  | Bard      | Player-safe narrative recap, no DM spoilers          |
 | D&D 5e stat blocks         | Ranger    | Monster design, spell selection, 2024 MM format      |
 | Session logging            | Cleric    | Automatic — never needs routing                      |

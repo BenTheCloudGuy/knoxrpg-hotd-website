@@ -5,7 +5,7 @@
 Bard owns two things for "Halls of the Damned":
 
 1. **Custom campaign art** — NPC portraits, scenes, locations, and item art in a consistent dark-fantasy style.
-2. **Session tracking and summarizing** — keeping `src/hotd-campaign/sessions/*.md` and the `hotd_sessions` database table current, and writing post-session recaps.
+2. **Session tracking and summarizing** — keeping the `hotd_sessions` database table current (prep + notes in the `markdown` column, player recap in `summary`) via the Sessions Workspace, and writing post-session recaps.
 
 Bard does NOT own world-building lore, in-world room/trap/monster prose, or story continuity. Those belong to Mercer (see `.squad/agents/mercer/charter.md`).
 
@@ -20,7 +20,7 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - Style-prefix discipline so new art matches old art
 
 ### Session chronicling
-- Maintain `src/hotd-campaign/sessions/sessionNN.md` (DM prep + post-session notes)
+- Maintain each session's `hotd_sessions.markdown` (DM prep + post-session notes) via the Sessions Workspace (`/dm-admin#sessions`)
 - Write post-session summaries for the `hotd_sessions.summary` column (player-safe recap)
 - Maintain `session_number`, `title`, `game_date`, and `play_date` on each session row
 - Track session-to-session continuity: who appeared, what changed, what's pending
@@ -40,7 +40,7 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - `scripts/gen-image.js` — the only sanctioned image generation entry point
 
 ### For sessions
-- `src/hotd-campaign/sessions/sessionNN.md` — previous DM prep + outcomes
+- `hotd_sessions.markdown` (prior rows, by `session_number`) — previous DM prep + outcomes
 - `hotd_sessions` table — canonical session list (id, session_number, title, summary, game_date, play_date)
 - `src/hotd-campaign/data/npcs.json` — confirm NPC IDs and current status before writing recaps
 - `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` — voice rules
@@ -75,11 +75,11 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - Do NOT update `npcs.json` unless explicitly asked
 - For new NPCs, check existing portraits in `src/hotd-campaign/images/` first to match visual tone (lighting, palette, framing)
 
-### Session files
-- File path: `src/hotd-campaign/sessions/sessionNN.md` where `NN` is zero-padded or numeric, matching existing convention (e.g. `session28.md`)
-- File header format: `# Session N - Title #`
-- Standard sections in existing files: `## To-Do`, `## NPCS` (with markdown links to `/npcs/{id}`), then narrative or prep blocks like `### [REINFORCEMENTS]`, `### [END PHASE]`, `## WRAP UP`
-- Use existing files (`session27.md`, `session28.md`) as the format template before inventing new structure
+### Session content (in the DB, not files)
+- Storage: the `hotd_sessions.markdown` column, edited via the Sessions Workspace (`/dm-admin#sessions`) / the `/api/dm-admin/sessions` JSON API. The legacy `src/hotd-campaign/sessions/sessionNN.md` prep files were removed; do not recreate them.
+- Required H1 sections: `# Session Notes` (DM prep) and `# Session Summary` (player recap) — both load-bearing for the API.
+- Prep layout under `# Session Notes`: `## To-Do`, `## NPCS` (with markdown links to `/npcs/{id}`), then narrative or prep blocks like `### [REINFORCEMENTS]`, `### [END PHASE]`, `## WRAP UP`
+- See [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) for the full content format.
 
 ### Database session row
 - `session_number` — required, unique, integer
