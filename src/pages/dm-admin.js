@@ -219,7 +219,6 @@ async function renderDmAdminPage(session) {
               <h3 style="color:#e8b923;">&#128214; Campaign Notebook</h3>
               <p style="color:#888;margin:8px 0;">A Trilium-inspired knowledge base for your campaign.<br/>Select a note from the tree or create a new one.</p>
               <div style="color:#555;font-size:0.75rem;max-width:360px;text-align:left;line-height:1.7;">
-                <div>&#128196; <strong>Markdown files</strong> stored in <code>src/hotd-campaign/notebook/</code></div>
                 <div>&#9998; <strong>Rich editing</strong> &mdash; headings, bold, italic, lists, tables, code</div>
                 <div>&#128247; <strong>Paste images</strong> directly into the editor (Ctrl+V)</div>
                 <div>&#128190; <strong>Auto-save</strong> after 5 seconds of inactivity</div>

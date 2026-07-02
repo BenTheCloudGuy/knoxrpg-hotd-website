@@ -18,7 +18,7 @@ During the height of the **Netheril Empire**, Shorthagot infiltrated its highest
 
 The **Order of the Yellow Rose** was founded in 75 DR to guard the Keys and watch over the buried ruins of Thul Avenar. For over a thousand years the prison held. Then in 1496 DR, **Lyzara'Nualith**, a succubus in service to Tharizdun disguised as the noblewoman Lady Elysra Nivariel Williams, orchestrated the **Fall of Valls**. Her cultists breached the planar gateway beneath the city, flooding it with horrors from the Shadowfell and shattering the Order's stronghold. The Keys were scattered, and the prison that holds Shorthagot grows weaker by the day.
 
-The players began in the northern kingdom of **Damara**, hired as caravan guards on the Pelavir River. They survived the Fall of Valls, crossed into the demiplane of **Barovia** through the Devil's Mist, and now fight to recover the Keys, understand the ancient Netherese machinery, and stop Lyzara'Nualith's forces before Shorthagot is freed and completes his long-interrupted work: the liberation of the Chained God.
+The players began in the northern kingdom of **Damara**, hired as caravan guards on the Pelavir River. They survived the Fall of Valls, crossed into the demiplane of **Barovia** through the Devil's Mist, and now fight to recover the Key, understand the ancient Netherese machinery, and stop Lyzara'Nualith's forces before Shorthagot is freed and completes his long-interrupted work: the liberation of the Chained God.
 
 ---
 

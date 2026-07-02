@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.13.3] - 2026-07-02
+
+### Fixed
+- **Campaign Notebook welcome pane no longer claims notes are stored as Markdown files on disk.** The `#notes` panel help text stated "📄 **Markdown files** stored in `src/hotd-campaign/notebook/`", but the notebook has been DB-backed for some time: the read/write/tree endpoints in `src/routes/dm-admin-api.js` all operate on the `hotd_notebook_pages` PostgreSQL table (content lives in a column, not a `.md` file, and is also embedded into `hotd_embeddings` for RAG). The stale line was removed from the welcome pane in `src/pages/dm-admin.js`.
+
 ## [3.13.2] - 2026-06-30
 
 ### Fixed
