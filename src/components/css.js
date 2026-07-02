@@ -17,7 +17,7 @@ function navCss() {
       text-decoration: none; padding: 4px 0;
     }
     .site-brand img {
-      display: block; height: 72px; width: auto; max-width: 100%;
+      display: block; height: 108px; width: auto; max-width: 100%;
       object-fit: contain;
     }
     .site-brand:hover img { opacity: 0.85; }
@@ -174,7 +174,7 @@ function navCss() {
       .site-nav { grid-template-columns: auto 1fr auto; padding: 0 12px; }
       .nav-hamburger { display: block; order: -1; }
       .site-brand { justify-self: center; }
-      .site-brand img { max-height: 48px; max-width: none; width: auto; }
+      .site-brand img { max-height: 72px; max-width: none; width: auto; }
       .nav-links { display: none !important; }
       .nav-right { display: none !important; }
       .nav-dropdown-menu { display: none !important; }

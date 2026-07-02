@@ -68,7 +68,7 @@ async function handleAdminRoutes(decoded, req, res, session) {
       if (form.next_game_date !== undefined) await pgPool.query("INSERT INTO hotd_config (key,value) VALUES ('next_game_date',$1) ON CONFLICT (key) DO UPDATE SET value=$1", [form.next_game_date]);
       if (form.party_location !== undefined) await pgPool.query("INSERT INTO hotd_config (key,value) VALUES ('party_location',$1) ON CONFLICT (key) DO UPDATE SET value=$1", [form.party_location]);
     } catch (e) { console.error("Update home config:", e.message); }
-    res.writeHead(302, { Location: "/home/admin" }); res.end(); return true;
+    res.writeHead(302, { Location: "/calendar/admin" }); res.end(); return true;
   }
 
   // ── NPCs ───────────────────────────────────────────────────

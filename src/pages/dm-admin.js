@@ -396,8 +396,7 @@ async function renderDmAdminPage(session) {
       <section class="dmc-panel" id="dmc-campaign" style="display:none;">
         <div class="dmc-panel-bar"><h2>Campaign Data</h2></div>
         <div class="dmc-card-grid">
-          <a href="/home/admin" class="dmc-card"><span>&#127968;</span>Home<small>Next game, location</small></a>
-          <a href="/calendar/admin" class="dmc-card"><span>&#128197;</span>Calendar<small>Harptos events</small></a>
+          <a href="/calendar/admin" class="dmc-card"><span>&#128197;</span>Calendar<small>Next game, Harptos events</small></a>
           <a href="/maps/admin" class="dmc-card"><span>&#128506;</span>Maps<small>Upload/manage</small></a>
           <a href="/map/admin" class="dmc-card"><span>&#128205;</span>Markers<small>Interactive placement</small></a>
           <a href="/artifacts/admin" class="dmc-card"><span>&#128142;</span>Artifacts<small>Magic items</small></a>

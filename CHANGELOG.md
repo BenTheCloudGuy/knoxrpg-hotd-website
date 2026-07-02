@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.14.0] - 2026-07-02
+
+### Changed
+- **The standalone "Home Dashboard Admin" page (`/home/admin`) was retired and its four sections were redistributed into the DM Command Center dropdown and Calendar Admin.**
+  - **Next Scheduled Game** (Date & Time + Party Location editor) now lives at the top of **Calendar Admin** (`/calendar/admin`), directly above "Set Current Campaign Date". `renderCalendarAdminPage` fetches `next_game_date` / `party_location` from `hotd_config` and the form still posts to `/admin/home/update`, which now redirects back to `/calendar/admin` on save.
+  - **Map Markers** is now a direct DMCC dropdown item under **Campaign** → `/map/admin`.
+  - **Player Characters** is a DMCC dropdown item under **Campaign** → `/characters/admin` (the pre-existing "Characters" entry was renamed to "Player Characters" for clarity; the public Campaign nav "Characters" link is unchanged).
+  - **Bulk Upload** is now a DMCC dropdown item under **Config** → `/bulk-upload/admin`.
+  - The redundant **Edit Dashboard** dropdown entry and the **Home** card in the DMCC Campaign Data panel were removed; the Calendar card subtitle now reads "Next game, Harptos events". The Map Markers Admin page breadcrumb "Home Admin" link now points to Calendar Admin.
+- Any lingering `/home/admin` link (bookmarks, old cards) now 302-redirects to `/calendar/admin`; the `renderHomeAdminPage` function and its export were removed from `src/pages/admin.js`.
+- **Site logo enlarged 50%.** `.site-brand img` desktop height is now `108px` (was `72px`) and the mobile cap is `72px` (was `48px`). The header is a `display:grid; align-items:end` container with auto height, so it simply grows to fit; the DMCC canvas is sized dynamically by `sizeDmc()` (measures the real header height), so the taller logo needs no other layout changes. Validated via a render harness: the desktop CSS resolves to `108px`, mobile to `72px`, the DMCC dropdown shows the new Campaign/Config items, and "Edit Dashboard" is gone.
+
 ## [3.13.3] - 2026-07-02
 
 ### Fixed

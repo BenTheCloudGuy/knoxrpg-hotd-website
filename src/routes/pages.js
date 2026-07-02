@@ -18,7 +18,7 @@ const {
 
 // Admin pages
 const {
-  renderHomeAdminPage, renderCalendarAdminPage, renderMapsAdminPage,
+  renderCalendarAdminPage, renderMapsAdminPage,
   renderNpcsAdminPage, renderSessionsAdminPage, renderArtifactsAdminPage,
   renderHandoutsAdminPage, renderArtAdminPage, renderBulkUploadAdminPage,
   renderMapAdminPage, renderCharactersAdminPage,
@@ -156,9 +156,12 @@ async function handlePageRoutes(decoded, req, res, session, url) {
   // ── Admin pages ────────────────────────────────────────────
   if (decoded.endsWith("/admin") && ["/home/admin","/calendar/admin","/maps/admin","/map/admin","/npcs/admin","/sessions/admin","/artifacts/admin","/handouts/admin","/art/admin","/bulk-upload/admin","/characters/admin"].includes(decoded)) {
     if (!session || session.role !== "admin") { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
+    // The Home Dashboard Admin page was retired: its Next Scheduled Game editor
+    // moved to Calendar Admin and its other options became DM Command Center
+    // dropdown links. Redirect any lingering /home/admin links there.
+    if (decoded === "/home/admin") { res.writeHead(302, { Location: "/calendar/admin" }); res.end(); return true; }
     let adminHtml;
     switch (decoded) {
-      case "/home/admin": adminHtml = await renderHomeAdminPage(session); break;
       case "/calendar/admin": adminHtml = await renderCalendarAdminPage(session, url.searchParams.get("month")); break;
       case "/maps/admin": adminHtml = await renderMapsAdminPage(session); break;
       case "/map/admin": adminHtml = await renderMapAdminPage(session); break;

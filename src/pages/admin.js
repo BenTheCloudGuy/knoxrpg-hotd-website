@@ -8,60 +8,19 @@ const { HARPTOS_MONTHS } = require("../config");
 const { pageShell, embedShell } = require("../components/shell");
 const { renderRichTextBlock } = require("../lib/markdown");
 
-// ── Home Dashboard Admin ──────────────────────────────────────
-async function renderHomeAdminPage(session) {
-  if (!session || session.role !== "admin") return null;
-  let nextGameDate = "", partyLocation = "";
-  try {
-    const cfgRes = await pgPool.query("SELECT key, value FROM hotd_config WHERE key IN ('next_game_date','party_location')");
-    for (const r of cfgRes.rows) {
-      if (r.key === "next_game_date") nextGameDate = r.value;
-      if (r.key === "party_location") partyLocation = r.value;
-    }
-  } catch (_) {}
-
-  const body = `
-  <div class="content">
-    <h2 class="section-title">&#9881; Home Dashboard Admin</h2>
-    <p style="color:#888;margin-bottom:16px;"><a href="/" style="color:#e8b923;text-decoration:none;">&larr; Back to Home</a></p>
-
-    <div class="admin-campaign-form">
-      <h3>&#128197; Next Scheduled Game</h3>
-      <form method="POST" action="/admin/home/update">
-        <div class="form-row"><div><label>Date &amp; Time</label><input type="datetime-local" name="next_game_date" value="${esc(nextGameDate)}" /></div><div></div></div>
-        <div class="form-row"><div><label>Party Location</label><input type="text" name="party_location" value="${esc(partyLocation)}" placeholder="e.g. Waterdeep, The Yawning Portal" /></div><div></div></div>
-        <button type="submit">Save</button>
-      </form>
-    </div>
-
-    <div class="admin-campaign-form" style="margin-top:16px;">
-      <h3>&#128506; Map Markers</h3>
-      <p style="color:#888;font-size:0.85rem;">Place and manage markers on the Barovia map. <a href="/map/admin" style="color:#e8b923;">Edit Map Markers &rarr;</a></p>
-    </div>
-
-    <div class="admin-campaign-form" style="margin-top:16px;">
-      <h3>&#9876; Player Characters</h3>
-      <p style="color:#888;font-size:0.85rem;">GM-only workspace for player character data. Read-only view of all D&amp;D Beyond synced fields plus an editable <strong style="color:#e8b923;">DM Notes</strong> column that survives DDB syncs. Click <strong>PUBLISH</strong> to write changes into the RAG index. <a href="/characters/admin" style="color:#e8b923;">Open GM Player Workspace &rarr;</a></p>
-    </div>
-
-    <div class="admin-campaign-form" style="margin-top:16px;">
-      <h3>&#128228; Bulk Upload</h3>
-      <p style="color:#888;font-size:0.85rem;">Bulk import NPCs, Artifacts, or Handouts via JSON. <a href="/bulk-upload/admin" style="color:#e8b923;">Go to Bulk Upload &rarr;</a></p>
-    </div>
-  </div>`;
-  return pageShell("Home Admin — Halls of the Damned", "/", body, session);
-}
-
 // ── Calendar Admin ────────────────────────────────────────────
 async function renderCalendarAdminPage(session, monthParam) {
   if (!session || session.role !== "admin") return null;
   let currentMonth = 6, currentDay = 21, currentYear = 1497;
+  let nextGameDate = "", partyLocation = "";
   try {
-    const cfgRes = await pgPool.query("SELECT key, value FROM hotd_config WHERE key IN ('current_month','current_day','current_year')");
+    const cfgRes = await pgPool.query("SELECT key, value FROM hotd_config WHERE key IN ('current_month','current_day','current_year','next_game_date','party_location')");
     for (const r of cfgRes.rows) {
       if (r.key === "current_month") currentMonth = parseInt(r.value, 10);
       if (r.key === "current_day") currentDay = parseInt(r.value, 10);
       if (r.key === "current_year") currentYear = parseInt(r.value, 10);
+      if (r.key === "next_game_date") nextGameDate = r.value;
+      if (r.key === "party_location") partyLocation = r.value;
     }
   } catch (_) {}
   const viewMonth = monthParam ? Math.max(1, Math.min(12, parseInt(monthParam, 10) || currentMonth)) : currentMonth;
@@ -100,6 +59,15 @@ async function renderCalendarAdminPage(session, monthParam) {
     <p style="color:#888;margin-bottom:16px;"><a href="/calendar?month=${viewMonth}" style="color:#e8b923;text-decoration:none;">&larr; Back to Calendar</a></p>
 
     <div class="admin-campaign-form">
+      <h3>&#128197; Next Scheduled Game</h3>
+      <form method="POST" action="/admin/home/update">
+        <div class="form-row"><div><label>Date &amp; Time</label><input type="datetime-local" name="next_game_date" value="${esc(nextGameDate)}" /></div><div></div></div>
+        <div class="form-row"><div><label>Party Location</label><input type="text" name="party_location" value="${esc(partyLocation)}" placeholder="e.g. Waterdeep, The Yawning Portal" /></div><div></div></div>
+        <button type="submit">Save</button>
+      </form>
+    </div>
+
+    <div class="admin-campaign-form" style="margin-top:16px;">
       <h3>&#128197; Set Current Campaign Date</h3>
       <form method="POST" action="/admin/calendar/set-date">
         <div class="form-row">
@@ -1028,7 +996,7 @@ async function renderMapAdminPage(session) {
   const body = `
   <div class="content" style="width:95%;max-width:95%;margin:0 auto;">
     <h2 class="section-title">&#9881; Map Markers Admin</h2>
-    <p style="color:#888;margin-bottom:16px;"><a href="/" style="color:#e8b923;text-decoration:none;">&larr; Back to Home</a> &nbsp;|&nbsp; <a href="/home/admin" style="color:#e8b923;text-decoration:none;">Home Admin</a></p>
+    <p style="color:#888;margin-bottom:16px;"><a href="/" style="color:#e8b923;text-decoration:none;">&larr; Back to Home</a> &nbsp;|&nbsp; <a href="/calendar/admin" style="color:#e8b923;text-decoration:none;">Calendar Admin</a></p>
 
     <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
       <!-- MAP -->
@@ -2001,7 +1969,6 @@ async function renderCharactersAdminPage(session) {
 }
 
 module.exports = {
-  renderHomeAdminPage,
   renderCalendarAdminPage,
   renderMapsAdminPage,
   renderNpcsAdminPage,
