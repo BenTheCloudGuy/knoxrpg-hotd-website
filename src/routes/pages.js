@@ -11,7 +11,7 @@ const {
   renderHomePage, renderCalendarPage, renderMapsPage,
   renderNpcsPage, renderNpcDetailPage, renderSessionsPage, renderCharactersPage,
   renderHistoryPage, renderArtifactsPage, renderHandoutsPage, renderArtGalleryPage,
-  renderArtifactDetailPage, renderHandoutDetailPage, renderJournalPage,
+  renderArtifactDetailPage, renderHandoutDetailPage,
   renderGroupsPage, renderGroupDetailPage,
   renderRealmsPage, renderRealmDetailPage,
 } = require("../pages/campaign");
@@ -211,9 +211,6 @@ async function handlePageRoutes(decoded, req, res, session, url) {
       html = await renderHandoutsPage(session); break;
     case "/art":
       html = await renderArtGalleryPage(session); break;
-    case "/journal":
-      if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
-      html = await renderJournalPage(session); break;
     case "/dungeon-master":
       if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
       html = renderDungeonMasterPage(session); break;

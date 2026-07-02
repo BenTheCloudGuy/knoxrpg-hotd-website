@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.15.0] - 2026-07-02
+
+### Removed
+- **The standalone Adventure Journal page (`/journal`) was deleted** now that its note-taking role is covered by the DM Command Center **Campaign Notebook** (`/dm-admin#notes`). Removed:
+  - The `renderJournalPage` function (~540 lines of two-pane editor, Harptos date picker, entity autocomplete, and polling) plus its export from `src/pages/campaign.js`.
+  - The `/journal` route case and import from `src/routes/pages.js` — the path now returns 404.
+  - The `Adventure Notes` link from the DM Command Center **Campaign** dropdown group and the `Adventure Journal` entry from the site search index (`src/config.js`).
+  - The now-orphaned journal API endpoints in `src/routes/api.js`: `GET /api/journal`, `POST /api/journal/save`, `POST /api/journal/delete`, and `GET /api/journal/entities` (the autocomplete dictionary was used only by the deleted page).
+
+### Notes
+- The `hotd_adventure_journal` table and its RAG wiring were intentionally **left intact** (schema in `src/db/schema.js`, `source_type = 'journal'` in `src/lib/ai-tools.js` / `src/lib/search.js`) so existing journal entries remain queryable by the DM AI. Only the user-facing page and its dedicated endpoints were removed; no data was dropped.
+
 ## [3.14.0] - 2026-07-02
 
 ### Changed
