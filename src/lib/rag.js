@@ -89,7 +89,14 @@ async function searchEmbeddings(openai, query, opts = {}) {
   }
 
   // Hybrid: combine vector similarity with full-text keyword match
-  // Full-text boost is added when query terms appear in the text
+  // Full-text boost is added when query terms appear in the text.
+  // Campaign boost nudges first-party campaign content (NPCs, sessions,
+  // lore, characters, artifacts, handouts, notebook pages) above generic
+  // reference material (dnd_book / ddb_* chunks) on broad queries.
+  const CAMPAIGN_BOOST_SQL =
+    "CASE WHEN source_type IN " +
+    "('npc','session','lore','lore_json','character','artifact','handout','notebook') " +
+    "THEN 0.06 ELSE 0 END";
   const tsQuery = query.split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean).join(' & ');
   const hasTsQuery = tsQuery.length > 0;
 
@@ -99,7 +106,8 @@ async function searchEmbeddings(openai, query, opts = {}) {
     sql = `
       SELECT title, chunk_text, chunk_hash, source_type, source_id, source_path, metadata,
              (1 - (embedding <=> $1::vector)) +
-             CASE WHEN to_tsvector('english', chunk_text) @@ to_tsquery('english', $${paramIdx}) THEN 0.05 ELSE 0 END
+             CASE WHEN to_tsvector('english', chunk_text) @@ to_tsquery('english', $${paramIdx}) THEN 0.05 ELSE 0 END +
+             ${CAMPAIGN_BOOST_SQL}
              AS score
       FROM hotd_embeddings
       ${whereClause}
@@ -110,10 +118,12 @@ async function searchEmbeddings(openai, query, opts = {}) {
   } else {
     sql = `
       SELECT title, chunk_text, chunk_hash, source_type, source_id, source_path, metadata,
-             1 - (embedding <=> $1::vector) AS score
+             (1 - (embedding <=> $1::vector)) +
+             ${CAMPAIGN_BOOST_SQL}
+             AS score
       FROM hotd_embeddings
       ${whereClause}
-      ORDER BY embedding <=> $1::vector
+      ORDER BY score DESC
       LIMIT $2
     `;
   }

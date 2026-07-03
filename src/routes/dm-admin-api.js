@@ -9,6 +9,7 @@ const { readBody, sendJSON, parseMultipart } = require("../lib/utils");
 const azure = require("../lib/azure");
 const { uploadBlobToStorage } = azure;
 const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
+const { chatWithTools } = require("../lib/ai-tools");
 const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
@@ -1221,44 +1222,35 @@ ${ragContext}${entityContext}`;
       if (convR.rows.length === 0) { sendJSON(res, { error: "Conversation not found" }, 404); return true; }
       const messages = convR.rows[0].messages || [];
 
-      // Build RAG context from the message
-      const ragContext = await buildEmbeddingContext(azure.openaiClient, userMsg, {
-        includeDmOnly: true, limit: 8, minScore: 0.25,
-      });
-
-      const systemPrompt = `You are the DM AI assistant for "Halls of the Damned", a D&D 5e campaign set in Barovia.
-You have access to the campaign's full knowledge base including DM-only secrets. Respond accurately using the context below.
-Use markdown formatting. Be conversational but precise.
-
-${ragContext}`;
-
-      // Build message history (last 20 messages for context window)
+      // Build the conversation transcript for the tool-enabled chat path.
+      // Include the last ~20 stored turns plus the new user message. The
+      // full tool + auto-RAG loop (same path as /api/chat) handles context
+      // retrieval and lookups internally, so no manual system prompt / RAG
+      // string is assembled here.
       const historySlice = messages.slice(-20);
-      const chatMessages = [
-        { role: "system", content: systemPrompt },
-        ...historySlice.map(m => ({ role: m.role, content: m.content })),
-        { role: "user", content: userMsg },
+      const userMessages = [
+        ...historySlice.map(m => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: String(m.content).slice(0, 2000),
+        })),
+        { role: "user", content: userMsg.slice(0, 2000) },
       ];
 
-      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
-      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
+      // Resolve the DM model from config (explicit row preferred, sane fallback).
+      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = $1", ["ai_model"]);
+      const model = cfgR.rows.length ? cfgR.rows[0].value : (azure.aiModel || "gpt-5.4-mini");
 
-      const t0 = Date.now();
-      const completion = await azure.openaiClient.chat.completions.create({
-        model,
-        messages: chatMessages,
-        max_completion_tokens: 4096,
-        temperature: 0.7,
-      });
-      recordChatCompletion(completion, {
-        model,
-        username: session.username || "",
-        isDM: true,
-        source: "dm-admin.chat",
-        latencyMs: Date.now() - t0,
-      });
+      const { reply: aiReply, _debug: chatDebug } = await chatWithTools(
+        azure.openaiClient, model, userMessages,
+        {
+          isDM: true,
+          username: session.username || "",
+          userId: session.userId,
+          maxTokens: 4096,
+          temperature: 0.7,
+        }
+      );
 
-      const aiReply = completion.choices[0]?.message?.content || "No response.";
       const now = new Date().toISOString();
 
       // Append both messages
@@ -1276,8 +1268,8 @@ ${ragContext}`;
       sendJSON(res, {
         ok: true,
         reply: aiReply,
-        usage: completion.usage,
-        ragChunks: ragContext ? ragContext.split("---").length : 0,
+        usage: (chatDebug && chatDebug.usage) || {},
+        ragChunks: (chatDebug && chatDebug.autoRag && chatDebug.autoRag.results) || 0,
       });
     } catch (err) {
       console.error("DM Chat error:", err);

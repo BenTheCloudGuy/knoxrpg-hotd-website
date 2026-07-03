@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.16.0] - 2026-07-02
+
+### Fixed
+- **DM Command Center chat now uses the full tool-calling + auto-RAG path.** The `POST /api/dm-admin/conversations/:id/message` handler in `src/routes/dm-admin-api.js` previously built a single `buildEmbeddingContext(...)` string and called `azure.openaiClient.chat.completions.create(...)` directly with **no tools**, so the DM assistant could not look up NPCs, sessions, spells, monsters, magic items, artifacts, or player characters on demand. It now routes through `chatWithTools(...)` — the same proven path used by `/api/chat` — passing the last ~20 conversation turns plus the new message with `isDM: true` and the admin's `username` / `userId`. The `lookup_*` / `search_*` tools and the DM auto-RAG context injection are now available in the DM chat. Message persistence (both the user turn and the assistant reply) and the JSON response contract (`ok` / `reply` / `usage` / `ragChunks`) the front-end reads are preserved; `usage` and `ragChunks` are now sourced from the `chatWithTools` debug info (auto-RAG passage count).
+
+### Changed
+- **Campaign source-type retrieval boost in `searchEmbeddings()`** (`src/lib/rag.js`). Broad queries such as "tell me about the campaign factions and lore" previously surfaced generic `dnd_book` / `ddb_*` reference chunks over first-party campaign content. The score expression now adds a small additive `+0.06` boost when `source_type IN ('npc','session','lore','lore_json','character','artifact','handout','notebook')`, mirroring the existing `+0.05` full-text boost. The no-keyword branch now also orders by the boosted score. Verified against the prod DB: the factions/lore query top-8 mix went from `dnd_book:8` (before) to `dnd_book:5, lore:3` (after).
+
+### Added
+- **Explicit `hotd_config.ai_model` config row.** The `ai_model` key was missing from `hotd_config` on the prod DB, so the DM model was resolving via the code fallback (`gpt-5.4-mini`) implicitly. It is now set explicitly to `gpt-5.4-mini` (the standard DM model — the codebase default in `src/lib/azure.js`, all `dm-admin-api.js` fallbacks, and the DMCC settings UI default). The message handler resolves the model from `hotd_config.ai_model` via a parameterized query, falling back to `azure.aiModel` then `gpt-5.4-mini`.
+
 ## [3.15.0] - 2026-07-02
 
 ### Removed
