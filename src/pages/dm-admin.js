@@ -437,7 +437,13 @@ async function renderDmAdminPage(session) {
     /* ── Main ── */
     .dmc-main { flex:1; overflow-y:auto; padding:0; min-width:0; }
     .dmc-panel { padding:20px 24px; }
-    .dmc-panel-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+    /* Pin the panel action bar to the top of the scrolling canvas so its
+       buttons (+ Add NPC, + New Chat, filters, etc.) stay reachable no matter
+       how far the panel content is scrolled. Negative margins pull it over the
+       panel padding so it spans the full canvas width. Panels that opt out of
+       padding (#dmc-notes, #dmc-sessions) have no .dmc-panel-bar, so they are
+       unaffected. */
+    .dmc-panel-bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; margin:-20px -24px 16px; padding:14px 24px; background:#111; border-bottom:1px solid #222; flex-wrap:wrap; gap:8px; }
     .dmc-panel-bar h2 { color:#c83232; margin:0; font-size:1.15rem; }
     .dmc-bar-actions { display:flex; gap:6px; }
 
@@ -610,7 +616,7 @@ async function renderDmAdminPage(session) {
     .nb-folder-children { }
     .nb-tree-item.nb-hidden { display:none; }
     .nb-folder-children.nb-hidden { display:none; }
-    .nb-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-main { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .nb-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; text-align:center; padding:32px; }
     .nb-welcome h3 { margin:0 0 8px; font-size:1.1rem; }
     .nb-welcome code { background:#1a1a1a; padding:2px 6px; border-radius:4px; font-size:0.72rem; color:#aaa; }
@@ -625,9 +631,10 @@ async function renderDmAdminPage(session) {
     .nb-title-wrap { padding:8px 14px 4px; border-bottom:1px solid #1a1a1a; }
     .nb-note-title { width:100%; background:transparent; border:none; color:#e8b923; font-size:1.2rem; font-weight:700; outline:none; padding:0; font-family:inherit; }
     .nb-note-title::placeholder { color:#333; }
-    #nb-editor-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-    #nb-editor-wrap .EasyMDEContainer { flex:1; display:flex; flex-direction:column; }
-    #nb-editor-wrap .EasyMDEContainer .CodeMirror { flex:1; background:#111; color:#ccc; border:none; font-size:0.85rem; }
+    #nb-editor-wrap { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+    #nb-editor-wrap .EasyMDEContainer { flex:1; min-height:0; display:flex; flex-direction:column; }
+    #nb-editor-wrap .EasyMDEContainer .CodeMirror { flex:1; min-height:0; background:#111; color:#ccc; border:none; font-size:0.85rem; }
+    #nb-editor-wrap .EasyMDEContainer .CodeMirror-scroll { min-height:0; }
     #nb-editor-wrap .editor-toolbar { background:#0d0d0d; border-bottom:1px solid #222; }
     #nb-editor-wrap .editor-toolbar button { color:#999 !important; }
     #nb-editor-wrap .editor-toolbar button:hover { background:#1a1a1a !important; }
@@ -653,10 +660,11 @@ async function renderDmAdminPage(session) {
     .nb-ctx-danger:hover { background:#2a1515; color:#f66; }
     .nb-ctx-sep { border-top:1px solid #2a2a2a; margin:3px 0; }
     /* ── Editor body (editor + right panel) ── */
-    .nb-editor-body { flex:1; display:flex; overflow:hidden; }
-    .nb-editor-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-    .nb-editor-area .EasyMDEContainer { flex:1; display:flex; flex-direction:column; }
-    .nb-editor-area .EasyMDEContainer .CodeMirror { flex:1; }
+    .nb-editor-body { flex:1; min-height:0; display:flex; overflow:hidden; }
+    .nb-editor-area { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-editor-area .EasyMDEContainer { flex:1; min-height:0; display:flex; flex-direction:column; }
+    .nb-editor-area .EasyMDEContainer .CodeMirror { flex:1; min-height:0; }
+    .nb-editor-area .EasyMDEContainer .CodeMirror-scroll { min-height:0; }
     /* ── Right info panel ── */
     .nb-right-panel { width:240px; min-width:180px; border-left:1px solid #222; background:#0a0a0a; overflow-y:auto; font-size:0.75rem; }
     .nb-rp-section { border-bottom:1px solid #1a1a1a; }

@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.16.1] - 2026-07-03
+
+### Fixed
+- **Campaign Notebook (`/dm-admin#notes`) editor did not scroll — no scroll wheel, no scrollbar, and the notebook chrome scrolled away.** The EasyMDE editor's height chain in `src/pages/dm-admin.js` (`.nb-main` → `#nb-editor-wrap` → `.nb-editor-body` → `.nb-editor-area` → `.EasyMDEContainer` → `.CodeMirror`) was a flexbox column/row cascade **missing `min-height:0` at every level**. In flexbox, a flex item's default `min-height` is `auto`, so it refuses to shrink below its content's intrinsic size; CodeMirror therefore grew to fit the *entire* note instead of scrolling internally. Because every ancestor was `overflow:hidden`, the overflow had nowhere to scroll, so the whole `.dmc` canvas (and the page) overflowed instead — which is why the site footer appeared, the sidebar "Campaign Notes" header + search box scrolled out of view, and the editor toolbar (Save / Delete) scrolled away with no way to reach the bottom of a long note. Added `min-height:0` (plus `min-width:0` on `.nb-editor-area`) to every flex level and `min-height:0` to `.CodeMirror-scroll`, mirroring the proven Sessions Workspace pattern from 3.13.0. CodeMirror is now bounded to the available height and scrolls internally with a working scroll wheel and scrollbar; the sidebar header, search, breadcrumb, and Save/Delete buttons stay pinned.
+- **DMCC panel action buttons vanished when scrolling long panels.** The `.dmc-panel-bar` (which holds each panel's primary actions — `+ Add NPC`, `+ New Chat`, Story Forge tabs, NPC filter, etc.) scrolled up and out of view with the panel content on tall panels (NPCs, Users, Story Forge, Image Studio, …). It is now `position:sticky; top:0` with negative margins that pull it over the panel padding so it spans the full canvas width and stays pinned to the top of the scroll area. Panels that opt out of padding (`#dmc-notes`, `#dmc-sessions`) have no `.dmc-panel-bar`, so they are unaffected.
+
 ## [3.16.0] - 2026-07-02
 
 ### Fixed
