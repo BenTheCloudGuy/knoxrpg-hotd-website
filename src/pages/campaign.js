@@ -9,12 +9,31 @@ const { esc, safeJson } = require("../lib/utils");
 const { HARPTOS_MONTHS, ordinal, STATIC_ROOT } = require("../config");
 const { pageShell } = require("../components/shell");
 const { mapOverlayBlock, artifactOverlayBlock } = require("../components/overlays");
-const { renderMarkdownFile, renderRichTextBlock, markdownToHtml } = require("../lib/markdown");
+const { renderRichTextBlock, markdownToHtml } = require("../lib/markdown");
 
 // ── House Rules Page ──────────────────────────────────────────
-function renderHouseRulesPage(session) {
-  const rulesPath = path.join(STATIC_ROOT, "data", "houserules.md");
-  const htmlContent = renderMarkdownFile(rulesPath);
+async function getNotebookContent(notebookPath) {
+  try {
+    const { rows } = await pgPool.query(
+      "SELECT content FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'",
+      [notebookPath]
+    );
+    return rows.length ? rows[0].content : null;
+  } catch (_) { return null; }
+}
+async function listNotebookFiles(parentPath) {
+  try {
+    const { rows } = await pgPool.query(
+      "SELECT name, content FROM hotd_notebook_pages WHERE parent_path = $1 AND type = 'file' ORDER BY name",
+      [parentPath]
+    );
+    return rows;
+  } catch (_) { return []; }
+}
+
+async function renderHouseRulesPage(session) {
+  const content = await getNotebookContent("Campaign Data/houserules.md");
+  const htmlContent = content ? markdownToHtml(content) : '<p style="color:#888;">Content not yet available.</p>';
   const body = `
   <div class="content">
     <div class="history-content">${htmlContent}</div>
@@ -23,9 +42,9 @@ function renderHouseRulesPage(session) {
 }
 
 // ── Overcasting Page ──────────────────────────────────────────
-function renderOvercastingPage(session) {
-  const mdPath = path.join(STATIC_ROOT, "data", "over-casting.md");
-  const htmlContent = renderMarkdownFile(mdPath);
+async function renderOvercastingPage(session) {
+  const content = await getNotebookContent("Campaign Data/over-casting.md");
+  const htmlContent = content ? markdownToHtml(content) : '<p style="color:#888;">Content not yet available.</p>';
   const body = `
   <div class="content">
     <a href="/house-rules" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to House Rules</a>
@@ -35,9 +54,9 @@ function renderOvercastingPage(session) {
 }
 
 // ── Circle Magic Page ─────────────────────────────────────────
-function renderCircleMagicPage(session) {
-  const mdPath = path.join(STATIC_ROOT, "data", "casting_circle.md");
-  const htmlContent = renderMarkdownFile(mdPath);
+async function renderCircleMagicPage(session) {
+  const content = await getNotebookContent("Campaign Data/casting_circle.md");
+  const htmlContent = content ? markdownToHtml(content) : '<p style="color:#888;">Content not yet available.</p>';
   const body = `
   <div class="content">
     <a href="/house-rules" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to House Rules</a>
@@ -753,8 +772,8 @@ async function renderCharactersPage(session) {
 
 // ── History Page (rendered from markdown) ─────────────────────
 async function renderHistoryPage(session) {
-  const historyPath = path.join(STATIC_ROOT, "data", "history.md");
-  const htmlContent = renderMarkdownFile(historyPath);
+  const content = await getNotebookContent("Campaign Data/history.md");
+  const htmlContent = content ? markdownToHtml(content) : '<p style="color:#888;">Content not yet available.</p>';
   const body = `
   <div class="content">
     <h2 class="section-title">&#128220; Campaign History &amp; Key Events</h2>
@@ -958,15 +977,13 @@ function parseRealmMeta(content) {
   return meta;
 }
 
-function renderRealmsPage(session) {
-  const realmsDir = path.join(STATIC_ROOT, 'data', 'realms');
+async function renderRealmsPage(session) {
   let realms = [];
   try {
-    const files = fs.readdirSync(realmsDir).filter(f => f.endsWith('.md')).sort();
+    const files = await listNotebookFiles('Campaign Data/Realms');
     realms = files.map(f => {
-      const content = fs.readFileSync(path.join(realmsDir, f), 'utf-8');
-      const meta = parseRealmMeta(content);
-      meta.slug = f.replace(/\.md$/, '');
+      const meta = parseRealmMeta(f.content);
+      meta.slug = f.name.replace(/\.md$/, '');
       return meta;
     });
   } catch (_) {}
@@ -997,18 +1014,16 @@ function renderRealmsPage(session) {
   return pageShell('Realms of Faerun — Halls of the Damned', '/realms', body, session);
 }
 
-function renderRealmDetailPage(slug, session) {
+async function renderRealmDetailPage(slug, session) {
   const safeName = slug.replace(/[^a-z0-9_-]/gi, '');
-  const filePath = path.join(STATIC_ROOT, 'data', 'realms', `${safeName}.md`);
-  if (!fs.existsSync(filePath)) return null;
-  let md = fs.readFileSync(filePath, 'utf-8');
+  let md = await getNotebookContent(`Campaign Data/Realms/${safeName}.md`);
+  if (md == null) return null;
   const isAdmin = session && session.role === 'admin';
   if (!isAdmin) {
     md = md.replace(/\n## DM Notes[\s\S]*$/, '');
   }
   const meta = parseRealmMeta(md);
   let htmlContent = markdownToHtml(md);
-  htmlContent = htmlContent.replace(/src="\.\.\/\.\.\/images\//g, 'src="/hotd-content/images/');
   // Make images clickable for popout overlay
   htmlContent = htmlContent.replace(
     /<img\s+src="([^"]+)"\s+alt="([^"]*)"\s+style="([^"]*)"/g,
@@ -1023,15 +1038,13 @@ function renderRealmDetailPage(slug, session) {
   return pageShell(`${meta.title || 'Realm'} — Halls of the Damned`, '/realms', body, session);
 }
 
-function renderGroupsPage(session) {
-  const groupsDir = path.join(STATIC_ROOT, "data", "groups");
+async function renderGroupsPage(session) {
   let groups = [];
   try {
-    const files = fs.readdirSync(groupsDir).filter(f => f.endsWith(".md")).sort();
+    const files = await listNotebookFiles("Campaign Data/Groups");
     groups = files.map(f => {
-      const content = fs.readFileSync(path.join(groupsDir, f), "utf-8");
-      const meta = parseGroupMeta(content);
-      meta.slug = f.replace(/\.md$/, "");
+      const meta = parseGroupMeta(f.content);
+      meta.slug = f.name.replace(/\.md$/, "");
       return meta;
     });
   } catch (_) {}
@@ -1071,18 +1084,16 @@ function renderGroupsPage(session) {
   return pageShell("Notable Groups — Halls of the Damned", "/groups", body, session);
 }
 
-function renderGroupDetailPage(slug, session) {
+async function renderGroupDetailPage(slug, session) {
   const safeName = slug.replace(/[^a-z0-9_-]/gi, "");
-  const filePath = path.join(STATIC_ROOT, "data", "groups", `${safeName}.md`);
-  if (!fs.existsSync(filePath)) return null;
-  let md = fs.readFileSync(filePath, "utf-8");
+  let md = await getNotebookContent(`Campaign Data/Groups/${safeName}.md`);
+  if (md == null) return null;
   const isAdmin = session && session.role === 'admin';
   if (!isAdmin) {
     md = md.replace(/\n## DM Notes[\s\S]*$/, '');
   }
   const meta = parseGroupMeta(md);
   let htmlContent = markdownToHtml(md);
-  htmlContent = htmlContent.replace(/src="\.\.\/images\//g, 'src="/hotd-content/images/');
   const body = `
   <div class="content">
     <a href="/groups" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Notable Groups</a>

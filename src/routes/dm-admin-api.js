@@ -1417,20 +1417,22 @@ ${ragContext}${entityContext}`;
     return true;
   }
 
-  // ── Notebook: write file (+ RAG embed) ─────────────────────
+  // ── Notebook: write file (+ RAG embed when published) ──────
   if (decoded === "/api/dm-admin/notebook/write" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
       const b = JSON.parse(await readBody(req));
       if (!b.path || b.content === undefined) { sendJSON(res, { error: "path and content required" }, 400); return true; }
       const { rows } = await pgPool.query(
-        "UPDATE hotd_notebook_pages SET content = $1, updated_at = NOW() WHERE path = $2 AND type = 'file' RETURNING name",
+        "UPDATE hotd_notebook_pages SET content = $1, updated_at = NOW() WHERE path = $2 AND type = 'file' RETURNING name, status",
         [b.content, b.path]
       );
       if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
       sendJSON(res, { ok: true });
-      // Async RAG embedding (don't block the response)
-      embedNotebookPage(b.path, rows[0].name, b.content).catch(() => {});
+      // Only published pages are embedded into RAG; drafts stay out until published.
+      if (rows[0].status === "published") {
+        embedNotebookPage(b.path, rows[0].name, b.content).catch(() => {});
+      }
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -1466,10 +1468,8 @@ ${ragContext}${entityContext}`;
         [b.path, parentPath, name, type, content]
       );
       sendJSON(res, { ok: true });
-      // Embed new file content
-      if (type === "file" && content.trim()) {
-        embedNotebookPage(b.path, name, content).catch(() => {});
-      }
+      // New pages are created as drafts (status default) and are NOT embedded.
+      // They enter RAG only when published (see publish endpoint).
     } catch (e) {
       if (e.code === "23505") { sendJSON(res, { error: "already exists" }, 409); }
       else { sendJSON(res, { error: e.message }, 500); }

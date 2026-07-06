@@ -124,7 +124,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
   if (decoded.startsWith("/realms/") && decoded !== "/realms") {
     const slug = decoded.split("/")[2];
     if (slug) {
-      const detailHtml = renderRealmDetailPage(slug, session);
+      const detailHtml = await renderRealmDetailPage(slug, session);
       if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
     }
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
@@ -135,7 +135,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
   if (decoded.startsWith("/groups/") && decoded !== "/groups") {
     const slug = decoded.split("/")[2];
     if (slug) {
-      const detailHtml = renderGroupDetailPage(slug, session);
+      const detailHtml = await renderGroupDetailPage(slug, session);
       if (detailHtml) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(detailHtml); return true; }
     }
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); res.end(render404Page());
@@ -184,11 +184,11 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     case "/":
       html = await renderHomePage(session); break;
     case "/house-rules":
-      html = renderHouseRulesPage(session); break;
+      html = await renderHouseRulesPage(session); break;
     case "/overcasting":
-      html = renderOvercastingPage(session); break;
+      html = await renderOvercastingPage(session); break;
     case "/circle-magic":
-      html = renderCircleMagicPage(session); break;
+      html = await renderCircleMagicPage(session); break;
     case "/calendar":
       html = await renderCalendarPage(session, url.searchParams.get("month")); break;
     case "/maps":
@@ -202,9 +202,9 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     case "/history":
       html = await renderHistoryPage(session); break;
     case "/groups":
-      html = renderGroupsPage(session); break;
+      html = await renderGroupsPage(session); break;
     case "/realms":
-      html = renderRealmsPage(session); break;
+      html = await renderRealmsPage(session); break;
     case "/artifacts":
       html = await renderArtifactsPage(session); break;
     case "/handouts":

@@ -369,12 +369,17 @@ async function ensureHotdTables() {
         name        TEXT NOT NULL,
         type        TEXT NOT NULL DEFAULT 'file',
         content     TEXT DEFAULT '',
+        status      TEXT NOT NULL DEFAULT 'draft',
         created_at  TIMESTAMPTZ DEFAULT NOW(),
         updated_at  TIMESTAMPTZ DEFAULT NOW()
       );
+      -- Migration for pre-existing installs: add status (draft|published).
+      -- 'published' pages are embedded into RAG; 'draft' pages are not.
+      ALTER TABLE hotd_notebook_pages ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft';
       CREATE INDEX IF NOT EXISTS idx_notebook_path ON hotd_notebook_pages (path);
       CREATE INDEX IF NOT EXISTS idx_notebook_parent ON hotd_notebook_pages (parent_path);
       CREATE INDEX IF NOT EXISTS idx_notebook_type ON hotd_notebook_pages (type);
+      CREATE INDEX IF NOT EXISTS idx_notebook_status ON hotd_notebook_pages (status);
     `).catch(() => {});
 
     // Seed DALL-E style prefix

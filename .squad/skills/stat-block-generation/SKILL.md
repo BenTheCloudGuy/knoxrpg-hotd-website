@@ -17,9 +17,9 @@ Create D&D 5e (2024) stat blocks for campaign NPCs, monsters, and allies as form
 
 3. If the NPC has a `portrait_url`, add a portrait image at the top of the stat block:
    ```markdown
-   ![NPC Name](../images/npc-name.png)
+   ![NPC Name](/hotd-content/images/npc-name.png)
    ```
-   The image path is relative from `src/hotd-campaign/data/statBlocks/` to `src/hotd-campaign/images/`. The `portrait_url` field in npcs.json stores the filename (e.g., `/images/vasilka.png`), so strip the `/images/` prefix and use `../images/filename.png`.
+   The `portrait_url` field in npcs.json now stores an absolute served URL (e.g., `/hotd-content/images/vasilka.png`) — images live on the uploads PVC/NAS/blob, not the repo. Use the `portrait_url` value directly as the image source; do not build a relative `../images/` path.
 
 4. Build the stat block using 2024 Monster Manual format:
    - Size, type, alignment line

@@ -48,6 +48,10 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 - Own `scripts/sync-uploads-backup.sh` (cortana user cron, 03:30): additive `rsync` PVC → NAS + `az storage blob upload-batch` PVC → blob. Blob key is in Key Vault (`gaming-storage-key`); the cortana runner reads it from `~/.config/hotd-backup/blob.env`.
 - The server resolves `/images/*` and `/hotd-content/*` via the overlay in `src/server.js` (uploads PVC → NAS → repo). DB image columns (`hotd_npcs.portrait_url`, `hotd_maps.image_url`, etc.) use `/hotd-content/images/*`.
 
+### Campaign lore in the notebook
+- Campaign lore markdown lives in `hotd_notebook_pages` under `Campaign Data/` (migrated from `src/hotd-campaign/data/*.md`). Pages carry `status` (`draft`|`published`); only `published` pages are embedded into RAG (drafts are not).
+- Public `/realms`, `/groups`, `/house-rules`, `/overcasting`, `/circle-magic`, `/history` pages render from the notebook via `getNotebookContent` / `listNotebookFiles` in `src/pages/campaign.js` (DM Notes stripped for non-admins). Editing lore = editing the notebook page, not a repo file.
+
 ## Tools
 
 - `grep`, `edit`, `view`, `terminal`, `route`, `memory`, `decision`

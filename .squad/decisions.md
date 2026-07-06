@@ -17,7 +17,7 @@ Don't guess, make assumptions, or make things up. If you want to make a suggeste
 ### Architecture
 
 #### Campaign data location
-Campaign data lives in `src/hotd-campaign/data/` (JSON + Markdown). NPCs are in `npcs.json`, session summaries in `session_summary.json`, campaign history in `history.md`.
+Campaign **lore markdown** now lives in the DB-backed Campaign Notebook (`hotd_notebook_pages`) under the `Campaign Data/` root (top-level pages + `Groups/` + `Realms/`). It was migrated out of `src/hotd-campaign/data/*.md`. The public `/realms`, `/groups`, `/house-rules`, `/overcasting`, `/circle-magic`, and `/history` pages render from the notebook (with `## DM Notes` stripped for non-admins). Notebook pages carry a `status` (`draft`|`published`); only `published` pages are embedded into RAG. The legacy repo files under `src/hotd-campaign/data/` still exist but are deprecated and scheduled for removal. NPCs are still seeded from `npcs.json` (synced to `hotd_npcs` via `sync-npcs.js` / `sync-npcs.yml`); `portrait_url` values now use `/hotd-content/images/*`.
 
 #### Environment secrets
 Environment secrets come from Azure Key Vault in production, environment variables in development. Never hardcode secrets.

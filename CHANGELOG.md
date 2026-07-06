@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.18.0] - 2026-07-05
+
+### Added
+- **Campaign lore migrated into the Campaign Notebook (Step 2).** All 57 markdown files under `src/hotd-campaign/data/` (7 top-level + 5 `groups/` + 45 `realms/`) were copied into `hotd_notebook_pages` under a new `Campaign Data/` root (`Campaign Data/`, `Campaign Data/Groups/`, `Campaign Data/Realms/`), with image links rewritten to `/hotd-content/images/*`. Content parity verified 57/57. Migration is via the new idempotent `scripts/migrate-data-to-notebook.js`.
+- **Notebook `status` column (`draft`|`published`).** `hotd_notebook_pages` gains a `status` column (default `draft`). Only `published` pages are embedded into RAG; drafts are not. Existing notebook pages were backfilled to `published` (they were already embedded). The publish/unpublish UI comes in a later step; this release adds the schema + gating.
+
+### Changed
+- **Public lore pages now render from the notebook DB, not repo files.** `/realms`, `/realms/:slug`, `/groups`, `/groups/:slug`, `/house-rules`, `/overcasting`, `/circle-magic`, and `/history` in `src/pages/campaign.js` read from `hotd_notebook_pages` (via new `getNotebookContent` / `listNotebookFiles` helpers) instead of `fs.readFileSync` on `src/hotd-campaign/data/`. `## DM Notes` is still stripped for non-admins on realm/group detail pages. The corresponding renderers (and their `src/routes/pages.js` call sites) are now async. Public visibility is independent of `status` (draft pages still render publicly; `status` gates RAG only).
+- **Notebook write/create endpoints gate RAG embedding on `status`.** `POST /api/dm-admin/notebook/write` only re-embeds when the page is `published`; `POST /api/dm-admin/notebook/create` no longer embeds on creation (new pages are drafts).
+- **`npcs.json` `portrait_url` values migrated `/images/*` → `/hotd-content/images/*`** (81 entries; the Step 1 deferral), keeping the NPC seed consistent with the migrated `hotd_npcs.portrait_url`. `sync-npcs.js` dry-run validates 81/0 errors. The stat-block-generation skill's portrait-path instruction was updated to use the absolute `/hotd-content/images/` URL directly.
+
+### Notes
+- The repo files under `src/hotd-campaign/data/` still exist and are now **deprecated** — they are removed in Step 3, at which point the file-based lore RAG (`source_type` `lore` / `lore_json`) is cleaned up and the notebook pages are published into RAG (Step 4).
+- Squad docs updated: `.squad/decisions.md` (campaign data location) and the Artificer charter (notebook backs public lore + `status` gating).
+- **Step 3 flag:** `npcs.json` must be moved out of `src/hotd-campaign/data/` before that directory is deleted (it stays as the NPC seed). The `/art` gallery page still scans the repo `images/` dir and needs handling when repo images are removed.
+
 ## [3.17.0] - 2026-07-05
 
 ### Changed
