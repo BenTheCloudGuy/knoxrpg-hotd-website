@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: foundry-data
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hotd-foundry.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.data.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.data.size }}

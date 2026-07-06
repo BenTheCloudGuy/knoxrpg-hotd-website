@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.25.0] - 2026-07-06
+
+### Added
+- **Repo-managed FoundryVTT deployment under `foundryvtt/infra/`** — the `hotd-foundry.knoxrpg.com` instance is now built and deployed from this repo instead of the external Ansible stack. Includes a container image (`docker/Dockerfile` + `entrypoint.sh`: `node:22-slim` + tini, FoundryVTT fetched at build time, launched directly under tini — no PM2/companion), a Helm chart (`helm/foundryvtt`: Deployment/Service/Ingress/PVC/Secret), and `scripts/fetch-foundry.sh` (logs in to foundryvtt.com with Key Vault creds and extracts the node build into a gitignored `foundry-release/`). No FoundryVTT binaries or credentials are committed.
+- **`deploy-foundry.yml` GitHub workflow** — on pushes touching `foundryvtt/**` (or manual dispatch), fetches the release, builds `localhost:32000/hotd-foundry:<build>` via buildah, and runs `helm upgrade --install` into `foundryvtt-hotd`. License + admin keys are read from Azure Key Vault at deploy time (into local shell vars, never step outputs) and injected as a K8s Secret.
+- **Foundry `/data` now lives on a `microk8s-hostpath` PVC** (the same storage class the HotD website uses), backed by the healthy root NVMe — replacing the old hostPath on the failed data drive.
+- **`Summoner` Squad agent** (`.squad/agents/summoner/charter.md`) — FoundryVTT Steward owning deploy/infra, server ops (worlds/systems/modules), and the Foundry API/MCP, grounded in official Foundry documentation. Wired into `team.md`, `routing.md`, the Squad coordinator, and `copilot-instructions.md`.
+- **`foundryvtt/mcp/` — FoundryVTT API MCP server** exposing `foundry_status`, `foundry_health`, and a host-locked `foundry_api_get` (SSRF-safe). Registered in `.vscode/mcp.json`. Deeper game-data tools await a Foundry-side REST relay module.
+
+### Changed
+- **The `FoundryVTT` nav link moved from `Game Info` → `Home`** (`src/config.js`).
+
+### Removed
+- **Tore down the old Ansible-managed `foundryvtt-hotd` instance** — deleted the `foundryvtt-hotd` namespace (Deployment/Service/Ingress/Secret) and removed the broken `foundryvtt-backup-hotd` cron (it ran `rsync --delete` off the failed NVMe). Old manifests were backed up off-repo before deletion. The `dev` and `knoxrpg` Foundry instances are untouched.
+
+### Notes
+- The old campaign world (`halls-of-the-damned`) was on the failed drive with no usable NAS backup and is not recoverable; the new instance starts clean (operator-accepted).
+- **Operator action required before first deploy:** add `foundry-username`, `foundry-password`, `foundry-build` (e.g. `13.351`), `foundry-license-key`, and `foundry-admin-key` to `cloudgeek-cus-keyvault`, then push (or run the workflow) to build + deploy. See `foundryvtt/infra/README.md`.
+
 ## [3.24.0] - 2026-07-06
 
 ### Changed

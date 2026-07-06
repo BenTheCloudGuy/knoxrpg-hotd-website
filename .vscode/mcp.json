@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "hotd-foundry": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["foundryvtt/mcp/server.mjs"],
+      "env": {
+        "FOUNDRY_URL": "https://hotd-foundry.knoxrpg.com"
+      }
+    }
+  }
+}

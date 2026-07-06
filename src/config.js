@@ -42,6 +42,7 @@ const NAV_ITEMS = [
   {
     label: "Home", dropdown: [
       { label: "Dashboard", href: "/" },
+      { label: "FoundryVTT", href: "https://hotd-foundry.knoxrpg.com", external: true },
       { label: "Account", href: "/account", sessionAware: true },
     ]
   },
@@ -58,7 +59,6 @@ const NAV_ITEMS = [
         { label: "Circle Magic", href: "/circle-magic" },
       ]},
       { label: "DM AI", href: "/dungeon-master" },
-      { label: "FoundryVTT", href: "https://hotd-foundry.knoxrpg.com", external: true },
     ]
   },
   {

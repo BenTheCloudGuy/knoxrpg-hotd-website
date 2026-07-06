@@ -1,0 +1,87 @@
+# =============================================================================
+# HotD FoundryVTT — Helm Values
+# =============================================================================
+
+# -- Namespace ----------------------------------------------------------------
+namespace: foundryvtt-hotd
+createNamespace: true
+
+# -- Container Image ----------------------------------------------------------
+# Built + pushed by .github/workflows/deploy-foundry.yml. The tag is the
+# FoundryVTT build number and is overridden at deploy time.
+image:
+  repository: localhost:32000/hotd-foundry
+  tag: "latest"
+  pullPolicy: Always
+
+# -- Rollout trigger ----------------------------------------------------------
+# Rendered as a pod-template annotation so `helm upgrade` always produces a
+# changed Deployment spec (forces a rolling restart even on an unchanged tag).
+# The deploy workflow passes the git SHA.
+rolloutTrigger: ""
+
+podAnnotations: {}
+
+# -- Instance identity --------------------------------------------------------
+instance:
+  name: hotd
+  fqdn: hotd-foundry.knoxrpg.com
+
+# -- Persistent Foundry /data -------------------------------------------------
+# storageClass microk8s-hostpath backs onto the healthy root NVMe
+# (/var/snap/microk8s/common/default-storage) — the SAME class the HotD
+# website PVCs (hotd-uploads, hotd-notebook-images) use. This deliberately
+# replaces the old hostPath on the failed data drive.
+data:
+  size: 20Gi
+  storageClass: microk8s-hostpath
+  mountPath: /data
+
+# -- Secrets (license + admin password) ---------------------------------------
+# Provide at deploy time from Azure Key Vault via --set (the workflow reads
+# foundry-license-key / foundry-admin-key and passes them with --set-string),
+# or pre-create a Secret and set existingSecret. NEVER commit real values.
+# When existingSecret is empty, the chart renders `foundry-secrets` with keys
+# `license-key` and `admin-key`.
+secrets:
+  licenseKey: ""
+  adminKey: ""
+  existingSecret: ""
+
+# -- Service ------------------------------------------------------------------
+service:
+  type: NodePort
+  gamePort: 30000
+  # Keep the old instance's game NodePort so any external references still work.
+  gameNodePort: 30002
+
+# -- Ingress & TLS (cert-manager + Let's Encrypt) -----------------------------
+# WebSocket-friendly timeouts; large body size for scene/asset uploads.
+ingress:
+  enabled: true
+  className: public
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "300m"
+  tls:
+    secretName: tls-hotd-foundry
+
+# -- Resources ----------------------------------------------------------------
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "4"
+    memory: "4Gi"
+
+# -- Security Context ---------------------------------------------------------
+securityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Probes -------------------------------------------------------------------
+probes:
+  initialDelaySeconds: 45

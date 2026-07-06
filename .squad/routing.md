@@ -28,6 +28,10 @@ How to decide who handles what.
 | Campaign data content edits | Mercer   | Campaign Notebook lore pages (`hotd_notebook_pages`), `hotd_npcs` NPC text |
 | FoundryVTT module code     | Wizard    | Hooks, settings, module.json, ES module scripts      |
 | FoundryVTT integration     | Wizard    | Website-to-Foundry sync, module features             |
+| FoundryVTT deploy/infra    | Summoner  | `foundryvtt/infra/**`, Helm chart, deploy-foundry.yml, image build |
+| FoundryVTT server ops      | Summoner  | Worlds, systems, installed modules, license, PVC data, rollouts |
+| FoundryVTT API / MCP       | Summoner  | `foundryvtt/mcp/**`, REST/WebSocket API tooling      |
+| Foundry modules/systems eval | Summoner | Compatibility checks against official Foundry docs + manifests |
 | NPC portraits, AI art      | Bard      | Portrait generation, style consistency, image review |
 | Campaign scene & item art  | Bard      | Scenes, locations, magic items, handouts             |
 | Session notes & summaries  | Bard      | Notebook `Sessions/` pages (`# Session Notes` + `# Session Summary`) |

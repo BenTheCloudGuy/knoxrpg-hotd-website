@@ -1,0 +1,106 @@
+name: Deploy HotD FoundryVTT
+
+# Builds the FoundryVTT image (release fetched from foundryvtt.com using Key
+# Vault creds) and deploys it to MicroK8s via Helm. Secrets (license, admin,
+# Foundry account) are read from Azure Key Vault on the self-hosted cortana
+# runner and never stored in the repo or in step outputs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'foundryvtt/**'
+      - '.github/workflows/deploy-foundry.yml'
+  workflow_dispatch:
+    inputs:
+      foundry_build:
+        description: "FoundryVTT build/version to fetch (blank = foundry-build KV secret / latest stable)"
+        required: false
+        default: ""
+
+env:
+  IMAGE_NAME: localhost:32000/hotd-foundry
+  HELM_RELEASE: hotd-foundry
+  NAMESPACE: foundryvtt-hotd
+  KEYVAULT: cloudgeek-cus-keyvault
+  CHART_DIR: foundryvtt/infra/helm/foundryvtt
+
+jobs:
+  build:
+    name: Fetch + Build + Push
+    runs-on: [self-hosted, linux, cortana]
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve build number
+        id: meta
+        run: |
+          BUILD="${{ github.event.inputs.foundry_build }}"
+          if [ -z "$BUILD" ]; then
+            BUILD="$(az keyvault secret show --vault-name "$KEYVAULT" --name foundry-build --query value -o tsv)"
+          fi
+          if [ -z "$BUILD" ]; then
+            echo "::error::No FoundryVTT build resolved (set the foundry-build Key Vault secret or pass foundry_build)."
+            exit 1
+          fi
+          echo "tag=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "FoundryVTT build: $BUILD"
+
+      - name: Fetch FoundryVTT release
+        env:
+          FOUNDRY_KEYVAULT: ${{ env.KEYVAULT }}
+          FOUNDRY_BUILD: ${{ steps.meta.outputs.tag }}
+        run: bash foundryvtt/infra/scripts/fetch-foundry.sh
+
+      - name: Build container image
+        run: |
+          buildah bud --no-cache \
+            -f foundryvtt/infra/docker/Dockerfile \
+            -t ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            foundryvtt/infra/docker
+
+      - name: Push to local registry
+        run: |
+          buildah push --tls-verify=false \
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} \
+            docker://${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+          buildah push --tls-verify=false \
+            ${{ env.IMAGE_NAME }}:latest \
+            docker://${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    name: Deploy to MicroK8s
+    runs-on: [self-hosted, linux, cortana]
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via Helm
+        run: |
+          # Read secrets into local shell vars only (never step outputs).
+          LICENSE="$(az keyvault secret show --vault-name "$KEYVAULT" --name foundry-license-key --query value -o tsv)"
+          ADMIN="$(az keyvault secret show --vault-name "$KEYVAULT" --name foundry-admin-key --query value -o tsv)"
+          if [ -z "$LICENSE" ] || [ -z "$ADMIN" ]; then
+            echo "::error::foundry-license-key or foundry-admin-key missing from Key Vault ($KEYVAULT)."
+            exit 1
+          fi
+          microk8s helm upgrade --install ${{ env.HELM_RELEASE }} ${{ env.CHART_DIR }} \
+            --namespace ${{ env.NAMESPACE }} --create-namespace \
+            --set image.tag=${{ needs.build.outputs.tag }} \
+            --set rolloutTrigger=${{ github.sha }} \
+            --set-string secrets.licenseKey="$LICENSE" \
+            --set-string secrets.adminKey="$ADMIN"
+
+      - name: Wait for rollout
+        run: |
+          microk8s kubectl rollout status deployment/foundryvtt \
+            -n ${{ env.NAMESPACE }} --timeout=300s
+
+      - name: Show deployment info
+        if: always()
+        run: |
+          echo "FoundryVTT build: ${{ needs.build.outputs.tag }}"
+          microk8s kubectl get pods,svc,ingress -n ${{ env.NAMESPACE }} -l app=foundryvtt

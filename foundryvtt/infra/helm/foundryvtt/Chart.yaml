@@ -1,0 +1,9 @@
+apiVersion: v2
+name: hotd-foundry
+description: FoundryVTT (Halls of the Damned) on self-hosted MicroK8s
+type: application
+# Chart version — bump on template/values changes.
+version: 0.1.0
+# Tracks the targeted FoundryVTT major line. The running image tag is set at
+# deploy time (--set image.tag=<build>) from the foundry-build Key Vault secret.
+appVersion: "13"

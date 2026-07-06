@@ -1,0 +1,16 @@
+{
+  "name": "hotd-foundry-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing the Halls of the Damned FoundryVTT API (hotd-foundry.knoxrpg.com).",
+  "bin": {
+    "hotd-foundry-mcp": "server.mjs"
+  },
+  "scripts": {
+    "mcp": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  }
+}

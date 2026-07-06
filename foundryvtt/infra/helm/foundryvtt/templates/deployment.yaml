@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foundryvtt
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hotd-foundry.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # Recreate: FoundryVTT holds an exclusive lock on the RWO data volume; never
+  # run two pods against the same PVC.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "hotd-foundry.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hotd-foundry.selectorLabels" . | nindent 8 }}
+      annotations:
+        rolloutTrigger: {{ .Values.rolloutTrigger | quote }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      securityContext:
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+        - name: foundryvtt
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: game
+              containerPort: {{ .Values.service.gamePort }}
+          env:
+            - name: INSTANCE_NAME
+              value: {{ .Values.instance.name | quote }}
+            - name: FOUNDRY_FQDN
+              value: {{ .Values.instance.fqdn | quote }}
+            - name: FOUNDRY_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hotd-foundry.secretName" . }}
+                  key: license-key
+            - name: FOUNDRY_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hotd-foundry.secretName" . }}
+                  key: admin-key
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.data.mountPath }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: game
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: game
+            initialDelaySeconds: {{ add .Values.probes.initialDelaySeconds 30 }}
+            periodSeconds: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: foundry-data

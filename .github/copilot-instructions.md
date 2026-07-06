@@ -15,6 +15,7 @@ Do not answer directly, do not edit files, and do not run commands without first
 - Code, infrastructure, DB, RAG, auth, Docker, Helm, CI/CD, code review → **Artificer**
 - Narrative prose, room/trap/monster/scene/treasure descriptions, story continuity, canon checks, in-world lore edits → **Mercer**
 - FoundryVTT module code (`foundry/hotd-module/**`) → **Wizard**
+- FoundryVTT deployment/infra (`foundryvtt/infra/**`), Helm chart, image build, server ops, worlds/modules/systems, API/MCP (`foundryvtt/mcp/**`) → **Summoner**
 - Art generation, session prep, session summaries → **Bard**
 - D&D 5e stat blocks → **Ranger**
 - Memory, decisions, session logs → **Cleric** (silent)

@@ -1,0 +1,4 @@
+# FoundryVTT release is downloaded at build time — never committed.
+foundry-release/
+*.zip
+cookies.txt
