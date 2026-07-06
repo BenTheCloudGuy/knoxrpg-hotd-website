@@ -102,45 +102,6 @@ async function renderDmAdminPage(session) {
 
       <!-- ╔══ CAMPAIGN NOTEBOOK ══╗ -->
       <section class="dmc-panel" id="dmc-notes" style="display:none;">
-        <div id="nb-ai-modal" class="nb-ai-modal" style="display:none;">
-          <div class="nb-ai-box">
-            <div class="nb-ai-hdr"><h3>&#10024; AI Assist &mdash; Generate a Notebook Page</h3><button class="dmc-btn dmc-btn-sm" onclick="nbAiClose()">&#10005;</button></div>
-            <div class="nb-ai-body">
-              <label class="nb-ai-lbl">Prompt
-                <textarea id="nb-ai-prompt" rows="4" class="dmc-textarea" placeholder="Describe the document to generate. It is grounded in your campaign RAG (NPCs, lore, sessions). e.g. 'Write a detailed writeup of the Wachter family politics in Vallaki, including their feud with the Vallakoviches.'"></textarea>
-              </label>
-              <label class="nb-ai-lbl">Related entities (optional, comma-separated NPC/place names)
-                <input id="nb-ai-ents" placeholder="Fiona Wachter, Vallaki, Baron Vallakovich" />
-              </label>
-              <div class="dmc-form-actions">
-                <button class="dmc-btn dmc-btn-primary" id="nb-ai-gen" onclick="nbAiGenerate()">Generate</button>
-                <span id="nb-ai-status" class="dmc-status-text"></span>
-              </div>
-              <div id="nb-ai-preview-wrap" style="display:none;">
-                <label class="nb-ai-lbl">Draft content (editable)
-                  <textarea id="nb-ai-editor" rows="12" class="dmc-textarea" oninput="nbAiPreview()"></textarea>
-                </label>
-                <div class="nb-ai-followup">
-                  <input id="nb-ai-followup" class="nb-ai-followup-in" placeholder="Follow-up for the AI (e.g. 'make it darker', 'add a section on their rituals')" onkeydown="if(event.key==='Enter'){event.preventDefault();nbAiRefine();}" />
-                  <button class="dmc-btn dmc-btn-sm" id="nb-ai-refine" onclick="nbAiRefine()">&#129302; Refine with AI</button>
-                </div>
-                <details class="nb-ai-prev-details">
-                  <summary>Preview</summary>
-                  <div class="forge-result-body" id="nb-ai-preview" style="max-height:300px;overflow:auto;"></div>
-                </details>
-                <div class="dmc-form-row" style="margin-top:10px;">
-                  <label class="nb-ai-lbl">Save to folder<select id="nb-ai-folder"></select></label>
-                  <label class="nb-ai-lbl" style="flex:2;">Page name<input id="nb-ai-name" placeholder="wachter-politics" /></label>
-                </div>
-                <div class="dmc-form-actions">
-                  <button class="dmc-btn dmc-btn-primary" onclick="nbAiCreate()">Create Draft Page</button>
-                  <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Start Over</button>
-                  <span class="dmc-hint">Creates a DRAFT page you can edit and publish.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="notebook-layout">
           <div class="nb-sidebar" id="nb-sidebar">
             <div class="nb-sidebar-hdr">
@@ -166,6 +127,47 @@ async function renderDmAdminPage(session) {
                 <div>&#128247; <strong>Paste images</strong> directly into the editor (Ctrl+V)</div>
                 <div>&#128190; <strong>Auto-save</strong> after 5 seconds of inactivity</div>
                 <div>&#128269; <strong>Search</strong> notes by name in the sidebar</div>
+              </div>
+            </div>
+            <div id="nb-ai-pane" class="nb-ai-pane" style="display:none;">
+              <div class="nb-ai-pane-hdr">
+                <h3>&#10024; AI Assist</h3>
+                <span id="nb-ai-temp-note" class="dmc-hint" style="flex:1;"></span>
+                <button class="dmc-btn dmc-btn-sm" onclick="nbAiCancel()" title="Close">&#10005; Close</button>
+              </div>
+              <div class="nb-ai-pane-body">
+                <label class="nb-ai-lbl">Prompt
+                  <textarea id="nb-ai-prompt" rows="3" class="dmc-textarea" placeholder="Describe the document to generate. Grounded in your campaign RAG (NPCs, lore, sessions). e.g. 'Write a writeup of the Wachter family politics in Vallaki.'"></textarea>
+                </label>
+                <label class="nb-ai-lbl">Related entities (optional, comma-separated NPC/place names)
+                  <input id="nb-ai-ents" placeholder="Fiona Wachter, Vallaki, Baron Vallakovich" />
+                </label>
+                <div class="dmc-form-actions">
+                  <button class="dmc-btn dmc-btn-primary" id="nb-ai-gen" onclick="nbAiGenerate()">Generate</button>
+                  <span id="nb-ai-status" class="dmc-status-text"></span>
+                </div>
+                <div id="nb-ai-preview-wrap" style="display:none;">
+                  <label class="nb-ai-lbl">Draft content (editable)
+                    <textarea id="nb-ai-editor" rows="16" class="dmc-textarea" oninput="nbAiPreview()"></textarea>
+                  </label>
+                  <div class="nb-ai-followup">
+                    <input id="nb-ai-followup" class="nb-ai-followup-in" placeholder="Follow-up for the AI (e.g. 'make it darker', 'add a section on their rituals')" onkeydown="if(event.key==='Enter'){event.preventDefault();nbAiRefine();}" />
+                    <button class="dmc-btn dmc-btn-sm" id="nb-ai-refine" onclick="nbAiRefine()">&#129302; Refine with AI</button>
+                  </div>
+                  <details class="nb-ai-prev-details">
+                    <summary>Preview</summary>
+                    <div class="forge-result-body" id="nb-ai-preview" style="max-height:340px;overflow:auto;"></div>
+                  </details>
+                  <div class="dmc-form-row" style="margin-top:10px;">
+                    <label class="nb-ai-lbl">Save to folder<select id="nb-ai-folder"></select></label>
+                    <label class="nb-ai-lbl" style="flex:2;">Page name<input id="nb-ai-name" placeholder="wachter-politics" /></label>
+                  </div>
+                  <div class="dmc-form-actions">
+                    <button class="dmc-btn dmc-btn-primary" onclick="nbAiFinalize()">Save Page</button>
+                    <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Regenerate</button>
+                    <span class="dmc-hint">Set a folder + name to move it out of the temp root, or leave blank to keep the temp draft.</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div id="nb-editor-wrap" style="display:none;">
@@ -542,11 +544,10 @@ async function renderDmAdminPage(session) {
     .notebook-layout { display:flex; height:100%; border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
-    .nb-ai-modal { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1000; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; }
-    .nb-ai-box { background:#141414; border:1px solid #c83232; border-radius:10px; width:100%; max-width:720px; }
-    .nb-ai-hdr { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #222; }
-    .nb-ai-hdr h3 { margin:0; color:#e8b923; font-size:0.95rem; }
-    .nb-ai-body { padding:16px; }
+    .nb-ai-pane { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+    .nb-ai-pane-hdr { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid #222; }
+    .nb-ai-pane-hdr h3 { margin:0; color:#e8b923; font-size:0.95rem; flex-shrink:0; }
+    .nb-ai-pane-body { flex:1; min-height:0; overflow-y:auto; padding:16px; }
     .nb-ai-lbl { display:flex; flex-direction:column; gap:4px; font-size:0.72rem; color:#888; margin-bottom:10px; }
     .nb-ai-followup { display:flex; gap:6px; margin:6px 0 10px; }
     .nb-ai-followup-in { flex:1; background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ddd; padding:6px 8px; font-size:0.8rem; }
@@ -1140,6 +1141,7 @@ async function renderDmAdminPage(session) {
     }
     _nbCurrentPath = path;
     el('nb-welcome').style.display = 'none';
+    el('nb-ai-pane').style.display = 'none';
     el('nb-editor-wrap').style.display = 'flex';
     el('nb-save-status').textContent = 'Loading...';
     renderBreadcrumb(path);
@@ -1411,6 +1413,7 @@ async function renderDmAdminPage(session) {
 
   function showNbWelcome() {
     el('nb-welcome').style.display = 'flex';
+    el('nb-ai-pane').style.display = 'none';
     el('nb-editor-wrap').style.display = 'none';
   }
 
@@ -1499,7 +1502,16 @@ async function renderDmAdminPage(session) {
   }
 
   // ── AI Assist: RAG-grounded page generation + iterative refine ──
-  function nbAiOpen() {
+  var _nbAiTempPath = null;   // temp draft file this AI session is bound to
+  var _nbAiGenerated = false; // whether the AI produced content this session
+
+  function showNbAiPane() {
+    el('nb-welcome').style.display = 'none';
+    el('nb-editor-wrap').style.display = 'none';
+    el('nb-ai-pane').style.display = 'flex';
+  }
+
+  async function nbAiOpen() {
     el('nb-ai-prompt').value = '';
     el('nb-ai-ents').value = '';
     el('nb-ai-name').value = '';
@@ -1508,13 +1520,29 @@ async function renderDmAdminPage(session) {
     el('nb-ai-preview').innerHTML = '';
     el('nb-ai-preview-wrap').style.display = 'none';
     el('nb-ai-status').textContent = '';
+    _nbAiGenerated = false;
+    // Create a temp draft at the notebook root so the work has a real home immediately.
+    var tempName = 'ai-draft-' + Date.now() + '.md';
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempName, type:'file', content:'# Untitled AI Draft\\n\\n' }) });
+    if (!r.ok) { var d = await r.json(); return alert('Could not start AI draft: ' + (d.error || '')); }
+    _nbAiTempPath = tempName;
+    _nbCurrentPath = tempName;
+    _nbStatus = 'draft';
+    await loadNotes();
     var folders = [''];
     (function walk(nodes) { (nodes || []).forEach(function(n) { if (n.type === 'folder') { folders.push(n.path); walk(n.children); } }); })(_nbTree);
     el('nb-ai-folder').innerHTML = folders.map(function(f) { return '<option value="' + esc(f) + '">' + (f ? esc(f) : '(root)') + '</option>'; }).join('');
-    el('nb-ai-modal').style.display = 'flex';
+    el('nb-ai-temp-note').textContent = 'Temp draft: ' + tempName;
+    showNbAiPane();
   }
-  function nbAiClose() { el('nb-ai-modal').style.display = 'none'; }
+
   function nbAiPreview() { el('nb-ai-preview').innerHTML = renderMd(el('nb-ai-editor').value || ''); }
+
+  // Persist the current editor content into the bound temp draft.
+  async function nbAiSaveTemp() {
+    if (!_nbAiTempPath) return;
+    await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbAiTempPath, content:el('nb-ai-editor').value }) }).catch(function() {});
+  }
 
   // Shared call: promptText is the instruction; baseContent (if set) makes it a revision.
   async function nbAiRun(promptText, baseContent, statusMsg) {
@@ -1526,7 +1554,9 @@ async function renderDmAdminPage(session) {
     el('nb-ai-editor').value = d.content || '';
     nbAiPreview();
     el('nb-ai-preview-wrap').style.display = 'block';
+    _nbAiGenerated = true;
     el('nb-ai-status').textContent = (d.ragChunks || 0) + ' RAG chunks \u00b7 ' + (d.entityLookups || 0) + ' NPC lookups' + (d.usage ? ' \u00b7 ' + d.usage.total_tokens + ' tokens' : '');
+    await nbAiSaveTemp();
     return d;
   }
 
@@ -1557,18 +1587,43 @@ async function renderDmAdminPage(session) {
     finally { btn.disabled = false; }
   }
 
-  async function nbAiCreate() {
+  // Save Page: persist the temp draft, optionally renaming it to a chosen folder/name.
+  async function nbAiFinalize() {
     var content = el('nb-ai-editor').value;
     if (!content.trim()) return alert('Nothing to save');
+    await nbAiSaveTemp();
     var folder = el('nb-ai-folder').value;
     var name = el('nb-ai-name').value.trim();
-    if (!name) return alert('Enter a page name');
-    if (!name.endsWith('.md')) name += '.md';
-    var fullPath = folder ? folder + '/' + name : name;
-    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:fullPath, type:'file', content:content }) });
-    var d = await r.json();
-    if (r.ok) { nbAiClose(); await loadNotes(); nbOpenFile(fullPath); }
-    else { alert('Error: ' + (d.error || '')); }
+    var target = _nbAiTempPath;
+    if (name) {
+      if (!name.endsWith('.md')) name += '.md';
+      var newPath = folder ? folder + '/' + name : name;
+      if (newPath !== _nbAiTempPath) {
+        var rr = await fetch('/api/dm-admin/notebook/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ oldPath:_nbAiTempPath, newPath:newPath }) });
+        if (!rr.ok) { var d = await rr.json(); return alert('Rename failed: ' + (d.error || '')); }
+        target = newPath;
+      }
+    }
+    _nbAiTempPath = null;
+    await loadNotes();
+    nbOpenFile(target);
+  }
+
+  // Close: discard an untouched temp draft, otherwise keep it and open it in the editor.
+  async function nbAiCancel() {
+    var tempPath = _nbAiTempPath;
+    _nbAiTempPath = null;
+    if (!tempPath) { showNbWelcome(); return; }
+    if (!_nbAiGenerated) {
+      await fetch('/api/dm-admin/notebook/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempPath }) }).catch(function() {});
+      _nbCurrentPath = null;
+      await loadNotes();
+      showNbWelcome();
+    } else {
+      await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempPath, content:el('nb-ai-editor').value }) }).catch(function() {});
+      await loadNotes();
+      nbOpenFile(tempPath);
+    }
   }
 
   async function nbNewFile() { nbNewFileIn(''); }

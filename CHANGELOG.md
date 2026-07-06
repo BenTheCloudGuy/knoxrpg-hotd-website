@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ### Changed
 - **Removed the "Campaign Notes" label from the notebook sidebar header** (`/dm-admin#notes`) — it was redundant with the panel context. The header now shows just the action buttons (AI / New File / New Folder / Expand / Collapse).
+- **AI Assist is now a full-frame workspace instead of a modal.** Clicking **✨ AI** in the notebook opens the AI Assist inside the entire right frame (a third pane alongside the welcome and editor views) and immediately creates a **temp draft file at the notebook root** (`ai-draft-<timestamp>.md`, DRAFT) so the work has a real home from the first keystroke. Generate / Refine write into the editable draft *and* persist to that temp file as you go. **Save Page** either renames the temp draft into a chosen folder + name (via `POST /api/dm-admin/notebook/rename`) or, if left blank, keeps it as the temp draft, then opens it in the editor. **Close** discards the temp draft if nothing was generated, otherwise keeps it. Replaces the old fixed-overlay modal (`#nb-ai-modal` → in-frame `#nb-ai-pane`).
 
 ## [3.21.0] - 2026-07-05
 
