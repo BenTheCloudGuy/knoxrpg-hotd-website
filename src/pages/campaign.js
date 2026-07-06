@@ -164,7 +164,7 @@ async function renderHomePage(session) {
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:20px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">&#128506; Map of Barovia</h3>
           <div id="mapContainer" style="width:100%;aspect-ratio:5025/3225;overflow:hidden;cursor:grab;border-radius:8px;position:relative;background:#111;">
-            <img id="baroviaMap" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:5025px;height:3225px;" />
+            <img id="baroviaMap" src="/hotd-content/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:5025px;height:3225px;" />
             <div id="homeMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;"></div>
           </div>
           <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Click and drag to pan</div>
@@ -211,18 +211,18 @@ async function renderHomePage(session) {
     if (!container || !img) return;
     var IMG_W = 5025, IMG_H = 3225;
     var ICON_PATHS = {
-      allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
-      barovia: '/images/icons/baroviaShield.png',
-      dusk_elves: '/images/icons/duskElvesShield.png',
-      kezk: '/images/icons/KezkShield.png',
-      party: '/images/icons/partyShield.png',
-      ravenkind: '/images/icons/RavenKindSheild.png',
-      strahd_abbot: '/images/icons/strahdAbbotShield.png',
-      strahd_demon_army: '/images/icons/strahdDemonArmySheild.png',
-      strahd: '/images/icons/strahdShield.png',
-      strahd_werewolves: '/images/icons/strahdWerewolvesShield.png',
-      villaki: '/images/icons/VillakiShield.png',
-      vistani: '/images/icons/vistaniShield.png'
+      allied_werewolves: '/hotd-content/images/icons/AlliedWerewolvesShield.png',
+      barovia: '/hotd-content/images/icons/baroviaShield.png',
+      dusk_elves: '/hotd-content/images/icons/duskElvesShield.png',
+      kezk: '/hotd-content/images/icons/KezkShield.png',
+      party: '/hotd-content/images/icons/partyShield.png',
+      ravenkind: '/hotd-content/images/icons/RavenKindSheild.png',
+      strahd_abbot: '/hotd-content/images/icons/strahdAbbotShield.png',
+      strahd_demon_army: '/hotd-content/images/icons/strahdDemonArmySheild.png',
+      strahd: '/hotd-content/images/icons/strahdShield.png',
+      strahd_werewolves: '/hotd-content/images/icons/strahdWerewolvesShield.png',
+      villaki: '/hotd-content/images/icons/VillakiShield.png',
+      vistani: '/hotd-content/images/icons/vistaniShield.png'
     };
     var cw = container.clientWidth, ch = container.clientHeight;
     var scale = Math.min(cw / IMG_W, ch / IMG_H);
@@ -926,7 +926,7 @@ function parseGroupMeta(mdContent) {
     if (t.startsWith("- **Status:**")) meta.status = t.replace("- **Status:**", "").trim();
     if (t.startsWith("- **Alignment:**")) meta.alignment = t.replace("- **Alignment:**", "").trim();
     const imgMatch = t.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
-    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/images\//, "/images/");
+    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/images\//, "/hotd-content/images/");
   }
   return meta;
 }
@@ -940,7 +940,7 @@ function parseRealmMeta(content) {
     const t = line.trim();
     if (t.startsWith('# ') && !meta.title) meta.title = t.slice(2);
     const imgMatch = t.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
-    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/\.\.\/images\//, '/images/');
+    if (imgMatch) meta.image = imgMatch[2].replace(/^\.\.\/\.\.\/images\//, '/hotd-content/images/');
     const regionMatch = t.match(/\*\*Region:\*\*\s*(.+)/);
     if (regionMatch) meta.region = regionMatch[1];
     const glanceMatch = t.match(/\*\*At a Glance:\*\*\s*(.+)/);
@@ -1008,7 +1008,7 @@ function renderRealmDetailPage(slug, session) {
   }
   const meta = parseRealmMeta(md);
   let htmlContent = markdownToHtml(md);
-  htmlContent = htmlContent.replace(/src="\.\.\/\.\.\/images\//g, 'src="/images/');
+  htmlContent = htmlContent.replace(/src="\.\.\/\.\.\/images\//g, 'src="/hotd-content/images/');
   // Make images clickable for popout overlay
   htmlContent = htmlContent.replace(
     /<img\s+src="([^"]+)"\s+alt="([^"]*)"\s+style="([^"]*)"/g,
@@ -1082,7 +1082,7 @@ function renderGroupDetailPage(slug, session) {
   }
   const meta = parseGroupMeta(md);
   let htmlContent = markdownToHtml(md);
-  htmlContent = htmlContent.replace(/src="\.\.\/images\//g, 'src="/images/');
+  htmlContent = htmlContent.replace(/src="\.\.\/images\//g, 'src="/hotd-content/images/');
   const body = `
   <div class="content">
     <a href="/groups" style="color:#e8b923;text-decoration:none;font-size:0.9rem;">&larr; Back to Notable Groups</a>

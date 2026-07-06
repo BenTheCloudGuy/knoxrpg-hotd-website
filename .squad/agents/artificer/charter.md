@@ -42,6 +42,12 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 - Own public `/api/search` quality: audit result relevance, embedding coverage, and Story Forge context quality
 - Own the function-tool surface (`lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`) consumed by Mercer and Ranger
 
+### Image & asset storage
+- Image bytes are **not** stored in the repo or the DB. The live/served store is the writable uploads PVC (`hotd-uploads`, mounted at `/data/hotd-uploads`, served under `/hotd-content/*`). Migrated repo images live at `/hotd-content/images/*`.
+- Durable backups: the NAS (`hotd-website-content` share on homeserver) and Azure Blob (`cloudgeekcusgaming01/hotd-website-content`). Both are populated by the nightly backup job.
+- Own `scripts/sync-uploads-backup.sh` (cortana user cron, 03:30): additive `rsync` PVC → NAS + `az storage blob upload-batch` PVC → blob. Blob key is in Key Vault (`gaming-storage-key`); the cortana runner reads it from `~/.config/hotd-backup/blob.env`.
+- The server resolves `/images/*` and `/hotd-content/*` via the overlay in `src/server.js` (uploads PVC → NAS → repo). DB image columns (`hotd_npcs.portrait_url`, `hotd_maps.image_url`, etc.) use `/hotd-content/images/*`.
+
 ## Tools
 
 - `grep`, `edit`, `view`, `terminal`, `route`, `memory`, `decision`

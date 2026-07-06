@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.17.0] - 2026-07-05
+
+### Changed
+- **Images migrated off the repo to the uploads PVC / NAS / blob (Step 1 of the Campaign Notes migration).** The 195 image files under `src/hotd-campaign/images/` (373 MB) were copied to the writable uploads PVC and now serve under `/hotd-content/images/*`. The repo files remain in git for now (removed in a later step); nothing depends on them being shipped in the container image anymore.
+- **`src/server.js` now resolves `/images/*` and `/siteLogo.png` through a content overlay** (`serveOverlayFile`): uploads PVC → read-only NAS → repo `STATIC_ROOT`. `/css/*` and `/js/*` still serve from the repo. This keeps every image URL working after the repo image files are deleted.
+- **Prod DB image references migrated `/images/*` → `/hotd-content/images/*`** — 81 `hotd_npcs.portrait_url` + 2 `hotd_maps.image_url` rows (reversible prefix transform; all 83 URLs verified 200). Reversal is stripping the leading `/hotd-content`.
+- **Hardcoded `/images/*` references repointed to `/hotd-content/images/*`** in `src/pages/campaign.js` (Barovia map, faction shield icons, realm/group markdown image transforms), `src/pages/admin.js` (map, marker-icon legend, `ICON_PATHS`, form placeholders), and the `hotd_maps` seed in `src/db/schema.js`.
+
+### Added
+- **`scripts/sync-uploads-backup.sh` + nightly cron** — additive backup of the whole uploads PVC to two durable destinations: `rsync` → NAS (`hotd-website-content` on homeserver) and `az storage blob upload-batch` → Azure Blob (`cloudgeekcusgaming01/hotd-website-content`). Runs on cortana (03:30 user cron). Never deletes remote files, so historical NAS/blob assets that predate the PVC are preserved. Blob key stored in Key Vault as `gaming-storage-key`; the runner reads it from `~/.config/hotd-backup/blob.env` (not committed).
+- **One-time seed:** the 195 images were uploaded to `hotd-website-content/images/` in blob and rsynced to the NAS `images/` directory, so images now exist in three places (PVC live, NAS, blob).
+- **Artificer charter** gained an "Image & asset storage" section documenting the PVC/NAS/blob model, the overlay, and ownership of the backup job.
+
+### Notes
+- **`npcs.json` `portrait_url` values were intentionally left at `/images/*`.** It is a DB seed under `src/hotd-campaign/data/` auto-synced by `.github/workflows/sync-npcs.yml` and coupled to the stat-block skill's prefix-strip logic; its rewrite is folded into the Step 2 `data/` migration. No breakage — the `/images/*` overlay still serves those files.
+- **Cross-step flag:** the public `/realms` and `/groups` pages still read markdown directly from `src/hotd-campaign/data/`. Deleting `data/` in a later step will break them unless the rendering is rewired to the notebook DB.
+- The K8s blob secret from the original plan was **not** created — the backup runs on cortana (not a K8s CronJob) and the app does not dual-write, so it would be dead infra. Key Vault is the single source of truth.
+
 ## [3.16.1] - 2026-07-03
 
 ### Fixed

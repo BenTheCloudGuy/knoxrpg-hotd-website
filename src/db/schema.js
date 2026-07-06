@@ -210,8 +210,8 @@ async function ensureHotdTables() {
     const mapCount = await pgPool.query("SELECT COUNT(*) AS cnt FROM hotd_maps");
     if (parseInt(mapCount.rows[0].cnt, 10) === 0) {
       await pgPool.query(`INSERT INTO hotd_maps (name, description, image_url, sort_order) VALUES
-        ('Barovia',  'The dread domain of Strahd von Zarovich.',         '/images/maps/barovia_map.jpeg',        1),
-        ('Faerûn',   'The modern map of the continent of Faerûn.',        '/images/maps/FaerunColorModernMap.jpg', 2)`);
+        ('Barovia',  'The dread domain of Strahd von Zarovich.',         '/hotd-content/images/maps/barovia_map.jpeg',        1),
+        ('Faerûn',   'The modern map of the continent of Faerûn.',        '/hotd-content/images/maps/FaerunColorModernMap.jpg', 2)`);
       console.log("  HOTD maps: seeded");
     }
     // ── Adventure Journal table ──

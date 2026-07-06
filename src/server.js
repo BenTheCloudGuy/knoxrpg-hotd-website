@@ -24,6 +24,24 @@ const { handleAdminTestRoutes } = require("./routes/admin-test");
 const { handleDmAdminApiRoutes } = require("./routes/dm-admin-api");
 const { handlePageRoutes }      = require("./routes/pages");
 
+// ── Content overlay resolution ────────────────────────────────
+// Serve a relative asset path from an ordered list of roots (first
+// existing wins) with a path-traversal guard. Used for both the
+// /hotd-content/* space and the legacy /images/* space so that images
+// migrated off the repo (now on the uploads PVC / read-only NAS) keep
+// resolving without shipping image bytes in the container image.
+function serveOverlayFile(relative, roots, res) {
+  for (const root of roots) {
+    const fullPath = path.join(root, relative);
+    if (!fullPath.startsWith(root)) { res.writeHead(403); return res.end("Forbidden"); }
+    if (require("fs").existsSync(fullPath)) return serveFile(res, fullPath);
+  }
+  const lastRoot = roots[roots.length - 1];
+  return serveFile(res, path.join(lastRoot, relative));
+}
+const IMAGE_ROOTS = [HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR, STATIC_ROOT].filter(Boolean);
+const HOTD_CONTENT_ROOTS = [HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR].filter(Boolean);
+
 // ══════════════════════════════════════════════════════════════
 // ── HTTP SERVER ───────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
@@ -35,26 +53,20 @@ async function dispatch(req, res) {
 
   // ── Static assets / health — skip DB session lookup ────────
   if (decoded === "/siteLogo.png") {
-    return serveFile(res, path.join(STATIC_ROOT, "images", "hotd_logo.png"));
+    return serveOverlayFile("images/hotd_logo.png", IMAGE_ROOTS, res);
   }
-  if (decoded.startsWith("/images/") || decoded.startsWith("/css/") || decoded.startsWith("/js/")) {
+  if (decoded.startsWith("/css/") || decoded.startsWith("/js/")) {
     return serveStaticFile(decoded.slice(1), res);
+  }
+  // /images/* now resolves from the uploads PVC / NAS first (images were
+  // migrated off the repo), falling back to the repo STATIC_ROOT for any
+  // assets still shipped in the container (e.g. css/js live under STATIC_ROOT).
+  if (decoded.startsWith("/images/")) {
+    return serveOverlayFile(decoded.slice(1), IMAGE_ROOTS, res);
   }
   // ── Local HOTD content (writable uploads PVC overlayed over read-only NAS) ─
   if ((HOTD_UPLOADS_DIR || HOTD_CONTENT_DIR) && decoded.startsWith("/hotd-content/")) {
-    const relative = decodeURIComponent(decoded.slice("/hotd-content/".length));
-    // Try the writable uploads PVC first, then the NAS read-only mount.
-    const roots = [HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR].filter(Boolean);
-    for (const root of roots) {
-      const fullPath = require("path").join(root, relative);
-      if (!fullPath.startsWith(root)) { res.writeHead(403); return res.end("Forbidden"); }
-      if (require("fs").existsSync(fullPath)) {
-        return serveFile(res, fullPath);
-      }
-    }
-    // Fall through to the last root so serveFile can emit a clean 404.
-    const lastRoot = roots[roots.length - 1];
-    return serveFile(res, require("path").join(lastRoot, relative));
+    return serveOverlayFile(decodeURIComponent(decoded.slice("/hotd-content/".length)), HOTD_CONTENT_ROOTS, res);
   }
   if (decoded === "/health" || decoded === "/healthz") {
     return sendJSON(res, { status: "ok", app: "hotd-campaign", ts: new Date().toISOString() });

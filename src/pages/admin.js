@@ -143,7 +143,7 @@ async function renderMapsAdminPage(session) {
     <div class="admin-campaign-form">
       <h3>&#10133; Add Map</h3>
       <form method="POST" action="/admin/maps/add" enctype="multipart/form-data">
-        <div class="form-row"><div><label>Map Name</label><input type="text" name="name" required /></div><div><label>Image URL</label><input type="text" name="image_url" placeholder="/images/maps/..." /></div></div>
+        <div class="form-row"><div><label>Map Name</label><input type="text" name="name" required /></div><div><label>Image URL</label><input type="text" name="image_url" placeholder="/hotd-content/images/maps/..." /></div></div>
         <div class="form-row"><div><label>Upload Image</label><input type="file" name="image_file" accept="image/jpeg,image/png,image/bmp,image/webp" /></div><div></div></div>
         <div class="form-row full"><div><label>Description</label><textarea name="description" rows="2"></textarea></div></div>
         <div class="form-row"><div><label>Sort Order</label><input type="number" name="sort_order" value="0" /></div><div></div></div>
@@ -208,7 +208,7 @@ async function renderNpcsAdminPage(session) {
         <div class="form-row"><div><label>Class</label><input type="text" name="npc_class" /></div><div><label>Location</label><input type="text" name="location" /></div></div>
         <div class="form-row"><div><label>Status</label><input type="text" name="status" value="Alive" /></div>
           <div><label>Alignment</label><select name="alignment_tag"><option value="ally">Ally</option><option value="enemy">Enemy</option><option value="neutral" selected>Neutral</option></select></div></div>
-        <div class="form-row"><div><label>Portrait URL (or upload below)</label><input type="text" name="portrait_url" placeholder="/images/NpcName.jpg" /></div><div><label>Sort Order</label><input type="number" name="sort_order" value="0" /></div></div>
+        <div class="form-row"><div><label>Portrait URL (or upload below)</label><input type="text" name="portrait_url" placeholder="/hotd-content/images/NpcName.jpg" /></div><div><label>Sort Order</label><input type="number" name="sort_order" value="0" /></div></div>
         <div class="form-row"><div><label>Hidden from players?</label><select name="is_hidden"><option value="true" selected>Hidden</option><option value="false">Visible</option></select></div><div></div></div>
         <div class="form-row full"><div><label>Upload Portrait Image</label><input type="file" name="portrait_file" accept="image/jpeg,image/png,image/bmp" style="color:#ccc;" /></div></div>
         <div class="form-row full"><div><label>Description</label><textarea name="description" rows="3"></textarea></div></div>
@@ -760,7 +760,7 @@ async function renderArtifactsAdminPage(session) {
       <h3>&#10133; Add Artifact</h3>
       <form method="POST" action="/admin/artifacts/add" enctype="multipart/form-data">
         <div class="form-row"><div><label>Name</label><input type="text" name="name" required /></div><div><label>Rarity</label><select name="rarity"><option value="Common">Common</option><option value="Uncommon">Uncommon</option><option value="Rare">Rare</option><option value="Very Rare">Very Rare</option><option value="Legendary">Legendary</option><option value="Artifact">Artifact</option></select></div></div>
-        <div class="form-row"><div><label>Image URL</label><input type="text" name="image_url" placeholder="/images/artifact.jpg" /></div><div><label>Owner</label><input type="text" name="owner" /></div></div>
+        <div class="form-row"><div><label>Image URL</label><input type="text" name="image_url" placeholder="/hotd-content/images/artifact.jpg" /></div><div><label>Owner</label><input type="text" name="owner" /></div></div>
         <div class="form-row"><div><label>Upload Image</label><input type="file" name="image_file" accept="image/jpeg,image/png,image/bmp,video/webm,image/webm" /></div><div></div></div>
         <div class="form-row full"><div><label>Description</label><textarea name="description" rows="3"></textarea></div></div>
         <div class="form-row full"><div><label>Lore</label><textarea name="lore" rows="3"></textarea></div></div>
@@ -1027,7 +1027,7 @@ async function renderMapAdminPage(session) {
           <span id="markerSizeVal" style="color:#e8b923;font-size:0.85rem;min-width:30px;">54</span>
         </div>
         <div id="adminMapContainer" style="width:100%;aspect-ratio:${IMG_W}/${IMG_H};overflow:hidden;cursor:crosshair;border-radius:8px;position:relative;background:#111;">
-          <img id="adminMapImg" src="/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:${IMG_W}px;height:${IMG_H}px;" />
+          <img id="adminMapImg" src="/hotd-content/images/main_map.jpeg" alt="Map of Barovia" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;width:${IMG_W}px;height:${IMG_H}px;" />
           <div id="adminMapMarkers" style="position:absolute;top:0;left:0;width:0;height:0;"></div>
         </div>
         <div style="color:#666;font-size:0.75rem;margin-top:8px;text-align:center;">Scroll to zoom &middot; Right-click+drag to pan &middot; Left-click empty area to place &middot; Drag markers to move</div>
@@ -1038,20 +1038,20 @@ async function renderMapAdminPage(session) {
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;">
           <h3 style="color:#e8b923;margin:0 0 12px 0;font-size:1rem;">Marker Icons</h3>
           <div style="color:#ccc;font-size:0.85rem;line-height:2;">
-            <div><img src="/images/icons/AlliedWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Allied Werewolves</strong></div>
+            <div><img src="/hotd-content/images/icons/AlliedWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Allied Werewolves</strong></div>
             <div>⚔️ <strong>Battle</strong> — Crossed Swords</div>
-            <div><img src="/images/icons/baroviaShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Barovia</strong></div>
-            <div><img src="/images/icons/duskElvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Dusk Elves</strong></div>
-            <div><img src="/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
-            <div><img src="/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
+            <div><img src="/hotd-content/images/icons/baroviaShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Barovia</strong></div>
+            <div><img src="/hotd-content/images/icons/duskElvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Dusk Elves</strong></div>
+            <div><img src="/hotd-content/images/icons/KezkShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Kezk</strong></div>
+            <div><img src="/hotd-content/images/icons/partyShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Party</strong></div>
             <div>❗ <strong>Point of Interest</strong></div>
-            <div><img src="/images/icons/RavenKindSheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Ravenkind</strong></div>
-            <div><img src="/images/icons/strahdAbbotShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Abbot</strong></div>
-            <div><img src="/images/icons/strahdDemonArmySheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Demon Army</strong></div>
-            <div><img src="/images/icons/strahdShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd</strong></div>
-            <div><img src="/images/icons/strahdWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Werewolves</strong></div>
-            <div><img src="/images/icons/VillakiShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Villaki</strong></div>
-            <div><img src="/images/icons/vistaniShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Vistani</strong></div>
+            <div><img src="/hotd-content/images/icons/RavenKindSheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Ravenkind</strong></div>
+            <div><img src="/hotd-content/images/icons/strahdAbbotShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Abbot</strong></div>
+            <div><img src="/hotd-content/images/icons/strahdDemonArmySheild.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Demon Army</strong></div>
+            <div><img src="/hotd-content/images/icons/strahdShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd</strong></div>
+            <div><img src="/hotd-content/images/icons/strahdWerewolvesShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Strahd Werewolves</strong></div>
+            <div><img src="/hotd-content/images/icons/VillakiShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Villaki</strong></div>
+            <div><img src="/hotd-content/images/icons/vistaniShield.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;" /> <strong>Vistani</strong></div>
           </div>
         </div>
         <div id="selectedMarkerPanel" style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;display:none;">
@@ -1087,18 +1087,18 @@ async function renderMapAdminPage(session) {
     var isPanning = false, startX = 0, startY = 0;
 
     var ICON_PATHS = {
-      allied_werewolves: '/images/icons/AlliedWerewolvesShield.png',
-      barovia: '/images/icons/baroviaShield.png',
-      dusk_elves: '/images/icons/duskElvesShield.png',
-      kezk: '/images/icons/KezkShield.png',
-      party: '/images/icons/partyShield.png',
-      ravenkind: '/images/icons/RavenKindSheild.png',
-      strahd_abbot: '/images/icons/strahdAbbotShield.png',
-      strahd_demon_army: '/images/icons/strahdDemonArmySheild.png',
-      strahd: '/images/icons/strahdShield.png',
-      strahd_werewolves: '/images/icons/strahdWerewolvesShield.png',
-      villaki: '/images/icons/VillakiShield.png',
-      vistani: '/images/icons/vistaniShield.png'
+      allied_werewolves: '/hotd-content/images/icons/AlliedWerewolvesShield.png',
+      barovia: '/hotd-content/images/icons/baroviaShield.png',
+      dusk_elves: '/hotd-content/images/icons/duskElvesShield.png',
+      kezk: '/hotd-content/images/icons/KezkShield.png',
+      party: '/hotd-content/images/icons/partyShield.png',
+      ravenkind: '/hotd-content/images/icons/RavenKindSheild.png',
+      strahd_abbot: '/hotd-content/images/icons/strahdAbbotShield.png',
+      strahd_demon_army: '/hotd-content/images/icons/strahdDemonArmySheild.png',
+      strahd: '/hotd-content/images/icons/strahdShield.png',
+      strahd_werewolves: '/hotd-content/images/icons/strahdWerewolvesShield.png',
+      villaki: '/hotd-content/images/icons/VillakiShield.png',
+      vistani: '/hotd-content/images/icons/vistaniShield.png'
     };
     var markers = ${markerJson};
     var dragging = null, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0, didDrag = false;
