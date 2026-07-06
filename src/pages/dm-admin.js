@@ -144,7 +144,6 @@ async function renderDmAdminPage(session) {
         <div class="notebook-layout">
           <div class="nb-sidebar" id="nb-sidebar">
             <div class="nb-sidebar-hdr">
-              <span style="font-weight:700;color:#c83232;font-size:0.82rem;">Campaign Notes</span>
               <div style="display:flex;gap:4px;">
                 <button class="dmc-btn dmc-btn-sm dmc-btn-primary" onclick="nbAiOpen()" title="Generate a page with AI (RAG-grounded)">&#10024; AI</button>
                 <button class="dmc-btn dmc-btn-sm" onclick="nbNewFile()" title="New File">&#128196; +</button>

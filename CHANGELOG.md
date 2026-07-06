@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.21.1] - 2026-07-06
+
+### Changed
+- **Removed the "Campaign Notes" label from the notebook sidebar header** (`/dm-admin#notes`) — it was redundant with the panel context. The header now shows just the action buttons (AI / New File / New Folder / Expand / Collapse).
+
 ## [3.21.0] - 2026-07-05
 
 ### Added
