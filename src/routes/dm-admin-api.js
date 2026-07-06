@@ -969,6 +969,9 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       const body = JSON.parse(await readBody(req));
       const { prompt } = body;
       if (!prompt || !prompt.trim()) { sendJSON(res, { error: "Prompt is required" }, 400); return true; }
+      // When baseContent is supplied, this is a follow-up revision of an
+      // existing draft rather than a fresh generation.
+      const baseContent = typeof body.baseContent === "string" ? body.baseContent : "";
       const entities = Array.isArray(body.entities)
         ? body.entities
         : (typeof body.entities === "string" ? body.entities.split(",").map(s => s.trim()).filter(Boolean) : []);
@@ -1001,11 +1004,22 @@ ${ragContext}${entityContext}`;
       const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
 
       const t0 = Date.now();
+      const userMessage = baseContent.trim()
+        ? `Here is the current draft document:
+
+---
+${baseContent}
+---
+
+Revise the document according to this instruction, returning the FULL updated Markdown document (not just the changes):
+
+${prompt}`
+        : prompt;
       const completion = await azure.openaiClient.chat.completions.create({
         model,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
+          { role: "user", content: userMessage },
         ],
         max_completion_tokens: 4096,
         temperature: 0.8,

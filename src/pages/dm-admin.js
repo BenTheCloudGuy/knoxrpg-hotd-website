@@ -117,14 +117,24 @@ async function renderDmAdminPage(session) {
                 <span id="nb-ai-status" class="dmc-status-text"></span>
               </div>
               <div id="nb-ai-preview-wrap" style="display:none;">
-                <div class="forge-result-body" id="nb-ai-preview" style="max-height:340px;overflow:auto;"></div>
+                <label class="nb-ai-lbl">Draft content (editable)
+                  <textarea id="nb-ai-editor" rows="12" class="dmc-textarea" oninput="nbAiPreview()"></textarea>
+                </label>
+                <div class="nb-ai-followup">
+                  <input id="nb-ai-followup" class="nb-ai-followup-in" placeholder="Follow-up for the AI (e.g. 'make it darker', 'add a section on their rituals')" onkeydown="if(event.key==='Enter'){event.preventDefault();nbAiRefine();}" />
+                  <button class="dmc-btn dmc-btn-sm" id="nb-ai-refine" onclick="nbAiRefine()">&#129302; Refine with AI</button>
+                </div>
+                <details class="nb-ai-prev-details">
+                  <summary>Preview</summary>
+                  <div class="forge-result-body" id="nb-ai-preview" style="max-height:300px;overflow:auto;"></div>
+                </details>
                 <div class="dmc-form-row" style="margin-top:10px;">
                   <label class="nb-ai-lbl">Save to folder<select id="nb-ai-folder"></select></label>
                   <label class="nb-ai-lbl" style="flex:2;">Page name<input id="nb-ai-name" placeholder="wachter-politics" /></label>
                 </div>
                 <div class="dmc-form-actions">
                   <button class="dmc-btn dmc-btn-primary" onclick="nbAiCreate()">Create Draft Page</button>
-                  <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Regenerate</button>
+                  <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Start Over</button>
                   <span class="dmc-hint">Creates a DRAFT page you can edit and publish.</span>
                 </div>
               </div>
@@ -539,6 +549,10 @@ async function renderDmAdminPage(session) {
     .nb-ai-hdr h3 { margin:0; color:#e8b923; font-size:0.95rem; }
     .nb-ai-body { padding:16px; }
     .nb-ai-lbl { display:flex; flex-direction:column; gap:4px; font-size:0.72rem; color:#888; margin-bottom:10px; }
+    .nb-ai-followup { display:flex; gap:6px; margin:6px 0 10px; }
+    .nb-ai-followup-in { flex:1; background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ddd; padding:6px 8px; font-size:0.8rem; }
+    .nb-ai-prev-details { margin:0 0 10px; }
+    .nb-ai-prev-details summary { cursor:pointer; color:#888; font-size:0.74rem; padding:2px 0; }
     .nb-search-wrap { padding:6px 10px; border-bottom:1px solid #1a1a1a; }
     .nb-search { width:100%; background:#111; border:1px solid #2a2a2a; border-radius:4px; padding:5px 8px; color:#ccc; font-size:0.75rem; outline:none; }
     .nb-search:focus { border-color:#c83232; }
@@ -897,7 +911,6 @@ async function renderDmAdminPage(session) {
   let _nbTree = [];
   let _nbCurrentPath = null;
   let _nbStatus = null;
-  let _nbAiContent = '';
   let _nbEditor = null;
   let _nbDirty = false;
   let _nbSaveTimer = null;
@@ -1486,49 +1499,74 @@ async function renderDmAdminPage(session) {
     }
   }
 
-  // ── AI Assist: RAG-grounded page generation ──
+  // ── AI Assist: RAG-grounded page generation + iterative refine ──
   function nbAiOpen() {
     el('nb-ai-prompt').value = '';
     el('nb-ai-ents').value = '';
     el('nb-ai-name').value = '';
+    el('nb-ai-editor').value = '';
+    el('nb-ai-followup').value = '';
+    el('nb-ai-preview').innerHTML = '';
     el('nb-ai-preview-wrap').style.display = 'none';
     el('nb-ai-status').textContent = '';
-    _nbAiContent = '';
     var folders = [''];
     (function walk(nodes) { (nodes || []).forEach(function(n) { if (n.type === 'folder') { folders.push(n.path); walk(n.children); } }); })(_nbTree);
     el('nb-ai-folder').innerHTML = folders.map(function(f) { return '<option value="' + esc(f) + '">' + (f ? esc(f) : '(root)') + '</option>'; }).join('');
     el('nb-ai-modal').style.display = 'flex';
   }
   function nbAiClose() { el('nb-ai-modal').style.display = 'none'; }
+  function nbAiPreview() { el('nb-ai-preview').innerHTML = renderMd(el('nb-ai-editor').value || ''); }
+
+  // Shared call: promptText is the instruction; baseContent (if set) makes it a revision.
+  async function nbAiRun(promptText, baseContent, statusMsg) {
+    var ents = el('nb-ai-ents').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    el('nb-ai-status').textContent = statusMsg;
+    var r = await fetch('/api/dm-admin/notebook/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:promptText, entities:ents, baseContent:baseContent || '' }) });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Generation failed');
+    el('nb-ai-editor').value = d.content || '';
+    nbAiPreview();
+    el('nb-ai-preview-wrap').style.display = 'block';
+    el('nb-ai-status').textContent = (d.ragChunks || 0) + ' RAG chunks \u00b7 ' + (d.entityLookups || 0) + ' NPC lookups' + (d.usage ? ' \u00b7 ' + d.usage.total_tokens + ' tokens' : '');
+    return d;
+  }
+
   async function nbAiGenerate() {
     var p = el('nb-ai-prompt').value.trim();
     if (!p) return alert('Enter a prompt');
-    var ents = el('nb-ai-ents').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
     var btn = el('nb-ai-gen'); btn.disabled = true;
-    el('nb-ai-status').textContent = 'Generating with campaign RAG...';
     try {
-      var r = await fetch('/api/dm-admin/notebook/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:p, entities:ents }) });
-      var d = await r.json();
-      if (!r.ok) throw new Error(d.error || 'Generation failed');
-      _nbAiContent = d.content || '';
-      el('nb-ai-preview').innerHTML = renderMd(_nbAiContent);
-      el('nb-ai-preview-wrap').style.display = 'block';
-      el('nb-ai-status').textContent = (d.ragChunks || 0) + ' RAG chunks \u00b7 ' + (d.entityLookups || 0) + ' NPC lookups' + (d.usage ? ' \u00b7 ' + d.usage.total_tokens + ' tokens' : '');
+      var d = await nbAiRun(p, '', 'Generating with campaign RAG...');
       if (!el('nb-ai-name').value) {
-        var m = _nbAiContent.match(/^#\s+(.+)$/m);
+        var m = (d.content || '').match(/^#\s+(.+)$/m);
         if (m) el('nb-ai-name').value = m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
       }
     } catch (e) { el('nb-ai-status').textContent = 'Error: ' + e.message; }
     finally { btn.disabled = false; }
   }
+
+  async function nbAiRefine() {
+    var instr = el('nb-ai-followup').value.trim();
+    if (!instr) return alert('Enter a follow-up instruction');
+    var base = el('nb-ai-editor').value;
+    if (!base.trim()) return alert('Generate a draft first');
+    var btn = el('nb-ai-refine'); btn.disabled = true;
+    try {
+      await nbAiRun(instr, base, 'Refining with AI...');
+      el('nb-ai-followup').value = '';
+    } catch (e) { el('nb-ai-status').textContent = 'Error: ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+
   async function nbAiCreate() {
-    if (!_nbAiContent) return;
+    var content = el('nb-ai-editor').value;
+    if (!content.trim()) return alert('Nothing to save');
     var folder = el('nb-ai-folder').value;
     var name = el('nb-ai-name').value.trim();
     if (!name) return alert('Enter a page name');
     if (!name.endsWith('.md')) name += '.md';
     var fullPath = folder ? folder + '/' + name : name;
-    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:fullPath, type:'file', content:_nbAiContent }) });
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:fullPath, type:'file', content:content }) });
     var d = await r.json();
     if (r.ok) { nbAiClose(); await loadNotes(); nbOpenFile(fullPath); }
     else { alert('Error: ' + (d.error || '')); }
