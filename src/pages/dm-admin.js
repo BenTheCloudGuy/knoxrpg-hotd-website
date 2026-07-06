@@ -129,67 +129,45 @@ async function renderDmAdminPage(session) {
                 <div>&#128269; <strong>Search</strong> notes by name in the sidebar</div>
               </div>
             </div>
-            <div id="nb-ai-pane" class="nb-ai-pane" style="display:none;">
-              <div class="nb-ai-pane-hdr">
-                <h3>&#10024; AI Assist</h3>
-                <span id="nb-ai-temp-note" class="dmc-hint" style="flex:1;"></span>
-                <button class="dmc-btn dmc-btn-sm" onclick="nbAiCancel()" title="Close">&#10005; Close</button>
-              </div>
-              <div class="nb-ai-pane-body">
-                <label class="nb-ai-lbl">Prompt
-                  <textarea id="nb-ai-prompt" rows="3" class="dmc-textarea" placeholder="Describe the document to generate. Grounded in your campaign RAG (NPCs, lore, sessions). e.g. 'Write a writeup of the Wachter family politics in Vallaki.'"></textarea>
-                </label>
-                <label class="nb-ai-lbl">Related entities (optional, comma-separated NPC/place names)
-                  <input id="nb-ai-ents" placeholder="Fiona Wachter, Vallaki, Baron Vallakovich" />
-                </label>
-                <div class="dmc-form-actions">
-                  <button class="dmc-btn dmc-btn-primary" id="nb-ai-gen" onclick="nbAiGenerate()">Generate</button>
-                  <span id="nb-ai-status" class="dmc-status-text"></span>
-                </div>
-                <div id="nb-ai-preview-wrap" style="display:none;">
-                  <label class="nb-ai-lbl">Draft content (editable)
-                    <textarea id="nb-ai-editor" rows="16" class="dmc-textarea" oninput="nbAiPreview()"></textarea>
-                  </label>
-                  <div class="nb-ai-followup">
-                    <input id="nb-ai-followup" class="nb-ai-followup-in" placeholder="Follow-up for the AI (e.g. 'make it darker', 'add a section on their rituals')" onkeydown="if(event.key==='Enter'){event.preventDefault();nbAiRefine();}" />
-                    <button class="dmc-btn dmc-btn-sm" id="nb-ai-refine" onclick="nbAiRefine()">&#129302; Refine with AI</button>
-                  </div>
-                  <details class="nb-ai-prev-details">
-                    <summary>Preview</summary>
-                    <div class="forge-result-body" id="nb-ai-preview" style="max-height:340px;overflow:auto;"></div>
-                  </details>
-                  <div class="dmc-form-row" style="margin-top:10px;">
-                    <label class="nb-ai-lbl">Save to folder<select id="nb-ai-folder"></select></label>
-                    <label class="nb-ai-lbl" style="flex:2;">Page name<input id="nb-ai-name" placeholder="wachter-politics" /></label>
-                  </div>
-                  <div class="dmc-form-actions">
-                    <button class="dmc-btn dmc-btn-primary" onclick="nbAiFinalize()">Save Page</button>
-                    <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Regenerate</button>
-                    <span class="dmc-hint">Set a folder + name to move it out of the temp root, or leave blank to keep the temp draft.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
             <div id="nb-editor-wrap" style="display:none;">
               <div class="nb-editor-bar">
-                <div class="nb-breadcrumb" id="nb-breadcrumb"></div>
-                <div style="display:flex;gap:6px;align-items:center;">
+                <div class="nb-tb-left">
+                  <input type="text" id="nb-note-title" class="nb-tb-name" placeholder="Page name..." title="Page name (used as the file name)" />
+                  <label class="nb-tb-fld">in <select id="nb-ai-folder" class="nb-tb-folder"></select></label>
+                </div>
+                <div class="nb-tb-right">
                   <span id="nb-save-status" style="color:#555;font-size:0.72rem;"></span>
                   <span id="nb-status-badge" style="display:none;font-size:0.62rem;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.03em;"></span>
                   <button id="nb-publish-btn" class="dmc-btn dmc-btn-sm" style="display:none;" onclick="nbTogglePublish()"></button>
+                  <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="nbSave()" title="Save this page (moves it if you changed the name or folder)">&#128190; Save Page</button>
+                  <button class="dmc-btn dmc-btn-sm" id="nb-ai-regen" onclick="nbAiGenerate()" title="Re-run the AI prompt and replace the draft">&#8635; Regenerate</button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbToggleInfo()" title="Note Info &amp; Backlinks">&#9432;</button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbShowLinkMap()" title="Link Map">&#128279;</button>
-                  <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="nbSave()">&#128190; Save</button>
-                  <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="nbDeleteCurrent()" title="Delete this file">&#128465;</button>
+                  <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="nbDeleteCurrent()" title="Delete this page">&#128465;</button>
+                  <button class="dmc-btn dmc-btn-sm" onclick="nbCloseEditor()" title="Close">&#10005;</button>
                 </div>
               </div>
-              <div class="nb-title-wrap">
-                <input type="text" id="nb-note-title" class="nb-note-title" placeholder="Note title..." />
+              <div class="nb-ai-sec">
+                <div class="nb-ai-sec-hdr"><span>&#10024; AI Assist</span><span id="nb-ai-status" class="dmc-status-text"></span></div>
+                <textarea id="nb-ai-prompt" rows="2" class="nb-ai-prompt-in" placeholder="Describe the document to generate. Grounded in your campaign RAG (NPCs, lore, sessions). e.g. 'Write a writeup of the Wachter family politics in Vallaki.'"></textarea>
+                <div class="nb-ai-sec-row">
+                  <input id="nb-ai-ents" class="nb-ai-ents-in" placeholder="Related entities (optional): Fiona Wachter, Vallaki, Baron Vallakovich" />
+                  <button class="dmc-btn dmc-btn-primary dmc-btn-sm" id="nb-ai-gen" onclick="nbAiGenerate()">Generate</button>
+                </div>
+                <div class="nb-ai-sec-row">
+                  <input id="nb-ai-followup" class="nb-ai-followup-in" placeholder="Follow-up for the AI (e.g. 'make it darker', 'add a section on their rituals')" onkeydown="if(event.key==='Enter'){event.preventDefault();nbAiRefine();}" />
+                  <button class="dmc-btn dmc-btn-sm" id="nb-ai-refine" onclick="nbAiRefine()">&#129302; Refine</button>
+                </div>
+              </div>
+              <div class="nb-tabs">
+                <button class="nb-tab nb-tab-active" id="nb-tab-edit" onclick="nbShowTab('edit')">Edit</button>
+                <button class="nb-tab" id="nb-tab-preview" onclick="nbShowTab('preview')">Preview</button>
               </div>
               <div class="nb-editor-body">
-                <div class="nb-editor-area">
-                  <textarea id="nb-editor"></textarea>
+                <div class="nb-editor-area" id="nb-edit-view">
+                  <textarea id="nb-editor" class="nb-editor-ta" spellcheck="false" placeholder="Write Markdown here, or use AI Assist above to generate a draft..." oninput="nbEditorChanged()"></textarea>
                 </div>
+                <div class="nb-preview-view" id="nb-preview-view" style="display:none;"></div>
                 <div class="nb-right-panel" id="nb-right-panel" style="display:none;">
                   <div class="nb-rp-section">
                     <div class="nb-rp-hdr">&#128279; Backlinks</div>
@@ -544,11 +522,38 @@ async function renderDmAdminPage(session) {
     .notebook-layout { display:flex; height:100%; border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
-    .nb-ai-pane { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
-    .nb-ai-pane-hdr { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid #222; }
-    .nb-ai-pane-hdr h3 { margin:0; color:#e8b923; font-size:0.95rem; flex-shrink:0; }
-    .nb-ai-pane-body { flex:1; min-height:0; overflow-y:auto; padding:16px; }
-    .nb-ai-lbl { display:flex; flex-direction:column; gap:4px; font-size:0.72rem; color:#888; margin-bottom:10px; }
+    /* ── Unified editor: toolbar ── */
+    .nb-tb-left { display:flex; align-items:center; gap:8px; min-width:0; flex:1; }
+    .nb-tb-name { background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#e8b923; padding:5px 8px; font-size:0.85rem; font-weight:600; min-width:150px; max-width:340px; }
+    .nb-tb-name:focus { border-color:#c83232; outline:none; }
+    .nb-tb-fld { display:flex; align-items:center; gap:5px; font-size:0.7rem; color:#666; }
+    .nb-tb-folder { background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ccc; padding:4px 6px; font-size:0.75rem; max-width:220px; }
+    .nb-tb-right { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+    /* ── Unified editor: AI Assist section (fixed size, stays put) ── */
+    .nb-ai-sec { border-bottom:1px solid #222; background:#0a0a0a; padding:8px 12px; display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+    .nb-ai-sec-hdr { display:flex; justify-content:space-between; align-items:center; color:#e8b923; font-size:0.8rem; font-weight:600; }
+    .nb-ai-sec-hdr .dmc-status-text { color:#666; font-size:0.68rem; font-weight:400; }
+    .nb-ai-prompt-in { width:100%; box-sizing:border-box; background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ddd; padding:6px 8px; font-size:0.8rem; resize:vertical; font-family:inherit; }
+    .nb-ai-prompt-in:focus { border-color:#c83232; outline:none; }
+    .nb-ai-sec-row { display:flex; gap:6px; align-items:center; }
+    .nb-ai-ents-in { flex:1; min-width:0; background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ddd; padding:6px 8px; font-size:0.78rem; }
+    .nb-ai-ents-in:focus { border-color:#c83232; outline:none; }
+    /* ── Unified editor: Edit/Preview tabs ── */
+    .nb-tabs { display:flex; gap:2px; padding:0 12px; border-bottom:1px solid #222; background:#0a0a0a; flex-shrink:0; }
+    .nb-tab { background:none; border:none; border-bottom:2px solid transparent; color:#777; font-size:0.75rem; font-weight:600; padding:8px 14px; cursor:pointer; }
+    .nb-tab:hover { color:#ccc; }
+    .nb-tab-active { color:#e8b923; border-bottom-color:#c83232; }
+    /* ── Unified editor: textarea + preview (fills remaining space) ── */
+    .nb-editor-ta { flex:1; min-height:0; width:100%; box-sizing:border-box; background:#111; color:#ccc; border:none; outline:none; resize:none; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:0.85rem; line-height:1.6; }
+    .nb-preview-view { flex:1; min-width:0; min-height:0; overflow-y:auto; background:#111; color:#ccc; padding:16px 22px; font-size:0.9rem; line-height:1.65; }
+    .nb-preview-view h1, .nb-preview-view h2, .nb-preview-view h3 { color:#e8b923; }
+    .nb-preview-view code { background:#1a1a1a; padding:2px 5px; border-radius:3px; }
+    .nb-preview-view pre { background:#0d0d0d; border:1px solid #222; padding:12px; border-radius:6px; overflow-x:auto; }
+    .nb-preview-view img { max-width:100%; border-radius:6px; }
+    .nb-preview-view table { border-collapse:collapse; }
+    .nb-preview-view th, .nb-preview-view td { border:1px solid #333; padding:5px 9px; }
+    .nb-preview-view .wiki-link { color:#e8b923; cursor:pointer; text-decoration:underline dotted; }
+    .nb-preview-view .wiki-link:hover { color:#fff; text-decoration:underline; }
     .nb-ai-followup { display:flex; gap:6px; margin:6px 0 10px; }
     .nb-ai-followup-in { flex:1; background:#0d0d0d; border:1px solid #333; border-radius:4px; color:#ddd; padding:6px 8px; font-size:0.8rem; }
     .nb-ai-prev-details { margin:0 0 10px; }
@@ -576,38 +581,8 @@ async function renderDmAdminPage(session) {
     .nb-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; text-align:center; padding:32px; }
     .nb-welcome h3 { margin:0 0 8px; font-size:1.1rem; }
     .nb-welcome code { background:#1a1a1a; padding:2px 6px; border-radius:4px; font-size:0.72rem; color:#aaa; }
-    .nb-editor-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid #222; min-height:36px; background:#0a0a0a; }
-    .nb-breadcrumb { display:flex; align-items:center; gap:4px; font-size:0.72rem; color:#666; overflow:hidden; }
-    .nb-breadcrumb span { cursor:pointer; color:#888; }
-    .nb-breadcrumb span:hover { color:#e8b923; text-decoration:underline; }
-    .nb-breadcrumb .nb-bc-sep { color:#333; cursor:default; }
-    .nb-breadcrumb .nb-bc-sep:hover { color:#333; text-decoration:none; }
-    .nb-breadcrumb .nb-bc-current { color:#e8b923; cursor:default; }
-    .nb-breadcrumb .nb-bc-current:hover { text-decoration:none; }
-    .nb-title-wrap { padding:8px 14px 4px; border-bottom:1px solid #1a1a1a; }
-    .nb-note-title { width:100%; background:transparent; border:none; color:#e8b923; font-size:1.2rem; font-weight:700; outline:none; padding:0; font-family:inherit; }
-    .nb-note-title::placeholder { color:#333; }
+    .nb-editor-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 12px; border-bottom:1px solid #222; min-height:36px; background:#0a0a0a; }
     #nb-editor-wrap { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
-    #nb-editor-wrap .EasyMDEContainer { flex:1; min-height:0; display:flex; flex-direction:column; }
-    #nb-editor-wrap .EasyMDEContainer .CodeMirror { flex:1; min-height:0; background:#111; color:#ccc; border:none; font-size:0.85rem; }
-    #nb-editor-wrap .EasyMDEContainer .CodeMirror-scroll { min-height:0; }
-    #nb-editor-wrap .editor-toolbar { background:#0d0d0d; border-bottom:1px solid #222; }
-    #nb-editor-wrap .editor-toolbar button { color:#999 !important; }
-    #nb-editor-wrap .editor-toolbar button:hover { background:#1a1a1a !important; }
-    #nb-editor-wrap .editor-toolbar button.active { background:#222 !important; color:#e8b923 !important; }
-    #nb-editor-wrap .editor-preview { background:#111; color:#ccc; padding:16px; overflow-y:auto; }
-    #nb-editor-wrap .editor-preview h1,
-    #nb-editor-wrap .editor-preview h2,
-    #nb-editor-wrap .editor-preview h3 { color:#e8b923; }
-    #nb-editor-wrap .editor-preview code { background:#1a1a1a; padding:2px 5px; border-radius:3px; }
-    #nb-editor-wrap .editor-preview pre { background:#0d0d0d; border:1px solid #222; padding:12px; border-radius:6px; overflow-x:auto; }
-    #nb-editor-wrap .editor-preview table { border-collapse:collapse; width:100%; margin:8px 0; }
-    #nb-editor-wrap .editor-preview th,
-    #nb-editor-wrap .editor-preview td { border:1px solid #333; padding:6px 10px; text-align:left; }
-    #nb-editor-wrap .editor-preview th { background:#1a1a1a; color:#e8b923; }
-    #nb-editor-wrap .editor-preview blockquote { border-left:3px solid #c83232; margin:8px 0; padding:4px 12px; color:#888; }
-    #nb-editor-wrap .editor-preview img { max-width:100%; border-radius:6px; }
-    #nb-editor-wrap .editor-statusbar { background:#0a0a0a; border-top:1px solid #222; color:#555; }
     /* ── Context menu ── */
     .nb-ctx-menu { position:fixed; z-index:9999; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:4px 0; min-width:180px; box-shadow:0 4px 16px rgba(0,0,0,0.5); }
     .nb-ctx-item { padding:6px 14px; font-size:0.78rem; color:#ccc; cursor:pointer; }
@@ -618,9 +593,6 @@ async function renderDmAdminPage(session) {
     /* ── Editor body (editor + right panel) ── */
     .nb-editor-body { flex:1; min-height:0; display:flex; overflow:hidden; }
     .nb-editor-area { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
-    .nb-editor-area .EasyMDEContainer { flex:1; min-height:0; display:flex; flex-direction:column; }
-    .nb-editor-area .EasyMDEContainer .CodeMirror { flex:1; min-height:0; }
-    .nb-editor-area .EasyMDEContainer .CodeMirror-scroll { min-height:0; }
     /* ── Right info panel ── */
     .nb-right-panel { width:240px; min-width:180px; border-left:1px solid #222; background:#0a0a0a; overflow-y:auto; font-size:0.75rem; }
     .nb-rp-section { border-bottom:1px solid #1a1a1a; }
@@ -633,9 +605,6 @@ async function renderDmAdminPage(session) {
     .nb-backlink-item .nb-bl-ctx { color:#555; font-size:0.68rem; display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .nb-info-row { display:flex; justify-content:space-between; padding:3px 0; color:#666; }
     .nb-info-row span:last-child { color:#aaa; }
-    /* ── Wiki link in preview ── */
-    #nb-editor-wrap .editor-preview .wiki-link { color:#e8b923; cursor:pointer; text-decoration:underline dotted; border-bottom:none; }
-    #nb-editor-wrap .editor-preview .wiki-link:hover { color:#fff; text-decoration:underline; }
     /* ── Link Map overlay ── */
     .nb-linkmap-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; }
     .nb-linkmap-inner { background:#111; border:1px solid #333; border-radius:10px; width:92vw; max-width:1100px; height:75vh; display:flex; flex-direction:column; overflow:hidden; }
@@ -657,8 +626,6 @@ async function renderDmAdminPage(session) {
     }
   </style>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
   <script>
@@ -911,7 +878,7 @@ async function renderDmAdminPage(session) {
   let _nbTree = [];
   let _nbCurrentPath = null;
   let _nbStatus = null;
-  let _nbEditor = null;
+  let _nbEditorWired = false;
   let _nbDirty = false;
   let _nbSaveTimer = null;
   let _nbInfoOpen = false;
@@ -1109,122 +1076,144 @@ async function renderDmAdminPage(session) {
   }
 
   // ── Breadcrumb ──
+  // Sync the toolbar identity (page name + folder) from a path.
   function renderBreadcrumb(path) {
-    var parts = path.split('/');
-    var bc = el('nb-breadcrumb');
-    var html = '<span class="nb-bc-sep">&#128214;</span>';
-    var cumulative = '';
-    for (var i = 0; i < parts.length; i++) {
-      if (i > 0) cumulative += '/';
-      cumulative += parts[i];
-      var label = parts[i].replace(/\\.md$/i, '');
-      if (i < parts.length - 1) {
-        html += ' <span class="nb-bc-sep">/</span> <span data-path="'+esc(cumulative)+'">'+esc(label)+'</span>';
-      } else {
-        html += ' <span class="nb-bc-sep">/</span> <span class="nb-bc-current">'+esc(label)+'</span>';
-      }
-    }
-    bc.innerHTML = html;
-    bc.onclick = function(e) {
-      var sp = e.target.closest('[data-path]');
-      if (sp) {
-        var node = findNode(_nbTree, sp.dataset.path);
-        if (node && node.type === 'file') nbOpenFile(sp.dataset.path);
-      }
-    };
+    if (!path) return;
+    nbPopulateFolders();
+    var fileName = path.split('/').pop();
+    if (el('nb-note-title')) el('nb-note-title').value = fileName.replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
+    if (el('nb-ai-folder')) el('nb-ai-folder').value = path.indexOf('/') >= 0 ? path.substring(0, path.lastIndexOf('/')) : '';
   }
 
-  // ── Open file (with title, breadcrumb, backlinks) ──
+  // ── Open a page into the unified editor ──
   async function nbOpenFile(path) {
-    if (_nbDirty && _nbCurrentPath) {
-      await nbSave(true);
-    }
+    if (_nbDirty && _nbCurrentPath) { await nbAutoSave(); }
     _nbCurrentPath = path;
+    if (path !== _nbAiTempPath) _nbAiTempPath = null;
     el('nb-welcome').style.display = 'none';
-    el('nb-ai-pane').style.display = 'none';
     el('nb-editor-wrap').style.display = 'flex';
     el('nb-save-status').textContent = 'Loading...';
-    renderBreadcrumb(path);
-
-    // Set title from filename
-    var titleName = path.split('/').pop().replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
-    el('nb-note-title').value = titleName;
+    el('nb-ai-status').textContent = '';
+    el('nb-ai-followup').value = '';
 
     var r = await fetch('/api/dm-admin/notebook/read?path=' + encodeURIComponent(path));
     var d = await r.json();
     if (!r.ok) { el('nb-save-status').textContent = 'Error: ' + (d.error||''); return; }
 
-    if (!_nbEditor) {
-      _nbEditor = new EasyMDE({
-        element: document.getElementById('nb-editor'),
-        spellChecker: false,
-        autofocus: true,
-        status: ['lines', 'words', 'cursor'],
-        toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','image','table','horizontal-rule','|','preview','side-by-side','fullscreen','|','guide'],
-        previewRender: function(text) {
-          // Render [[wiki links]] as clickable spans
-          var processed = text.replace(/\\[\\[([^\\]]+)\\]\\]/g, function(m, name) {
-            return '<span class="wiki-link" data-note="'+name+'">'+name+'</span>';
-          });
-          return DOMPurify.sanitize(marked.parse(processed));
-        },
-        sideBySideFullscreen: false,
-        minHeight: '200px',
-      });
-      _nbEditor.codemirror.on('change', function() {
-        _nbDirty = true;
-        el('nb-save-status').textContent = 'Unsaved changes';
-        el('nb-save-status').style.color = '#e8b923';
-        clearTimeout(_nbSaveTimer);
-        _nbSaveTimer = setTimeout(function() { nbSave(true); }, 5000);
-      });
-      // Image paste handler
-      _nbEditor.codemirror.on('paste', function(cm, e) {
-        var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (var i = 0; i < items.length; i++) {
-          if (items[i].type.indexOf('image') !== -1) {
-            e.preventDefault();
-            var file = items[i].getAsFile();
-            nbUploadImage(file, cm);
-            return;
-          }
-        }
-      });
-      // Image drop handler
-      _nbEditor.codemirror.on('drop', function(cm, e) {
-        var files = e.dataTransfer.files;
-        for (var i = 0; i < files.length; i++) {
-          if (files[i].type.indexOf('image') !== -1) {
-            e.preventDefault();
-            nbUploadImage(files[i], cm);
-            return;
-          }
-        }
-      });
-      // Wiki-link click in preview
-      document.querySelector('.editor-preview')?.addEventListener('click', function(e) {
-        var wl = e.target.closest('.wiki-link');
-        if (!wl) return;
-        var noteName = wl.dataset.note;
-        var target = _nbAllFiles.find(function(f) {
-          return f.name.replace(/\\.md$/i, '').toLowerCase() === noteName.toLowerCase();
-        });
-        if (target) nbOpenFile(target.path);
-        else alert('Note not found: ' + noteName);
-      });
-    }
+    nbPopulateFolders();
+    var fileName = path.split('/').pop();
+    el('nb-note-title').value = fileName.replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
+    el('nb-ai-folder').value = path.indexOf('/') >= 0 ? path.substring(0, path.lastIndexOf('/')) : '';
 
-    _nbEditor.value(d.content || '');
+    nbWireEditor();
+    el('nb-editor').value = d.content || '';
     _nbDirty = false;
     el('nb-save-status').textContent = 'Saved';
     el('nb-save-status').style.color = '#555';
-    renderNbTree();
     _nbStatus = d.status || 'draft';
     nbRenderStatus();
-
-    // Load backlinks and note info
+    nbShowTab('edit');
+    renderNbTree();
     nbLoadBacklinks(path);
     nbLoadNoteInfo(d.content || '');
+  }
+
+  // Populate the toolbar folder <select> from the current tree.
+  function nbPopulateFolders() {
+    var sel = el('nb-ai-folder');
+    if (!sel) return;
+    var current = sel.value;
+    var folders = [''];
+    (function walk(nodes) { (nodes || []).forEach(function(n) { if (n.type === 'folder') { folders.push(n.path); walk(n.children); } }); })(_nbTree);
+    sel.innerHTML = folders.map(function(f) { return '<option value="' + esc(f) + '">' + (f ? esc(f) : '(root)') + '</option>'; }).join('');
+    sel.value = current;
+  }
+
+  // Wire paste/drop image upload + preview wiki-link clicks (once).
+  function nbWireEditor() {
+    if (_nbEditorWired) return;
+    _nbEditorWired = true;
+    var ta = el('nb-editor');
+    ta.addEventListener('paste', function(e) {
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          e.preventDefault();
+          nbUploadImage(items[i].getAsFile(), ta);
+          return;
+        }
+      }
+    });
+    ta.addEventListener('drop', function(e) {
+      var files = (e.dataTransfer || {}).files || [];
+      for (var i = 0; i < files.length; i++) {
+        if (files[i].type.indexOf('image') !== -1) {
+          e.preventDefault();
+          nbUploadImage(files[i], ta);
+          return;
+        }
+      }
+    });
+    el('nb-preview-view').addEventListener('click', function(e) {
+      var wl = e.target.closest('.wiki-link');
+      if (!wl) return;
+      var noteName = wl.dataset.note;
+      var target = _nbAllFiles.find(function(f) {
+        return f.name.replace(/\\.md$/i, '').toLowerCase() === noteName.toLowerCase();
+      });
+      if (target) nbOpenFile(target.path);
+      else alert('Note not found: ' + noteName);
+    });
+  }
+
+  // Typing in the editor -> mark dirty + schedule auto-save (content only).
+  function nbEditorChanged() {
+    _nbDirty = true;
+    el('nb-save-status').textContent = 'Unsaved changes';
+    el('nb-save-status').style.color = '#e8b923';
+    clearTimeout(_nbSaveTimer);
+    _nbSaveTimer = setTimeout(nbAutoSave, 5000);
+  }
+
+  // Auto-save: persist content to the current path (no rename/move).
+  async function nbAutoSave() {
+    if (!_nbCurrentPath || !_nbDirty) return;
+    var r = await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbCurrentPath, content:el('nb-editor').value }) });
+    if (r.ok) {
+      _nbDirty = false;
+      el('nb-save-status').textContent = 'Saved';
+      el('nb-save-status').style.color = '#555';
+    }
+  }
+
+  // Switch between the Edit and Preview tabs.
+  function nbShowTab(tab) {
+    var edit = tab !== 'preview';
+    el('nb-edit-view').style.display = edit ? 'flex' : 'none';
+    el('nb-preview-view').style.display = edit ? 'none' : 'block';
+    el('nb-tab-edit').classList.toggle('nb-tab-active', edit);
+    el('nb-tab-preview').classList.toggle('nb-tab-active', !edit);
+    if (!edit) {
+      var processed = (el('nb-editor').value || '').replace(/\\[\\[([^\\]]+)\\]\\]/g, function(m, name) {
+        return '<span class="wiki-link" data-note="' + esc(name) + '">' + esc(name) + '</span>';
+      });
+      el('nb-preview-view').innerHTML = renderMd(processed);
+    }
+  }
+
+  // Close the editor; clean up an untouched temp AI draft.
+  async function nbCloseEditor() {
+    if (_nbDirty && _nbCurrentPath) { await nbAutoSave(); }
+    if (_nbAiTempPath && _nbCurrentPath === _nbAiTempPath && !_nbAiGenerated) {
+      var bodyText = (el('nb-editor').value || '').trim();
+      if (bodyText === '' || bodyText === '# Untitled AI Draft') {
+        await fetch('/api/dm-admin/notebook/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbAiTempPath }) }).catch(function() {});
+        _nbCurrentPath = null;
+        await loadNotes();
+      }
+    }
+    _nbAiTempPath = null;
+    showNbWelcome();
   }
 
   // ── Backlinks ──
@@ -1394,7 +1383,7 @@ async function renderDmAdminPage(session) {
     };
   }
 
-  async function nbUploadImage(file, cm) {
+  async function nbUploadImage(file, ta) {
     el('nb-save-status').textContent = 'Uploading image...';
     var fd = new FormData();
     fd.append('image', file, file.name);
@@ -1403,8 +1392,12 @@ async function renderDmAdminPage(session) {
     var r = await fetch(uploadUrl, { method:'POST', body:fd });
     var d = await r.json();
     if (r.ok && d.url) {
-      var cursor = cm.getCursor();
-      cm.replaceRange('![image](' + d.url + ')\\n', cursor);
+      var s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
+      var snippet = '![image](' + d.url + ')\\n';
+      ta.value = ta.value.slice(0, s) + snippet + ta.value.slice(e);
+      ta.selectionStart = ta.selectionEnd = s + snippet.length;
+      ta.focus();
+      nbEditorChanged();
       el('nb-save-status').textContent = 'Image inserted';
     } else {
       el('nb-save-status').textContent = 'Upload failed';
@@ -1413,7 +1406,6 @@ async function renderDmAdminPage(session) {
 
   function showNbWelcome() {
     el('nb-welcome').style.display = 'flex';
-    el('nb-ai-pane').style.display = 'none';
     el('nb-editor-wrap').style.display = 'none';
   }
 
@@ -1444,7 +1436,7 @@ async function renderDmAdminPage(session) {
 
   async function nbPublish() {
     if (!_nbCurrentPath) return;
-    if (_nbDirty) { await nbSave(true); }
+    if (_nbDirty) { await nbAutoSave(); }
     var btn = el('nb-publish-btn'); btn.disabled = true; btn.textContent = 'Publishing...';
     try {
       var r = await fetch('/api/dm-admin/notebook/publish', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:_nbCurrentPath}) });
@@ -1468,21 +1460,25 @@ async function renderDmAdminPage(session) {
   }
 
   async function nbSave(silent) {
-    if (!_nbCurrentPath || !_nbEditor) return;
-    var content = _nbEditor.value();
-    // Check if title changed (rename the file)
-    var currentName = _nbCurrentPath.split('/').pop().replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
-    var newTitle = el('nb-note-title').value.trim();
-    if (newTitle && newTitle !== currentName) {
-      var dir = _nbCurrentPath.substring(0, _nbCurrentPath.lastIndexOf('/'));
-      var newFileName = newTitle.replace(/\\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') + '.md';
-      var newPath = dir ? dir + '/' + newFileName : newFileName;
+    if (!_nbCurrentPath) return;
+    var content = el('nb-editor').value;
+    // Move/rename if the page name or folder changed.
+    var name = el('nb-note-title').value.trim();
+    var folder = el('nb-ai-folder').value;
+    if (name) {
+      var fileName = name.replace(/\\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!fileName) fileName = 'untitled';
+      var newPath = (folder ? folder + '/' : '') + fileName + '.md';
       if (newPath !== _nbCurrentPath) {
         var rr = await fetch('/api/dm-admin/notebook/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({oldPath:_nbCurrentPath, newPath:newPath}) });
         if (rr.ok) {
+          if (_nbAiTempPath === _nbCurrentPath) _nbAiTempPath = newPath;
           _nbCurrentPath = newPath;
-          renderBreadcrumb(newPath);
-          await loadNotes();
+        } else {
+          var er = await rr.json();
+          el('nb-save-status').textContent = 'Move failed: ' + (er.error||'');
+          el('nb-save-status').style.color = '#f44';
+          return;
         }
       }
     }
@@ -1493,6 +1489,9 @@ async function renderDmAdminPage(session) {
       _nbDirty = false;
       el('nb-save-status').textContent = 'Saved';
       el('nb-save-status').style.color = '#4ade80';
+      await loadNotes();
+      renderBreadcrumb(_nbCurrentPath);
+      nbLoadNoteInfo(content);
       setTimeout(function() { el('nb-save-status').style.color = '#555'; el('nb-save-status').textContent = 'Saved'; }, 2000);
     } else {
       var d = await r.json();
@@ -1501,47 +1500,28 @@ async function renderDmAdminPage(session) {
     }
   }
 
-  // ── AI Assist: RAG-grounded page generation + iterative refine ──
-  var _nbAiTempPath = null;   // temp draft file this AI session is bound to
+  // ── AI Assist: RAG-grounded generation + iterative refine (in the unified editor) ──
+  var _nbAiTempPath = null;   // set while a fresh AI draft (unsaved temp) is the current page
   var _nbAiGenerated = false; // whether the AI produced content this session
 
-  function showNbAiPane() {
-    el('nb-welcome').style.display = 'none';
-    el('nb-editor-wrap').style.display = 'none';
-    el('nb-ai-pane').style.display = 'flex';
-  }
-
-  async function nbAiOpen() {
-    el('nb-ai-prompt').value = '';
-    el('nb-ai-ents').value = '';
-    el('nb-ai-name').value = '';
-    el('nb-ai-editor').value = '';
-    el('nb-ai-followup').value = '';
-    el('nb-ai-preview').innerHTML = '';
-    el('nb-ai-preview-wrap').style.display = 'none';
-    el('nb-ai-status').textContent = '';
+  // Create a fresh temp draft at the notebook root and open it in the editor.
+  async function nbStartTempDraft() {
     _nbAiGenerated = false;
-    // Create a temp draft at the notebook root so the work has a real home immediately.
     var tempName = 'ai-draft-' + Date.now() + '.md';
     var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempName, type:'file', content:'# Untitled AI Draft\\n\\n' }) });
-    if (!r.ok) { var d = await r.json(); return alert('Could not start AI draft: ' + (d.error || '')); }
+    if (!r.ok) { var d = await r.json(); alert('Could not start AI draft: ' + (d.error || '')); throw new Error('temp draft failed'); }
     _nbAiTempPath = tempName;
-    _nbCurrentPath = tempName;
-    _nbStatus = 'draft';
     await loadNotes();
-    var folders = [''];
-    (function walk(nodes) { (nodes || []).forEach(function(n) { if (n.type === 'folder') { folders.push(n.path); walk(n.children); } }); })(_nbTree);
-    el('nb-ai-folder').innerHTML = folders.map(function(f) { return '<option value="' + esc(f) + '">' + (f ? esc(f) : '(root)') + '</option>'; }).join('');
-    el('nb-ai-temp-note').textContent = 'Temp draft: ' + tempName;
-    showNbAiPane();
+    await nbOpenFile(tempName);
   }
 
-  function nbAiPreview() { el('nb-ai-preview').innerHTML = renderMd(el('nb-ai-editor').value || ''); }
-
-  // Persist the current editor content into the bound temp draft.
-  async function nbAiSaveTemp() {
-    if (!_nbAiTempPath) return;
-    await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbAiTempPath, content:el('nb-ai-editor').value }) }).catch(function() {});
+  // ✨ AI button: start a new AI draft page and focus the prompt.
+  async function nbAiOpen() {
+    try { await nbStartTempDraft(); } catch (e) { return; }
+    el('nb-ai-prompt').value = '';
+    el('nb-ai-ents').value = '';
+    el('nb-ai-status').textContent = '';
+    el('nb-ai-prompt').focus();
   }
 
   // Shared call: promptText is the instruction; baseContent (if set) makes it a revision.
@@ -1551,79 +1531,46 @@ async function renderDmAdminPage(session) {
     var r = await fetch('/api/dm-admin/notebook/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:promptText, entities:ents, baseContent:baseContent || '' }) });
     var d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Generation failed');
-    el('nb-ai-editor').value = d.content || '';
-    nbAiPreview();
-    el('nb-ai-preview-wrap').style.display = 'block';
+    el('nb-editor').value = d.content || '';
     _nbAiGenerated = true;
+    _nbDirty = true;
+    nbShowTab('edit');
     el('nb-ai-status').textContent = (d.ragChunks || 0) + ' RAG chunks \u00b7 ' + (d.entityLookups || 0) + ' NPC lookups' + (d.usage ? ' \u00b7 ' + d.usage.total_tokens + ' tokens' : '');
-    await nbAiSaveTemp();
+    await nbAutoSave();
+    nbLoadNoteInfo(el('nb-editor').value);
     return d;
   }
 
+  // Generate / Regenerate: run the prompt and replace the draft.
   async function nbAiGenerate() {
     var p = el('nb-ai-prompt').value.trim();
     if (!p) return alert('Enter a prompt');
+    if (!_nbCurrentPath) { try { await nbStartTempDraft(); } catch (e) { return; } }
     var btn = el('nb-ai-gen'); btn.disabled = true;
+    var rbtn = el('nb-ai-regen'); if (rbtn) rbtn.disabled = true;
     try {
       var d = await nbAiRun(p, '', 'Generating with campaign RAG...');
-      if (!el('nb-ai-name').value) {
-        var m = (d.content || '').match(/^#\s+(.+)$/m);
-        if (m) el('nb-ai-name').value = m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      // For a fresh temp draft, auto-name from the first heading.
+      if (_nbAiTempPath && _nbCurrentPath === _nbAiTempPath) {
+        var m = (d.content || '').match(/^#\\s+(.+)$/m);
+        if (m) el('nb-note-title').value = m[1].trim();
       }
     } catch (e) { el('nb-ai-status').textContent = 'Error: ' + e.message; }
-    finally { btn.disabled = false; }
+    finally { btn.disabled = false; if (rbtn) rbtn.disabled = false; }
   }
 
+  // Refine: revise the current draft with a follow-up instruction.
   async function nbAiRefine() {
     var instr = el('nb-ai-followup').value.trim();
     if (!instr) return alert('Enter a follow-up instruction');
-    var base = el('nb-ai-editor').value;
-    if (!base.trim()) return alert('Generate a draft first');
+    var base = el('nb-editor').value;
+    if (!base.trim()) return alert('Generate or write a draft first');
     var btn = el('nb-ai-refine'); btn.disabled = true;
     try {
       await nbAiRun(instr, base, 'Refining with AI...');
       el('nb-ai-followup').value = '';
     } catch (e) { el('nb-ai-status').textContent = 'Error: ' + e.message; }
     finally { btn.disabled = false; }
-  }
-
-  // Save Page: persist the temp draft, optionally renaming it to a chosen folder/name.
-  async function nbAiFinalize() {
-    var content = el('nb-ai-editor').value;
-    if (!content.trim()) return alert('Nothing to save');
-    await nbAiSaveTemp();
-    var folder = el('nb-ai-folder').value;
-    var name = el('nb-ai-name').value.trim();
-    var target = _nbAiTempPath;
-    if (name) {
-      if (!name.endsWith('.md')) name += '.md';
-      var newPath = folder ? folder + '/' + name : name;
-      if (newPath !== _nbAiTempPath) {
-        var rr = await fetch('/api/dm-admin/notebook/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ oldPath:_nbAiTempPath, newPath:newPath }) });
-        if (!rr.ok) { var d = await rr.json(); return alert('Rename failed: ' + (d.error || '')); }
-        target = newPath;
-      }
-    }
-    _nbAiTempPath = null;
-    await loadNotes();
-    nbOpenFile(target);
-  }
-
-  // Close: discard an untouched temp draft, otherwise keep it and open it in the editor.
-  async function nbAiCancel() {
-    var tempPath = _nbAiTempPath;
-    _nbAiTempPath = null;
-    if (!tempPath) { showNbWelcome(); return; }
-    if (!_nbAiGenerated) {
-      await fetch('/api/dm-admin/notebook/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempPath }) }).catch(function() {});
-      _nbCurrentPath = null;
-      await loadNotes();
-      showNbWelcome();
-    } else {
-      await fetch('/api/dm-admin/notebook/write', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:tempPath, content:el('nb-ai-editor').value }) }).catch(function() {});
-      await loadNotes();
-      nbOpenFile(tempPath);
-    }
   }
 
   async function nbNewFile() { nbNewFileIn(''); }

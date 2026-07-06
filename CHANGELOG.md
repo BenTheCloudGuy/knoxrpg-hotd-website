@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.22.0] - 2026-07-06
+
+### Changed
+- **The notebook now uses a single unified editor for every page** (`/dm-admin#notes`). The old EasyMDE rich editor and the separate AI Assist pane were merged into one full-frame workspace used for all pages (existing, hand-written, and AI-generated):
+  - **Top toolbar** carries the identity + actions: **Page name** + **Folder** selector, **💾 Save Page**, **↻ Regenerate**, **Publish / Unpublish** (with the DRAFT / PUBLISHED badge), Info, Link Map, Delete, and Close.
+  - **AI Assist** (prompt, related entities, **Generate**, and the **🤖 Refine** follow-up) stays in a fixed section just under the toolbar and is available on every page.
+  - **[ Edit | Preview ] tabs** replace the old collapsible preview; the Markdown textarea fills all remaining vertical space top-to-bottom, and Preview renders Markdown + `[[wiki links]]`.
+- **Save Page** writes the page and, if you changed the name or folder, moves it (via `POST /api/dm-admin/notebook/rename`); **auto-save** (5 s after you stop typing) persists content only. **Publish / Unpublish** is unchanged and still drives RAG membership (publish embeds with player/DM visibility split; unpublish removes).
+- **✨ AI** still spins up a temp draft (`ai-draft-<timestamp>.md`, DRAFT) at the notebook root and opens it in the unified editor; **Close** discards it if nothing was generated.
+
+### Removed
+- **EasyMDE dropped.** The editor is now a plain Markdown textarea with an Edit/Preview tab (paste/drop image upload is preserved via `POST /api/dm-admin/notebook/upload-image`). Removed the EasyMDE CDN includes and the now-dead EasyMDE / breadcrumb / title-wrap CSS. The `#nb-ai-modal` / `#nb-ai-pane` overlays are gone.
+
 ## [3.21.1] - 2026-07-06
 
 ### Changed
