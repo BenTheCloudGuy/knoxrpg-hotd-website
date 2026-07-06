@@ -3,7 +3,7 @@
 // Bridges two sources of tools:
 //   1. Website AI function tools (from src/lib/ai-tools.js) — reused for parity with
 //      the DM AI on the website itself.
-//   2. MCP-only custom tools — raw search, RAG status, reindex trigger, Story Forge.
+//   2. MCP-only custom tools — raw search, RAG status, reindex trigger, content generation.
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -14,7 +14,7 @@ const { searchEmbeddings } = require('../lib/rag.js');
 import { getOpenAIClient } from './openai-client.mjs';
 import { ragStatus } from './rag-status.mjs';
 import { triggerReindex } from './reindex.mjs';
-import { storyForgeGenerate } from './story-forge.mjs';
+import { generateCampaignContent } from './story-forge.mjs';
 
 // Website tools we expose through the MCP. Read-only lookups + scoped RAG.
 // We deliberately EXCLUDE query_database and describe_table — too broad for
@@ -111,12 +111,12 @@ const customMcpTools = [
     },
   },
   {
-    name: 'story_forge_generate',
+    name: 'generate_campaign_content',
     description:
-      'Run the Story Forge: RAG-augmented prose generation. Pulls campaign context for the ' +
+      'RAG-augmented prose generation. Pulls campaign context for the ' +
       'prompt + named entities, then asks the model to write canon-aware content. Heavier than ' +
       'search; use for NPC backstories, scene descriptions, magic items, session summaries, ' +
-      'quest hooks, faction lore.',
+      'quest hooks, faction lore. Output is suitable for pasting into a campaign notebook page.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -166,8 +166,8 @@ export async function dispatchTool(name, args) {
   if (name === 'trigger_reindex') {
     return await triggerReindex(args || {});
   }
-  if (name === 'story_forge_generate') {
-    return await storyForgeGenerate(openai, args || {});
+  if (name === 'generate_campaign_content') {
+    return await generateCampaignContent(openai, args || {});
   }
 
   if (EXPOSED_WEBSITE_TOOLS.has(name)) {

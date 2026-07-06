@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.21.0] - 2026-07-05
+
+### Added
+- **Notebook AI Assist** — the Campaign Notebook (`/dm-admin#notes`) has a **✨ AI** button that opens a modal: a freeform prompt + optional related entities generate a RAG-grounded Markdown document (`POST /api/dm-admin/notebook/generate`, grounded via `buildEmbeddingContext` + direct NPC lookups), preview it, then **Create Draft Page** (pick folder + name) drops it into the notebook as a draft you can edit and publish. This replaces Story Forge with an in-notebook authoring flow.
+
+### Removed
+- **Story Forge retired.** The standalone Story Forge panel (`/dm-admin#forge`), its nav link, all its client JS, and the `hotd_dm_story_elements` **library** (Commit-to-library, Library browser, Apply-to-NPCs) are gone. Removed endpoints: `POST /story-forge/generate`, `POST /story-forge/rag-search`, and all `/story-elements*` CRUD/apply routes. The `hotd_dm_story_elements` table is left dormant (not dropped; no data loss).
+
+### Changed
+- **MCP generation tool de-branded** — `story_forge_generate` → `generate_campaign_content` (`src/mcp/tools.mjs` + `src/mcp/story-forge.mjs`), same in-process RAG-grounded generation. MCP README updated.
+- **Docs** updated for the retirement / new AI Assist: `README.md`, `src/mcp/README.md`, and the Mercer / Artificer charters (the Mercer prose-generation path now points at `/api/dm-admin/notebook/generate`).
+
+### Notes
+- The 9 Story Forge templates were dropped in favor of freeform generation (per design decision). The dead `.forge-*` CSS classes in `dm-admin.js` are harmless (one, `.forge-result-body`, is reused for the AI Assist preview) and can be cleaned up later. `src/pages/dm-admin.old.js` (a legacy backup, not served) still references the old routes and was left untouched.
+
 ## [3.20.0] - 2026-07-05
 
 ### Added

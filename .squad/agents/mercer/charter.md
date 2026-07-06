@@ -47,9 +47,9 @@ When writing or fact-checking narrative content, Mercer reads these in priority 
    - `realms-readable.md`, `atlas-of-faerun.html`, `a-guide-to-the-realms.html`
    - `gods-of-faerun.html`, `factions-of-the-realms.html`, `magic-of-faerun.html`
 5. **Website RAG (when running in-app)** — read-only context only
-   - When generating prose via the Story Forge endpoint (`/api/dm-admin/story-forge/generate`), RAG context is injected automatically into the system prompt by `buildEmbeddingContext()` in `src/lib/rag.js`. Mercer never calls `rag.js` directly.
+   - When generating a notebook page via the notebook AI Assist (`/api/dm-admin/notebook/generate`), RAG context is injected automatically into the system prompt by `buildEmbeddingContext()` in `src/lib/rag.js`. Mercer never calls `rag.js` directly.
    - During tool-calling chats, Mercer uses the AI function tools `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster` (defined in `src/lib/ai-tools.js`). These wrap DB queries and RAG search.
-   - Any changes to the RAG pipeline, embedding sources, function-tool definitions, or Story Forge plumbing belong to Artificer.
+   - Any changes to the RAG pipeline, embedding sources, function-tool definitions, or notebook generation plumbing belong to Artificer.
 
 ## Conventions
 

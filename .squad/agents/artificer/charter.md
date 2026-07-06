@@ -39,7 +39,7 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 - Own RAG health: monitor `/api/dm-admin/rag-status`, watch for stale or missing embeddings
 - Trigger and validate re-indexing for non-session sources (NPCs, lore files, realms, DDB content, artifacts, handouts, calendar) via `scripts/embed-pipeline.js`
 - Coordinate with Bard, who runs `scripts/embed-pipeline.js --source session` after session summary updates
-- Own public `/api/search` quality: audit result relevance, embedding coverage, and Story Forge context quality
+- Own public `/api/search` quality: audit result relevance, embedding coverage, and notebook AI-generation context quality
 - Own the function-tool surface (`lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`) consumed by Mercer and Ranger
 
 ### Image & asset storage

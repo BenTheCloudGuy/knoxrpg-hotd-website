@@ -33,9 +33,9 @@ The players began in the northern kingdom of **Damara**, hired as caravan guards
 - **Artifacts & Handouts** — In-game artifacts, letters, and DM handouts
 - **Campaign History** — Full world history timeline from the Dawn Ages through present day
 - **Art Gallery** — Campaign art served from NAS storage with click-to-enlarge overlay
-- **DM Command Center** — Sidebar dashboard with AI chat, campaign notebook, NPC/session CRUD, Story Forge, and Image Studio
+- **DM Command Center** — Sidebar dashboard with AI chat, campaign notebook (with RAG-grounded AI Assist), NPC/session CRUD, and Image Studio
 - **DM AI Chat** — RAG-grounded AI assistant with function-calling tools for campaign Q&A
-- **Story Forge** — AI content generation with 8 templates, grounded in campaign embeddings
+- **Notebook AI Assist** — RAG-grounded freeform content generation that drafts new campaign notebook pages
 - **Image Studio** — GPT Image 1 generation with gallery management and publish-to-art-gallery workflow
 - **Campaign Notebook** — Trilium-inspired markdown notebook with wiki-links, backlinks, and link map
 - **RAG Pipeline** — Embedding pipeline with pgvector for semantic search across all campaign content

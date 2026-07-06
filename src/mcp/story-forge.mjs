@@ -1,5 +1,5 @@
-// Story Forge: RAG-augmented content generation for the MCP server.
-// Mirrors src/routes/dm-admin-api.js /api/dm-admin/story-forge/generate logic, in-process.
+// Campaign content generation for the MCP server: RAG-augmented prose.
+// Runs in-process; grounds output in campaign RAG + direct NPC lookups.
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -19,7 +19,7 @@ const TEMPLATE_PROMPTS = {
   freeform: '',
 };
 
-export async function storyForgeGenerate(openai, { prompt, template = 'freeform', entities = [] } = {}) {
+export async function generateCampaignContent(openai, { prompt, template = 'freeform', entities = [] } = {}) {
   if (!prompt || typeof prompt !== 'string') {
     throw new Error('prompt is required');
   }
@@ -51,7 +51,7 @@ export async function storyForgeGenerate(openai, { prompt, template = 'freeform'
       ).join('\n')
     : '';
 
-  const systemPrompt = `You are the Story Forge, an AI assistant for the Dungeon Master of "Halls of the Damned", a D&D 5e campaign set in Barovia.
+  const systemPrompt = `You are an AI writing assistant for the Dungeon Master of "Halls of the Damned", a D&D 5e campaign set in Barovia.
 
 You MUST use the campaign context provided below to ensure accuracy. Never invent NPCs, locations, events, or history that contradict the established campaign data. If the context doesn't cover something, you may extrapolate creatively but flag it as [NEW CONTENT].
 

@@ -75,7 +75,6 @@ const NAV_ITEMS = [
     label: "\u2699 DM Command Center", adminOnly: true, dropdown: [
       { header: "AI Tools" },
       { label: "DM Chat", href: "/dm-admin#chat" },
-      { label: "Story Forge", href: "/dm-admin#forge" },
       { label: "Image Studio", href: "/dm-admin#images" },
       { header: "Campaign" },
       { label: "Notebook", href: "/dm-admin#notes" },

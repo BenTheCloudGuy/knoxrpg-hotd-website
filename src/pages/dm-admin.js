@@ -47,102 +47,6 @@ async function renderDmAdminPage(session) {
         </div>
       </section>
 
-      <!-- ╔══ STORY FORGE ══╗ -->
-      <section class="dmc-panel" id="dmc-forge" style="display:none;">
-        <div class="dmc-panel-bar"><h2>Story Forge</h2>
-          <div class="dmc-bar-actions">
-            <button class="dmc-btn dmc-btn-sm" onclick="showForge('gen')">Generate</button>
-            <button class="dmc-btn dmc-btn-sm" onclick="showForge('lib')">Library</button>
-            <button class="dmc-btn dmc-btn-sm" onclick="showForge('rag')">RAG Search</button>
-          </div>
-        </div>
-        <!-- Generate -->
-        <div id="forge-gen" class="forge-sec">
-          <div class="dmc-form-row">
-            <label>Template<select id="forge-tpl" onchange="updateForgeHint()">
-              <option value="npc_backstory">NPC Backstory</option>
-              <option value="magic_item">Magic Item</option>
-              <option value="spell">Custom Spell</option>
-              <option value="session_summary">Session Summary</option>
-              <option value="session_planning">Session Planning</option>
-              <option value="scene_description">Scene Description</option>
-              <option value="quest_hook">Quest Hook</option>
-              <option value="faction_lore">Faction Lore</option>
-              <option value="freeform">Freeform</option>
-            </select></label>
-            <label>Related Entities<input id="forge-ents" placeholder="Ireena, Vallaki, Van Richten" /></label>
-          </div>
-          <p id="forge-hint" class="dmc-hint"></p>
-          <textarea id="forge-prompt" rows="4" class="dmc-textarea" placeholder="Describe what to generate..."></textarea>
-          <div class="dmc-form-actions">
-            <button class="dmc-btn dmc-btn-primary" id="forge-go" onclick="forgeGen()">Generate</button>
-            <span id="forge-status" class="dmc-status-text"></span>
-          </div>
-          <div id="forge-result" class="forge-result" style="display:none;">
-            <div class="forge-result-hdr">
-              <span id="forge-result-meta"></span>
-              <div>
-                <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="forgeCommit()">Commit</button>
-                <button class="dmc-btn dmc-btn-sm" onclick="forgeCopy()">Copy</button>
-                <button class="dmc-btn dmc-btn-sm" onclick="forgeGen()">Redo</button>
-              </div>
-            </div>
-            <div id="forge-result-body" class="forge-result-body"></div>
-          </div>
-        </div>
-        <!-- Library -->
-        <div id="forge-lib" class="forge-sec" style="display:none;">
-          <div class="dmc-form-row">
-            <label>Type<select id="forge-lib-type" onchange="loadForgeLib()">
-              <option value="">All</option>
-              <option value="npc_backstory">NPC Backstory</option><option value="magic_item">Magic Item</option>
-              <option value="spell">Spell</option><option value="session_summary">Session Summary</option>
-              <option value="session_planning">Session Planning</option><option value="scene_description">Scene</option>
-              <option value="quest_hook">Quest Hook</option><option value="faction_lore">Faction Lore</option>
-              <option value="freeform">Freeform</option>
-            </select></label>
-            <label>Status<select id="forge-lib-st" onchange="loadForgeLib()">
-              <option value="">All</option><option value="draft">Draft</option>
-              <option value="committed">Committed</option><option value="archived">Archived</option>
-            </select></label>
-          </div>
-          <div id="forge-lib-list"></div>
-          <div id="forge-detail" class="forge-detail" style="display:none;">
-            <div class="forge-result-hdr"><h4 id="forge-det-title"></h4>
-              <div>
-                <button class="dmc-btn dmc-btn-sm dmc-btn-primary" onclick="forgeApply()">Apply to NPCs</button>
-                <button class="dmc-btn dmc-btn-sm" onclick="forgeEdit()">Edit</button>
-                <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="forgeDel()">Delete</button>
-                <button class="dmc-btn dmc-btn-sm" onclick="el('forge-detail').style.display='none'">Close</button>
-              </div>
-            </div>
-            <div id="forge-det-meta" class="forge-result-meta"></div>
-            <div id="forge-det-body" class="forge-result-body"></div>
-            <div id="forge-det-edit" style="display:none;margin-top:8px;">
-              <textarea id="forge-det-edit-ta" rows="8" class="dmc-textarea"></textarea>
-              <div class="dmc-form-actions"><button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="forgeSaveEdit()">Save</button>
-                <button class="dmc-btn dmc-btn-sm" onclick="el('forge-det-edit').style.display='none'">Cancel</button></div>
-            </div>
-          </div>
-        </div>
-        <!-- RAG -->
-        <div id="forge-rag" class="forge-sec" style="display:none;">
-          <p class="dmc-hint">Search your campaign's embedded knowledge base. Includes DM-only content.</p>
-          <div class="dmc-form-row">
-            <label style="flex:3">Query<input id="rag-q" placeholder="What happened to Ireena at Castle Ravenloft?" onkeydown="if(event.key==='Enter')ragSearch()" /></label>
-            <label>Source<select id="rag-type"><option value="">All</option>
-              <option value="npc">NPC</option><option value="session">Session</option>
-              <option value="lore">Lore</option><option value="lore_json">Lore JSON</option>
-              <option value="calendar">Calendar</option><option value="handout">Handout</option>
-              <option value="artifact">Artifact</option><option value="character">Character</option>
-              <option value="journal">Journal</option></select></label>
-            <label>Min<input type="number" id="rag-min" value="0.2" min="0" max="1" step="0.05" style="width:80px" /></label>
-          </div>
-          <div class="dmc-form-actions"><button class="dmc-btn dmc-btn-primary" onclick="ragSearch()">Search</button></div>
-          <div id="rag-results"></div>
-        </div>
-      </section>
-
       <!-- ╔══ IMAGE STUDIO ══╗ -->
       <section class="dmc-panel" id="dmc-images" style="display:none;">
         <div class="dmc-panel-bar"><h2>Image Studio</h2></div>
@@ -198,11 +102,41 @@ async function renderDmAdminPage(session) {
 
       <!-- ╔══ CAMPAIGN NOTEBOOK ══╗ -->
       <section class="dmc-panel" id="dmc-notes" style="display:none;">
+        <div id="nb-ai-modal" class="nb-ai-modal" style="display:none;">
+          <div class="nb-ai-box">
+            <div class="nb-ai-hdr"><h3>&#10024; AI Assist &mdash; Generate a Notebook Page</h3><button class="dmc-btn dmc-btn-sm" onclick="nbAiClose()">&#10005;</button></div>
+            <div class="nb-ai-body">
+              <label class="nb-ai-lbl">Prompt
+                <textarea id="nb-ai-prompt" rows="4" class="dmc-textarea" placeholder="Describe the document to generate. It is grounded in your campaign RAG (NPCs, lore, sessions). e.g. 'Write a detailed writeup of the Wachter family politics in Vallaki, including their feud with the Vallakoviches.'"></textarea>
+              </label>
+              <label class="nb-ai-lbl">Related entities (optional, comma-separated NPC/place names)
+                <input id="nb-ai-ents" placeholder="Fiona Wachter, Vallaki, Baron Vallakovich" />
+              </label>
+              <div class="dmc-form-actions">
+                <button class="dmc-btn dmc-btn-primary" id="nb-ai-gen" onclick="nbAiGenerate()">Generate</button>
+                <span id="nb-ai-status" class="dmc-status-text"></span>
+              </div>
+              <div id="nb-ai-preview-wrap" style="display:none;">
+                <div class="forge-result-body" id="nb-ai-preview" style="max-height:340px;overflow:auto;"></div>
+                <div class="dmc-form-row" style="margin-top:10px;">
+                  <label class="nb-ai-lbl">Save to folder<select id="nb-ai-folder"></select></label>
+                  <label class="nb-ai-lbl" style="flex:2;">Page name<input id="nb-ai-name" placeholder="wachter-politics" /></label>
+                </div>
+                <div class="dmc-form-actions">
+                  <button class="dmc-btn dmc-btn-primary" onclick="nbAiCreate()">Create Draft Page</button>
+                  <button class="dmc-btn dmc-btn-sm" onclick="nbAiGenerate()">Regenerate</button>
+                  <span class="dmc-hint">Creates a DRAFT page you can edit and publish.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="notebook-layout">
           <div class="nb-sidebar" id="nb-sidebar">
             <div class="nb-sidebar-hdr">
               <span style="font-weight:700;color:#c83232;font-size:0.82rem;">Campaign Notes</span>
               <div style="display:flex;gap:4px;">
+                <button class="dmc-btn dmc-btn-sm dmc-btn-primary" onclick="nbAiOpen()" title="Generate a page with AI (RAG-grounded)">&#10024; AI</button>
                 <button class="dmc-btn dmc-btn-sm" onclick="nbNewFile()" title="New File">&#128196; +</button>
                 <button class="dmc-btn dmc-btn-sm" onclick="nbNewFolder()" title="New Folder">&#128193; +</button>
                 <button class="dmc-btn dmc-btn-sm" onclick="nbExpandAll()" title="Expand All" style="font-size:0.65rem;">&#9662;&#9662;</button>
@@ -599,6 +533,12 @@ async function renderDmAdminPage(session) {
     .notebook-layout { display:flex; height:100%; border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
+    .nb-ai-modal { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1000; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; }
+    .nb-ai-box { background:#141414; border:1px solid #c83232; border-radius:10px; width:100%; max-width:720px; }
+    .nb-ai-hdr { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #222; }
+    .nb-ai-hdr h3 { margin:0; color:#e8b923; font-size:0.95rem; }
+    .nb-ai-body { padding:16px; }
+    .nb-ai-lbl { display:flex; flex-direction:column; gap:4px; font-size:0.72rem; color:#888; margin-bottom:10px; }
     .nb-search-wrap { padding:6px 10px; border-bottom:1px solid #1a1a1a; }
     .nb-search { width:100%; background:#111; border:1px solid #2a2a2a; border-radius:4px; padding:5px 8px; color:#ccc; font-size:0.75rem; outline:none; }
     .nb-search:focus { border-color:#c83232; }
@@ -723,7 +663,7 @@ async function renderDmAdminPage(session) {
   // works from any page and switches panels in-place when already here.
   let _currentPanel = null;
   let _loaded = {};
-  const PANELS = ['chat','forge','images','notes','characters','npcs','sessions','ai','search','campaign','users'];
+  const PANELS = ['chat','images','notes','characters','npcs','sessions','ai','search','campaign','users'];
   function showPanel(panel) {
     if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
@@ -737,7 +677,7 @@ async function renderDmAdminPage(session) {
     else location.hash = panel;
   }
   function loadPanel(p) {
-    const loaders = { chat:loadChat, forge:loadForge, images:loadImages, notes:loadNotes,
+    const loaders = { chat:loadChat, images:loadImages, notes:loadNotes,
       characters:loadChars, npcs:loadNpcs, sessions:loadSessions, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
     if (loaders[p]) loaders[p]();
@@ -852,128 +792,6 @@ async function renderDmAdminPage(session) {
     loadConversations();
   }
 
-  // ═══ STORY FORGE ═══
-  let _forgeContent = '', _forgeTpl = '', _forgeElId = null;
-  const FORGE_HINTS = {
-    npc_backstory:'Describe the NPC and what to develop. Mention related NPCs/locations.',
-    magic_item:'Describe the item concept, rarity, and campaign ties.',
-    spell:'Describe the spell concept, school, level, and use.',
-    session_summary:'Provide session number and key events.',
-    session_planning:'Describe next session goals. Mention NPCs and locations.',
-    scene_description:'Describe location, time, mood, and what the party notices.',
-    quest_hook:'Describe the quest concept and who gives it.',
-    faction_lore:'Name the faction and what to develop.',
-    freeform:'Write anything — AI uses RAG for grounding.',
-  };
-  function updateForgeHint() { el('forge-hint').textContent = FORGE_HINTS[el('forge-tpl').value] || ''; }
-  function showForge(s) { document.querySelectorAll('.forge-sec').forEach(x => x.style.display = 'none'); el('forge-' + s).style.display = 'block'; if (s === 'lib') loadForgeLib(); }
-  function loadForge() { updateForgeHint(); }
-
-  async function forgeGen() {
-    const prompt = el('forge-prompt').value.trim();
-    if (!prompt) return alert('Enter a prompt');
-    const tpl = el('forge-tpl').value;
-    const ents = el('forge-ents').value.split(',').map(s=>s.trim()).filter(Boolean);
-    el('forge-go').disabled = true;
-    el('forge-status').textContent = 'Generating with RAG context...';
-    try {
-      const r = await fetch('/api/dm-admin/story-forge/generate', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ template:tpl, prompt, entities:ents })
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      _forgeContent = d.content; _forgeTpl = tpl;
-      el('forge-result-body').innerHTML = renderMd(d.content);
-      el('forge-result-meta').innerHTML = esc(tpl.replace(/_/g,' ')) + ' &middot; ' + d.ragChunks + ' RAG chunks &middot; ' + d.entityLookups + ' lookups' + (d.usage ? ' &middot; ' + d.usage.total_tokens + ' tokens' : '');
-      el('forge-result').style.display = 'block';
-      el('forge-status').textContent = 'Done!';
-      setTimeout(() => el('forge-status').textContent = '', 3000);
-    } catch(e) { el('forge-status').textContent = 'Error: ' + e.message; }
-    finally { el('forge-go').disabled = false; }
-  }
-
-  function forgeCopy() { navigator.clipboard.writeText(_forgeContent).then(() => alert('Copied!')); }
-
-  async function forgeCommit() {
-    const title = prompt('Title:','');
-    if (!title) return;
-    const ents = el('forge-ents').value.split(',').map(s=>s.trim()).filter(Boolean);
-    const r = await fetch('/api/dm-admin/story-elements', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ element_type:_forgeTpl||'freeform', title, content:_forgeContent, related_entities:ents, status:'draft' })
-    });
-    const d = await r.json();
-    alert(r.ok ? 'Saved (ID: ' + d.id + ')' : 'Error: ' + (d.error||''));
-  }
-
-  async function loadForgeLib() {
-    const type = el('forge-lib-type').value;
-    const st = el('forge-lib-st').value;
-    let url = '/api/dm-admin/story-elements?';
-    if(type) url += 'type=' + type + '&';
-    if(st) url += 'status=' + st;
-    const r = await fetch(url);
-    const d = await r.json();
-    const list = el('forge-lib-list');
-    if (!d.elements?.length) { list.innerHTML = '<p class="dmc-empty">No elements yet.</p>'; return; }
-    list.innerHTML = d.elements.map(e => {
-      const bc = e.status==='committed'?'forge-badge-committed':e.status==='archived'?'forge-badge-archived':'forge-badge-draft';
-      const rel = (typeof e.related_entities==='string'?JSON.parse(e.related_entities):e.related_entities)||[];
-      return '<div class="forge-lib-item" onclick="openForgeEl('+e.id+')"><div><h5>'+esc(e.title)+'</h5><small>'+e.element_type.replace(/_/g,' ')+' &middot; '+new Date(e.updated_at).toLocaleDateString()+(rel.length?' &middot; '+rel.join(', '):'')+
-        '</small></div><span class="'+bc+'">'+e.status+'</span></div>';
-    }).join('');
-  }
-
-  async function openForgeEl(id) {
-    _forgeElId = id;
-    const r = await fetch('/api/dm-admin/story-elements/' + id);
-    const d = await r.json();
-    if (!r.ok) return;
-    const e = d.element;
-    el('forge-det-title').textContent = e.title;
-    el('forge-det-body').innerHTML = renderMd(e.content);
-    el('forge-det-body').dataset.raw = e.content;
-    const bc = e.status==='committed'?'forge-badge-committed':e.status==='archived'?'forge-badge-archived':'forge-badge-draft';
-    const rel = (typeof e.related_entities==='string'?JSON.parse(e.related_entities):e.related_entities)||[];
-    el('forge-det-meta').innerHTML = '<span>'+e.element_type.replace(/_/g,' ')+'</span><span class="'+bc+'">'+e.status+'</span><span>'+new Date(e.created_at).toLocaleString()+'</span>'+(rel.length?'<span>'+rel.join(', ')+'</span>':'');
-    el('forge-det-edit').style.display = 'none';
-    el('forge-detail').style.display = 'block';
-  }
-
-  function forgeEdit() { el('forge-det-edit-ta').value = el('forge-det-body').dataset.raw || el('forge-det-body').textContent; el('forge-det-edit').style.display = 'block'; }
-  async function forgeSaveEdit() {
-    if(!_forgeElId) return;
-    const r = await fetch('/api/dm-admin/story-elements/'+_forgeElId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({content:el('forge-det-edit-ta').value})});
-    if(r.ok) { const v=el('forge-det-edit-ta').value; el('forge-det-body').innerHTML=renderMd(v); el('forge-det-body').dataset.raw=v; el('forge-det-edit').style.display='none'; loadForgeLib(); }
-  }
-  async function forgeDel() {
-    if(!_forgeElId||!confirm('Delete?')) return;
-    await fetch('/api/dm-admin/story-elements/'+_forgeElId,{method:'DELETE'});
-    el('forge-detail').style.display='none'; loadForgeLib();
-  }
-  async function forgeApply() {
-    if(!_forgeElId) return;
-    const ids = prompt('NPC IDs (comma separated):');
-    if(!ids) return;
-    const r = await fetch('/api/dm-admin/story-elements/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({element_id:_forgeElId,npc_ids:ids.split(',').map(s=>s.trim())})});
-    const d = await r.json();
-    alert(r.ok ? 'Applied to '+d.updated+' NPC(s)' : 'Error: '+(d.error||''));
-    if(r.ok) openForgeEl(_forgeElId);
-  }
-
-  async function ragSearch() {
-    const q = el('rag-q').value.trim();
-    if(!q) return;
-    el('rag-results').innerHTML = '<p class="dmc-empty">Searching...</p>';
-    const r = await fetch('/api/dm-admin/story-forge/rag-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,sourceType:el('rag-type').value||undefined,minScore:parseFloat(el('rag-min').value)||0.2,limit:10})});
-    const d = await r.json();
-    if(!d.results?.length) { el('rag-results').innerHTML = '<p class="dmc-empty">No results.</p>'; return; }
-    el('rag-results').innerHTML = d.results.map(r =>
-      '<div class="forge-rag-item"><div class="forge-rag-hdr"><strong>'+esc(r.title)+'</strong><span><span class="forge-score">'+r.score+'</span> '+r.source_type+'</span></div><p>'+esc(r.chunk_text.substring(0,500))+(r.chunk_text.length>500?'...':'')+'</p></div>'
-    ).join('');
-  }
-
   // ═══ IMAGE STUDIO ═══
   let _imgFolder = null, _imgId = null, _imgPreviewId = null;
   async function loadImages() { await loadImgFolders(); await loadImgGallery(); }
@@ -1079,6 +897,7 @@ async function renderDmAdminPage(session) {
   let _nbTree = [];
   let _nbCurrentPath = null;
   let _nbStatus = null;
+  let _nbAiContent = '';
   let _nbEditor = null;
   let _nbDirty = false;
   let _nbSaveTimer = null;
@@ -1665,6 +1484,54 @@ async function renderDmAdminPage(session) {
       el('nb-save-status').textContent = 'Save failed: ' + (d.error||'');
       el('nb-save-status').style.color = '#f44';
     }
+  }
+
+  // ── AI Assist: RAG-grounded page generation ──
+  function nbAiOpen() {
+    el('nb-ai-prompt').value = '';
+    el('nb-ai-ents').value = '';
+    el('nb-ai-name').value = '';
+    el('nb-ai-preview-wrap').style.display = 'none';
+    el('nb-ai-status').textContent = '';
+    _nbAiContent = '';
+    var folders = [''];
+    (function walk(nodes) { (nodes || []).forEach(function(n) { if (n.type === 'folder') { folders.push(n.path); walk(n.children); } }); })(_nbTree);
+    el('nb-ai-folder').innerHTML = folders.map(function(f) { return '<option value="' + esc(f) + '">' + (f ? esc(f) : '(root)') + '</option>'; }).join('');
+    el('nb-ai-modal').style.display = 'flex';
+  }
+  function nbAiClose() { el('nb-ai-modal').style.display = 'none'; }
+  async function nbAiGenerate() {
+    var p = el('nb-ai-prompt').value.trim();
+    if (!p) return alert('Enter a prompt');
+    var ents = el('nb-ai-ents').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    var btn = el('nb-ai-gen'); btn.disabled = true;
+    el('nb-ai-status').textContent = 'Generating with campaign RAG...';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:p, entities:ents }) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Generation failed');
+      _nbAiContent = d.content || '';
+      el('nb-ai-preview').innerHTML = renderMd(_nbAiContent);
+      el('nb-ai-preview-wrap').style.display = 'block';
+      el('nb-ai-status').textContent = (d.ragChunks || 0) + ' RAG chunks \u00b7 ' + (d.entityLookups || 0) + ' NPC lookups' + (d.usage ? ' \u00b7 ' + d.usage.total_tokens + ' tokens' : '');
+      if (!el('nb-ai-name').value) {
+        var m = _nbAiContent.match(/^#\s+(.+)$/m);
+        if (m) el('nb-ai-name').value = m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      }
+    } catch (e) { el('nb-ai-status').textContent = 'Error: ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+  async function nbAiCreate() {
+    if (!_nbAiContent) return;
+    var folder = el('nb-ai-folder').value;
+    var name = el('nb-ai-name').value.trim();
+    if (!name) return alert('Enter a page name');
+    if (!name.endsWith('.md')) name += '.md';
+    var fullPath = folder ? folder + '/' + name : name;
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:fullPath, type:'file', content:_nbAiContent }) });
+    var d = await r.json();
+    if (r.ok) { nbAiClose(); await loadNotes(); nbOpenFile(fullPath); }
+    else { alert('Error: ' + (d.error || '')); }
   }
 
   async function nbNewFile() { nbNewFileIn(''); }

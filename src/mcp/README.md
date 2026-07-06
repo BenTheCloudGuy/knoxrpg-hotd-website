@@ -1,6 +1,6 @@
 # HotD RAG MCP Server
 
-A Model Context Protocol server that exposes the "Halls of the Damned" campaign RAG, lookup tools, Story Forge, and reindex pipeline to MCP-aware AI agents (Claude Desktop, VS Code Copilot, custom clients).
+A Model Context Protocol server that exposes the "Halls of the Damned" campaign RAG, lookup tools, content generation, and reindex pipeline to MCP-aware AI agents (Claude Desktop, VS Code Copilot, custom clients).
 
 ## What it exposes
 
@@ -9,7 +9,7 @@ A Model Context Protocol server that exposes the "Halls of the Damned" campaign 
 | `search_embeddings`      | RAG (raw)   | Hybrid pgvector + full-text search over `hotd_embeddings`               |
 | `rag_status`             | Health      | Total/per-source chunk counts and freshness                             |
 | `trigger_reindex`        | Pipeline    | Spawn `scripts/embed-pipeline.js` for a given source/mode               |
-| `story_forge_generate`   | Generation  | RAG-augmented prose generation with 9 templates                         |
+| `generate_campaign_content` | Generation  | RAG-augmented prose generation grounded in campaign embeddings          |
 | `lookup_npc`             | Lookup      | Fuzzy NPC lookup by name                                                |
 | `search_npcs`            | Lookup      | NPC search by location/status/keyword                                   |
 | `get_session_log`        | Lookup      | Session summary by number or keyword                                    |
@@ -130,6 +130,6 @@ curl -N -H "Authorization: Bearer $MCP_AUTH_TOKEN" http://hotd-mcp.knoxrpg.com/s
 ## Notes
 
 - The `trigger_reindex` tool spawns `scripts/embed-pipeline.js` as a child process with a 5-minute hard timeout. Output is truncated to the last 8 KB of stdout and 2 KB of stderr.
-- The `story_forge_generate` tool runs the same logic as the website's `/api/dm-admin/story-forge/generate` endpoint, but in-process. The model is read from the `hotd_config.ai_model` row.
+- The `generate_campaign_content` tool runs RAG-augmented generation in-process (the same grounding as the website's notebook AI Assist). The model is read from the `hotd_config.ai_model` row.
 - All tools run in DM mode (`isDM = true`), so MCP callers get DM-only context. Treat the MCP server as a privileged interface and bind it to localhost or require `MCP_AUTH_TOKEN` for remote use.
 - Helm deployment for the HTTP transport is not yet wired. To run it in the cluster, add a `Deployment + Service + Ingress` in `helm/hotd-website/templates/` and inject `MCP_AUTH_TOKEN` from a `Secret`.

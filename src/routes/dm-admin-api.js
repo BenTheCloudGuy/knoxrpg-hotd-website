@@ -8,7 +8,7 @@ const { pgPool } = require("../db/pool");
 const { readBody, sendJSON, parseMultipart } = require("../lib/utils");
 const azure = require("../lib/azure");
 const { uploadBlobToStorage } = azure;
-const { searchEmbeddings, buildEmbeddingContext } = require("../lib/rag");
+const { buildEmbeddingContext } = require("../lib/rag");
 const { chatWithTools } = require("../lib/ai-tools");
 const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
@@ -956,57 +956,45 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
   }
 
   // ══════════════════════════════════════════════════════════════
-  // ── STORY FORGE ─────────────────────────────────────────────
+  // ── NOTEBOOK AI GENERATION ──────────────────────────────────
   // ══════════════════════════════════════════════════════════════
 
-  // ── Story Forge: generate content ──────────────────────────
-  if (decoded === "/api/dm-admin/story-forge/generate" && req.method === "POST") {
+  // ── Notebook: AI generate (RAG-grounded freeform) ──────────
+  // Generates a Markdown document grounded in campaign RAG + NPC lookups.
+  // The notebook UI turns the result into a new DRAFT page.
+  if (decoded === "/api/dm-admin/notebook/generate" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     try {
       const body = JSON.parse(await readBody(req));
-      const { template, prompt, entities } = body;
-      if (!prompt) { sendJSON(res, { error: "Prompt is required" }, 400); return true; }
+      const { prompt } = body;
+      if (!prompt || !prompt.trim()) { sendJSON(res, { error: "Prompt is required" }, 400); return true; }
+      const entities = Array.isArray(body.entities)
+        ? body.entities
+        : (typeof body.entities === "string" ? body.entities.split(",").map(s => s.trim()).filter(Boolean) : []);
 
-      // Build RAG context from the prompt + entity names
-      const searchTerms = [prompt, ...(entities || [])].join(" ");
+      // Build RAG context from the prompt + entity names (DM content included)
+      const searchTerms = [prompt, ...entities].join(" ");
       const ragContext = await buildEmbeddingContext(azure.openaiClient, searchTerms, {
         includeDmOnly: true, limit: 12, minScore: 0.25,
       });
 
       // Also do direct DB lookups for mentioned entities
       const entityData = [];
-      for (const ent of (entities || []).slice(0, 10)) {
+      for (const ent of entities.slice(0, 10)) {
         const npcR = await pgPool.query(
           "SELECT name, race, npc_class, location, status, alignment_tag, description FROM hotd_npcs WHERE name ILIKE $1 LIMIT 1",
           [`%${ent}%`]
         );
         if (npcR.rows.length) entityData.push({ type: "NPC", ...npcR.rows[0] });
       }
-
-      const templatePrompts = {
-        npc_backstory: "Generate a rich, detailed NPC backstory. Include personality traits, motivations, secrets, and connections to other campaign elements. Format with markdown headers.",
-        magic_item: "Design a custom D&D 5e magic item. Include: Name, Rarity, Type, Attunement requirements, Description, Mechanical effects (with specific numbers), Lore/History. Format as a proper item card.",
-        spell: "Design a custom D&D 5e spell. Include: Name, Level, School, Casting Time, Range, Components, Duration, Description with mechanical effects. Format as a proper spell card.",
-        session_summary: "Write a narrative session summary in the voice of a chronicler. Include key events, NPC interactions, combat highlights, and plot developments. Reference specific characters and locations accurately.",
-        session_planning: "Create a detailed session plan. Include: Opening scene, Key encounters (social/combat/exploration), NPC motivations and dialogue hooks, Potential branching points, Treasure/rewards, Cliffhanger ending options.",
-        scene_description: "Write an evocative scene description for the DM to read aloud. Use vivid sensory details (sight, sound, smell, touch). Set the mood and atmosphere. Keep it 2-3 paragraphs.",
-        quest_hook: "Design a compelling quest hook. Include: The hook (how players learn about it), Background (what's really going on), Key NPCs involved, Locations, Potential rewards, Complications/twists.",
-        faction_lore: "Write detailed faction lore. Include: Name, History, Goals, Leadership, Membership, Relations with other factions, Current activities, How PCs might interact with them.",
-        freeform: "",
-      };
-
-      const templateInstr = templatePrompts[template] || templatePrompts.freeform;
       const entityContext = entityData.length
         ? "\n\nDirect entity data:\n" + entityData.map(e => `- ${e.type}: ${e.name} — ${e.race || ""} ${e.npc_class || ""}, ${e.location || ""}, ${e.status || ""}. ${(e.description || "").slice(0, 500)}`).join("\n")
         : "";
 
-      const systemPrompt = `You are the Story Forge — an AI assistant for the Dungeon Master of "Halls of the Damned", a D&D 5e campaign set in Barovia.
+      const systemPrompt = `You are an AI writing assistant for the Dungeon Master of "Halls of the Damned", a D&D 5e campaign set in Barovia. Produce a single, well-structured Markdown document suitable for the campaign notebook (use headings, lists, and tables where helpful).
 
 You MUST use the campaign context provided below to ensure accuracy. Never invent NPCs, locations, events, or history that contradict the established campaign data. If the context doesn't cover something, you may extrapolate creatively but flag it as [NEW CONTENT].
-
-${templateInstr}
-
 ${ragContext}${entityContext}`;
 
       const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
@@ -1026,7 +1014,7 @@ ${ragContext}${entityContext}`;
         model,
         username: session.username || "",
         isDM: true,
-        source: "dm-admin.story-forge",
+        source: "dm-admin.notebook-generate",
         latencyMs: Date.now() - t0,
       });
 
@@ -1039,129 +1027,7 @@ ${ragContext}${entityContext}`;
         entityLookups: entityData.length,
       });
     } catch (err) {
-      console.error("Story Forge generation error:", err);
-      sendJSON(res, { error: err.message }, 500);
-    }
-    return true;
-  }
-
-  // ── Story Forge: list story elements ───────────────────────
-  if (decoded === "/api/dm-admin/story-elements" && req.method === "GET") {
-    if (!requireAdmin(session, res)) return true;
-    const params = new URL("http://x" + req.url).searchParams;
-    const type = params.get("type") || null;
-    const status = params.get("status") || null;
-    let q = "SELECT id, element_type, title, status, related_entities, created_at, updated_at FROM hotd_dm_story_elements";
-    const wheres = [];
-    const vals = [];
-    let idx = 1;
-    if (type) { wheres.push(`element_type = $${idx++}`); vals.push(type); }
-    if (status) { wheres.push(`status = $${idx++}`); vals.push(status); }
-    if (wheres.length) q += " WHERE " + wheres.join(" AND ");
-    q += " ORDER BY updated_at DESC";
-    const r = await pgPool.query(q, vals);
-    sendJSON(res, { elements: r.rows });
-    return true;
-  }
-
-  // ── Story Forge: get single element ────────────────────────
-  const storyGetMatch = decoded.match(/^\/api\/dm-admin\/story-elements\/(\d+)$/);
-  if (storyGetMatch && req.method === "GET") {
-    if (!requireAdmin(session, res)) return true;
-    const id = parseInt(storyGetMatch[1], 10);
-    const r = await pgPool.query("SELECT * FROM hotd_dm_story_elements WHERE id = $1", [id]);
-    if (r.rows.length === 0) { sendJSON(res, { error: "Not found" }, 404); return true; }
-    sendJSON(res, { element: r.rows[0] });
-    return true;
-  }
-
-  // ── Story Forge: commit (save) element ─────────────────────
-  if (decoded === "/api/dm-admin/story-elements" && req.method === "POST") {
-    if (!requireAdmin(session, res)) return true;
-    const body = JSON.parse(await readBody(req));
-    const { element_type, title, content, related_entities, status } = body;
-    if (!element_type || !title || !content) {
-      sendJSON(res, { error: "element_type, title, and content are required" }, 400);
-      return true;
-    }
-    const r = await pgPool.query(
-      `INSERT INTO hotd_dm_story_elements (element_type, title, content, related_entities, status)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`,
-      [element_type, title, content, JSON.stringify(related_entities || []), status || "draft"]
-    );
-    sendJSON(res, { ok: true, id: r.rows[0].id, created_at: r.rows[0].created_at });
-    return true;
-  }
-
-  // ── Story Forge: update element ────────────────────────────
-  const storyUpdateMatch = decoded.match(/^\/api\/dm-admin\/story-elements\/(\d+)$/);
-  if (storyUpdateMatch && req.method === "PUT") {
-    if (!requireAdmin(session, res)) return true;
-    const id = parseInt(storyUpdateMatch[1], 10);
-    const body = JSON.parse(await readBody(req));
-    const sets = [];
-    const vals = [];
-    let idx = 1;
-    if (body.title !== undefined) { sets.push(`title = $${idx++}`); vals.push(body.title); }
-    if (body.content !== undefined) { sets.push(`content = $${idx++}`); vals.push(body.content); }
-    if (body.status !== undefined) { sets.push(`status = $${idx++}`); vals.push(body.status); }
-    if (body.related_entities !== undefined) { sets.push(`related_entities = $${idx++}`); vals.push(JSON.stringify(body.related_entities)); }
-    if (body.element_type !== undefined) { sets.push(`element_type = $${idx++}`); vals.push(body.element_type); }
-    if (sets.length === 0) { sendJSON(res, { error: "Nothing to update" }, 400); return true; }
-    sets.push("updated_at = NOW()");
-    vals.push(id);
-    await pgPool.query(`UPDATE hotd_dm_story_elements SET ${sets.join(", ")} WHERE id = $${idx}`, vals);
-    sendJSON(res, { ok: true });
-    return true;
-  }
-
-  // ── Story Forge: delete element ────────────────────────────
-  const storyDeleteMatch = decoded.match(/^\/api\/dm-admin\/story-elements\/(\d+)$/);
-  if (storyDeleteMatch && req.method === "DELETE") {
-    if (!requireAdmin(session, res)) return true;
-    const id = parseInt(storyDeleteMatch[1], 10);
-    await pgPool.query("DELETE FROM hotd_dm_story_elements WHERE id = $1", [id]);
-    sendJSON(res, { ok: true });
-    return true;
-  }
-
-  // ── Story Forge: apply to NPCs (update NPC description with story element content) ──
-  if (decoded === "/api/dm-admin/story-elements/apply" && req.method === "POST") {
-    if (!requireAdmin(session, res)) return true;
-    const body = JSON.parse(await readBody(req));
-    const { element_id, npc_ids, append_text } = body;
-    if (!element_id || !npc_ids?.length) {
-      sendJSON(res, { error: "element_id and npc_ids are required" }, 400);
-      return true;
-    }
-    const elR = await pgPool.query("SELECT title, content FROM hotd_dm_story_elements WHERE id = $1", [element_id]);
-    if (elR.rows.length === 0) { sendJSON(res, { error: "Story element not found" }, 404); return true; }
-    const text = append_text || `\n\n---\n**[Story Forge: ${elR.rows[0].title}]**\n${elR.rows[0].content}`;
-    let updated = 0;
-    for (const npcId of npc_ids) {
-      const nid = parseInt(npcId, 10);
-      if (isNaN(nid)) continue;
-      await pgPool.query("UPDATE hotd_npcs SET description = description || $1 WHERE id = $2", [text, nid]);
-      updated++;
-    }
-    // Mark element as committed
-    await pgPool.query("UPDATE hotd_dm_story_elements SET status = 'committed' WHERE id = $1", [element_id]);
-    sendJSON(res, { ok: true, updated });
-    return true;
-  }
-
-  // ── Story Forge: RAG search preview ────────────────────────
-  if (decoded === "/api/dm-admin/story-forge/rag-search" && req.method === "POST") {
-    if (!requireAdmin(session, res)) return true;
-    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
-    try {
-      const body = JSON.parse(await readBody(req));
-      const results = await searchEmbeddings(azure.openaiClient, body.query || "", {
-        includeDmOnly: true, limit: body.limit || 10, minScore: body.minScore || 0.2,
-        sourceType: body.sourceType || undefined,
-      });
-      sendJSON(res, { results });
-    } catch (err) {
+      console.error("Notebook generate error:", err);
       sendJSON(res, { error: err.message }, 500);
     }
     return true;
