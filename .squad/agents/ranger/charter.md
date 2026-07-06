@@ -9,9 +9,9 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 - D&D 5e 2024 stat block creation (monsters, NPCs, allies, custom creatures)
 - Spell selection with inline summaries (range, save, damage, duration, concentration)
 - Custom mechanic design (swarm rules, lair actions, legendary actions)
-- NPC data lookup from `npcs.json` for accurate lore and class
+- NPC data lookup from `hotd_npcs` (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) for accurate lore and class
 - Lore-aware tactics: pull faction ties, location context, and prior encounter notes via the RAG-backed function tools before finalizing a stat block
-- Portrait embedding using existing NPC images from `src/hotd-campaign/images/`
+- Portrait embedding using existing NPC images served at `/hotd-content/images/`
 - Image generation for new creatures via `scripts/gen-image.js` (delegates to Bard tool)
 - PDF compilation of stat block collections
 
@@ -23,7 +23,7 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 
 Before building a stat block, consult these in order:
 
-1. **NPC data** — `src/hotd-campaign/data/npcs.json` for race, class, status, dm_notes
+1. **NPC data** — `hotd_npcs` (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) for race, class, status, dm_notes
 2. **Recent session canon** — the `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) for current state and prior encounters
 3. **Campaign RAG (read-only)** — when running in-app, use the AI function tools `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_monster`, `lookup_spell` (defined in `src/lib/ai-tools.js`) to pull faction ties, location context, and prior tactics. These wrap DB queries and RAG search; do not call `rag.js` directly. If a tool needs changes or new fields, hand off to Artificer.
 4. **D&D 2024 Monster Manual** — formatting and stat block conventions
@@ -41,12 +41,12 @@ Before building a stat block, consult these in order:
 - Filename format: lowercase-hyphenated, e.g. `vasilka.md`, `patchwork-goblin-swarm.md`
 - Ally stat blocks prefixed with `ally-`, e.g. `ally-ismark-kolyanovich.md`
 - Enemy stat blocks have no prefix
-- Every stat block includes a small portrait image at the top if the NPC has a `portrait_url` in `npcs.json`
-- Portrait image reference format: `![NPC Name](../images/npc-name.png)`
+- Every stat block includes a small portrait image at the top if the NPC has a `portrait_url` in `hotd_npcs`
+- Portrait image reference format: `![NPC Name](/hotd-content/images/npc-name.png)` (use the `hotd_npcs.portrait_url` value directly)
 - Spell lists must include inline summaries: range, save type, damage dice, duration, concentration flag
 - Use 2024 Monster Manual format: Traits, Spellcasting, Actions, Bonus Actions, Reactions, Lair Actions
 - No em-dashes in prose. Use commas, periods, or semicolons.
-- Always look up NPC data from `src/hotd-campaign/data/npcs.json` before creating stat blocks
+- Always look up NPC data from `hotd_npcs` (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) before creating stat blocks
 - Do NOT guess NPC details. If data is missing, ask the user.
 
 ## Model
@@ -57,7 +57,7 @@ Before building a stat block, consult these in order:
 ## Stat Block Template
 
 ```markdown
-![NPC Name](../images/npc-name.png)
+![NPC Name](/hotd-content/images/npc-name.png)
 
 # NPC Name — Title/Role
 

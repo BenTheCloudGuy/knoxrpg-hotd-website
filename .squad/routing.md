@@ -9,7 +9,7 @@ How to decide who handles what.
 | Server code, routes, pages | Artificer | Node.js server, API endpoints, pages, components     |
 | Database, schema, queries  | Artificer | PostgreSQL schema, migrations, pool config           |
 | AI/RAG, OpenAI integration | Artificer | Embeddings, chat completions, RAG pipeline           |
-| Campaign data infrastructure | Artificer | Schema, load paths, validators for `hotd-campaign/data/` |
+| Campaign data infrastructure | Artificer | Schema, load paths for `hotd_notebook_pages` (Campaign Notebook) and `hotd_npcs` |
 | Authentication, secrets    | Artificer | Auth routes, Azure Key Vault, OAuth                  |
 | Code review, architecture  | Artificer | Review PRs, check quality, architectural decisions   |
 | Codebase strategy & refactor | Artificer | Read code, propose fixes, map dependencies         |
@@ -25,7 +25,7 @@ How to decide who handles what.
 | Scene framing & transitions| Mercer    | In-world prose between encounters                    |
 | Attack / combat narration  | Mercer    | Grounded action prose for the table                  |
 | Story continuity, canon check | Mercer | Fact-check against NPCs, sessions, lore              |
-| Campaign data content edits | Mercer   | `realms/*.md` lore, notebook entries, `npcs.json` text |
+| Campaign data content edits | Mercer   | Campaign Notebook lore pages (`hotd_notebook_pages`), `hotd_npcs` NPC text |
 | FoundryVTT module code     | Wizard    | Hooks, settings, module.json, ES module scripts      |
 | FoundryVTT integration     | Wizard    | Website-to-Foundry sync, module features             |
 | NPC portraits, AI art      | Bard      | Portrait generation, style consistency, image review |

@@ -50,7 +50,7 @@ let openaiClient = null;
 
 // ── Content root (relative to repo) ──────────────────────────
 const REPO_ROOT = path.resolve(__dirname, "..");
-const CONTENT_DIR = path.join(REPO_ROOT, "src", "hotd-campaign");
+
 
 // ── Report accumulator ───────────────────────────────────────
 const report = {
@@ -238,47 +238,15 @@ async function stageExtract() {
     log(`Journal entries: ${rows.length} extracted`);
   }
 
-  // ── Files: Markdown under hotd-campaign ─────────────────────
-  if (!SOURCE_FILTER || SOURCE_FILTER === "lore") {
-    const mdFiles = findMarkdownFiles(CONTENT_DIR);
-    for (const filePath of mdFiles) {
-      const relativePath = path.relative(REPO_ROOT, filePath).replace(/\\/g, "/");
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const baseName = path.basename(filePath, ".md");
-
-      // Split on "## DM Notes" to separate player-visible from DM-only content
-      const dmSplit = raw.split(/(?=^## DM Notes)/m);
-      const playerContent = dmSplit[0].trim();
-      const dmContent = dmSplit.length > 1 ? dmSplit.slice(1).join("\n").trim() : null;
-
-      if (playerContent) {
-        sources.push({ type: "lore", id: null, title: baseName, content: playerContent, is_dm_only: false, source_path: relativePath, metadata: { file: relativePath } });
-      }
-      if (dmContent) {
-        sources.push({ type: "lore", id: null, title: `${baseName} (DM Notes)`, content: dmContent, is_dm_only: true, source_path: relativePath, metadata: { file: relativePath, dm_only: true } });
-      }
-    }
-    log(`Lore files: ${mdFiles.length} extracted (with DM Notes splitting)`);
-  }
-
-  // ── Files: JSON data files ──────────────────────────────────
-  if (!SOURCE_FILTER || SOURCE_FILTER === "lore") {
-    const jsonFiles = findJsonDataFiles(path.join(CONTENT_DIR, "data"));
-    for (const filePath of jsonFiles) {
-      const relativePath = path.relative(REPO_ROOT, filePath).replace(/\\/g, "/");
-      try {
-        const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-        const items = Array.isArray(raw) ? raw : [raw];
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          const title = item.name || item.title || `${path.basename(filePath, ".json")} #${i}`;
-          const text = typeof item === "string" ? item : JSON.stringify(item, null, 2);
-          sources.push({ type: "lore_json", id: null, title, content: text, is_dm_only: false, source_path: relativePath, metadata: { file: relativePath, index: i } });
-        }
-      } catch (e) { log(`  WARN: Failed to parse ${relativePath}: ${e.message}`); }
-    }
-    log(`JSON data files: ${jsonFiles.length} extracted`);
-  }
+  // ── Files: campaign lore (REMOVED) ─────────────────────────
+  // Campaign lore markdown (realms, groups, house rules, history, etc.) and
+  // the JSON data files no longer live in the repo — they were migrated into
+  // the DB-backed Campaign Notebook (hotd_notebook_pages, source_type
+  // 'notebook'). The former file-based `lore` / `lore_json` extraction stages
+  // were removed here. Existing `lore` / `lore_json` rows in hotd_embeddings
+  // are intentionally left untouched by incremental runs (cleanOrphans does
+  // not target them); they are reconciled to notebook embeddings when the
+  // notebook pages are published.
 
   // ── DB: DM story elements (future) ─────────────────────────
   if (!SOURCE_FILTER || SOURCE_FILTER === "dm_story") {
@@ -787,28 +755,6 @@ function splitByParagraphs(text, maxChars, overlap) {
     }
   }
   return final;
-}
-
-function findMarkdownFiles(dir) {
-  const files = [];
-  if (!fs.existsSync(dir)) return files;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...findMarkdownFiles(full));
-    else if (entry.name.endsWith(".md")) files.push(full);
-  }
-  return files;
-}
-
-function findJsonDataFiles(dir) {
-  const files = [];
-  if (!fs.existsSync(dir)) return files;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...findJsonDataFiles(full));
-    else if (entry.name.endsWith(".json")) files.push(full);
-  }
-  return files;
 }
 
 function countBy(arr, key) {

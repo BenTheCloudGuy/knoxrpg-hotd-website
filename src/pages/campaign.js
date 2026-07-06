@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const { pgPool } = require("../db/pool");
 const { esc, safeJson } = require("../lib/utils");
-const { HARPTOS_MONTHS, ordinal, STATIC_ROOT } = require("../config");
+const { HARPTOS_MONTHS, ordinal } = require("../config");
 const { pageShell } = require("../components/shell");
 const { mapOverlayBlock, artifactOverlayBlock } = require("../components/overlays");
 const { renderRichTextBlock, markdownToHtml } = require("../lib/markdown");
@@ -849,26 +849,33 @@ async function renderHandoutsPage(session) {
 
 // ── Art / Images Gallery Page ─────────────────────────────────
 async function renderArtGalleryPage(session) {
-  // Scan filesystem for images (everything except maps/)
-  const imgDir = path.join(STATIC_ROOT, 'images');
+  // Images live on the uploads PVC / NAS (served under /hotd-content/images/),
+  // not the repo. Scan the writable uploads dir first, then the read-only NAS,
+  // unioning by relative path. Everything except maps/ is shown.
+  const { HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR } = require("../config");
   const imageExts = /\.(png|jpg|jpeg|webp)$/i;
   const excludeDirs = new Set(['maps']);
+  const rels = new Set();
 
-  function collectImages(dir, urlPrefix) {
-    let images = [];
-    if (!fs.existsSync(dir)) return images;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        if (excludeDirs.has(entry.name)) continue;
-        images = images.concat(collectImages(path.join(dir, entry.name), `${urlPrefix}/${entry.name}`));
-      } else if (imageExts.test(entry.name)) {
-        images.push(`${urlPrefix}/${entry.name}`);
+  function collect(root) {
+    if (!root) return;
+    const base = path.join(root, 'images');
+    (function walk(dir, rel) {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          if (excludeDirs.has(entry.name)) continue;
+          walk(path.join(dir, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
+        } else if (imageExts.test(entry.name)) {
+          rels.add(rel ? `${rel}/${entry.name}` : entry.name);
+        }
       }
-    }
-    return images;
+    })(base, '');
   }
+  collect(HOTD_UPLOADS_DIR);
+  collect(HOTD_CONTENT_DIR);
 
-  const allImages = collectImages(imgDir, '/images').sort();
+  const allImages = [...rels].sort().map(r => `/hotd-content/images/${r}`);
 
   const artCards = allImages.length > 0 ? allImages.map(url => `
     <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(url)}, "")'>

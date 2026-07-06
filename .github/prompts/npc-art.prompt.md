@@ -9,7 +9,7 @@ Generate a dark fantasy character portrait for the specified NPC.
 
 ## Steps
 
-1. Look up the NPC in `src/hotd-campaign/data/npcs.json` by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `description`, and `dm_notes` fields.
+1. Look up the NPC in the `hotd_npcs` database (via the DM Command Center NPCs panel at `/dm-admin#npcs` or the `lookup_npc` tool) by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `description`, and `dm_notes` fields.
 
 2. If the user provides specific physical description details or creative direction, use those. Otherwise, craft a character-appropriate description from the NPC data.
 
@@ -27,11 +27,11 @@ Generate a dark fantasy character portrait for the specified NPC.
 4. Generate the image by creating and running a Node.js script in `tmp/` that:
    - Uses the `openai` SDK (require from `NODE_PATH=../scripts/node_modules`)
    - Calls `client.images.generate()` with `model: 'gpt-image-1'`, `size: '1024x1024'`, `quality: 'high'`
-   - Saves the output as a `.png` to `src/hotd-campaign/images/` using lowercase-hyphenated naming (e.g., `madam-eva.png`)
+   - Saves the output as a `.png` using lowercase-hyphenated naming (e.g., `madam-eva.png`). Portraits now live on the uploads store served at `/hotd-content/images/`, not the removed `src/hotd-campaign/images/` directory.
 
 5. Show the generated image to the user for approval.
 
-6. Do NOT update `npcs.json` or any other files unless the user asks.
+6. Do NOT update the NPC's `hotd_npcs` record or any other data unless the user asks.
 
 ## Important Rules
 

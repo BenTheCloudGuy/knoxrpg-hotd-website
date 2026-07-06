@@ -4,7 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/hotd-campaign/**'
+      # Campaign lore lives in the DB Campaign Notebook now (not repo files),
+      # so this workflow only auto-triggers when the pipeline script itself
+      # changes. DB-source reindexing is otherwise driven in-app (session /
+      # character publish via reindexSources), the MCP reindex tool, or a
+      # manual workflow_dispatch below.
       - 'scripts/embed-pipeline.js'
   workflow_dispatch:
     inputs:

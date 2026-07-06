@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.19.0] - 2026-07-05
+
+### Removed
+- **Repo campaign content deleted (Step 3 cleanup).** `src/hotd-campaign/data/` (57 lore markdown files + `npcs.json`) and `src/hotd-campaign/images/` (195 image files) were removed from the repo. Lore now lives in the Campaign Notebook (`hotd_notebook_pages`, `Campaign Data/`, published), images on the uploads PVC/NAS/blob (`/hotd-content/images/*`). The container still builds — the Dockerfile `mkdir -p /app/hotd-campaign/images/notebook` recreates the mount points, and `STATIC_ROOT` remains a valid (empty) overlay fallback.
+- **NPC seed retired.** `scripts/sync-npcs.js` and `.github/workflows/sync-npcs.yml` deleted. `hotd_npcs` (managed via the DMCC NPCs panel, `/dm-admin#npcs`) is now the sole source of truth for NPCs.
+- **File-based lore indexing removed from `scripts/embed-pipeline.js`.** The `lore` / `lore_json` extraction stages (and the now-unused `CONTENT_DIR`, `findMarkdownFiles`, `findJsonDataFiles` helpers) were removed. The pipeline still indexes all DB sources (npc, session, artifact, handout, calendar, character, journal, dm_story) and remains the engine behind in-app `reindexSources` (session/character publish) and the MCP reindex tool. Existing `lore` / `lore_json` embeddings are left intact (cleanOrphans does not target them) and are reconciled to notebook embeddings when notebook pages are published.
+
+### Changed
+- **`/art` gallery sources images from the uploads store.** `renderArtGalleryPage` now scans the uploads PVC (`HOTD_UPLOADS_DIR/images`) and the read-only NAS (`HOTD_CONTENT_DIR/images`), unioned, emitting `/hotd-content/images/*` URLs (still excluding `maps/`), instead of scanning the deleted repo `images/` dir.
+- **`.github/workflows/embed.yml` trigger retargeted** — no longer watches `src/hotd-campaign/**` (that content is in the DB now); auto-triggers only on `scripts/embed-pipeline.js` changes, plus manual `workflow_dispatch` for DB-source reindexing.
+- **The 57 migrated Campaign Notebook pages are now `published`** (their content was already indexed in RAG via the legacy `lore` rows).
+- **Docs updated** for the new sources of truth (NPCs → `hotd_npcs`/DMCC, lore → Campaign Notebook, images → `/hotd-content/images/`): `.github/copilot-instructions.md`, `npc-art.prompt.md`, the Mercer/Bard/Ranger/Artificer charters, `.squad/decisions.md`, `.squad/routing.md`, and the narrative-prose / npc-portrait-generation / session-summary / stat-block-generation skills.
+
+### Notes
+- **Deferred to Step 4 (publish mechanism):** re-embedding the published notebook pages as `source_type='notebook'` with the player/DM visibility split (currently they rely on the legacy `lore` rows), and removing the stale `lore` / `lore_json` rows — including the ~81 orphaned rows `npcs.json` produced while it doubled as a `lore_json` source.
+- **Open question — stat blocks:** the Ranger charter and session-pdf/stat-block skills still reference `src/hotd-campaign/data/statBlocks/`, which no longer exists. Its new home (likely the notebook `Monster Stats/` folder) is undecided and was intentionally left unchanged.
+- `scripts/add-art-gallery.js` (a dormant one-off that read `npcs.json` and seeded `hotd_art`) is now obsolete — the gallery scans the filesystem — and was left in place.
+
 ## [3.18.0] - 2026-07-05
 
 ### Added

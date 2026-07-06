@@ -18,8 +18,8 @@ Use this skill when the user asks to:
 1. **The previous session** — the `hotd_sessions` row for `session_number = N-1` (the `markdown` column for prep + notes, `summary` for the published recap). Continuity starts here. Example: `psql -h localhost -p 30432 -U cortana -d dnd_website -c "SELECT markdown, summary FROM hotd_sessions WHERE session_number = <N-1>"` (PG password in `/memories/repo/cortana-db.md`).
 2. **The current session (if it exists)** — the `hotd_sessions` row for `session_number = N`, for prep already captured in its `markdown`.
 3. **`hotd_sessions` table** — confirm `session_number`, current `title`, current `summary`, `game_date`, `play_date`.
-4. **`src/hotd-campaign/data/npcs.json`** — confirm every NPC mentioned by name. `npcid` is the canon identifier used in DM notes and cross-references; the **website URL uses `hotd_npcs.id`** (DB primary key), which is different. See the linking rule below.
-5. **`src/hotd-campaign/data/campaign_notes.md`** — chapter/arc context.
+4. **`hotd_npcs`** (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) — confirm every NPC mentioned by name. `npcid` (the `hotd_npcs.npcid` column) is the canon identifier used in DM notes and cross-references; the **website URL uses `hotd_npcs.id`** (DB primary key), which is different. See the linking rule below.
+5. **Campaign Notebook `Campaign Data/campaign_notes.md`** (`hotd_notebook_pages`) — chapter/arc context.
 6. **`tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md`** — voice rules.
 7. **`tmp/halls-of-the-damned/01-dm-guide/narration-notes.md`** — PC background hooks (worth pulling into recaps when a character moment fires).
 
@@ -67,7 +67,7 @@ Session prep, notes, and the player recap all live in the `markdown` column of t
 Rules:
 
 - The `# Session Notes` and `# Session Summary` H1 headings are required and load-bearing (the API keys off them). Other H1s are allowed but ignored.
-- NPC links use the public website pattern `https://hotd.knoxrpg.com/npcs/{id}` where `{id}` is the **`hotd_npcs.id` column** (DB primary key), **not** the `npcid` field in `npcs.json`. The two differ: e.g. Mordenkainen is `npcid=93` but `id=669`. The website route resolves `/npcs/:id` against `hotd_npcs.id` only.
+- NPC links use the public website pattern `https://hotd.knoxrpg.com/npcs/{id}` where `{id}` is the **`hotd_npcs.id` column** (DB primary key), **not** the `npcid` field (the `hotd_npcs.npcid` column). The two differ: e.g. Mordenkainen is `npcid=93` but `id=669`. The website route resolves `/npcs/:id` against `hotd_npcs.id` only.
   - **Lookup query** (preferred): `SELECT id, name FROM hotd_npcs WHERE name ILIKE ANY(ARRAY['%Name1%','%Name2%']);` (PG env: `PGHOST=localhost PGPORT=30432 PGUSER=cortana PGDATABASE=dnd_website`, password in `/memories/repo/cortana-db.md`).
   - **Via MCP:** `search_campaign_lore` with `source_type="npc"` returns `source_id` which equals `hotd_npcs.id`.
   - In DM-internal notes (e.g. `(npcid 24)` citations), continue to use `npcid` — that is the canon identifier. URLs are the only place that needs the DB `id`.
@@ -81,7 +81,7 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 - **Audience:** the players at the table. No DM secrets. No spoilers for upcoming plot.
 - **Content:** what the party did, who they met, what changed in the world, where they ended.
 - **Voice:** 3rd person, past tense, reporter-style. Who did what to whom.
-- **Banned:** internal DM mechanics, hidden NPC motivations, future plot beats, anything tagged `dm_notes` in `npcs.json`.
+- **Banned:** internal DM mechanics, hidden NPC motivations, future plot beats, anything tagged `dm_notes` in `hotd_npcs`.
 
 ### Locked voice rules (sessions 25 to 28 set the bar; do not violate)
 
@@ -89,7 +89,7 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 2. **4 to 5 dense paragraphs.** Roughly 300 to 550 words. Open mid-action, not with scene-setting.
 3. **Open with a concrete beat.** A PC name and a specific action in the first sentence. No weather, no mood-setting preamble.
 4. **One paragraph per major beat,** in chronological order.
-5. **Name every PC and NPC by full canonical name.** Never "the rogue" or "the cleric." Pull names from `npcs.json` and the PC roster.
+5. **Name every PC and NPC by full canonical name.** Never "the rogue" or "the cleric." Pull names from `hotd_npcs` and the PC roster.
 6. **DM shorthand stays out.** Replace nicknames like "Moddy" or "Ezzie" with full names ("Mordenkainen", "Ezmerelda"). Family/group labels like "the Skanders" are fine because they describe a group, not a single person.
 7. **Preserve the DM's asides and humor verbatim.** ("Krutha still very much naked", "with a mischievous grin", a linebacker metaphor, "Krutha rolled a natural 1. Twice.") These are the table's voice and are non-negotiable. Do not sanitize them.
 8. **Preserve thematic spell descriptions alongside mechanical names.** If the DM describes Vasilka's Flaming Sphere as "a whirlwind spun out of the burning hut below Thorian", keep both the spell name ("Flaming Sphere") and the thematic description. Don't pick one and drop the other.
@@ -113,7 +113,7 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 
 1. Confirm next session number against the `hotd_sessions` table.
 2. Copy the section structure from the most recent session's `markdown` (its `# Session Notes` body).
-3. Pull the active NPCs from `npcs.json` (look up by current location, status, or arc).
+3. Pull the active NPCs from `hotd_npcs` (look up by current location, status, or arc via `lookup_npc` / `search_npcs`).
 4. Block out phases the DM has called out (`[REINFORCEMENTS]`, `[END PHASE]`, etc.).
 5. Add `## To-Do` items for any prep that needs to happen before the session (maps, tokens, art).
 6. Save the `markdown` to the session row (create it if needed) via the Sessions Workspace / `/api/dm-admin/sessions`. Do NOT invent encounter beats the user didn't ask for.
@@ -122,7 +122,7 @@ This is what shows on the public website and what gets embedded for RAG. Treat i
 
 1. Read the session's `markdown` (its `# Session Notes` body) and any DM notes the user gives you.
 2. Read the previous session's `summary` for continuity (where the party was, who was wounded, what was pending).
-3. Look up every NPC name in `npcs.json`. Confirm IDs, status, location.
+3. Look up every NPC name in `hotd_npcs`. Confirm IDs, status, location.
 4. Draft a 2–5 paragraph player-safe recap using the format above.
 5. Apply the voice test. Strip anything that sounds like trailer prose.
 6. Show the draft to the user for approval before writing to the DB.
@@ -178,13 +178,13 @@ The DM is expected to review and edit before clicking **Publish Summary**. Gener
 
 - **The `hotd_sessions` table is the single source of truth** for session prep, notes, and summaries. The old `src/hotd-campaign/sessions/sessionNN.md` prep files were removed in favor of the DB; do not recreate them. Persist all session content through the Sessions Workspace JSON API (`/api/dm-admin/sessions`) so the website owns storage and RAG re-indexing.
 - If the user says "write the summary in the Sessions Workspace" or "use the admin portal", call the JSON API endpoints above and let the website own the persistence.
-- The voice rules and reference order above still apply. The AI system prompt baked into the `/generate-summary` endpoint is a guard rail, not a substitute for hand-checking against `npcs.json` and the prior session.
+- The voice rules and reference order above still apply. The AI system prompt baked into the `/generate-summary` endpoint is a guard rail, not a substitute for hand-checking against `hotd_npcs` and the prior session.
 
 ## Rules
 
 - Never invent events. If the user's notes don't cover a beat, ask.
 - Never expose DM secrets in the public summary. If you're unsure whether something is a secret, ask.
-- Never modify `npcs.json` from this skill.
+- Never modify NPC records in `hotd_npcs` from this skill.
 - Never modify the title or session_number of an existing session row without explicit approval — both are referenced by other systems (PDFs, RAG, public pages).
 - Always link NPCs by their `hotd_npcs.id` in markdown files (not `npcid`). Names alone break when NPCs are renamed; the wrong ID column produces 404s.
 - After any DB summary write, re-index. RAG goes stale silently otherwise.

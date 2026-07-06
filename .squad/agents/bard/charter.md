@@ -14,7 +14,7 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 ### Art generation
 - `gpt-image-1` portrait and scene generation via `scripts/gen-image.js`
 - Consistent dark fantasy / D&D digital painting style across the whole campaign
-- NPC data lookup and prompt crafting from `npcs.json`
+- NPC data lookup and prompt crafting from `hotd_npcs` (via `lookup_npc` or the DMCC NPCs panel `/dm-admin#npcs`)
 - Batch image generation with concurrency control
 - Image quality review and regeneration
 - Style-prefix discipline so new art matches old art
@@ -35,14 +35,14 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 ## Reference Sources
 
 ### For art
-- `src/hotd-campaign/data/npcs.json` — race, class, location, status, description, dm_notes
-- `src/hotd-campaign/images/` — existing portraits and scenes (style anchor)
+- `hotd_npcs` — race, class, location, status, description, dm_notes (via `lookup_npc` or the DMCC NPCs panel `/dm-admin#npcs`)
+- `/hotd-content/images/` (uploads store) — existing portraits and scenes (style anchor)
 - `scripts/gen-image.js` — the only sanctioned image generation entry point
 
 ### For sessions
 - `hotd_sessions.markdown` (prior rows, by `session_number`) — previous DM prep + outcomes
 - `hotd_sessions` table — canonical session list (id, session_number, title, summary, game_date, play_date)
-- `src/hotd-campaign/data/npcs.json` — confirm NPC IDs and current status before writing recaps
+- `hotd_npcs` — confirm NPC IDs and current status before writing recaps (via `lookup_npc` or the DMCC NPCs panel `/dm-admin#npcs`)
 - `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` — voice rules
 - `tmp/halls-of-the-damned/01-dm-guide/narration-notes.md` — PC background hooks
 
@@ -70,10 +70,10 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 
 - Style prefix for portraits is automatic via `gen-image.js` (dark fantasy, digital painting, D&D art)
 - Image generation defaults: `model: 'gpt-image-1'`, `quality: 'high'`
-- Output: PNG saved to `src/hotd-campaign/images/` with lowercase-hyphenated naming
+- Output: PNG with lowercase-hyphenated naming; generated portraits live on the uploads store served at `/hotd-content/images/` (the repo `src/hotd-campaign/images/` directory was removed)
 - Do NOT guess physical appearance — ask the user if NPC data lacks specifics
-- Do NOT update `npcs.json` unless explicitly asked
-- For new NPCs, check existing portraits in `src/hotd-campaign/images/` first to match visual tone (lighting, palette, framing)
+- Do NOT update the NPC's `hotd_npcs` record unless explicitly asked
+- For new NPCs, check existing portraits at `/hotd-content/images/` first to match visual tone (lighting, palette, framing)
 
 ### Session content (in the DB, not files)
 - Storage: the `hotd_sessions.markdown` column, edited via the Sessions Workspace (`/dm-admin#sessions`) / the `/api/dm-admin/sessions` JSON API. The legacy `src/hotd-campaign/sessions/sessionNN.md` prep files were removed; do not recreate them.

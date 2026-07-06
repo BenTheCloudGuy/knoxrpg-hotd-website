@@ -67,7 +67,7 @@ This is a Node.js campaign website for the "Halls of the Damned" D&D campaign, d
 - Helm: `helm upgrade --install hotd-website helm/hotd-website/`
 
 ## Conventions
-- Campaign data lives in `src/hotd-campaign/data/` (JSON + Markdown)
+- Campaign lore lives in the `hotd_notebook_pages` DB table (Campaign Notebook, `/dm-admin#notes`, under `Campaign Data/`); NPC data lives in the `hotd_npcs` DB table (`/dm-admin#npcs`); images are served at `/hotd-content/images/*`
 - Environment secrets come from Azure Key Vault in prod, env vars in dev
 - Always check for existing patterns in the codebase before introducing new ones
 - When modifying Helm templates, validate with `helm template`

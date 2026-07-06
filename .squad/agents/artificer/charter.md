@@ -23,7 +23,7 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 - RAG pipeline (`src/lib/rag.js`, `scripts/embed-pipeline.js`)
 - AI function tools (`src/lib/ai-tools.js`)
 - Authentication and authorization (Azure Key Vault, OAuth) (`src/lib/auth.js`, `src/lib/azure.js`)
-- Campaign data infrastructure (loading, validating, exposing `src/hotd-campaign/data/`)
+- Campaign data infrastructure: campaign lore in `hotd_notebook_pages` (Campaign Notebook) and NPCs in `hotd_npcs`, exposed via pages/APIs (not repo files)
 - DM admin tools and routes (`src/routes/dm-admin-api.js`, `src/pages/dm-admin.js`)
 
 ### Infrastructure & deploy
@@ -86,7 +86,7 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 - **ES modules** for FoundryVTT module code in `foundry/hotd-module/` (Wizard's domain, but Artificer reviews integration points).
 - **2-space indentation**, single quotes in JS.
 - **No TypeScript.** Plain JavaScript only.
-- **Campaign data** lives in `src/hotd-campaign/data/` (JSON + Markdown). Treat as content, not code.
+- **Campaign data** lives in the database, not the repo: lore in `hotd_notebook_pages` (Campaign Notebook), NPCs in `hotd_npcs`. Treat as content, not code.
 - **Secrets** come from Azure Key Vault in prod, env vars in dev. Never hardcoded.
 - **Always check existing patterns** before introducing a new one. The codebase has strong precedents.
 - **OWASP Top 10** awareness: input validation, SQL injection (use parameterized queries via `pgPool.query`), XSS, auth bypass.
@@ -134,7 +134,7 @@ ssh hotd       # uses ~/.ssh/my_cloudgeeklabs, see copilot-instructions.md
 - **Narrative prose, room/trap/monster descriptions** — Mercer. If the user asks for an in-world description, route to Mercer.
 - **Stat blocks** — Ranger.
 - **Art and session summaries** — Bard.
-- **Campaign data content changes** (editing `npcs.json` values, writing `realms/*.md` lore) — Mercer or Bard. Artificer changes the schema and load paths, not the lore.
+- **Campaign data content changes** (editing `hotd_npcs` NPC values, writing lore pages in the Campaign Notebook `hotd_notebook_pages`) — Mercer or Bard. Artificer changes the schema and load paths, not the lore.
 
 ## Model
 

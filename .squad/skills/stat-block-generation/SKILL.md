@@ -8,7 +8,7 @@ Create D&D 5e (2024) stat blocks for campaign NPCs, monsters, and allies as form
 
 ### Step-by-step
 
-1. Look up the NPC in `src/hotd-campaign/data/npcs.json` by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `alignment_tag`, `description`, `dm_notes`, and `portrait_url` fields.
+1. Look up the NPC in the `hotd_npcs` database (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `alignment_tag`, `description`, `dm_notes`, and `portrait_url` fields.
 
 2. Determine the stat block type:
    - **Enemy/Monster:** No filename prefix. Include lair actions or legendary actions if appropriate.
@@ -19,7 +19,7 @@ Create D&D 5e (2024) stat blocks for campaign NPCs, monsters, and allies as form
    ```markdown
    ![NPC Name](/hotd-content/images/npc-name.png)
    ```
-   The `portrait_url` field in npcs.json now stores an absolute served URL (e.g., `/hotd-content/images/vasilka.png`) — images live on the uploads PVC/NAS/blob, not the repo. Use the `portrait_url` value directly as the image source; do not build a relative `../images/` path.
+   The `portrait_url` field in `hotd_npcs` stores an absolute served URL (e.g., `/hotd-content/images/vasilka.png`) — images live on the uploads PVC/NAS/blob, not the repo. Use the `portrait_url` value directly as the image source; do not build a relative `../images/` path.
 
 4. Build the stat block using 2024 Monster Manual format:
    - Size, type, alignment line
@@ -59,9 +59,9 @@ Create D&D 5e (2024) stat blocks for campaign NPCs, monsters, and allies as form
 - If stat details (level, CR, special abilities) aren't specified by the user, derive them from the NPC's class, description, and role in the campaign.
 - Spell selections should match the NPC's class, personality, and tactical role.
 - Include a DM Notes section with campaign context: when they appear, how to run them, story hooks.
-- Portrait images must use relative paths from the statBlocks directory: `../images/filename.png`
+- Portrait images use the `hotd_npcs.portrait_url` value directly (an absolute served URL, e.g. `/hotd-content/images/filename.png`).
 - If no portrait exists for the NPC, note it in DM Notes and skip the image tag.
-- Do NOT modify `npcs.json` unless explicitly asked.
+- Do NOT modify the NPC's `hotd_npcs` record unless explicitly asked.
 
 ### Stat Guidelines by Role
 

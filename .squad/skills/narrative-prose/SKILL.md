@@ -33,9 +33,9 @@ Voice anchors (from the campaign master doc):
 
 ## Reference order (read before writing)
 
-1. `src/hotd-campaign/data/npcs.json` — for any named NPC mentioned
-2. `src/hotd-campaign/data/realms/*.md` — for region tone and geography
-3. `src/hotd-campaign/data/Krezk.md` (and other notebook entries) — for location format precedent
+1. `hotd_npcs` (via `lookup_npc` / `search_npcs`) — for any named NPC mentioned
+2. Campaign Notebook `Campaign Data/Realms/*` (`hotd_notebook_pages`) — for region tone and geography
+3. Campaign Notebook `Campaign Data/Krezk.md` (and other notebook pages) — for location format precedent
 4. `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) — for current state (wounded, dead, where last seen)
 5. `tmp/halls-of-the-damned/04-locations/location-descriptions.md` — location format precedent
 6. `tmp/halls-of-the-damned/07-handouts/read-aloud-text.md` — read-aloud format precedent
@@ -159,10 +159,10 @@ If the attack misses, narrate the miss with the same economy. Do not pad.
 ## Rules
 
 - Never invent canon. If a fact is missing, ask the user or check RAG.
-- Never modify `npcs.json` from this skill. That is a separate, explicit task.
-- Never describe a published-canon location in a way that contradicts the realm file in `src/hotd-campaign/data/realms/`.
-- When using a named NPC, cite the `npcid` from `npcs.json` in DM notes (e.g. `Baron Krezkov (npcid 24)`).
-- Match existing file precedents in `src/hotd-campaign/data/` before inventing new layouts.
+- Never modify NPC records in `hotd_npcs` from this skill. That is a separate, explicit task.
+- Never describe a published-canon location in a way that contradicts its realm page in the Campaign Notebook (`Campaign Data/Realms/`).
+- When using a named NPC, cite the `npcid` from `hotd_npcs` in DM notes (e.g. `Baron Krezkov (npcid 24)`).
+- Match existing Campaign Notebook page precedents before inventing new layouts.
 - Read-aloud blocks must pass the "say it out loud" test. If it feels like reading a book aloud, rewrite it.
 
 ## Learned from
@@ -170,4 +170,4 @@ If the attack misses, narrate the miss with the same economy. Do not pad.
 - User's writing-style memory note
 - `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` (the campaign style guide with worked examples)
 - `tmp/halls-of-the-damned/07-handouts/read-aloud-text.md` (existing read-aloud precedent)
-- `src/hotd-campaign/data/Krezk.md` (existing notebook format)
+- Campaign Notebook `Campaign Data/Krezk.md` (existing notebook format)

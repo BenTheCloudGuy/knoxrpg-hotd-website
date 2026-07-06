@@ -8,7 +8,7 @@ Generate dark fantasy character portraits for campaign NPCs using the GPT Image 
 
 ### Step-by-step
 
-1. Look up the NPC in `src/hotd-campaign/data/npcs.json` by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `description`, and `dm_notes` fields.
+1. Look up the NPC in the `hotd_npcs` database (via the DMCC NPCs panel at `/dm-admin#npcs` or the `lookup_npc` tool) by name. Read their `name`, `race`, `npc_class`, `location`, `status`, `description`, and `dm_notes` fields.
 
 2. If the user provides specific physical description details or creative direction, use those. Otherwise, craft a character-appropriate description from the NPC data.
 
@@ -37,11 +37,11 @@ Generate dark fantasy character portraits for campaign NPCs using the GPT Image 
 
    Available sizes: `1024x1024` (portrait), `1536x1024` (landscape scene), `1024x1536` (tall portrait)
 
-   Output is always saved to `src/hotd-campaign/images/`.
+   Generated images live on the uploads store and are served at `/hotd-content/images/` (the repo `src/hotd-campaign/images/` directory was removed).
 
 5. Show the generated image to the user for approval.
 
-6. Do NOT update `npcs.json` or any other files unless the user asks.
+6. Do NOT update the NPC's `hotd_npcs` record or any other data unless the user asks.
 
 ### Rules
 
