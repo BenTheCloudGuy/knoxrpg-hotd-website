@@ -141,6 +141,8 @@ async function renderDmAdminPage(session) {
                   <button id="nb-publish-btn" class="dmc-btn dmc-btn-sm" style="display:none;" onclick="nbTogglePublish()"></button>
                   <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="nbSave()" title="Save this page (moves it if you changed the name or folder)">&#128190; Save Page</button>
                   <button class="dmc-btn dmc-btn-sm" id="nb-ai-regen" onclick="nbAiGenerate()" title="Re-run the AI prompt and replace the draft">&#8635; Regenerate</button>
+                  <button class="dmc-btn dmc-btn-sm" id="nb-session-summary" style="display:none;" onclick="nbSessionGenSummary()" title="Draft the Session Summary from the Session Notes (AI)">&#129302; Generate Summary</button>
+                  <button class="dmc-btn dmc-btn-sm" id="nb-session-pdf" style="display:none;" onclick="nbSessionPdf()" title="Render this session to a GM Guide PDF">&#128196; Create PDF</button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbToggleInfo()" title="Note Info &amp; Backlinks">&#9432;</button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbShowLinkMap()" title="Link Map">&#128279;</button>
                   <button class="dmc-btn dmc-btn-sm dmc-btn-danger" onclick="nbDeleteCurrent()" title="Delete this page">&#128465;</button>
@@ -273,11 +275,6 @@ async function renderDmAdminPage(session) {
         </div>
       </section>
 
-      <!-- ╔══ SESSIONS ══╗ -->
-      <section class="dmc-panel" id="dmc-sessions" style="display:none;">
-        <iframe id="dmc-sessions-frame" data-src="/sessions/admin?embed=1" title="Sessions Workspace" style="width:100%;height:100%;border:none;display:block;background:#111;"></iframe>
-      </section>
-
       <!-- ╔══ AI CONFIG ══╗ -->
       <section class="dmc-panel" id="dmc-ai" style="display:none;">
         <div class="dmc-panel-bar"><h2>AI Configuration</h2>
@@ -367,7 +364,7 @@ async function renderDmAdminPage(session) {
        buttons (+ Add NPC, + New Chat, filters, etc.) stay reachable no matter
        how far the panel content is scrolled. Negative margins pull it over the
        panel padding so it spans the full canvas width. Panels that opt out of
-       padding (#dmc-notes, #dmc-sessions) have no .dmc-panel-bar, so they are
+       padding (#dmc-notes) have no .dmc-panel-bar, so they are
        unaffected. */
     .dmc-panel-bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; margin:-20px -24px 16px; padding:14px 24px; background:#111; border-bottom:1px solid #222; flex-wrap:wrap; gap:8px; }
     .dmc-panel-bar h2 { color:#c83232; margin:0; font-size:1.15rem; }
@@ -518,8 +515,6 @@ async function renderDmAdminPage(session) {
 
     /* ═══ CAMPAIGN NOTEBOOK ═══ */
     #dmc-notes { padding:0 !important; height:100%; overflow:hidden; }
-    /* ═══ SESSIONS WORKSPACE (embedded iframe) ═══ */
-    #dmc-sessions { padding:0 !important; height:100%; overflow:hidden; }
     .notebook-layout { display:flex; height:100%; border:1px solid #222; border-radius:8px; overflow:hidden; background:#0d0d0d; }
     .nb-sidebar { width:260px; min-width:200px; max-width:360px; border-right:1px solid #222; display:flex; flex-direction:column; background:#0a0a0a; resize:horizontal; overflow:hidden; }
     .nb-sidebar-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #222; }
@@ -666,7 +661,7 @@ async function renderDmAdminPage(session) {
   // works from any page and switches panels in-place when already here.
   let _currentPanel = null;
   let _loaded = {};
-  const PANELS = ['chat','images','notes','characters','npcs','sessions','ai','search','campaign','users'];
+  const PANELS = ['chat','images','notes','characters','npcs','ai','search','campaign','users'];
   function showPanel(panel) {
     if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
@@ -681,7 +676,7 @@ async function renderDmAdminPage(session) {
   }
   function loadPanel(p) {
     const loaders = { chat:loadChat, images:loadImages, notes:loadNotes,
-      characters:loadChars, npcs:loadNpcs, sessions:loadSessions, ai:loadAiCfg,
+      characters:loadChars, npcs:loadNpcs, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
     if (loaders[p]) loaders[p]();
   }
@@ -1140,6 +1135,9 @@ async function renderDmAdminPage(session) {
     el('nb-save-status').style.color = '#555';
     _nbStatus = d.status || 'draft';
     nbRenderStatus();
+    var _isSess = path.indexOf('Sessions/') === 0;
+    el('nb-session-summary').style.display = _isSess ? 'inline-block' : 'none';
+    el('nb-session-pdf').style.display = _isSess ? 'inline-block' : 'none';
     nbShowTab('edit');
     renderNbTree();
     nbLoadBacklinks(path);
@@ -1782,9 +1780,48 @@ async function renderDmAdminPage(session) {
     if (!name.endsWith('.md')) name += '.md';
     var fullPath = folder ? folder + '/' + name : name;
     var title = name.replace(/\\.md$/i, '').replace(/[-_]/g, ' ');
-    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:fullPath, type:'file', content:'# ' + title + '\\n\\n'}) });
+    var content = (folder === 'Sessions' || (folder && folder.indexOf('Sessions/') === 0)) ? nbSessionTemplate() : ('# ' + title + '\\n\\n');
+    var r = await fetch('/api/dm-admin/notebook/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:fullPath, type:'file', content:content}) });
     if (r.ok) { await loadNotes(); nbOpenFile(fullPath); }
     else { var d = await r.json(); alert('Error: '+(d.error||'')); }
+  }
+
+  // Default template for a new Session page (Adventure Notes/Sessions/).
+  function nbSessionTemplate() {
+    return 'Session #: \\nTitle: \\nIn-Game Date: \\nPlay Date: \\n\\n# Session Notes\\n\\n\\n# Session Summary\\n\\n_This is what players will see when you Publish. Write it by hand or use Generate Summary to draft it from the notes above._\\n';
+  }
+
+  // Session pages: AI-draft the Session Summary from the Session Notes.
+  async function nbSessionGenSummary() {
+    if (!_nbCurrentPath) return;
+    if (_nbDirty) await nbAutoSave();
+    var btn = el('nb-session-summary'); btn.disabled = true;
+    el('nb-save-status').textContent = 'Generating summary...'; el('nb-save-status').style.color = '#888';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/session-summary', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbCurrentPath }) });
+      var d = await r.json();
+      if (!r.ok) { el('nb-save-status').textContent = 'Summary failed: ' + (d.error||''); el('nb-save-status').style.color = '#f44'; return; }
+      nbSetContent(d.content || '');
+      _nbDirty = false;
+      el('nb-save-status').textContent = 'Summary generated'; el('nb-save-status').style.color = '#4ade80';
+    } catch (e) { el('nb-save-status').textContent = 'Summary error: ' + e.message; el('nb-save-status').style.color = '#f44'; }
+    finally { btn.disabled = false; }
+  }
+
+  // Session pages: render a GM Guide PDF (Session Notes, minus the summary).
+  async function nbSessionPdf() {
+    if (!_nbCurrentPath) return;
+    if (_nbDirty) await nbAutoSave();
+    var btn = el('nb-session-pdf'); btn.disabled = true;
+    el('nb-save-status').textContent = 'Building PDF...'; el('nb-save-status').style.color = '#888';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/session-pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ path:_nbCurrentPath }) });
+      var d = await r.json();
+      if (!r.ok) { el('nb-save-status').textContent = 'PDF failed: ' + (d.error||''); el('nb-save-status').style.color = '#f44'; return; }
+      el('nb-save-status').textContent = 'PDF ready'; el('nb-save-status').style.color = '#4ade80';
+      if (d.download_url) window.open(d.download_url, '_blank');
+    } catch (e) { el('nb-save-status').textContent = 'PDF error: ' + e.message; el('nb-save-status').style.color = '#f44'; }
+    finally { btn.disabled = false; }
   }
 
   async function nbNewFolder() { nbNewFolderIn(''); }
@@ -1955,14 +1992,6 @@ async function renderDmAdminPage(session) {
     if (!confirm('Delete NPC: '+name+'?')) return;
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     loadNpcs();
-  }
-
-  // ═══ SESSIONS (embedded Sessions Workspace) ═══
-  // The full Sessions Workspace UI lives at /sessions/admin and is mounted here
-  // in an iframe (lazy-loaded the first time the panel is opened).
-  function loadSessions() {
-    const f = el('dmc-sessions-frame');
-    if (f && !f.src) f.src = f.getAttribute('data-src');
   }
 
   // ═══ AI CONFIG ═══

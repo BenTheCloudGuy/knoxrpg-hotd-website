@@ -10,6 +10,15 @@ const { HARPTOS_MONTHS, ordinal } = require("../config");
 const { pageShell } = require("../components/shell");
 const { mapOverlayBlock, artifactOverlayBlock } = require("../components/overlays");
 const { renderRichTextBlock, markdownToHtml } = require("../lib/markdown");
+const { listSessionPages, getLatestPublishedSession, nextSessionNumber } = require("../lib/sessions");
+
+// Format a session play-date (stored as a metadata string) for display.
+function fmtPlayDate(v) {
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+}
 
 // ── House Rules Page ──────────────────────────────────────────
 async function getNotebookContent(notebookPath) {
@@ -74,18 +83,8 @@ async function renderHomePage(session) {
   // ALL rows (drafts included) so a draft of Session N doesn't collide
   // with itself when the DM schedules the next game.
   let lastSession = null, nextSessionNum = 1;
-  try {
-    const r = await pgPool.query(
-      "SELECT * FROM hotd_sessions WHERE published = TRUE ORDER BY session_number DESC LIMIT 1"
-    );
-    if (r.rows.length > 0) lastSession = r.rows[0];
-  } catch (_) {}
-  try {
-    const r = await pgPool.query(
-      "SELECT COALESCE(MAX(session_number), 0) AS max_n FROM hotd_sessions"
-    );
-    nextSessionNum = (r.rows[0] && r.rows[0].max_n ? r.rows[0].max_n : 0) + 1;
-  } catch (_) {}
+  try { lastSession = await getLatestPublishedSession(); } catch (_) {}
+  try { nextSessionNum = await nextSessionNumber(); } catch (_) {}
 
   // Fetch next scheduled game from config
   let nextGameDate = "", partyLocation = "";
@@ -131,12 +130,12 @@ async function renderHomePage(session) {
   // Last session summary (truncated)
   let lastSessionHtml = '<p style="color:#888;">No sessions recorded yet.</p>';
   if (lastSession) {
-    const playDateStr = lastSession.play_date ? new Date(lastSession.play_date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "";
+    const playDateStr = fmtPlayDate(lastSession.playDate);
     const summaryText = lastSession.summary || "Summary pending...";
     lastSessionHtml = `
       <div style="margin-top:8px;">
-        <strong style="color:#e8b923;">Session ${lastSession.session_number} &mdash; ${esc(lastSession.title)}</strong>
-        ${lastSession.game_date ? `<div style="color:#aaa;font-size:0.8rem;margin-top:4px;">&#128197; In-Game: ${esc(lastSession.game_date)}</div>` : ""}
+        <strong style="color:#e8b923;">Session ${lastSession.sessionNumber} &mdash; ${esc(lastSession.title)}</strong>
+        ${lastSession.gameDate ? `<div style="color:#aaa;font-size:0.8rem;margin-top:4px;">&#128197; In-Game: ${esc(lastSession.gameDate)}</div>` : ""}
         ${playDateStr ? `<div style="color:#666;font-size:0.75rem;margin-top:2px;">&#128197; Played: ${esc(playDateStr)}</div>` : ""}
         ${renderRichTextBlock(summaryText, "", "color:#aaa;margin-top:8px;line-height:1.6;font-size:0.9rem;")}
         <a href="/sessions" style="color:#e8b923;font-size:0.85rem;text-decoration:none;">&rarr; View all sessions</a>
@@ -591,23 +590,20 @@ async function renderNpcDetailPage(npcId, session) {
 // ── Sessions Page (DB-backed) ─────────────────────────────────
 async function renderSessionsPage(session) {
   // Admins see every session (drafts + published) so they can navigate to the
-  // editor. Everyone else only sees rows that have been explicitly published.
+  // editor. Everyone else only sees pages that have been explicitly published.
   const isAdmin = session && session.role === "admin";
-  const sql = isAdmin
-    ? "SELECT * FROM hotd_sessions ORDER BY session_number DESC"
-    : "SELECT * FROM hotd_sessions WHERE published = TRUE ORDER BY session_number DESC";
   let sessions = [];
-  try { const r = await pgPool.query(sql); sessions = r.rows; } catch (_) {}
+  try { sessions = await listSessionPages({ publishedOnly: !isAdmin }); } catch (_) {}
 
   const sessionList = sessions.length > 0 ? sessions.map(s => {
-    const playDateStr = s.play_date ? new Date(s.play_date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "";
+    const playDateStr = fmtPlayDate(s.playDate);
     const draftBadge = (isAdmin && !s.published)
       ? ` <span style="background:#7a2222;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:3px;vertical-align:middle;">DRAFT</span>`
       : "";
     return `
     <li>
-      <strong>Session ${s.session_number} &mdash; ${esc(s.title)}</strong>${draftBadge}
-      ${s.game_date ? `<div style="color:#e8b923;font-size:0.8rem;margin-top:2px;">&#128197; In-Game: ${esc(s.game_date)}</div>` : ""}
+      <strong>Session ${s.sessionNumber} &mdash; ${esc(s.title)}</strong>${draftBadge}
+      ${s.gameDate ? `<div style="color:#e8b923;font-size:0.8rem;margin-top:2px;">&#128197; In-Game: ${esc(s.gameDate)}</div>` : ""}
       ${playDateStr ? `<div style="color:#888;font-size:0.75rem;margin-top:2px;">&#128197; Played: ${esc(playDateStr)}</div>` : ""}
       ${renderRichTextBlock(s.summary, "Summary coming soon...", "color:#aaa;margin-top:8px;line-height:1.6;")}
     </li>`;
@@ -615,7 +611,7 @@ async function renderSessionsPage(session) {
     <li><strong>Session 0 &mdash; Campaign Kickoff</strong><p>Character creation, world introduction, and the call to adventure. Coming soon...</p></li>`;
 
   const adminLink = session && session.role === "admin" ?
-    `<div style="text-align:right;margin-bottom:16px;"><a href="/dm-admin#sessions" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
+    `<div style="text-align:right;margin-bottom:16px;"><a href="/dm-admin#notes" style="color:#e8b923;text-decoration:none;font-weight:600;font-size:0.85rem;">&#9881; Admin &rarr;</a></div>` : "";
 
   const body = `
   <div class="content">

@@ -14,6 +14,7 @@ const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const { syncCharacterFromDDB } = require("../lib/ddb-sync");
+const sessionsLib = require("../lib/sessions");
 const fs = require("fs");
 const os = require("os");
 const childProc = require("child_process");
@@ -105,6 +106,26 @@ function safeSessionSlug(n) {
   const num = parseInt(n, 10);
   if (!Number.isInteger(num) || num < 0 || num > 9999) return null;
   return String(num);
+}
+
+// Keep a hotd_sessions shadow row in sync with a notebook session page
+// (dormant table retained as backup + canon provenance + pdf_path store).
+// Returns the row id.
+async function upsertSessionShadow(parsed, content) {
+  const pd = parsed.playDate || null;
+  const ex = await pgPool.query("SELECT id FROM hotd_sessions WHERE session_number = $1", [parsed.sessionNumber]);
+  if (ex.rows.length) {
+    await pgPool.query(
+      "UPDATE hotd_sessions SET title=$1, summary=$2, markdown=$3, game_date=$4, play_date=$5, published=TRUE, published_at=COALESCE(published_at, NOW()), updated_at=NOW() WHERE id=$6",
+      [parsed.title, parsed.summary || "", content, parsed.gameDate || "", pd, ex.rows[0].id]
+    );
+    return ex.rows[0].id;
+  }
+  const ins = await pgPool.query(
+    "INSERT INTO hotd_sessions (session_number, title, summary, markdown, game_date, play_date, published, published_at) VALUES ($1,$2,$3,$4,$5,$6,TRUE,NOW()) RETURNING id",
+    [parsed.sessionNumber, parsed.title, parsed.summary || "", content, parsed.gameDate || "", pd]
+  );
+  return ins.rows[0].id;
 }
 
 function requireAdmin(session, res) {
@@ -1356,7 +1377,25 @@ ${prompt}`
       if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
       const { openaiClient } = require("../lib/azure");
       const result = await syncNotebookPageEmbedding(openaiClient, { path: b.path, name: rows[0].name, content: rows[0].content, status: "published" });
-      sendJSON(res, { ok: true, status: "published", chunks: result.chunks });
+
+      // Session pages: sync the shadow row + run the canon extract/apply/reindex pipeline.
+      let canon = null, canon_error = null;
+      if (sessionsLib.isSessionPath(b.path)) {
+        try {
+          const parsed = sessionsLib.parseSessionPage(rows[0].content);
+          const sid = await upsertSessionShadow(parsed, rows[0].content);
+          if (parsed.summary && parsed.summary.trim()) {
+            const cfgRows = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
+            const aiModel = cfgRows.rows[0]?.value || "gpt-5.4-mini";
+            const sessionForExtract = { id: sid, session_number: parsed.sessionNumber, title: parsed.title, game_date: parsed.gameDate, summary: parsed.summary };
+            const { proposals, headline } = await extractCanonUpdates({ openaiClient, model: aiModel, session: sessionForExtract });
+            const apply = await applyCanonUpdates({ session: sessionForExtract, proposals, headline, userId: session.userId || null });
+            const reindex = await reindexSources(apply.touched_sources);
+            canon = { applied: apply.applied, skipped: apply.skipped, errors: apply.errors, summary: apply.summary, reindex };
+          }
+        } catch (e) { console.error("Session canon on publish failed:", e); canon_error = e.message; }
+      }
+      sendJSON(res, { ok: true, status: "published", chunks: result.chunks, canon, canon_error });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -1376,6 +1415,136 @@ ${prompt}`
       await removeNotebookEmbeddings(b.path);
       sendJSON(res, { ok: true, status: "draft" });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: AI-generate a session page's "# Session Summary" ──
+  if (decoded === "/api/dm-admin/notebook/session-summary" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const b = JSON.parse(await readBody(req));
+      if (!b.path || !sessionsLib.isSessionPath(b.path)) { sendJSON(res, { error: "a session page path is required" }, 400); return true; }
+      const pr = await pgPool.query("SELECT content, name, status FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [b.path]);
+      if (!pr.rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      const content = pr.rows[0].content;
+      const parsed = sessionsLib.parseSessionPage(content);
+      const notes = parsed.notes;
+      if (!notes || !notes.trim()) { sendJSON(res, { error: 'No "# Session Notes" content to summarize. Add your raw notes first.' }, 400); return true; }
+      const promptOverride = (typeof b.prompt === "string") ? b.prompt.slice(0, 2000) : "";
+
+      const ragQuery = `Session ${parsed.sessionNumber} ${parsed.title || ""} ${notes.slice(0, 1500)}`;
+      let ragContext = "";
+      try { ragContext = await buildEmbeddingContext(azure.openaiClient, ragQuery, { includeDmOnly: false, limit: 10, minScore: 0.25 }); } catch (_) {}
+
+      const prior = (await sessionsLib.listSessionPages({ publishedOnly: true })).filter(s => s.sessionNumber < parsed.sessionNumber).slice(0, 3);
+      const priorBlock = prior.length
+        ? "Previous published summaries (most recent first):\n" + prior.map(p => `- Session ${p.sessionNumber}: ${p.title}\n${(p.summary || "").slice(0, 800)}`).join("\n\n")
+        : "(No prior published summaries.)";
+
+      const cfgR = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'ai_model'");
+      const model = cfgR.rows.length ? cfgR.rows[0].value : "gpt-5.4-mini";
+
+      const systemPrompt = `You are the campaign chronicler for "Halls of the Damned", a D&D 5e game.
+
+Your job is to convert the Dungeon Master's raw post-session notes into a polished narrative summary the players will read on the campaign website.
+
+Voice rules (strict):
+- Match the DM's grounded, direct voice. Plain prose. No flowery language.
+- Do NOT use em-dashes. Use commas, periods, or semicolons instead.
+- Past tense, third-person. Refer to the party by their character names where known.
+- Do not invent events, NPCs, locations, or outcomes that are not in the notes or prior published summaries.
+- If something is ambiguous in the notes, write around it rather than making it up.
+- 4 to 8 short paragraphs is the typical length. Keep it tight.
+- Do not include a heading; the website wraps the text under "Session Summary".
+- Do not include meta commentary like "In this session..." — just tell the story.
+
+Campaign context follows. Use it for consistency; do not contradict it.
+
+${priorBlock}
+
+${ragContext}`.trim();
+
+      const userPrompt = `Session ${parsed.sessionNumber}${parsed.gameDate ? ` (in-game: ${parsed.gameDate})` : ""}: ${parsed.title || "Untitled"}
+
+Raw DM notes:
+${notes}
+
+${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""}`.trim();
+
+      const t0 = Date.now();
+      const completion = await azure.openaiClient.chat.completions.create({
+        model,
+        messages: [ { role: "system", content: systemPrompt }, { role: "user", content: userPrompt } ],
+        max_completion_tokens: 2048,
+        temperature: 0.6,
+      });
+      recordChatCompletion(completion, { model, username: session.username || "", isDM: true, source: "dm-admin.notebook-session-summary", latencyMs: Date.now() - t0 });
+      const generated = (completion.choices[0]?.message?.content || "").trim();
+      if (!generated) { sendJSON(res, { error: "AI returned an empty summary" }, 502); return true; }
+
+      const newContent = upsertSection(content, "Session Summary", generated);
+      await pgPool.query("UPDATE hotd_notebook_pages SET content = $1, updated_at = NOW() WHERE path = $2", [newContent, b.path]);
+      if (pr.rows[0].status === "published") embedNotebookPage(b.path, pr.rows[0].name, newContent, "published").catch(() => {});
+      sendJSON(res, { ok: true, content: newContent, generated_summary: generated, usage: completion.usage });
+    } catch (e) { console.error("Notebook session-summary error:", e); sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: generate a session page's GM Guide PDF ──
+  if (decoded === "/api/dm-admin/notebook/session-pdf" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      if (!b.path || !sessionsLib.isSessionPath(b.path)) { sendJSON(res, { error: "a session page path is required" }, 400); return true; }
+      const pr = await pgPool.query("SELECT content FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [b.path]);
+      if (!pr.rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      const content = pr.rows[0].content;
+      const parsed = sessionsLib.parseSessionPage(content);
+      const sessSlug = safeSessionSlug(parsed.sessionNumber);
+      if (sessSlug === null) { sendJSON(res, { error: "Session page has no valid Session # metadata" }, 400); return true; }
+      if (!fs.existsSync(PDF_SCRIPT)) { sendJSON(res, { error: `PDF builder not available in this deployment (missing ${PDF_SCRIPT}).` }, 501); return true; }
+      const gmGuideMd = stripSection(content, "Session Summary");
+      const tmpFile = notebookPath.join(os.tmpdir(), `hotd-session-${sessSlug}-${Date.now()}.md`);
+      fs.writeFileSync(tmpFile, gmGuideMd, "utf8");
+      try { fs.mkdirSync(PDF_REPORTS_DIR, { recursive: true }); }
+      catch (e) { sendJSON(res, { error: `Cannot create reports directory ${PDF_REPORTS_DIR}: ${e.message}` }, 500); return true; }
+      const outRelative = `session${sessSlug}-gm-guide.pdf`;
+      const outAbsolute = notebookPath.join(PDF_REPORTS_DIR, outRelative);
+      const docTitle = `Session ${sessSlug}: ${parsed.title || "Untitled"}`;
+      await new Promise((resolve, reject) => {
+        const child = childProc.spawn(process.execPath, [PDF_SCRIPT, "--input-file", tmpFile, "--out", outAbsolute, "--title", docTitle, "--session", sessSlug], { cwd: REPO_ROOT, stdio: ["ignore", "pipe", "pipe"] });
+        let stderr = ""; child.stderr.on("data", (d) => { stderr += d.toString(); });
+        child.on("error", reject);
+        child.on("exit", (code) => { try { fs.unlinkSync(tmpFile); } catch (_) {} if (code === 0) resolve(); else reject(new Error(`PDF script exited ${code}: ${stderr.slice(0, 500)}`)); });
+      });
+      const pdfRelativeForDb = `reports/${outRelative}`;
+      await upsertSessionShadow(parsed, content);
+      await pgPool.query("UPDATE hotd_sessions SET pdf_path = $1, pdf_generated_at = NOW(), updated_at = NOW() WHERE session_number = $2", [pdfRelativeForDb, parsed.sessionNumber]);
+      sendJSON(res, { ok: true, pdf_path: pdfRelativeForDb, download_url: `/api/dm-admin/notebook/session-pdf?path=${encodeURIComponent(b.path)}` });
+    } catch (e) { console.error("Notebook session PDF error:", e); sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: download a session page's generated PDF ──
+  if (decoded === "/api/dm-admin/notebook/session-pdf" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const qp = new URL(req.url, "http://x").searchParams.get("path");
+      if (!qp || !sessionsLib.isSessionPath(qp)) { sendJSON(res, { error: "a session page path is required" }, 400); return true; }
+      const pr = await pgPool.query("SELECT content FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [qp]);
+      if (!pr.rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      const parsed = sessionsLib.parseSessionPage(pr.rows[0].content);
+      const sr = await pgPool.query("SELECT pdf_path FROM hotd_sessions WHERE session_number = $1", [parsed.sessionNumber]);
+      const pdfPath = sr.rows[0] && sr.rows[0].pdf_path;
+      if (!pdfPath) { sendJSON(res, { error: "No PDF generated yet for this session" }, 404); return true; }
+      const resolved = notebookPath.resolve(REPO_ROOT, pdfPath);
+      if (!resolved.startsWith(PDF_REPORTS_DIR + notebookPath.sep) && resolved !== PDF_REPORTS_DIR) { sendJSON(res, { error: "Invalid PDF path" }, 400); return true; }
+      if (!fs.existsSync(resolved)) { sendJSON(res, { error: "PDF file missing on disk" }, 404); return true; }
+      const stat = fs.statSync(resolved);
+      res.writeHead(200, { "Content-Type": "application/pdf", "Content-Length": stat.size, "Content-Disposition": `attachment; filename="session${parsed.sessionNumber}-gm-guide.pdf"`, "Cache-Control": "no-store" });
+      fs.createReadStream(resolved).pipe(res);
+    } catch (e) { console.error("Notebook session PDF download error:", e); sendJSON(res, { error: e.message }, 500); }
     return true;
   }
 

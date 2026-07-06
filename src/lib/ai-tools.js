@@ -9,6 +9,7 @@
 const { pgPool } = require("../db/pool");
 const { searchEmbeddings } = require("./rag");
 const { trackAiChat, trackDbQuery } = require("./telemetry");
+const { listSessionPages } = require("./sessions");
 
 // ── Tool definitions (OpenAI function-calling schema) ────────
 
@@ -268,33 +269,28 @@ async function executeTool(name, args, openaiClient, isDM = false) {
     }
 
     case "get_session_log": {
+      const all = await listSessionPages({ publishedOnly: false });
       if (args.session_number != null) {
-        const res = await pgPool.query(
-          "SELECT session_number, title, summary, game_date, play_date FROM hotd_sessions WHERE session_number = $1",
-          [args.session_number]
-        );
-        if (res.rows.length === 0) return JSON.stringify({ found: false, message: `Session ${args.session_number} not found` });
-        const s = res.rows[0];
-        return JSON.stringify({ found: true, session: { number: s.session_number, title: s.title, summary: s.summary, game_date: s.game_date, play_date: s.play_date } });
+        const s = all.find(x => x.sessionNumber === parseInt(args.session_number, 10));
+        if (!s) return JSON.stringify({ found: false, message: `Session ${args.session_number} not found` });
+        return JSON.stringify({ found: true, session: { number: s.sessionNumber, title: s.title, summary: s.summary, game_date: s.gameDate, play_date: s.playDate } });
       }
       if (args.query) {
-        const pattern = `%${args.query}%`;
+        const q = String(args.query).toLowerCase();
         const limit = args.limit || 5;
-        const res = await pgPool.query(
-          "SELECT session_number, title, summary, game_date FROM hotd_sessions WHERE title ILIKE $1 OR summary ILIKE $1 ORDER BY session_number LIMIT $2",
-          [pattern, limit]
-        );
+        const matched = all.filter(s => (s.title || "").toLowerCase().includes(q) || (s.summary || "").toLowerCase().includes(q))
+          .sort((a, b) => a.sessionNumber - b.sessionNumber).slice(0, limit);
         return JSON.stringify({
-          count: res.rows.length,
-          sessions: res.rows.map(s => ({ number: s.session_number, title: s.title, summary: (s.summary || "").slice(0, 1000), game_date: s.game_date })),
+          count: matched.length,
+          sessions: matched.map(s => ({ number: s.sessionNumber, title: s.title, summary: (s.summary || "").slice(0, 1000), game_date: s.gameDate })),
         });
       }
       // No params — return the latest session with full summary, plus recent list
-      const latest = await pgPool.query("SELECT session_number, title, summary, game_date, play_date FROM hotd_sessions ORDER BY session_number DESC LIMIT 1");
-      const recent = await pgPool.query("SELECT session_number, title, game_date FROM hotd_sessions ORDER BY session_number DESC LIMIT 5");
+      const latest = all[0] || null;
+      const recent = all.slice(0, 5);
       return JSON.stringify({
-        latest_session: latest.rows.length ? { number: latest.rows[0].session_number, title: latest.rows[0].title, summary: latest.rows[0].summary, game_date: latest.rows[0].game_date, play_date: latest.rows[0].play_date } : null,
-        recent_sessions: recent.rows.map(s => ({ number: s.session_number, title: s.title, game_date: s.game_date })),
+        latest_session: latest ? { number: latest.sessionNumber, title: latest.title, summary: latest.summary, game_date: latest.gameDate, play_date: latest.playDate } : null,
+        recent_sessions: recent.map(s => ({ number: s.sessionNumber, title: s.title, game_date: s.gameDate })),
       });
     }
 

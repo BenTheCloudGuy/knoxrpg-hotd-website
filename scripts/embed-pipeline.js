@@ -95,19 +95,10 @@ async function stageExtract() {
   }
 
   // ── DB: Sessions ────────────────────────────────────────────
-  if (!SOURCE_FILTER || SOURCE_FILTER === "session") {
-    const { rows } = await pgPool.query("SELECT id, session_number, title, summary, game_date, play_date FROM hotd_sessions ORDER BY session_number");
-    for (const r of rows) {
-      const text = [
-        `# Session ${r.session_number}: ${r.title}`,
-        r.game_date ? `Game Date: ${r.game_date}` : null,
-        r.play_date ? `Play Date: ${new Date(r.play_date).toLocaleDateString()}` : null,
-        r.summary || null,
-      ].filter(Boolean).join("\n");
-      sources.push({ type: "session", id: r.id, title: `Session ${r.session_number}: ${r.title}`, content: text, is_dm_only: false, metadata: { session_number: r.session_number, game_date: r.game_date } });
-    }
-    log(`Sessions: ${rows.length} extracted`);
-  }
+  // Sessions now live in the Campaign Notebook (Adventure Notes/Sessions/) and
+  // are embedded as source_type='notebook' via src/lib/notebook-rag on publish.
+  // The legacy source_type='session' stage was removed; cleanOrphans() purges
+  // any leftover 'session' chunks.
 
   // ── DB: Artifacts ───────────────────────────────────────────
   if (!SOURCE_FILTER || SOURCE_FILTER === "artifact") {
@@ -664,7 +655,7 @@ async function cleanOrphans() {
   let deleted = 0;
   const orphanQueries = [
     { type: "npc", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'npc' AND source_id NOT IN (SELECT id FROM hotd_npcs)" },
-    { type: "session", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'session' AND source_id NOT IN (SELECT id FROM hotd_sessions)" },
+    { type: "session", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'session'" },
     { type: "artifact", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'artifact' AND source_id NOT IN (SELECT id FROM hotd_artifacts)" },
     { type: "handout", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'handout' AND source_id NOT IN (SELECT id FROM hotd_handouts)" },
     { type: "calendar", sql: "DELETE FROM hotd_embeddings WHERE source_type = 'calendar' AND source_id NOT IN (SELECT id FROM hotd_calendar_events)" },

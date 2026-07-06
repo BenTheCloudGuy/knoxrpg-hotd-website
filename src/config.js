@@ -81,7 +81,6 @@ const NAV_ITEMS = [
       { label: "Player Characters", href: "/characters/admin" },
       { label: "Map Markers", href: "/map/admin" },
       { label: "NPCs", href: "/dm-admin#npcs" },
-      { label: "Sessions", href: "/dm-admin#sessions" },
       { label: "Calendar Admin", href: "/calendar/admin" },
       { label: "Artifacts Admin", href: "/artifacts/admin" },
       { label: "Handouts Admin", href: "/handouts/admin" },

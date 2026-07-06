@@ -13,6 +13,9 @@ function resolveHref(r) {
   switch (type) {
     case 'npc':       return id ? `/npcs/${id}` : '/npcs';
     case 'session':   return '/sessions';
+    case 'notebook':
+      if (path.startsWith('Sessions/')) return '/sessions';
+      return null;
     case 'artifact':  return id ? `/artifacts/${id}` : '/artifacts';
     case 'handout':   return id ? `/handouts/${id}` : '/handouts';
     case 'calendar':  return '/calendar';
@@ -53,6 +56,7 @@ function categoryLabel(type) {
     npc: 'NPC', session: 'Session Log', artifact: 'Artifact',
     handout: 'Handout', calendar: 'Calendar Event', character: 'Player Character',
     journal: 'Adventure Journal', lore: 'Campaign Lore', lore_json: 'Campaign Data',
+    notebook: 'Campaign Notebook',
     spell: 'Spell', monster: 'Monster', magic_item: 'Magic Item',
     ddb_race: 'Race', ddb_class: 'Class', ddb_feat: 'Feat',
     ddb_background: 'Background', ddb_spell: 'Spell', ddb_monster: 'Monster',

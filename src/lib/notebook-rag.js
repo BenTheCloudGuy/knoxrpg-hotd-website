@@ -18,8 +18,10 @@
 const crypto = require("crypto");
 const { pgPool } = require("../db/pool");
 const { embedQuery } = require("./rag");
+const { splitH1 } = require("./sessions");
 
 const PUBLIC_LORE_PREFIX = "Campaign Data/";
+const SESSIONS_PREFIX = "Sessions/";
 
 // Split a page's content into ~1500-char chunks on line boundaries.
 function chunkText(content) {
@@ -39,6 +41,26 @@ function chunkText(content) {
 
 // Split page content into visibility segments [{ text, dmOnly }].
 function splitVisibility(pagePath, content) {
+  // Session pages (Sessions/): the "# Session Summary" section
+  // is player-visible; the metadata header + "# Session Notes" prep are DM-only.
+  // This is the INVERSE of the Campaign Data rule below.
+  if (pagePath.startsWith(SESSIONS_PREFIX)) {
+    const sections = splitH1(content);
+    const summary = sections.find((s) => s.heading.toLowerCase() === "session summary");
+    const publicText = summary ? summary.body.trim() : "";
+    const dmParts = [];
+    const firstH1 = content.search(/^#\s/m);
+    const head = (firstH1 >= 0 ? content.slice(0, firstH1) : content).trim();
+    if (head) dmParts.push(head);
+    for (const s of sections) {
+      if (s.heading.toLowerCase() !== "session summary") dmParts.push("# " + s.heading + "\n" + s.body);
+    }
+    const dmText = dmParts.join("\n\n").trim();
+    const out = [];
+    if (publicText) out.push({ text: "# Session Summary\n" + publicText, dmOnly: false });
+    if (dmText) out.push({ text: dmText, dmOnly: true });
+    return out;
+  }
   if (pagePath.startsWith(PUBLIC_LORE_PREFIX)) {
     const parts = content.split(/(?=^## DM Notes)/m);
     const player = parts[0].trim();

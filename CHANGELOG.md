@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.24.0] - 2026-07-06
+
+### Changed
+- **Sessions now live in the Campaign Notebook under a root-level `Sessions/` folder** instead of the standalone Sessions Workspace. Each session is a notebook page with a metadata header (`Session #`, `Title`, `In-Game Date`, `Play Date`) plus `# Session Notes` (DM prep, private) and `# Session Summary` (player recap). They are edited with the same unified notebook editor (Monaco + tabs + lint) as every other page. New shared module `src/lib/sessions.js` is the single source of truth for detecting/parsing/listing session pages.
+- **Player/DM visibility is inverted for session pages** (`src/lib/notebook-rag.js`): the `# Session Summary` section embeds as **player-visible** RAG (`is_dm_only=false`); the metadata + `# Session Notes` prep embeds **DM-only**. (Campaign Data pages keep the opposite split on `## DM Notes`.)
+- **Presentation now reads sessions from the notebook**, not `hotd_sessions`: the Home "Last Session" block, the `/sessions` page, the `get_session_log` AI tool, and search all go through `src/lib/sessions.js` (order + "latest published" key off the parsed `Session #` field). Search routes `Sessions/*` notebook chunks to `/sessions`.
+
+### Added
+- **Session pages get dedicated `🤖 Generate Summary` and `📄 Create PDF` actions** in the notebook toolbar (shown only for `Sessions/` pages). New endpoints `POST /api/dm-admin/notebook/session-summary` (RAG-grounded, drafts `# Session Summary` from `# Session Notes`) and `POST|GET /api/dm-admin/notebook/session-pdf` (GM-guide PDF via `build-session-pdf.js`, streamed download). Creating a new file in the `Sessions/` folder seeds the session template.
+- **Publishing a session page runs the canon pipeline + RAG embed**, matching the old workspace: `notebook/publish` for a `Sessions/` page extracts canon updates, applies them, reindexes touched sources, and embeds the page (summary public, prep DM-only). Unpublish removes it from RAG. A `hotd_sessions` shadow row is kept in sync per session for canon provenance + PDF path.
+- **`scripts/migrate-sessions-to-notebook.js`** — idempotent backfill of all `hotd_sessions` rows into `Sessions/` pages (metadata + markdown copied as-is, all published), embedded via the notebook-rag lib. Migrated all 31 sessions (131 RAG chunks: 70 player-visible summary + 61 DM-only prep).
+
+### Removed
+- **Retired the standalone Sessions Workspace UI.** The DM Command Center `Sessions` panel/iframe + nav item are gone; `/sessions/admin` now redirects to `/dm-admin#notes`; the `/sessions` "Admin →" link points there too. The legacy `session` stage was removed from `scripts/embed-pipeline.js` (sessions embed as `source_type='notebook'` now; `cleanOrphans` purges any leftover `source_type='session'` chunks). The `hotd_sessions` table, its CRUD/publish/summary/pdf API routes, and `renderSessionsAdminPage` are left **dormant** (backup + canon provenance; not dropped).
+
 ## [3.23.0] - 2026-07-06
 
 ### Added
