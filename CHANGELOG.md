@@ -6,10 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
-## [3.22.0] - 2026-07-06
+## [3.23.0] - 2026-07-06
+
+### Added
+- **Monaco (VS Code) editor with syntax highlighting in the notebook** (`/dm-admin#notes`). The Edit tab now mounts the Monaco editor (the engine that powers VS Code) with Markdown + embedded-HTML syntax highlighting, line numbers, and word wrap. It loads lazily from CDN the first time you open a page; if it can't load, the editor gracefully falls back to the plain textarea. Paste/drop image upload works inside Monaco (inserted at the cursor), and content stays mirrored so Save/Publish/Preview keep working unchanged.
+- **Inline Markdown linting (markdownlint rule IDs).** A self-contained linter surfaces the most common markdownlint issues as VS Code-style squiggles with hover messages using the real rule IDs: MD009 trailing spaces, MD010 hard tabs, MD012 multiple blanks, MD018/MD019 heading spacing, MD022 blanks around headings, MD023 heading start, MD025 multiple H1, MD026 heading trailing punctuation, MD031 blanks around fences, MD032 blanks around lists, MD040 fenced-code language, MD047 final newline. Linting is **purely advisory** — it never blocks Save or Publish. (Runs in-page with no external dependency; the full markdownlint engine isn't bundled because its browser build needs unbundled peer packages that don't fit this no-build site.)
 
 ### Fixed
 - **Preview tab now honors full Markdown.** `renderMd` runs `marked` with `{ gfm: true, breaks: true }`, so single newlines become line breaks (fixes the "newline spacing" gaps) and GFM features (tables, task lists, strikethrough, autolinks) render. Added complete preview styling (`.nb-preview-view`) for paragraphs, nested lists, all heading levels, blockquotes, code blocks, tables with zebra rows, `hr`, links, and images.
+
+## [3.22.0] - 2026-07-06
 
 ### Changed
 - **The notebook now uses a single unified editor for every page** (`/dm-admin#notes`). The old EasyMDE rich editor and the separate AI Assist pane were merged into one full-frame workspace used for all pages (existing, hand-written, and AI-generated):

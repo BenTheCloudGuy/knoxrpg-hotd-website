@@ -166,6 +166,7 @@ async function renderDmAdminPage(session) {
               <div class="nb-editor-body">
                 <div class="nb-editor-area" id="nb-edit-view">
                   <textarea id="nb-editor" class="nb-editor-ta" spellcheck="false" placeholder="Write Markdown here, or use AI Assist above to generate a draft..." oninput="nbEditorChanged()"></textarea>
+                  <div id="nb-monaco" class="nb-monaco" style="display:none;"></div>
                 </div>
                 <div class="nb-preview-view" id="nb-preview-view" style="display:none;"></div>
                 <div class="nb-right-panel" id="nb-right-panel" style="display:none;">
@@ -545,6 +546,7 @@ async function renderDmAdminPage(session) {
     .nb-tab-active { color:#e8b923; border-bottom-color:#c83232; }
     /* ── Unified editor: textarea + preview (fills remaining space) ── */
     .nb-editor-ta { flex:1; min-height:0; width:100%; box-sizing:border-box; background:#111; color:#ccc; border:none; outline:none; resize:none; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:0.85rem; line-height:1.6; }
+    .nb-monaco { flex:1; min-height:0; overflow:hidden; }
     .nb-preview-view { flex:1; min-width:0; min-height:0; overflow-y:auto; background:#111; color:#ccc; padding:16px 24px; font-size:0.9rem; line-height:1.7; }
     .nb-preview-view > *:first-child { margin-top:0; }
     .nb-preview-view h1, .nb-preview-view h2, .nb-preview-view h3, .nb-preview-view h4, .nb-preview-view h5, .nb-preview-view h6 { color:#e8b923; line-height:1.3; margin:1.2em 0 0.5em; font-weight:700; }
@@ -647,6 +649,7 @@ async function renderDmAdminPage(session) {
 
   <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
   <script>
   const el = id => document.getElementById(id);
   const esc = s => { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
@@ -898,6 +901,10 @@ async function renderDmAdminPage(session) {
   let _nbCurrentPath = null;
   let _nbStatus = null;
   let _nbEditorWired = false;
+  let _monaco = null;
+  let _monacoLoading = null;
+  let _nbSyncing = false;
+  let _nbLintTimer = null;
   let _nbDirty = false;
   let _nbSaveTimer = null;
   let _nbInfoOpen = false;
@@ -1126,6 +1133,8 @@ async function renderDmAdminPage(session) {
 
     nbWireEditor();
     el('nb-editor').value = d.content || '';
+    await nbEnsureMonaco();
+    if (_monaco) { _nbSyncing = true; _monaco.setValue(d.content || ''); _nbSyncing = false; }
     _nbDirty = false;
     el('nb-save-status').textContent = 'Saved';
     el('nb-save-status').style.color = '#555';
@@ -1135,6 +1144,7 @@ async function renderDmAdminPage(session) {
     renderNbTree();
     nbLoadBacklinks(path);
     nbLoadNoteInfo(d.content || '');
+    nbRunLint();
   }
 
   // Populate the toolbar folder <select> from the current tree.
@@ -1185,6 +1195,171 @@ async function renderDmAdminPage(session) {
     });
   }
 
+  // Set editor content in both the textarea (fallback + source of truth) and Monaco.
+  function nbSetContent(v) {
+    v = v || '';
+    el('nb-editor').value = v;
+    if (_monaco) { _nbSyncing = true; _monaco.setValue(v); _nbSyncing = false; }
+    nbScheduleLint();
+  }
+
+  // Lazily load Monaco (the VS Code editor) and mount it over the textarea.
+  function nbEnsureMonaco() {
+    if (_monaco) return Promise.resolve(_monaco);
+    if (_monacoLoading) return _monacoLoading;
+    if (typeof require === 'undefined' || !require.config) return Promise.resolve(null);
+    var VS = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min';
+    _monacoLoading = new Promise(function(resolve) {
+      try {
+        window.MonacoEnvironment = {
+          getWorkerUrl: function() {
+            return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
+              "self.MonacoEnvironment={baseUrl:'" + VS + "/'};" +
+              "importScripts('" + VS + "/vs/base/worker/workerMain.js');"
+            );
+          }
+        };
+        require.config({ paths: { vs: VS + '/vs' } });
+        require(['vs/editor/editor.main'], function() {
+          try {
+            _monaco = monaco.editor.create(el('nb-monaco'), {
+              value: el('nb-editor').value || '',
+              language: 'markdown',
+              theme: 'vs-dark',
+              automaticLayout: true,
+              wordWrap: 'on',
+              minimap: { enabled: false },
+              lineNumbers: 'on',
+              fontSize: 13,
+              scrollBeyondLastLine: false,
+              renderWhitespace: 'boundary',
+              fixedOverflowWidgets: true,
+              padding: { top: 10 }
+            });
+            el('nb-editor').style.display = 'none';
+            el('nb-monaco').style.display = 'block';
+            _monaco.onDidChangeModelContent(function() {
+              el('nb-editor').value = _monaco.getValue();
+              nbScheduleLint();
+              if (_nbSyncing) return;
+              nbEditorChanged();
+            });
+            nbWireMonacoImages();
+            nbRunLint();
+            resolve(_monaco);
+          } catch (e) { console.error('Monaco init failed', e); resolve(null); }
+        });
+      } catch (e) { console.error('Monaco load failed', e); resolve(null); }
+    });
+    return _monacoLoading;
+  }
+
+  // Paste / drop image upload inside Monaco.
+  function nbWireMonacoImages() {
+    var host = el('nb-monaco');
+    host.addEventListener('paste', function(e) {
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) { e.preventDefault(); e.stopPropagation(); nbUploadImage(items[i].getAsFile(), null); return; }
+      }
+    }, true);
+    host.addEventListener('drop', function(e) {
+      var files = (e.dataTransfer || {}).files || [];
+      for (var i = 0; i < files.length; i++) {
+        if (files[i].type.indexOf('image') !== -1) { e.preventDefault(); e.stopPropagation(); nbUploadImage(files[i], null); return; }
+      }
+    }, true);
+  }
+
+  // markdownlint-compatible linting -> inline Monaco squiggles (advisory only, VS Code rule IDs).
+  function nbScheduleLint() { clearTimeout(_nbLintTimer); _nbLintTimer = setTimeout(nbRunLint, 500); }
+
+  // A focused subset of markdownlint's default rules, self-contained (no external deps).
+  function nbLintMarkdown(text) {
+    var lines = String(text == null ? '' : text).split('\\n');
+    var out = [];
+    function add(line, id, name, desc, detail, range) {
+      out.push({ lineNumber: line, ruleNames: [id, name], ruleDescription: desc, errorDetail: detail || null, errorRange: range || null });
+    }
+    var inFence = false, fenceChar = '', blankRun = 0, h1Count = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var ln = i + 1, line = lines[i];
+      var fenceM = line.match(/^(\\s*)(\\x60{3,}|~{3,})(.*)$/);
+      if (fenceM && (!inFence || fenceM[2].charAt(0) === fenceChar)) {
+        if (!inFence) {
+          inFence = true; fenceChar = fenceM[2].charAt(0);
+          if (!fenceM[3].trim()) add(ln, 'MD040', 'fenced-code-language', 'Fenced code blocks should have a language specified', null, null);
+          if (i > 0 && lines[i-1].trim() !== '') add(ln, 'MD031', 'blanks-around-fences', 'Fenced code blocks should be surrounded by blank lines', null, null);
+        } else {
+          inFence = false;
+          if (i < lines.length - 1 && lines[i+1].trim() !== '') add(ln, 'MD031', 'blanks-around-fences', 'Fenced code blocks should be surrounded by blank lines', null, null);
+        }
+        blankRun = 0; continue;
+      }
+      if (inFence) { blankRun = 0; continue; }
+
+      if (line.trim() === '') {
+        blankRun++;
+        if (blankRun >= 2) add(ln, 'MD012', 'no-multiple-blanks', 'Multiple consecutive blank lines', 'Expected: 1; Actual: ' + blankRun, null);
+        continue;
+      }
+      blankRun = 0;
+
+      var tabIdx = line.indexOf('\\t');
+      if (tabIdx !== -1) add(ln, 'MD010', 'no-hard-tabs', 'Hard tabs', 'Column: ' + (tabIdx + 1), [tabIdx + 1, 1]);
+
+      var trail = line.match(/(\\s+)$/);
+      if (trail && trail[1].length !== 2) {
+        var rightLen = line.length - trail[1].length;
+        add(ln, 'MD009', 'no-trailing-spaces', 'Trailing spaces', 'Expected: 0 or 2; Actual: ' + trail[1].length, [rightLen + 1, trail[1].length]);
+      }
+
+      var hm = line.match(/^(\\s*)(#{1,6})(\\s*)(.*?)\\s*$/);
+      if (hm) {
+        var indent = hm[1], hashes = hm[2], sp = hm[3], htext = hm[4];
+        if (indent.length > 0) add(ln, 'MD023', 'heading-start-left', 'Headings must start at the beginning of the line', null, [1, indent.length]);
+        if (sp.length === 0 && htext.length > 0) add(ln, 'MD018', 'no-missing-space-atx', 'No space after hash on atx style heading', null, [indent.length + 1, hashes.length]);
+        else if (sp.length > 1) add(ln, 'MD019', 'no-multiple-space-atx', 'Multiple spaces after hash on atx style heading', null, [indent.length + 1, hashes.length + sp.length]);
+        if (htext && /[.,;:!]$/.test(htext)) add(ln, 'MD026', 'no-trailing-punctuation', 'Trailing punctuation in heading', "Punctuation: '" + htext.charAt(htext.length - 1) + "'", null);
+        if (hashes.length === 1) { h1Count++; if (h1Count > 1) add(ln, 'MD025', 'single-title/single-h1', 'Multiple top-level headings in the same document', null, null); }
+        if (i > 0 && lines[i-1].trim() !== '') add(ln, 'MD022', 'blanks-around-headings', 'Headings should be surrounded by blank lines', 'Expected blank line above', null);
+        if (i < lines.length - 1 && lines[i+1].trim() !== '') add(ln, 'MD022', 'blanks-around-headings', 'Headings should be surrounded by blank lines', 'Expected blank line below', null);
+      } else {
+        var listRe = /^(\\s*)([-*+]|\\d+\\.)\\s+/;
+        if (listRe.test(line)) {
+          var prevL = i > 0 ? lines[i-1] : '';
+          if (i > 0 && prevL.trim() !== '' && !listRe.test(prevL) && !/^\\s/.test(prevL)) add(ln, 'MD032', 'blanks-around-lists', 'Lists should be surrounded by blank lines', 'Expected blank line above', null);
+        }
+      }
+    }
+    if (text && text.charAt(text.length - 1) !== '\\n' && lines[lines.length - 1].trim() !== '') {
+      add(lines.length, 'MD047', 'single-trailing-newline', 'Files should end with a single newline character', null, null);
+    }
+    return out;
+  }
+
+  function nbRunLint() {
+    if (!_monaco || typeof monaco === 'undefined') return;
+    var model = _monaco.getModel(); if (!model) return;
+    var markers = [];
+    try {
+      nbLintMarkdown(_monaco.getValue()).forEach(function(v) {
+        var line = v.lineNumber || 1;
+        var col = 1, len = 1;
+        if (v.errorRange && v.errorRange.length === 2) { col = v.errorRange[0]; len = v.errorRange[1]; }
+        else { var lc = line <= model.getLineCount() ? model.getLineContent(line) : ''; len = Math.max(1, lc.length); }
+        markers.push({
+          startLineNumber: line, startColumn: col,
+          endLineNumber: line, endColumn: col + len,
+          message: v.ruleNames.slice(0, 2).join('/') + ': ' + v.ruleDescription + (v.errorDetail ? ' [' + v.errorDetail + ']' : ''),
+          severity: monaco.MarkerSeverity.Warning,
+          source: 'markdownlint'
+        });
+      });
+    } catch (e) { /* advisory only */ }
+    monaco.editor.setModelMarkers(model, 'markdownlint', markers);
+  }
+
   // Typing in the editor -> mark dirty + schedule auto-save (content only).
   function nbEditorChanged() {
     _nbDirty = true;
@@ -1217,6 +1392,8 @@ async function renderDmAdminPage(session) {
         return '<span class="wiki-link" data-note="' + esc(name) + '">' + esc(name) + '</span>';
       });
       el('nb-preview-view').innerHTML = renderMd(processed);
+    } else if (_monaco) {
+      setTimeout(function() { _monaco.layout(); _monaco.focus(); }, 0);
     }
   }
 
@@ -1411,11 +1588,17 @@ async function renderDmAdminPage(session) {
     var r = await fetch(uploadUrl, { method:'POST', body:fd });
     var d = await r.json();
     if (r.ok && d.url) {
-      var s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
       var snippet = '![image](' + d.url + ')\\n';
-      ta.value = ta.value.slice(0, s) + snippet + ta.value.slice(e);
-      ta.selectionStart = ta.selectionEnd = s + snippet.length;
-      ta.focus();
+      if (_monaco) {
+        var sel = _monaco.getSelection();
+        _monaco.executeEdits('img', [{ range: sel, text: snippet, forceMoveMarkers: true }]);
+        _monaco.focus();
+      } else if (ta) {
+        var s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
+        ta.value = ta.value.slice(0, s) + snippet + ta.value.slice(e);
+        ta.selectionStart = ta.selectionEnd = s + snippet.length;
+        ta.focus();
+      }
       nbEditorChanged();
       el('nb-save-status').textContent = 'Image inserted';
     } else {
@@ -1550,7 +1733,7 @@ async function renderDmAdminPage(session) {
     var r = await fetch('/api/dm-admin/notebook/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:promptText, entities:ents, baseContent:baseContent || '' }) });
     var d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Generation failed');
-    el('nb-editor').value = d.content || '';
+    nbSetContent(d.content || '');
     _nbAiGenerated = true;
     _nbDirty = true;
     nbShowTab('edit');
