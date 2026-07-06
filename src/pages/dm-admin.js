@@ -545,13 +545,32 @@ async function renderDmAdminPage(session) {
     .nb-tab-active { color:#e8b923; border-bottom-color:#c83232; }
     /* ── Unified editor: textarea + preview (fills remaining space) ── */
     .nb-editor-ta { flex:1; min-height:0; width:100%; box-sizing:border-box; background:#111; color:#ccc; border:none; outline:none; resize:none; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:0.85rem; line-height:1.6; }
-    .nb-preview-view { flex:1; min-width:0; min-height:0; overflow-y:auto; background:#111; color:#ccc; padding:16px 22px; font-size:0.9rem; line-height:1.65; }
-    .nb-preview-view h1, .nb-preview-view h2, .nb-preview-view h3 { color:#e8b923; }
-    .nb-preview-view code { background:#1a1a1a; padding:2px 5px; border-radius:3px; }
-    .nb-preview-view pre { background:#0d0d0d; border:1px solid #222; padding:12px; border-radius:6px; overflow-x:auto; }
+    .nb-preview-view { flex:1; min-width:0; min-height:0; overflow-y:auto; background:#111; color:#ccc; padding:16px 24px; font-size:0.9rem; line-height:1.7; }
+    .nb-preview-view > *:first-child { margin-top:0; }
+    .nb-preview-view h1, .nb-preview-view h2, .nb-preview-view h3, .nb-preview-view h4, .nb-preview-view h5, .nb-preview-view h6 { color:#e8b923; line-height:1.3; margin:1.2em 0 0.5em; font-weight:700; }
+    .nb-preview-view h1 { font-size:1.7rem; border-bottom:1px solid #2a2a2a; padding-bottom:0.3em; }
+    .nb-preview-view h2 { font-size:1.4rem; border-bottom:1px solid #222; padding-bottom:0.25em; }
+    .nb-preview-view h3 { font-size:1.2rem; }
+    .nb-preview-view h4 { font-size:1.05rem; color:#c83232; }
+    .nb-preview-view h5, .nb-preview-view h6 { font-size:0.95rem; color:#c83232; }
+    .nb-preview-view p { margin:0 0 0.9em; }
+    .nb-preview-view ul, .nb-preview-view ol { margin:0 0 0.9em; padding-left:1.6em; }
+    .nb-preview-view li { margin:0.2em 0; }
+    .nb-preview-view li > ul, .nb-preview-view li > ol { margin:0.2em 0; }
+    .nb-preview-view blockquote { border-left:3px solid #c83232; margin:0 0 0.9em; padding:0.2em 1em; color:#999; background:#161616; }
+    .nb-preview-view a { color:#6fb3ff; text-decoration:none; }
+    .nb-preview-view a:hover { text-decoration:underline; }
+    .nb-preview-view strong { color:#eee; }
+    .nb-preview-view hr { border:none; border-top:1px solid #2a2a2a; margin:1.4em 0; }
+    .nb-preview-view code { background:#1a1a1a; padding:2px 5px; border-radius:3px; font-size:0.85em; color:#e0b0b0; }
+    .nb-preview-view pre { background:#0d0d0d; border:1px solid #222; padding:12px 14px; border-radius:6px; overflow-x:auto; margin:0 0 0.9em; }
+    .nb-preview-view pre code { background:none; padding:0; color:#ccc; font-size:0.82rem; }
     .nb-preview-view img { max-width:100%; border-radius:6px; }
-    .nb-preview-view table { border-collapse:collapse; }
-    .nb-preview-view th, .nb-preview-view td { border:1px solid #333; padding:5px 9px; }
+    .nb-preview-view table { border-collapse:collapse; margin:0 0 0.9em; }
+    .nb-preview-view th, .nb-preview-view td { border:1px solid #333; padding:6px 10px; text-align:left; }
+    .nb-preview-view th { background:#1a1a1a; color:#e8b923; }
+    .nb-preview-view tr:nth-child(even) td { background:#151515; }
+    .nb-preview-view input[type=checkbox] { margin-right:6px; }
     .nb-preview-view .wiki-link { color:#e8b923; cursor:pointer; text-decoration:underline dotted; }
     .nb-preview-view .wiki-link:hover { color:#fff; text-decoration:underline; }
     .nb-ai-followup { display:flex; gap:6px; margin:6px 0 10px; }
@@ -633,7 +652,7 @@ async function renderDmAdminPage(session) {
   const esc = s => { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
   function renderMd(text) {
     if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
-      try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(_) {}
+      try { return DOMPurify.sanitize(marked.parse(text || '', { gfm: true, breaks: true })); } catch(_) {}
     }
     return esc(text);
   }

@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ## [3.22.0] - 2026-07-06
 
+### Fixed
+- **Preview tab now honors full Markdown.** `renderMd` runs `marked` with `{ gfm: true, breaks: true }`, so single newlines become line breaks (fixes the "newline spacing" gaps) and GFM features (tables, task lists, strikethrough, autolinks) render. Added complete preview styling (`.nb-preview-view`) for paragraphs, nested lists, all heading levels, blockquotes, code blocks, tables with zebra rows, `hr`, links, and images.
+
 ### Changed
 - **The notebook now uses a single unified editor for every page** (`/dm-admin#notes`). The old EasyMDE rich editor and the separate AI Assist pane were merged into one full-frame workspace used for all pages (existing, hand-written, and AI-generated):
   - **Top toolbar** carries the identity + actions: **Page name** + **Folder** selector, **💾 Save Page**, **↻ Regenerate**, **Publish / Unpublish** (with the DRAFT / PUBLISHED badge), Info, Link Map, Delete, and Close.
