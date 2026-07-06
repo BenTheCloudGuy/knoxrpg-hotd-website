@@ -107,7 +107,7 @@ When running inside the website, also use `searchEmbeddings()` from `src/lib/rag
 > **Read-Aloud (on first sighting)**
 > [What the party perceives first. Sound before sight, sight before identification. One short paragraph.]
 
-**Stat block:** `src/hotd-campaign/data/statBlocks/[file].md` (delegate to Ranger if missing)
+**Stat block:** Campaign Notebook `Monster Stats/[file].md` (delegate to Ranger if missing)
 
 **Behavior**
 - [How it opens combat]

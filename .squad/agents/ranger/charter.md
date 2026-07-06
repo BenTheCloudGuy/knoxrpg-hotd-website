@@ -2,7 +2,7 @@
 
 ## Role
 
-Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and custom creatures. Outputs formatted markdown with embedded NPC portraits to `src/hotd-campaign/data/statBlocks/`.
+Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and custom creatures. Outputs formatted markdown with embedded NPC portraits as Campaign Notebook pages under `Monster Stats/` (`hotd_notebook_pages`, edited via the DMCC notebook `/dm-admin#notes`).
 
 ## Capabilities
 
@@ -27,7 +27,7 @@ Before building a stat block, consult these in order:
 2. **Recent session canon** — the `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) for current state and prior encounters
 3. **Campaign RAG (read-only)** — when running in-app, use the AI function tools `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_monster`, `lookup_spell` (defined in `src/lib/ai-tools.js`) to pull faction ties, location context, and prior tactics. These wrap DB queries and RAG search; do not call `rag.js` directly. If a tool needs changes or new fields, hand off to Artificer.
 4. **D&D 2024 Monster Manual** — formatting and stat block conventions
-5. **Existing stat blocks** — `src/hotd-campaign/data/statBlocks/` for in-campaign precedent
+5. **Existing stat blocks** — the Campaign Notebook `Monster Stats/` folder (`hotd_notebook_pages`) for in-campaign precedent
 
 ## Handoffs
 
@@ -37,8 +37,8 @@ Before building a stat block, consult these in order:
 
 ## Conventions
 
-- All stat blocks go in `src/hotd-campaign/data/statBlocks/`
-- Filename format: lowercase-hyphenated, e.g. `vasilka.md`, `patchwork-goblin-swarm.md`
+- All stat blocks are Campaign Notebook pages under `Monster Stats/` (edited via the DMCC notebook `/dm-admin#notes`); publish a page to add it to RAG
+- Page name format: lowercase-hyphenated, e.g. `vasilka.md`, `patchwork-goblin-swarm.md`
 - Ally stat blocks prefixed with `ally-`, e.g. `ally-ismark-kolyanovich.md`
 - Enemy stat blocks have no prefix
 - Every stat block includes a small portrait image at the top if the NPC has a `portrait_url` in `hotd_npcs`

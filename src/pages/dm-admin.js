@@ -230,6 +230,8 @@ async function renderDmAdminPage(session) {
                 <div class="nb-breadcrumb" id="nb-breadcrumb"></div>
                 <div style="display:flex;gap:6px;align-items:center;">
                   <span id="nb-save-status" style="color:#555;font-size:0.72rem;"></span>
+                  <span id="nb-status-badge" style="display:none;font-size:0.62rem;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.03em;"></span>
+                  <button id="nb-publish-btn" class="dmc-btn dmc-btn-sm" style="display:none;" onclick="nbTogglePublish()"></button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbToggleInfo()" title="Note Info &amp; Backlinks">&#9432;</button>
                   <button class="dmc-btn dmc-btn-sm" onclick="nbShowLinkMap()" title="Link Map">&#128279;</button>
                   <button class="dmc-btn dmc-btn-primary dmc-btn-sm" onclick="nbSave()">&#128190; Save</button>
@@ -1076,6 +1078,7 @@ async function renderDmAdminPage(session) {
   // ═══ CAMPAIGN NOTEBOOK ═══
   let _nbTree = [];
   let _nbCurrentPath = null;
+  let _nbStatus = null;
   let _nbEditor = null;
   let _nbDirty = false;
   let _nbSaveTimer = null;
@@ -1383,6 +1386,8 @@ async function renderDmAdminPage(session) {
     el('nb-save-status').textContent = 'Saved';
     el('nb-save-status').style.color = '#555';
     renderNbTree();
+    _nbStatus = d.status || 'draft';
+    nbRenderStatus();
 
     // Load backlinks and note info
     nbLoadBacklinks(path);
@@ -1580,6 +1585,52 @@ async function renderDmAdminPage(session) {
 
   function nbDeleteCurrent() {
     if (_nbCurrentPath) nbDeleteItem(_nbCurrentPath);
+  }
+
+  // ── Publish / Unpublish (RAG membership) ──
+  function nbRenderStatus() {
+    var badge = el('nb-status-badge'); var btn = el('nb-publish-btn');
+    if (!badge || !btn) return;
+    if (!_nbCurrentPath || !_nbStatus) { badge.style.display = 'none'; btn.style.display = 'none'; return; }
+    badge.style.display = 'inline-block'; btn.style.display = 'inline-block';
+    btn.disabled = false;
+    if (_nbStatus === 'published') {
+      badge.textContent = 'PUBLISHED'; badge.style.background = 'rgba(74,222,128,0.15)'; badge.style.color = '#4ade80';
+      btn.textContent = 'Unpublish'; btn.title = 'Remove this page from campaign RAG (revert to draft)';
+    } else {
+      badge.textContent = 'DRAFT'; badge.style.background = 'rgba(232,185,35,0.15)'; badge.style.color = '#e8b923';
+      btn.textContent = '\u2191 Publish'; btn.title = 'Publish this page into campaign RAG';
+    }
+  }
+
+  function nbTogglePublish() {
+    if (!_nbCurrentPath) return;
+    return _nbStatus === 'published' ? nbUnpublish() : nbPublish();
+  }
+
+  async function nbPublish() {
+    if (!_nbCurrentPath) return;
+    if (_nbDirty) { await nbSave(true); }
+    var btn = el('nb-publish-btn'); btn.disabled = true; btn.textContent = 'Publishing...';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/publish', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:_nbCurrentPath}) });
+      var d = await r.json();
+      if (r.ok) { _nbStatus = 'published'; el('nb-save-status').textContent = 'Published (' + (d.chunks||0) + ' chunk' + ((d.chunks===1)?'':'s') + ' in RAG)'; el('nb-save-status').style.color = '#4ade80'; await loadNotes(); }
+      else { el('nb-save-status').textContent = 'Publish failed: ' + (d.error||''); el('nb-save-status').style.color = '#f44'; }
+    } catch (e) { el('nb-save-status').textContent = 'Publish failed'; el('nb-save-status').style.color = '#f44'; }
+    nbRenderStatus();
+  }
+
+  async function nbUnpublish() {
+    if (!_nbCurrentPath) return;
+    var btn = el('nb-publish-btn'); btn.disabled = true; btn.textContent = 'Unpublishing...';
+    try {
+      var r = await fetch('/api/dm-admin/notebook/unpublish', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:_nbCurrentPath}) });
+      var d = await r.json();
+      if (r.ok) { _nbStatus = 'draft'; el('nb-save-status').textContent = 'Unpublished (removed from RAG)'; el('nb-save-status').style.color = '#e8b923'; await loadNotes(); }
+      else { el('nb-save-status').textContent = 'Unpublish failed: ' + (d.error||''); el('nb-save-status').style.color = '#f44'; }
+    } catch (e) { el('nb-save-status').textContent = 'Unpublish failed'; el('nb-save-status').style.color = '#f44'; }
+    nbRenderStatus();
   }
 
   async function nbSave(silent) {

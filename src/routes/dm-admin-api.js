@@ -1320,7 +1320,7 @@ ${ragContext}${entityContext}`;
       return a.name.localeCompare(b.name);
     });
     for (const r of rows) {
-      const node = { name: r.name, path: r.path, type: r.type };
+      const node = { name: r.name, path: r.path, type: r.type, status: r.status };
       if (r.type === "folder") node.children = [];
       byPath[r.path] = node;
     }
@@ -1343,48 +1343,15 @@ ${ragContext}${entityContext}`;
     return roots;
   }
 
-  // ── Helper: embed notebook page content into RAG ──
-  async function embedNotebookPage(path, name, content) {
+  // ── Helper: (re)embed a notebook page into RAG per status + visibility ──
+  // Delegates to src/lib/notebook-rag.js. Published pages are embedded with
+  // player/DM visibility (Campaign Data/* splits on "## DM Notes"); draft /
+  // unpublished pages are removed from RAG.
+  const { syncNotebookPageEmbedding } = require("../lib/notebook-rag");
+  async function embedNotebookPage(path, name, content, status) {
     try {
       const { openaiClient } = require("../lib/azure");
-      const openai = openaiClient;
-      if (!openai || !content.trim()) return;
-      const { embedQuery } = require("../lib/rag");
-      const crypto = require("crypto");
-
-      // Chunk content (~1500 chars per chunk)
-      const chunks = [];
-      const lines = content.split("\n");
-      let current = "";
-      for (const line of lines) {
-        if (current.length + line.length > 1500 && current.length > 200) {
-          chunks.push(current);
-          current = "";
-        }
-        current += line + "\n";
-      }
-      if (current.trim()) chunks.push(current);
-
-      // Delete old embeddings for this notebook page
-      await pgPool.query(
-        "DELETE FROM hotd_embeddings WHERE source_type = 'notebook' AND source_path = $1",
-        [path]
-      );
-
-      // Insert new embeddings
-      for (let i = 0; i < chunks.length; i++) {
-        const chunkText = chunks[i].trim();
-        if (!chunkText) continue;
-        const chunkHash = crypto.createHash("sha256").update(path + ":" + i + ":" + chunkText).digest("hex");
-        const vector = await embedQuery(openai, chunkText);
-        const vectorStr = "[" + vector.join(",") + "]";
-        await pgPool.query(
-          `INSERT INTO hotd_embeddings (source_type, source_path, chunk_index, title, chunk_text, chunk_hash, embedding, is_dm_only, metadata)
-           VALUES ('notebook', $1, $2, $3, $4, $5, $6::vector, TRUE, $7)
-           ON CONFLICT (chunk_hash) DO UPDATE SET chunk_text = $4, embedding = $6::vector, title = $3, updated_at = NOW()`,
-          [path, i, name.replace(/\.md$/i, ""), chunkText, chunkHash, vectorStr, JSON.stringify({ notebook_path: path })]
-        );
-      }
+      await syncNotebookPageEmbedding(openaiClient, { path, name, content, status });
     } catch (e) {
       console.warn("  WARN: notebook RAG embed failed for", path, e.message);
     }
@@ -1395,7 +1362,7 @@ ${ragContext}${entityContext}`;
     if (!requireAdmin(session, res)) return true;
     try {
       const { rows } = await pgPool.query(
-        "SELECT path, parent_path, name, type FROM hotd_notebook_pages ORDER BY type, name"
+        "SELECT path, parent_path, name, type, status FROM hotd_notebook_pages ORDER BY type, name"
       );
       sendJSON(res, { tree: buildTree(rows) });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
@@ -1409,10 +1376,10 @@ ${ragContext}${entityContext}`;
     if (!filePath) { sendJSON(res, { error: "path required" }, 400); return true; }
     try {
       const { rows } = await pgPool.query(
-        "SELECT path, content FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [filePath]
+        "SELECT path, content, status FROM hotd_notebook_pages WHERE path = $1 AND type = 'file'", [filePath]
       );
       if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
-      sendJSON(res, { path: rows[0].path, content: rows[0].content });
+      sendJSON(res, { path: rows[0].path, content: rows[0].content, status: rows[0].status });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -1429,10 +1396,8 @@ ${ragContext}${entityContext}`;
       );
       if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
       sendJSON(res, { ok: true });
-      // Only published pages are embedded into RAG; drafts stay out until published.
-      if (rows[0].status === "published") {
-        embedNotebookPage(b.path, rows[0].name, b.content).catch(() => {});
-      }
+      // Re-sync RAG: published pages (re)embed with visibility; drafts are removed.
+      embedNotebookPage(b.path, rows[0].name, b.content, rows[0].status).catch(() => {});
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -1494,6 +1459,42 @@ ${ragContext}${entityContext}`;
         [b.path, b.path + "/%"]
       );
       sendJSON(res, { ok: true });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: publish (embed into RAG with visibility) ─────
+  if (decoded === "/api/dm-admin/notebook/publish" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+      const { rows } = await pgPool.query(
+        "UPDATE hotd_notebook_pages SET status = 'published', updated_at = NOW() WHERE path = $1 AND type = 'file' RETURNING name, content",
+        [b.path]
+      );
+      if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      const { openaiClient } = require("../lib/azure");
+      const result = await syncNotebookPageEmbedding(openaiClient, { path: b.path, name: rows[0].name, content: rows[0].content, status: "published" });
+      sendJSON(res, { ok: true, status: "published", chunks: result.chunks });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Notebook: unpublish (remove from RAG) ──────────────────
+  if (decoded === "/api/dm-admin/notebook/unpublish" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const b = JSON.parse(await readBody(req));
+      if (!b.path) { sendJSON(res, { error: "path required" }, 400); return true; }
+      const { rows } = await pgPool.query(
+        "UPDATE hotd_notebook_pages SET status = 'draft', updated_at = NOW() WHERE path = $1 AND type = 'file' RETURNING name",
+        [b.path]
+      );
+      if (!rows.length) { sendJSON(res, { error: "not found" }, 404); return true; }
+      const { removeNotebookEmbeddings } = require("../lib/notebook-rag");
+      await removeNotebookEmbeddings(b.path);
+      sendJSON(res, { ok: true, status: "draft" });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }

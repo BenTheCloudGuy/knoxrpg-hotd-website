@@ -48,7 +48,7 @@ Create D&D 5e (2024) stat blocks for campaign NPCs, monsters, and allies as form
    - *Hold Person* — 60 ft. Target humanoid must make WIS save or be paralyzed. Repeat save at end of each turn. Concentration.
    ```
 
-6. Save the file to `src/hotd-campaign/data/statBlocks/` using lowercase-hyphenated naming:
+6. Save the stat block as a Campaign Notebook page under `Monster Stats/` (via the DMCC notebook `/dm-admin#notes`), using lowercase-hyphenated naming, then publish it to add it to RAG:
    - Allies: `ally-ismark-kolyanovich.md`
    - Enemies: `vasilka.md`
    - Creatures: `patchwork-goblin-swarm.md`

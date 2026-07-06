@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.20.0] - 2026-07-05
+
+### Added
+- **Campaign Notebook publish / unpublish (Step 4).** The notebook editor (`/dm-admin#notes`) now shows a **DRAFT / PUBLISHED** status badge and a **Publish / Unpublish** toggle. Publishing embeds the page into RAG; unpublishing removes it. New endpoints: `POST /api/dm-admin/notebook/publish` and `POST /api/dm-admin/notebook/unpublish`. The `tree` and `read` endpoints now return `status`.
+- **`src/lib/notebook-rag.js`** — the single source of truth for notebook RAG embedding, with **path-based player/DM visibility**: pages under `Campaign Data/` split on a `## DM Notes` heading (text above it is player-visible `is_dm_only=false`, the DM Notes section is `is_dm_only=true`); every other notebook page (Adventure Notes, Monster Stats, NPC Info, …) is embedded fully DM-only. Draft/unpublished pages are removed from RAG.
+- **`scripts/reconcile-notebook-rag.js`** — one-time reconciliation that (re)embeds all published notebook pages via the lib and deletes the legacy file-based `lore` / `lore_json` rows.
+
+### Changed
+- **Notebook save re-syncs RAG per status.** `POST /api/dm-admin/notebook/write` now delegates to `notebook-rag.js`: published pages re-embed with visibility on every save; draft pages are kept out of RAG. The old inline `embedNotebookPage` (all `is_dm_only=true`, no split) was replaced.
+- **Stat blocks now live in the Campaign Notebook `Monster Stats/` folder** (`hotd_notebook_pages`), edited via the DMCC notebook and published to RAG. Ranger charter + stat-block / narrative-prose skills updated. (`build-session-pdf.js --statblocks` still reads files and is flagged as a pending follow-up.)
+
+### Notes
+- **Reconciliation run against prod:** 67 published notebook pages → 404 chunks (**342 player-visible, 65 DM-only**); the 1,032 legacy `lore` / `lore_json` rows (incl. the orphaned `npcs.json` rows) were deleted. Verified: `Campaign Data/Realms/barovia.md` = 6 player + 1 DM chunk; DM-only folders fully `is_dm_only=true`. The RAG data change is already live; this release deploys the UI + endpoints.
+- Public visibility of lore pages is unchanged (independent of publish status); `status` gates RAG membership only.
+
 ## [3.19.0] - 2026-07-05
 
 ### Removed

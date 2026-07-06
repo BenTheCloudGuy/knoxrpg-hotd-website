@@ -45,6 +45,8 @@ node scripts/build-session-pdf.js 29 --out /tmp/session29.pdf
 
 Output defaults to `reports/sessionNN-dm-guide.pdf`.
 
+> **Note (stat blocks):** Stat blocks now live in the Campaign Notebook `Monster Stats/` folder (`hotd_notebook_pages`), not `src/hotd-campaign/data/statBlocks/` (removed). `build-session-pdf.js --statblocks` still reads files and has **not** yet been updated to pull from the notebook — export the relevant `Monster Stats/` pages to files first, or treat statblock bundling as a pending follow-up.
+
 ## What the script does
 
 [scripts/build-session-pdf.js](../../../scripts/build-session-pdf.js) does the following:
