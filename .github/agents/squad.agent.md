@@ -60,7 +60,7 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 | Monster & treasure descriptions, story continuity, canon fact-checking        | **Mercer**             |
 | FoundryVTT module code, hooks, settings, module.json, website-to-Foundry sync | **Wizard**             |
 | NPC portraits, campaign art (scenes, items, handouts), style consistency      | **Bard**               |
-| Session notes & summaries (`hotd_sessions` table, via the Sessions Workspace), recaps | **Bard**     |
+| Session notes & summaries (notebook `Sessions/` pages), recaps | **Bard**     |
 | D&D 5e stat blocks, monster design, spell selection                           | **Ranger**             |
 | Session logging, decisions merge, history maintenance                         | **Cleric** (automatic) |
 | Work queue monitoring, backlog tracking, clean up artifacts and tmp files     | **Paladin**            |

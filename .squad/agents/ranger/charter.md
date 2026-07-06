@@ -24,7 +24,7 @@ Creates and maintains D&D 5e (2024) stat blocks for NPCs, monsters, allies, and 
 Before building a stat block, consult these in order:
 
 1. **NPC data** — `hotd_npcs` (via `lookup_npc` / `search_npcs` or the DMCC NPCs panel `/dm-admin#npcs`) for race, class, status, dm_notes
-2. **Recent session canon** — the `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) for current state and prior encounters
+2. **Recent session canon** — the notebook `Sessions/` pages (`# Session Notes` prep + `# Session Summary` recap, in the Campaign Notebook) for current state and prior encounters
 3. **Campaign RAG (read-only)** — when running in-app, use the AI function tools `lookup_npc`, `search_npcs`, `get_session_log`, `lookup_monster`, `lookup_spell` (defined in `src/lib/ai-tools.js`) to pull faction ties, location context, and prior tactics. These wrap DB queries and RAG search; do not call `rag.js` directly. If a tool needs changes or new fields, hand off to Artificer.
 4. **D&D 2024 Monster Manual** — formatting and stat block conventions
 5. **Existing stat blocks** — the Campaign Notebook `Monster Stats/` folder (`hotd_notebook_pages`) for in-campaign precedent

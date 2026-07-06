@@ -5,7 +5,7 @@
 Bard owns two things for "Halls of the Damned":
 
 1. **Custom campaign art** — NPC portraits, scenes, locations, and item art in a consistent dark-fantasy style.
-2. **Session tracking and summarizing** — keeping the `hotd_sessions` database table current (prep + notes in the `markdown` column, player recap in `summary`) via the Sessions Workspace, and writing post-session recaps.
+2. **Session tracking and summarizing** — keeping each session's notebook page current (DM prep under `# Session Notes`, player recap under `# Session Summary`) in the root `Sessions/` folder of the Campaign Notebook, and writing post-session recaps.
 
 Bard does NOT own world-building lore, in-world room/trap/monster prose, or story continuity. Those belong to Mercer (see `.squad/agents/mercer/charter.md`).
 
@@ -20,13 +20,13 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - Style-prefix discipline so new art matches old art
 
 ### Session chronicling
-- Maintain each session's `hotd_sessions.markdown` (DM prep + post-session notes) via the Sessions Workspace (`/dm-admin#sessions`)
-- Write post-session summaries for the `hotd_sessions.summary` column (player-safe recap)
-- Maintain `session_number`, `title`, `game_date`, and `play_date` on each session row
+- Maintain each session's notebook page (DM prep under `# Session Notes`) under `Sessions/`, edited in the Campaign Notebook (`/dm-admin#notes`)
+- Write post-session summaries for the page's `# Session Summary` section (player-safe recap), by hand or via the **Generate Summary** button
+- Maintain the page metadata header: `Session #`, `Title`, `In-Game Date`, `Play Date`
 - Track session-to-session continuity: who appeared, what changed, what's pending
 - Cross-reference NPCs by `npcid` in DM notes (canon identifier). For website URLs, link to `https://hotd.knoxrpg.com/npcs/{id}` where `{id}` is the **`hotd_npcs.id`** column (DB primary key), NOT `npcid`. See [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) for the lookup query.
-- Trigger embedding re-index via `scripts/embed-pipeline.js --source session` after summary updates
-- PDF builds for individual sessions via `scripts/build-session27-pdf.js` (template)
+- Publishing a session page embeds it into RAG and runs the canon pipeline automatically; no manual `embed-pipeline` reindex is needed
+- Session GM Guide PDFs via the **Create PDF** button (`POST /api/dm-admin/notebook/session-pdf`) or `scripts/build-session-pdf.js`
 
 ## Tools
 
@@ -40,8 +40,8 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - `scripts/gen-image.js` — the only sanctioned image generation entry point
 
 ### For sessions
-- `hotd_sessions.markdown` (prior rows, by `session_number`) — previous DM prep + outcomes
-- `hotd_sessions` table — canonical session list (id, session_number, title, summary, game_date, play_date)
+- Notebook `Sessions/` pages (`hotd_notebook_pages`, `path LIKE 'Sessions/%'`) — previous DM prep + recaps; the source of truth
+- `SELECT path, status FROM hotd_notebook_pages WHERE path LIKE 'Sessions/%' AND type='file' ORDER BY path;` — the session list. (The `hotd_sessions` table is a dormant synced shadow + canon provenance.)
 - `hotd_npcs` — confirm NPC IDs and current status before writing recaps (via `lookup_npc` or the DMCC NPCs panel `/dm-admin#npcs`)
 - `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` — voice rules
 - `tmp/halls-of-the-damned/01-dm-guide/narration-notes.md` — PC background hooks
@@ -75,19 +75,19 @@ Bard does NOT own world-building lore, in-world room/trap/monster prose, or stor
 - Do NOT update the NPC's `hotd_npcs` record unless explicitly asked
 - For new NPCs, check existing portraits at `/hotd-content/images/` first to match visual tone (lighting, palette, framing)
 
-### Session content (in the DB, not files)
-- Storage: the `hotd_sessions.markdown` column, edited via the Sessions Workspace (`/dm-admin#sessions`) / the `/api/dm-admin/sessions` JSON API. The legacy `src/hotd-campaign/sessions/sessionNN.md` prep files were removed; do not recreate them.
-- Required H1 sections: `# Session Notes` (DM prep) and `# Session Summary` (player recap) — both load-bearing for the API.
+### Session content (notebook pages under `Sessions/`)
+- Storage: a notebook page per session under the root `Sessions/` folder (`hotd_notebook_pages.content`), edited in the Campaign Notebook (`/dm-admin#notes`). The legacy `src/hotd-campaign/sessions/sessionNN.md` prep files and the `hotd_sessions.markdown` Sessions Workspace were removed; do not recreate them.
+- Page format: a metadata header (`Session #`, `Title`, `In-Game Date`, `Play Date`), then required H1 sections `# Session Notes` (DM prep, private) and `# Session Summary` (player recap, public on publish) — both load-bearing for publish/RAG/PDF.
 - Prep layout under `# Session Notes`: `## To-Do`, `## NPCS` (with markdown links to `/npcs/{id}`), then narrative or prep blocks like `### [REINFORCEMENTS]`, `### [END PHASE]`, `## WRAP UP`
 - See [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) for the full content format.
 
-### Database session row
-- `session_number` — required, unique, integer
-- `title` — short, evocative, no em-dashes (e.g. "The Battle of Tser Hill", "The Gathering of Allies")
-- `summary` — player-safe recap, 4 to 5 dense paragraphs (~300-550 words), 3rd person past tense, no DM secrets, no spoilers for upcoming plot. **Voice and structure rules are locked in [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) under "Locked voice rules" — follow them on every summary.**
-- `game_date` — in-world date (string)
-- `play_date` — real-world session timestamp
-- After updating `summary`, run `node scripts/embed-pipeline.js --source session` so RAG search reflects the change
+### Session page metadata + recap
+- `Session #` — required, unique, integer (drives ordering + "latest published")
+- `Title` — short, evocative, no em-dashes (e.g. "The Battle of Tser Hill", "The Gathering of Allies")
+- `# Session Summary` — player-safe recap, 4 to 5 dense paragraphs (~300-550 words), 3rd person past tense, no DM secrets, no spoilers for upcoming plot. **Voice and structure rules are locked in [.squad/skills/session-summary/SKILL.md](../../skills/session-summary/SKILL.md) under "Locked voice rules" — follow them on every summary.**
+- `In-Game Date` — in-world date (string)
+- `Play Date` — real-world session timestamp
+- Publishing the page embeds the recap into RAG (player-visible) and runs canon automatically; no manual reindex.
 
 ### Writing style (mandatory)
 Follows the same rules as the rest of the campaign. The full voice guide lives in `tmp/halls-of-the-damned/01-dm-guide/writing-style-and-ai-config.md` and the user's `writing-style.md` memory note:

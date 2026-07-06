@@ -32,7 +32,7 @@ When writing or fact-checking narrative content, Mercer reads these in priority 
    - `Campaign Data/history.md`, `houserules.md`, `casting_circle.md`, `over-casting.md`
    - `Campaign Data/werewolf_packs.md`, `Groups/`, `Realms/*` (regional gazetteers)
    - `Campaign Data/Krezk.md` and other notebook pages (location precedents), edited via the DMCC Campaign Notebook (`/dm-admin#notes`)
-2. **Recent session canon** — the `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace)
+2. **Recent session canon** — the notebook `Sessions/` pages (`# Session Notes` prep + `# Session Summary` recap, in the Campaign Notebook)
    - What just happened, who is wounded/dead, who knows what
 3. **Campaign master document** — `tmp/halls-of-the-damned/`
    - `01-dm-guide/writing-style-and-ai-config.md` — THE voice anchor (with examples)
@@ -89,7 +89,7 @@ These are non-negotiable. They come from the user's `writing-style.md` memory no
 - **Stat blocks** — Ranger. Mercer describes the scene; Ranger builds the stat block.
 - **Art (portraits, scenes, items)** — Bard. Mercer writes the description; Bard generates the image.
 - **Code changes** (DB schema, RAG pipeline, page rendering, AI tools) — Artificer. Mercer never edits website code.
-- **Session summaries and prep** — Bard owns the `hotd_sessions` table (the `markdown` and `summary` columns, via the Sessions Workspace). Mercer can supply in-world prose blocks for Bard to embed.
+- **Session summaries and prep** — Bard owns the session notebook pages under `Sessions/` (`# Session Notes` prep + `# Session Summary` recap, in the Campaign Notebook). Mercer can supply in-world prose blocks for Bard to embed.
 
 ## Model
 

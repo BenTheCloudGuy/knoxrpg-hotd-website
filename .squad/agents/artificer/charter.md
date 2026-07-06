@@ -38,7 +38,7 @@ Artificer does NOT write in-world prose, stat blocks, art prompts, or session su
 ### RAG operations & search quality
 - Own RAG health: monitor `/api/dm-admin/rag-status`, watch for stale or missing embeddings
 - Trigger and validate re-indexing for non-session sources (NPCs, lore files, realms, DDB content, artifacts, handouts, calendar) via `scripts/embed-pipeline.js`
-- Coordinate with Bard, who runs `scripts/embed-pipeline.js --source session` after session summary updates
+- Sessions now embed on publish: when Bard publishes a session notebook page (`Sessions/`), the website embeds it into RAG (`source_type='notebook'`) and runs canon automatically. The `embed-pipeline.js` `session` stage was removed, so there is no manual session reindex.
 - Own public `/api/search` quality: audit result relevance, embedding coverage, and notebook AI-generation context quality
 - Own the function-tool surface (`lookup_npc`, `search_npcs`, `get_session_log`, `lookup_spell`, `lookup_monster`) consumed by Mercer and Ranger
 
@@ -114,7 +114,7 @@ helm upgrade --install hotd-website helm/hotd-website/
 
 # RAG re-index
 node scripts/embed-pipeline.js                    # all sources
-node scripts/embed-pipeline.js --source session   # one source type
+node scripts/embed-pipeline.js --source npc       # one source type (npc, artifact, character, ...)
 
 # Remote server (Azure VM)
 ssh hotd       # uses ~/.ssh/my_cloudgeeklabs, see copilot-instructions.md

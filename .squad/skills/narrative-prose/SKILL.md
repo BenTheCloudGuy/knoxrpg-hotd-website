@@ -36,7 +36,7 @@ Voice anchors (from the campaign master doc):
 1. `hotd_npcs` (via `lookup_npc` / `search_npcs`) — for any named NPC mentioned
 2. Campaign Notebook `Campaign Data/Realms/*` (`hotd_notebook_pages`) — for region tone and geography
 3. Campaign Notebook `Campaign Data/Krezk.md` (and other notebook pages) — for location format precedent
-4. `hotd_sessions` table (the `markdown` / `summary` columns, via the Sessions Workspace) — for current state (wounded, dead, where last seen)
+4. Notebook `Sessions/` pages (`# Session Notes` prep + `# Session Summary` recap) — for current state (wounded, dead, where last seen)
 5. `tmp/halls-of-the-damned/04-locations/location-descriptions.md` — location format precedent
 6. `tmp/halls-of-the-damned/07-handouts/read-aloud-text.md` — read-aloud format precedent
 7. `tmp/halls-of-the-damned/05-items-and-artifacts/magic-items.md` — treasure format
