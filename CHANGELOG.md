@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.25.1] - 2026-07-06
+
+### Fixed
+- **FoundryVTT image build failed to download the release** (`Deploy HotD FoundryVTT` → *Fetch + Build + Push*). Foundry's `/releases/download` endpoint expects the **build number** (`351`), but `foundry-build` was set to the full version (`13.351`), which returns HTTP 500. Set `foundry-build=351` in Key Vault and hardened `foundryvtt/infra/scripts/fetch-foundry.sh` to derive the numeric build from either form (`13.351` → `351`). Corrected the build-number docs in the infra README and the fetch script.
+
 ## [3.25.0] - 2026-07-06
 
 ### Added

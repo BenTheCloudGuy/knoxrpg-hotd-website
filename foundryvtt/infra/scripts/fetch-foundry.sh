@@ -10,8 +10,11 @@
 # Required Key Vault secrets (vault: cloudgeek-cus-keyvault):
 #   foundry-username     — foundryvtt.com account email/username
 #   foundry-password     — foundryvtt.com account password
-#   foundry-build        — build/version to fetch (e.g. "13.348"); set this to
-#                          the latest stable build to track "latest stable"
+#   foundry-build        — FoundryVTT BUILD NUMBER to fetch (e.g. "351"). The
+#                          full version string ("13.351") is also accepted; the
+#                          numeric build after the last dot is used for the
+#                          download URL. Set to the latest stable build to track
+#                          "latest stable".
 #
 # Env overrides:
 #   FOUNDRY_KEYVAULT     — vault name (default cloudgeek-cus-keyvault)
@@ -58,9 +61,12 @@ case "$HTTP_CODE" in
   *) echo "ERROR: Foundry login failed (HTTP $HTTP_CODE)." >&2; exit 1 ;;
 esac
 
-echo "Downloading FoundryVTT build $FOUNDRY_BUILD (node)..."
+# The download endpoint wants the BUILD NUMBER only (e.g. 351), not the full
+# version (13.351). Accept either by taking the segment after the last dot.
+BUILD_NUM="${FOUNDRY_BUILD##*.}"
+echo "Downloading FoundryVTT build $BUILD_NUM (from '$FOUNDRY_BUILD', node)..."
 curl -s -L -b cookies.txt -o foundryvtt.zip \
-  "https://foundryvtt.com/releases/download?build=${FOUNDRY_BUILD}&platform=node"
+  "https://foundryvtt.com/releases/download?build=${BUILD_NUM}&platform=node"
 
 if ! unzip -tq foundryvtt.zip >/dev/null 2>&1; then
   echo "ERROR: Download is not a valid zip (auth failed or bad build number)." >&2

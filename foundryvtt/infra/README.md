@@ -42,14 +42,14 @@ Vault: `cloudgeek-cus-keyvault`. Add these before the first deploy:
 | --------------------- | --------------------------------------------------- |
 | `foundry-username`    | foundryvtt.com account email/username               |
 | `foundry-password`    | foundryvtt.com account password                     |
-| `foundry-build`       | build/version to fetch (e.g. `13.348`) — set to the latest stable build to track "latest stable" |
+| `foundry-build`       | FoundryVTT **build number** to fetch (e.g. `351`) — the full version `13.351` is also accepted (the number after the last dot is used). Set to the latest stable build to track "latest stable" |
 | `foundry-license-key` | FoundryVTT license key                              |
 | `foundry-admin-key`   | Foundry setup/admin password                        |
 
 ```bash
 az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-username    --value '...'
 az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-password    --value '...'
-az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-build       --value '13.348'
+az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-build       --value '351'
 az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-license-key --value '...'
 az keyvault secret set --vault-name cloudgeek-cus-keyvault --name foundry-admin-key   --value '...'
 ```
@@ -62,16 +62,16 @@ bash foundryvtt/infra/scripts/fetch-foundry.sh
 
 # 2. Build + push
 buildah bud -f foundryvtt/infra/docker/Dockerfile \
-  -t localhost:32000/hotd-foundry:13.348 foundryvtt/infra/docker
-buildah push --tls-verify=false localhost:32000/hotd-foundry:13.348 \
-  docker://localhost:32000/hotd-foundry:13.348
+  -t localhost:32000/hotd-foundry:351 foundryvtt/infra/docker
+buildah push --tls-verify=false localhost:32000/hotd-foundry:351 \
+  docker://localhost:32000/hotd-foundry:351
 
 # 3. Deploy (secrets from Key Vault)
 LICENSE="$(az keyvault secret show --vault-name cloudgeek-cus-keyvault --name foundry-license-key --query value -o tsv)"
 ADMIN="$(az keyvault secret show --vault-name cloudgeek-cus-keyvault --name foundry-admin-key --query value -o tsv)"
 microk8s helm upgrade --install hotd-foundry foundryvtt/infra/helm/foundryvtt/ \
   --namespace foundryvtt-hotd --create-namespace \
-  --set image.tag=13.348 \
+  --set image.tag=351 \
   --set-string secrets.licenseKey="$LICENSE" \
   --set-string secrets.adminKey="$ADMIN"
 ```
@@ -80,5 +80,5 @@ microk8s helm upgrade --install hotd-foundry foundryvtt/infra/helm/foundryvtt/ \
 
 ```bash
 microk8s helm template hotd-foundry foundryvtt/infra/helm/foundryvtt/ \
-  --set image.tag=13.348 --set-string secrets.licenseKey=x --set-string secrets.adminKey=y
+  --set image.tag=351 --set-string secrets.licenseKey=x --set-string secrets.adminKey=y
 ```
