@@ -8,6 +8,7 @@ const { readBody, parseForm, sendJSON } = require("../lib/utils");
 const { searchCampaign, buildRagContext } = require("../lib/search");
 const azure = require("../lib/azure");
 const { chatWithTools } = require("../lib/ai-tools");
+const { mapPcToActor, mapNpcToActor } = require("../lib/foundry-actors");
 
 /**
  * Handle API routes. Returns true if the route was handled, false otherwise.
@@ -89,6 +90,55 @@ async function handleApiRoutes(decoded, req, res, session, url) {
     } catch (err) {
       console.error("Foundry DMAI error:", err);
       sendJSON(res, { error: "An error occurred while generating a response." }, 500);
+    }
+    return true;
+  }
+
+  // ── Foundry actor export (PCs / NPCs -> dnd5e Actor JSON) ──
+  // Same token + CORS as /api/foundry/dmai. The hotd-website-integration
+  // module fetches this and creates Actors via Actor.create(). GM-owned data
+  // (NPC dm_notes) is fine here because the module makes NPC actors GM-only.
+  if (decoded === "/api/foundry/actors" && (req.method === "GET" || req.method === "OPTIONS")) {
+    let allowOrigin = "https://hotd-foundry.knoxrpg.com";
+    try {
+      const r = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'foundry_dmai_origin'");
+      if (r.rows[0] && r.rows[0].value) allowOrigin = r.rows[0].value;
+    } catch (_) {}
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return true; }
+
+    let expected = "";
+    try {
+      const r = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'foundry_dmai_token'");
+      expected = (r.rows[0] && r.rows[0].value) || "";
+    } catch (_) {}
+    if (!expected) { sendJSON(res, { error: "Foundry bridge not configured." }, 503); return true; }
+    const crypto = require("crypto");
+    const auth = req.headers.authorization || "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    const ok = token.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+    if (!ok) { sendJSON(res, { error: "Unauthorized" }, 401); return true; }
+
+    try {
+      const type = (url.searchParams.get("type") || "").toLowerCase();
+      let actors = [];
+      if (type === "pc" || type === "pcs") {
+        const { rows } = await pgPool.query("SELECT * FROM hotd_player_characters ORDER BY character_name");
+        actors = rows.map(mapPcToActor);
+      } else if (type === "npc" || type === "npcs") {
+        const { rows } = await pgPool.query("SELECT * FROM hotd_npcs WHERE COALESCE(is_hidden, false) = false ORDER BY name");
+        actors = rows.map(mapNpcToActor);
+      } else {
+        sendJSON(res, { error: "type must be 'pc' or 'npc'" }, 400); return true;
+      }
+      sendJSON(res, { type, count: actors.length, actors });
+    } catch (err) {
+      console.error("Foundry actors export error:", err);
+      sendJSON(res, { error: "An error occurred building actor data." }, 500);
     }
     return true;
   }

@@ -79,6 +79,14 @@ Hooks.once('ready', () => {
 
 // ── Intercept "DMAI <question>" chat commands ────────────────
 Hooks.on('chatMessage', (chatLog, message, chatData) => {
+  // GM-only import command: "HOTD IMPORT npcs" / "HOTD IMPORT pcs"
+  const imp = message.match(/^HOTD\s*IMPORT\s+(npcs?|pcs?|players?)\b/i);
+  if (imp) {
+    if (!game.user.isGM) { ui.notifications.warn('HotD import is GM-only.'); return false; }
+    importActors(/pc|player/i.test(imp[1]) ? 'pc' : 'npc').catch((e) => console.error(`${MODULE_ID} | import`, e));
+    return false;
+  }
+
   const trigger = (game.settings.get(MODULE_ID, 'dmaiTrigger') || 'DMAI').trim();
   if (!trigger) return true;
   const re = new RegExp('^' + escapeRegExp(trigger) + '\\b[:,]?\\s*([\\s\\S]*)$', 'i');
@@ -175,3 +183,111 @@ function mdToHtml(md) {
   html = html.replace(/\n/g, '<br>');
   return `<p>${html}</p>`;
 }
+
+// ══════════════════════════════════════════════════════════════
+// Actor import (website -> dnd5e Actors). GM-only. Idempotent: matches on the
+// module flags (sourceType + sourceId) so re-running updates instead of dupes.
+// ══════════════════════════════════════════════════════════════
+
+// Resolve relative /hotd-content image paths against the website base URL.
+function resolveImgs(payload, base) {
+  const fix = (u) => (typeof u === 'string' && u.startsWith('/')) ? base + u : u;
+  if (payload.img) payload.img = fix(payload.img);
+  if (payload.prototypeToken?.texture?.src) {
+    payload.prototypeToken.texture.src = fix(payload.prototypeToken.texture.src);
+  }
+}
+
+async function importActors(type) {
+  const base = (game.settings.get(MODULE_ID, 'websiteUrl') || '').replace(/\/+$/, '');
+  const token = game.settings.get(MODULE_ID, 'dmaiToken');
+  if (!base || !token) {
+    ui.notifications.error('Set the Website URL and DM AI Token in module settings first.');
+    return;
+  }
+
+  ui.notifications.info(`Importing ${type.toUpperCase()} from the HotD website…`);
+  let payloads;
+  try {
+    const res = await fetch(`${base}/api/foundry/actors?type=${encodeURIComponent(type)}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    payloads = data.actors || [];
+  } catch (err) {
+    ui.notifications.error(`Import failed: ${err.message}`);
+    return;
+  }
+
+  let created = 0, updated = 0, failed = 0;
+  for (const p of payloads) {
+    try {
+      resolveImgs(p, base);
+      const src = p.flags?.[MODULE_ID] || {};
+      const existing = game.actors.find((a) =>
+        a.getFlag(MODULE_ID, 'sourceType') === src.sourceType &&
+        a.getFlag(MODULE_ID, 'sourceId') === src.sourceId);
+      if (existing) { await existing.update(p); updated++; }
+      else { await Actor.create(p); created++; }
+    } catch (err) {
+      failed++;
+      console.error(`${MODULE_ID} | failed to import "${p?.name}"`, err);
+    }
+  }
+
+  const summary = `HotD import (${type}): ${created} created, ${updated} updated${failed ? `, ${failed} failed` : ''}.`;
+  ui.notifications.info(summary);
+  ChatMessage.create({
+    content: `<b>${summary}</b>`,
+    speaker: { alias: 'HotD Import' },
+    whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id),
+  });
+}
+
+async function promptImport() {
+  const DV2 = foundry?.applications?.api?.DialogV2;
+  if (DV2) {
+    const choice = await DV2.wait({
+      window: { title: 'Import from HotD Website' },
+      content: '<p>Create or update Actors from the campaign website.</p>',
+      buttons: [
+        { action: 'npc', label: 'Import NPCs' },
+        { action: 'pc', label: 'Import PCs (core stats)' },
+        { action: 'cancel', label: 'Cancel' },
+      ],
+      submit: (r) => r,
+    }).catch(() => 'cancel');
+    if (choice && choice !== 'cancel') importActors(choice);
+    return;
+  }
+  // Legacy fallback.
+  new Dialog({
+    title: 'Import from HotD Website',
+    content: '<p>Create or update Actors from the campaign website.</p>',
+    buttons: {
+      npc: { label: 'Import NPCs', callback: () => importActors('npc') },
+      pc: { label: 'Import PCs (core stats)', callback: () => importActors('pc') },
+      cancel: { label: 'Cancel' },
+    },
+    default: 'cancel',
+  }).render(true);
+}
+
+// GM button in the Actors sidebar directory.
+Hooks.on('renderActorDirectory', (app, html) => {
+  try {
+    if (!game.user?.isGM) return;
+    const root = html instanceof HTMLElement ? html : html?.[0];
+    if (!root || root.querySelector('.hotd-import-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'hotd-import-btn';
+    btn.innerHTML = '&#128229; Import from HotD';
+    btn.addEventListener('click', () => promptImport());
+    const header = root.querySelector('.directory-header') || root.querySelector('.header-actions') || root.querySelector('header') || root;
+    header.appendChild(btn);
+  } catch (err) {
+    console.error(`${MODULE_ID} | failed to add import button`, err);
+  }
+});
