@@ -39,4 +39,37 @@ set -- --dataPath="$DATA_PATH" --port=30000 --noupnp
 [ -n "$FOUNDRY_ADMIN_KEY" ] && set -- "$@" --adminPassword="$FOUNDRY_ADMIN_KEY"
 [ -n "$FOUNDRY_LICENSE_KEY" ] && set -- "$@" --licenseKey="$FOUNDRY_LICENSE_KEY"
 
+# On first boot, FoundryVTT still shows the "License Key Activation" page even
+# when the key is passed as a flag — the license must be *signed* (writes
+# Config/license.json). Sign it automatically: wait for the server to listen,
+# then POST the key to /license. Runs as a background subshell so the exec'd
+# node process stays PID 1's child (proper tini signal handling). No-op once
+# license.json exists.
+if [ -n "$FOUNDRY_LICENSE_KEY" ] && [ ! -f "$DATA_PATH/Config/license.json" ]; then
+  (
+    # Wait up to ~2 min for the server to accept requests.
+    i=0
+    while [ "$i" -lt 60 ]; do
+      if node -e 'fetch("http://localhost:30000/api/status").then(()=>process.exit(0)).catch(()=>process.exit(1))' 2>/dev/null; then
+        break
+      fi
+      i=$((i + 1))
+      sleep 2
+    done
+    # Sign the license (idempotent; retry a few times for validation lag).
+    j=0
+    while [ "$j" -lt 5 ] && [ ! -f "$DATA_PATH/Config/license.json" ]; do
+      node -e '
+        const key = process.env.FOUNDRY_LICENSE_KEY || "";
+        const body = new URLSearchParams({ licenseKey: key, accept: "on", action: "signLicense" }).toString();
+        fetch("http://localhost:30000/license", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body, redirect: "manual" })
+          .then((r) => console.log("[entrypoint] license sign ->", r.status))
+          .catch((e) => console.error("[entrypoint] license sign error:", e.message));
+      ' 2>&1 || true
+      j=$((j + 1))
+      sleep 3
+    done
+  ) &
+fi
+
 exec node /home/foundry/foundryvtt/main.js "$@"
