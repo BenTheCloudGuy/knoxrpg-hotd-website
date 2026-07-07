@@ -20,6 +20,8 @@ mkdir -p "$DATA_PATH/Config" "$DATA_PATH/Data" "$DATA_PATH/Logs"
 find "$DATA_PATH" -name '*.lock' -type f -delete 2>/dev/null || true
 
 # Seed a minimal options.json on first boot; Foundry extends it thereafter.
+# proxySSL/proxyPort tell Foundry it sits behind the TLS-terminating ingress so
+# clients hold a real WebSocket instead of falling back to slow long-polling.
 OPTIONS_FILE="$DATA_PATH/Config/options.json"
 if [ ! -s "$OPTIONS_FILE" ]; then
   cat > "$OPTIONS_FILE" <<EOF
@@ -29,9 +31,27 @@ if [ ! -s "$OPTIONS_FILE" ]; then
   "dataPath": "$DATA_PATH",
   "compressStatic": true,
   "compressSocket": true,
+  "proxySSL": true,
+  "proxyPort": 443,
   "hotReload": false
 }
 EOF
+fi
+
+# Enforce the reverse-proxy settings on every boot (existing data dirs may have
+# them unset, which causes sluggish long-polling fallback for web clients).
+if [ -f "$OPTIONS_FILE" ] && command -v node >/dev/null 2>&1; then
+  node -e '
+    const fs = require("fs"); const f = process.argv[1];
+    try {
+      const o = JSON.parse(fs.readFileSync(f, "utf8"));
+      if (o.proxySSL !== true || o.proxyPort !== 443) {
+        o.proxySSL = true; o.proxyPort = 443;
+        fs.writeFileSync(f, JSON.stringify(o, null, 2));
+        console.log("[entrypoint] set proxySSL=true proxyPort=443");
+      }
+    } catch (e) {}
+  ' "$OPTIONS_FILE" 2>/dev/null || true
 fi
 
 # Assemble launch args. Secrets are passed as flags only when present.
