@@ -89,6 +89,7 @@ jobs:
           fi
           microk8s helm upgrade --install ${{ env.HELM_RELEASE }} ${{ env.CHART_DIR }} \
             --namespace ${{ env.NAMESPACE }} --create-namespace \
+            --set createNamespace=false \
             --set image.tag=${{ needs.build.outputs.tag }} \
             --set rolloutTrigger=${{ github.sha }} \
             --set-string secrets.licenseKey="$LICENSE" \

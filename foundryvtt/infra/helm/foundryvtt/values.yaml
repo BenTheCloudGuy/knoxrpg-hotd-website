@@ -3,8 +3,13 @@
 # =============================================================================
 
 # -- Namespace ----------------------------------------------------------------
+# The namespace is created idempotently by Helm's `--create-namespace` flag
+# (used by the deploy workflow and the README manual deploy). Keep this false so
+# the chart does NOT also render a Namespace resource — rendering one alongside
+# `--create-namespace` makes Helm fail with "namespaces already exists". Set true
+# only for a standalone `helm install` WITHOUT `--create-namespace`.
 namespace: foundryvtt-hotd
-createNamespace: true
+createNamespace: false
 
 # -- Container Image ----------------------------------------------------------
 # Built + pushed by .github/workflows/deploy-foundry.yml. The tag is the

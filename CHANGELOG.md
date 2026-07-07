@@ -10,6 +10,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ### Fixed
 - **FoundryVTT image build failed to download the release** (`Deploy HotD FoundryVTT` → *Fetch + Build + Push*). Foundry's `/releases/download` endpoint expects the **build number** (`351`), but `foundry-build` was set to the full version (`13.351`), which returns HTTP 500. Set `foundry-build=351` in Key Vault and hardened `foundryvtt/infra/scripts/fetch-foundry.sh` to derive the numeric build from either form (`13.351` → `351`). Corrected the build-number docs in the infra README and the fetch script.
+- **FoundryVTT Helm deploy failed with "namespaces foundryvtt-hotd already exists"** — the workflow passed Helm's `--create-namespace` while the chart also rendered its own `Namespace` (default `createNamespace: true`). Flipped the chart default to `createNamespace: false` and made the deploy workflow explicit (`--set createNamespace=false`), so the namespace is owned solely by the `--create-namespace` flag.
+
+### Notes
+- The new instance is live at `https://hotd-foundry.knoxrpg.com` (Let's Encrypt cert issued, `/api/status` = `{"active":false,"version":"13.351"}`). Operator steps remaining: sign the license and create/select a world via the Foundry web UI on first login.
+- Deploy also required restarting the cluster's `hostpath-provisioner` (kube-system), which had lost leader election on Jul 1 and was wedged — it couldn't provision the new `foundry-data` PVC. Existing bound volumes were unaffected. Unrelated to this change but flagged for cluster health.
 
 ## [3.25.0] - 2026-07-06
 
