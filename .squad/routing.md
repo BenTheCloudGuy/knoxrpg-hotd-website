@@ -32,6 +32,7 @@ How to decide who handles what.
 | FoundryVTT server ops      | Summoner  | Worlds, systems, installed modules, license, PVC data, rollouts |
 | FoundryVTT API / MCP       | Summoner  | `foundryvtt/mcp/**`, REST/WebSocket API tooling      |
 | Foundry modules/systems eval | Summoner | Compatibility checks against official Foundry docs + manifests |
+| Website→Foundry actor import | Conjurer  | PC/NPC/monster → dnd5e Actors, AI field mapping, token strategy, ongoing sync |
 | NPC portraits, AI art      | Bard      | Portrait generation, style consistency, image review |
 | Campaign scene & item art  | Bard      | Scenes, locations, magic items, handouts             |
 | Session notes & summaries  | Bard      | Notebook `Sessions/` pages (`# Session Notes` + `# Session Summary`) |

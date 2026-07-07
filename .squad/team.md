@@ -16,6 +16,7 @@
 | Mercer    | Story Continuity & DM Prose       | [charter](agents/mercer/charter.md)    | active |
 | Wizard    | FoundryVTT Module Dev             | [charter](agents/wizard/charter.md)    | active |
 | Summoner  | FoundryVTT Steward (deploy/API)   | [charter](agents/summoner/charter.md)  | active |
+| Conjurer  | Actor & Token Conjurer (site→VTT) | [charter](agents/conjurer/charter.md)  | active |
 | Bard      | Campaign Art & Session Chronicler | [charter](agents/bard/charter.md)      | active |
 | Cleric    | Session Logging                   | [charter](agents/cleric/charter.md)    | active |
 | Ranger    | Stat Block & Monster Design       | [charter](agents/ranger/charter.md)    | active |

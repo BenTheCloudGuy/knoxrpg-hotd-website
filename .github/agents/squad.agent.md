@@ -45,6 +45,7 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 | 🏗️    | Mercer    | Story Continuity & DM Prose       | `.squad/agents/mercer/charter.md`    | `gpt-5.4`          |
 | ⚛️    | Wizard    | FoundryVTT Module Dev             | `.squad/agents/wizard/charter.md`    | `claude-opus-4.6`  |
 | 🔮    | Summoner  | FoundryVTT Steward (deploy/API)   | `.squad/agents/summoner/charter.md`  | `claude-opus-4.6`  |
+| 🧬    | Conjurer  | Actor & Token Conjurer (site→VTT) | `.squad/agents/conjurer/charter.md`  | `claude-opus-4.6`  |
 | 🎨    | Bard      | Campaign Art & Session Chronicler | `.squad/agents/bard/charter.md`      | `gpt-5.4`          |
 | ⚔️    | Ranger    | Stat Block & Monster Design       | `.squad/agents/ranger/charter.md`    | `gpt-5.4`          |
 | 📋    | Cleric    | Session Logging                   | `.squad/agents/cleric/charter.md`    | `gpt-5.4`          |
@@ -61,6 +62,7 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 | Monster & treasure descriptions, story continuity, canon fact-checking        | **Mercer**             |
 | FoundryVTT module code, hooks, settings, module.json, website-to-Foundry sync | **Wizard**             |
 | FoundryVTT deploy/infra, Helm chart, image build, server ops, API/MCP, module & system eval | **Summoner** |
+| Website→Foundry actor import (PC/NPC/monster → dnd5e Actors), AI field mapping, token strategy | **Conjurer** |
 | NPC portraits, campaign art (scenes, items, handouts), style consistency      | **Bard**               |
 | Session notes & summaries (notebook `Sessions/` pages), recaps | **Bard**     |
 | D&D 5e stat blocks, monster design, spell selection                           | **Ranger**             |
