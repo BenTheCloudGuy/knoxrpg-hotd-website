@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 ## [3.25.1] - 2026-07-06
 
+### Added
+- **Unified nightly backup `scripts/hotd-backup.sh`** covering the campaign's core data: a gzip'd `pg_dump` of the `dnd_website` PostgreSQL DB (which contains the **RAG/pgvector embeddings**, notebook, NPCs, sessions) and a `tar.gz` of the FoundryVTT `hotd` `/data` PVC (worlds, systems, modules, `Config` incl. `license.json`). Both go to the NAS (`/mnt/nas/backups/hotd/{db,foundry}`) as timestamped + `-latest` copies with 14-day retention; the PG password is read from Key Vault (`pg-password`) at runtime, and optional Azure Blob upload of the DB dump is available via `BLOB_DB_ENABLED=1`. Installed as a benthebuilder cron at 03:15 (alongside the 03:30 uploads backup). Verified: DB dump 544 MB (`gzip -t` OK), Foundry tar captures `license.json` + worlds.
+
 ### Fixed
 - **FoundryVTT image build failed to download the release** (`Deploy HotD FoundryVTT` → *Fetch + Build + Push*). Foundry's `/releases/download` endpoint expects the **build number** (`351`), but `foundry-build` was set to the full version (`13.351`), which returns HTTP 500. Set `foundry-build=351` in Key Vault and hardened `foundryvtt/infra/scripts/fetch-foundry.sh` to derive the numeric build from either form (`13.351` → `351`). Corrected the build-number docs in the infra README and the fetch script.
 - **FoundryVTT Helm deploy failed with "namespaces foundryvtt-hotd already exists"** — the workflow passed Helm's `--create-namespace` while the chart also rendered its own `Namespace` (default `createNamespace: true`). Flipped the chart default to `createNamespace: false` and made the deploy workflow explicit (`--set createNamespace=false`), so the namespace is owned solely by the `--create-namespace` flag.
