@@ -88,6 +88,30 @@ else
   log "created world $WORLD_ID"
 fi
 
+# ── Local repo module: hotd-website-integration (DM AI chat bridge) ─────────
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+LOCAL_MODULE_SRC="$REPO_ROOT/foundry/hotd-module"
+WEBSITE_URL="${WEBSITE_URL:-https://hotd.knoxrpg.com}"
+PGHOST="${PGHOST:-localhost}"; PGPORT="${PGPORT:-30432}"; PGUSER="${PGUSER:-cortana}"; PGDATABASE="${PGDATABASE:-dnd_website}"
+
+if [ -f "$LOCAL_MODULE_SRC/module.json" ]; then
+  log "installing local module hotd-website-integration"
+  rm -rf "$PVC/Data/modules/hotd-website-integration"
+  mkdir -p "$PVC/Data/modules/hotd-website-integration"
+  cp -r "$LOCAL_MODULE_SRC/." "$PVC/Data/modules/hotd-website-integration/"
+  ENABLE_MODULES+=("hotd-website-integration")
+fi
+
+# DM AI token from hotd_config (seeds the module's chat-bridge settings so the
+# operator never has to paste the secret). Best-effort; skipped if unavailable.
+if command -v psql >/dev/null 2>&1; then
+  : "${PGPASSWORD:=$(az keyvault secret show --vault-name "$KEYVAULT" --name pg-password --query value -o tsv 2>/dev/null || true)}"
+  export PGPASSWORD
+  psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -t -A \
+    -c "SELECT value FROM hotd_config WHERE key='foundry_dmai_token';" 2>/dev/null | tr -d '\n' > "$PVC/.dmai-token" || true
+  [ -s "$PVC/.dmai-token" ] && chmod 600 "$PVC/.dmai-token" || rm -f "$PVC/.dmai-token"
+fi
+
 # Enable modules in the world's settings LevelDB (classic-level from the pod).
 log "enabling modules: ${ENABLE_MODULES[*]}"
 # Build a JSON array of the module ids for the embedded node script.
@@ -95,23 +119,34 @@ ENABLE_JSON="[$(printf '"%s",' "${ENABLE_MODULES[@]}" | sed 's/,$//')]"
 ENABLE_JS="$PVC/.configure-enable.cjs"
 cat > "$ENABLE_JS" <<EOF
 const { ClassicLevel } = require('/home/foundry/foundryvtt/node_modules/classic-level');
-const crypto = require('crypto');
+const crypto = require('crypto'); const fs = require('fs');
 const DBP = '/data/Data/worlds/${WORLD_ID}/data/settings';
 const MODULES = ${ENABLE_JSON};
+const WEBSITE_URL = ${WEBSITE_URL@Q};
 const rid=(n=16)=>{const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';let s='';const b=crypto.randomBytes(n);for(let i=0;i<n;i++)s+=c[b[i]%c.length];return s;};
+const stats=()=>({coreVersion:'13',systemId:'${SYSTEM_ID}',systemVersion:null,createdTime:Date.now(),modifiedTime:Date.now(),lastModifiedBy:null});
 (async()=>{
   const db = new ClassicLevel(DBP, { valueEncoding: 'json' });
-  let cfgId=null, cur={};
-  for await (const [,v] of db.iterator()){ if(v && v.key==='core.moduleConfiguration'){ cfgId=v._id; try{cur=JSON.parse(v.value);}catch{ if(v.value&&typeof v.value==='object') cur=v.value; } break; } }
+  const byKey={};
+  for await (const [,v] of db.iterator()){ if(v && v.key) byKey[v.key]=v; }
+  async function upsert(key,value){ const ex=byKey[key]; const id=ex?ex._id:rid(); await db.put('!settings!'+id,{key,value:JSON.stringify(value),_id:id,user:null,_stats:ex?ex._stats:stats()}); }
+  let cur={}; if(byKey['core.moduleConfiguration']){ try{cur=JSON.parse(byKey['core.moduleConfiguration'].value);}catch{ const vv=byKey['core.moduleConfiguration'].value; if(vv&&typeof vv==='object')cur=vv; } }
   for(const m of MODULES) cur[m]=true;
-  const id=cfgId||rid(); const now=Date.now();
-  await db.put('!settings!'+id, { key:'core.moduleConfiguration', value:JSON.stringify(cur), _id:id, user:null, _stats:{coreVersion:'13',systemId:'${SYSTEM_ID}',systemVersion:null,createdTime:now,modifiedTime:now,lastModifiedBy:null} });
+  await upsert('core.moduleConfiguration', cur);
+  if (MODULES.includes('hotd-website-integration')) {
+    await upsert('hotd-website-integration.websiteUrl', WEBSITE_URL);
+    if (fs.existsSync('/data/.dmai-token')) {
+      const t = fs.readFileSync('/data/.dmai-token','utf8').trim();
+      if (t) await upsert('hotd-website-integration.dmaiToken', t);
+    }
+  }
   await db.close();
   console.log('moduleConfiguration =', JSON.stringify(cur));
 })().catch(e=>{console.error('ERR',e.message);process.exit(1);});
 EOF
 kc exec -n "$NAMESPACE" "$POD" -- node /data/.configure-enable.cjs
-rm -f "$ENABLE_JS"
+rm -f "$ENABLE_JS" "$PVC/.dmai-token"
 
 log "done. Launch the '${WORLD_TITLE}' world in the Foundry UI to start playing."
+log "DM AI chat: in-game, type 'DMAI <question>' (GM) — needs the website /api/foundry/dmai endpoint deployed + foundry_dmai_token in hotd_config."
 log "MaterialDeck: install via Foundry module browser after linking Material Foundry Patreon, then enable + install materialdeck-dnd5e."

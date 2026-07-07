@@ -40,6 +40,59 @@ async function handleApiRoutes(decoded, req, res, session, url) {
     }
   }
 
+  // ── Foundry DM AI (RAG) bridge ─────────────────────────────
+  // Token-authenticated, CORS-enabled endpoint so the FoundryVTT module
+  // (hotd-website-integration) can query the campaign RAG from in-game chat
+  // via the "DMAI <question>" command. The shared token and allowed origin
+  // live in hotd_config (keys foundry_dmai_token / foundry_dmai_origin) so no
+  // Helm/secret changes are needed. Runs chatWithTools (same RAG path as the
+  // website DM AI); the module keeps this GM-only and whispers responses since
+  // isDM answers can contain DM-only lore.
+  if (decoded === "/api/foundry/dmai" && (req.method === "POST" || req.method === "OPTIONS")) {
+    let allowOrigin = "https://hotd-foundry.knoxrpg.com";
+    try {
+      const r = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'foundry_dmai_origin'");
+      if (r.rows[0] && r.rows[0].value) allowOrigin = r.rows[0].value;
+    } catch (_) {}
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return true; }
+
+    let expected = "";
+    try {
+      const r = await pgPool.query("SELECT value FROM hotd_config WHERE key = 'foundry_dmai_token'");
+      expected = (r.rows[0] && r.rows[0].value) || "";
+    } catch (_) {}
+    if (!expected) { sendJSON(res, { error: "DM AI bridge not configured (set foundry_dmai_token)." }, 503); return true; }
+    if (!azure.openaiClient) { sendJSON(res, { error: "No AI backend available." }, 503); return true; }
+
+    const crypto = require("crypto");
+    const auth = req.headers.authorization || "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    const ok = token.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+    if (!ok) { sendJSON(res, { error: "Unauthorized" }, 401); return true; }
+
+    try {
+      const body = await readBody(req);
+      const { question, dm } = JSON.parse(body || "{}");
+      const q = String(question || "").slice(0, 2000).trim();
+      if (!q) { sendJSON(res, { error: "question required" }, 400); return true; }
+      const { reply } = await chatWithTools(
+        azure.openaiClient, azure.aiModel,
+        [{ role: "user", content: q }],
+        { isDM: dm !== false, username: "Foundry DM" }
+      );
+      sendJSON(res, { reply });
+    } catch (err) {
+      console.error("Foundry DMAI error:", err);
+      sendJSON(res, { error: "An error occurred while generating a response." }, 500);
+    }
+    return true;
+  }
+
   // ── Search API ─────────────────────────────────────────────
   if (decoded === "/api/search" && req.method === "GET") {
     const q = url.searchParams.get("q") || "";

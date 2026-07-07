@@ -21,18 +21,7 @@
         "compatibility": {}
       }
     ],
-    "requires": [
-      {
-        "id": "lib-wrapper",
-        "type": "module",
-        "compatibility": {}
-      },
-      {
-        "id": "socketlib",
-        "type": "module",
-        "compatibility": {}
-      }
-    ]
+    "requires": []
   },
   "esmodules": ["scripts/hotd-integration.mjs"],
   "styles": ["styles/hotd-integration.css"],
