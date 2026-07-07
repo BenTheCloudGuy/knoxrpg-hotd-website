@@ -8,7 +8,7 @@ const { readBody, parseForm, sendJSON } = require("../lib/utils");
 const { searchCampaign, buildRagContext } = require("../lib/search");
 const azure = require("../lib/azure");
 const { chatWithTools } = require("../lib/ai-tools");
-const { mapPcToActor, mapNpcToActor } = require("../lib/foundry-actors");
+const { mapPcToActor, mapNpcToActor, mapMonsterToActor } = require("../lib/foundry-actors");
 
 /**
  * Handle API routes. Returns true if the route was handled, false otherwise.
@@ -132,8 +132,22 @@ async function handleApiRoutes(decoded, req, res, session, url) {
       } else if (type === "npc" || type === "npcs") {
         const { rows } = await pgPool.query("SELECT * FROM hotd_npcs WHERE COALESCE(is_hidden, false) = false ORDER BY name");
         actors = rows.map(mapNpcToActor);
+      } else if (type === "monster" || type === "monsters") {
+        // On-demand: 4165 monsters, so require a search (q) or exact id.
+        const q = (url.searchParams.get("q") || "").trim();
+        const id = (url.searchParams.get("id") || "").trim();
+        const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "20", 10) || 20, 1), 50);
+        let rows = [];
+        if (id) {
+          rows = (await pgPool.query("SELECT * FROM monsters WHERE id = $1", [id])).rows;
+        } else if (q) {
+          rows = (await pgPool.query("SELECT * FROM monsters WHERE name ILIKE $1 ORDER BY name LIMIT $2", ["%" + q + "%", limit])).rows;
+        } else {
+          sendJSON(res, { error: "monster requires a 'q' (name search) or 'id'" }, 400); return true;
+        }
+        actors = rows.map(mapMonsterToActor);
       } else {
-        sendJSON(res, { error: "type must be 'pc' or 'npc'" }, 400); return true;
+        sendJSON(res, { error: "type must be 'pc', 'npc', or 'monster'" }, 400); return true;
       }
       sendJSON(res, { type, count: actors.length, actors });
     } catch (err) {

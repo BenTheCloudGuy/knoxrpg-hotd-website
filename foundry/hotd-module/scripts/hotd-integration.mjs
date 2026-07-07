@@ -86,6 +86,13 @@ Hooks.on('chatMessage', (chatLog, message, chatData) => {
     importActors(/pc|player/i.test(imp[1]) ? 'pc' : 'npc').catch((e) => console.error(`${MODULE_ID} | import`, e));
     return false;
   }
+  // GM-only monster import: "HOTD MONSTER <name>"
+  const mon = message.match(/^HOTD\s*MONSTER\s+(.+)$/i);
+  if (mon) {
+    if (!game.user.isGM) { ui.notifications.warn('HotD import is GM-only.'); return false; }
+    importMonsters(mon[1]).catch((e) => console.error(`${MODULE_ID} | monster import`, e));
+    return false;
+  }
 
   const trigger = (game.settings.get(MODULE_ID, 'dmaiTrigger') || 'DMAI').trim();
   if (!trigger) return true;
@@ -220,6 +227,12 @@ async function importActors(type) {
     return;
   }
 
+  await applyActorPayloads(payloads, base, type);
+}
+
+// Create or update actors from payloads (idempotent via module flags). Shared
+// by the PC/NPC import and the monster import.
+async function applyActorPayloads(payloads, base, label) {
   let created = 0, updated = 0, failed = 0;
   for (const p of payloads) {
     try {
@@ -235,14 +248,47 @@ async function importActors(type) {
       console.error(`${MODULE_ID} | failed to import "${p?.name}"`, err);
     }
   }
-
-  const summary = `HotD import (${type}): ${created} created, ${updated} updated${failed ? `, ${failed} failed` : ''}.`;
+  const summary = `HotD import (${label}): ${created} created, ${updated} updated${failed ? `, ${failed} failed` : ''}.`;
   ui.notifications.info(summary);
   ChatMessage.create({
     content: `<b>${summary}</b>`,
     speaker: { alias: 'HotD Import' },
     whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id),
   });
+  return { created, updated, failed };
+}
+
+// Import monsters from the RAG bestiary by name search (on-demand, capped).
+async function importMonsters(query) {
+  const base = (game.settings.get(MODULE_ID, 'websiteUrl') || '').replace(/\/+$/, '');
+  const token = game.settings.get(MODULE_ID, 'dmaiToken');
+  if (!base || !token) {
+    ui.notifications.error('Set the Website URL and DM AI Token in module settings first.');
+    return;
+  }
+  const q = String(query || '').trim();
+  if (!q) { ui.notifications.warn('Usage: HOTD MONSTER <name>'); return; }
+
+  ui.notifications.info(`Searching bestiary for "${q}"…`);
+  let payloads;
+  try {
+    const res = await fetch(`${base}/api/foundry/actors?type=monster&limit=20&q=${encodeURIComponent(q)}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    payloads = data.actors || [];
+  } catch (err) {
+    ui.notifications.error(`Monster search failed: ${err.message}`);
+    return;
+  }
+
+  if (!payloads.length) { ui.notifications.warn(`No monsters match "${q}".`); return; }
+  if (payloads.length > 12) {
+    ui.notifications.warn(`${payloads.length} monsters match "${q}" — refine your search.`);
+    return;
+  }
+  await applyActorPayloads(payloads, base, `monster:${q}`);
 }
 
 async function promptImport() {
@@ -254,10 +300,12 @@ async function promptImport() {
       buttons: [
         { action: 'npc', label: 'Import NPCs' },
         { action: 'pc', label: 'Import PCs (core stats)' },
+        { action: 'monster', label: 'Import Monster…' },
         { action: 'cancel', label: 'Cancel' },
       ],
       submit: (r) => r,
     }).catch(() => 'cancel');
+    if (choice === 'monster') { promptMonster(); return; }
     if (choice && choice !== 'cancel') importActors(choice);
     return;
   }
@@ -268,9 +316,34 @@ async function promptImport() {
     buttons: {
       npc: { label: 'Import NPCs', callback: () => importActors('npc') },
       pc: { label: 'Import PCs (core stats)', callback: () => importActors('pc') },
+      monster: { label: 'Import Monster…', callback: () => promptMonster() },
       cancel: { label: 'Cancel' },
     },
     default: 'cancel',
+  }).render(true);
+}
+
+// Prompt for a monster name, then import matches from the RAG bestiary.
+async function promptMonster() {
+  const DV2 = foundry?.applications?.api?.DialogV2;
+  if (DV2) {
+    const term = await DV2.prompt({
+      window: { title: 'Import Monster from Bestiary' },
+      content: '<p>Search the RAG bestiary by name (imports matches, capped).</p>' +
+               '<input name="q" type="text" placeholder="e.g. Vampire Spawn" style="width:100%">',
+      ok: { label: 'Search & Import', callback: (event, button) => button.form.elements.q.value },
+    }).catch(() => null);
+    if (term) importMonsters(term);
+    return;
+  }
+  new Dialog({
+    title: 'Import Monster from Bestiary',
+    content: '<input name="q" type="text" placeholder="Monster name" style="width:100%">',
+    buttons: {
+      ok: { label: 'Search & Import', callback: (html) => importMonsters(html[0].querySelector('input[name="q"]').value) },
+      cancel: { label: 'Cancel' },
+    },
+    default: 'ok',
   }).render(true);
 }
 

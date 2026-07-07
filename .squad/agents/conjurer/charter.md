@@ -39,7 +39,10 @@ creation into the live world. It collaborates rather than duplicates:
   a custom "core-stats" map (abilities/HP/AC/skills/spell slots/portrait/bio).
 - **NPCs**: lightweight Actors (name, portrait→token, biography from description +
   dm_notes); optionally linked to a monster stat block.
-- **Monsters**: best delivered as a **compendium pack** from the `monsters` table.
+- **Monsters**: on-demand import from the `monsters` RAG bestiary (4165) by name
+  search — GM runs `HOTD MONSTER <name>` (or the Import dialog) rather than bulk.
+  Full stat block: abilities, saves, HP/AC, movement, senses, CR, type/size,
+  damage + condition traits, art token. Actions/traits-as-Items is a later pass.
 
 ## Conventions
 
