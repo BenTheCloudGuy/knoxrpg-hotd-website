@@ -39,6 +39,16 @@ set -- --dataPath="$DATA_PATH" --port=30000 --noupnp
 [ -n "$FOUNDRY_ADMIN_KEY" ] && set -- "$@" --adminPassword="$FOUNDRY_ADMIN_KEY"
 [ -n "$FOUNDRY_LICENSE_KEY" ] && set -- "$@" --licenseKey="$FOUNDRY_LICENSE_KEY"
 
+# FoundryVTT binds its signed license (Config/license.json "host") to the
+# hostname. If the pod was recreated under a different hostname, the signature
+# no longer verifies. Drop a stale license.json so it re-signs for this host.
+HOSTNAME_NOW="$(cat /etc/hostname 2>/dev/null | tr -d '[:space:]')"
+LIC="$DATA_PATH/Config/license.json"
+if [ -n "$HOSTNAME_NOW" ] && [ -f "$LIC" ] && ! grep -q "\"$HOSTNAME_NOW\"" "$LIC" 2>/dev/null; then
+  echo "[entrypoint] license.json host mismatch ($HOSTNAME_NOW); removing to re-sign"
+  rm -f "$LIC"
+fi
+
 # On first boot, FoundryVTT still shows the "License Key Activation" page even
 # when the key is passed as a flag — the license must be *signed* (writes
 # Config/license.json). Sign it automatically: wait for the server to listen,
@@ -57,8 +67,11 @@ if [ -n "$FOUNDRY_LICENSE_KEY" ] && [ ! -f "$DATA_PATH/Config/license.json" ]; t
       sleep 2
     done
     # Sign the license (idempotent; retry a few times for validation lag).
+    # Sign the license until the activation page clears. Foundry needs more
+    # than one signLicense POST (validation lag), so loop and stop only once
+    # GET / no longer redirects to /license.
     j=0
-    while [ "$j" -lt 5 ] && [ ! -f "$DATA_PATH/Config/license.json" ]; do
+    while [ "$j" -lt 6 ]; do
       node -e '
         const key = process.env.FOUNDRY_LICENSE_KEY || "";
         const body = new URLSearchParams({ licenseKey: key, accept: "on", action: "signLicense" }).toString();
@@ -67,6 +80,10 @@ if [ -n "$FOUNDRY_LICENSE_KEY" ] && [ ! -f "$DATA_PATH/Config/license.json" ]; t
           .catch((e) => console.error("[entrypoint] license sign error:", e.message));
       ' 2>&1 || true
       j=$((j + 1))
+      if node -e 'fetch("http://localhost:30000/",{redirect:"manual"}).then(r=>{const l=r.headers.get("location")||"";process.exit(/\/license/.test(l)?1:0)}).catch(()=>process.exit(1))' 2>/dev/null; then
+        echo "[entrypoint] license active"
+        break
+      fi
       sleep 3
     done
   ) &

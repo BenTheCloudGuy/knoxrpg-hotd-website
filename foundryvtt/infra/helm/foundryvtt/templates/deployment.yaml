@@ -24,6 +24,11 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      # Stable hostname: FoundryVTT binds its license signature (Config/license.json
+      # "host") to os.hostname(). Pod names change on every rollout, which would
+      # invalidate the license and break world launch. A fixed hostname keeps the
+      # signed license valid across redeploys.
+      hostname: {{ .Values.instance.name }}-foundry
       securityContext:
         runAsUser: {{ .Values.securityContext.runAsUser }}
         fsGroup: {{ .Values.securityContext.fsGroup }}
