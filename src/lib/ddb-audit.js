@@ -17,6 +17,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const crypto = require("crypto");
+const ddbClient = require("./ddb-client");
 
 // DB-table-backed content types that carry a `description_text` and
 // feed the RAG as `ddb_*` embeddings. `matchBy` reflects how each type
@@ -194,7 +195,7 @@ async function runAudit(pgPool, opts = {}) {
   // Optional: owned-on-DDB gap (requires cobalt token; degrades gracefully).
   if (opts.cobaltToken) {
     try {
-      report.ddbOwned = await ownedGap(pgPool, opts.cobaltToken);
+      report.ddbOwned = await ownedGap(pgPool);
       report.tokenAvailable = true;
     } catch (err) {
       report.ddbOwnedError = err.message;
@@ -209,9 +210,8 @@ function mkAgg() { return { embeddable: 0, embedded: 0, missing: 0 }; }
 // ── OWNED-ON-DDB GAP (optional, needs cobalt token) ───────────
 // Enumerates the source books/drops that contain monsters the account
 // is entitled to but that have not been downloaded into the DB at all.
-async function ownedGap(pgPool, cobaltToken) {
-  const bearer = await cobaltBearer(cobaltToken);
-  const H = { Authorization: `Bearer ${bearer}`, Accept: "application/json", "User-Agent": "Mozilla/5.0" };
+async function ownedGap(pgPool) {
+  const H = await ddbClient.bearerHeaders();
 
   // Catalog: sourceId -> { code, title }
   const cfg = await (await fetch("https://www.dndbeyond.com/api/config/json", { headers: H })).json();
@@ -257,20 +257,6 @@ async function ownedGap(pgPool, cobaltToken) {
     entitledMonsters: total === Infinity ? null : total,
     missing,
   };
-}
-
-let _bearerCache = { token: null, at: 0 };
-async function cobaltBearer(cobalt) {
-  if (_bearerCache.token && Date.now() - _bearerCache.at < 240000) return _bearerCache.token;
-  const r = await fetch("https://auth-service.dndbeyond.com/v1/cobalt-token", {
-    method: "POST",
-    headers: { Cookie: `CobaltSession=${cobalt}` },
-  });
-  if (!r.ok) throw new Error(`cobalt exchange failed (${r.status})`);
-  const b = await r.json();
-  if (!b.token) throw new Error("no bearer token returned");
-  _bearerCache = { token: b.token, at: Date.now() };
-  return b.token;
 }
 
 // ── SYNC (embed missing DB rows into the RAG) ─────────────────

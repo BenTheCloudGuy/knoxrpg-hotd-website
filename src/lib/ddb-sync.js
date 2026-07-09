@@ -13,6 +13,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const { pgPool } = require("../db/pool");
+const ddbClient = require("./ddb-client");
 
 const DDB_API = "https://character-service.dndbeyond.com/character/v5/character";
 
@@ -489,13 +490,24 @@ function extractSenses(data) {
 async function fetchDDBCharacter(ddbId, { timeoutMs = 10000 } = {}) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
+  // Authenticated first (syncs PRIVATE campaign characters) when a cobalt
+  // token is configured; fall back to unauthenticated (public characters).
+  let headers;
+  try { if (await ddbClient.getCobaltToken()) headers = await ddbClient.bearerHeaders(); } catch (_) { headers = undefined; }
   let resp;
   try {
-    resp = await fetch(`${DDB_API}/${ddbId}`, { signal: controller.signal });
+    resp = await fetch(`${DDB_API}/${ddbId}`, { signal: controller.signal, headers });
+    if ((resp.status === 401 || resp.status === 403) && headers) {
+      resp = await fetch(`${DDB_API}/${ddbId}`, { signal: controller.signal });
+    }
   } finally {
     clearTimeout(t);
   }
-  if (!resp.ok) throw new Error(`DDB API returned ${resp.status}`);
+  if (!resp.ok) {
+    const e = new Error(`DDB API returned ${resp.status}`);
+    e.reason = (resp.status === 401 || resp.status === 403) ? "character-private" : (resp.status === 404 ? "character-not-found" : "ddb-error");
+    throw e;
+  }
   const json = await resp.json();
   if (!json?.data) throw new Error("No data in DDB response");
   return json.data;

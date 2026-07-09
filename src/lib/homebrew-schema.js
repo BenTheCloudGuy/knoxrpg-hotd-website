@@ -39,7 +39,7 @@ const CATEGORIES = {
     label: "Spell",
     contentTable: "spells",
     sourceType: "ddb_spell",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "level", label: "Level (0=cantrip)", type: "number" },
@@ -61,7 +61,7 @@ const CATEGORIES = {
     label: "Monster",
     contentTable: "monsters",
     sourceType: "ddb_monster",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "size", label: "Size", type: "select", options: SIZES },
@@ -80,7 +80,7 @@ const CATEGORIES = {
     label: "Feat",
     contentTable: "feats",
     sourceType: "ddb_feat",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "prerequisite", label: "Prerequisite", type: "text" },
@@ -96,7 +96,7 @@ const CATEGORIES = {
     label: "Species",
     contentTable: null, // races table columns differ; embed-only mirror for now
     sourceType: "ddb_race",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "size", label: "Size", type: "select", options: SIZES },
@@ -113,7 +113,7 @@ const CATEGORIES = {
     label: "Sub-Class",
     contentTable: null, // classes table; embed-only mirror for now
     sourceType: "ddb_class",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Subclass Name", type: "text", required: true },
       { key: "parent_class", label: "Parent Class", type: "text", required: true },
@@ -129,7 +129,7 @@ const CATEGORIES = {
     label: "Background",
     contentTable: "backgrounds",
     sourceType: "ddb_background",
-    pushable: false,
+    pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "feature_name", label: "Feature", type: "text" },

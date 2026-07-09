@@ -38,8 +38,9 @@ const ONLY = getArg('only', 'monsters,items,feats')
 const DRY_RUN = args.includes('--dry-run');
 const VERBOSE = args.includes('--verbose');
 
-const COBALT = process.env.DDB_COBALT_TOKEN;
-if (!COBALT) { console.error('ERROR: set DDB_COBALT_TOKEN'); process.exit(1); }
+const COBALT = process.env.DDB_COBALT_TOKEN || process.env.DDB_COBALT_SESSION_TOKEN;
+if (!COBALT && !process.env.AZURE_KEYVAULT_NAME) { console.error('ERROR: set DDB_COBALT_TOKEN / DDB_COBALT_SESSION_TOKEN (or configure Key Vault)'); process.exit(1); }
+const ddbClient = require('../src/lib/ddb-client');
 
 // ── Endpoints ─────────────────────────────────────────────────
 const COBALT_URL = 'https://auth-service.dndbeyond.com/v1/cobalt-token';
@@ -104,18 +105,11 @@ function abilityMod(score) {
   return (m >= 0 ? '+' : '') + m;
 }
 
-let _bearer = null;
-let _bearerAt = 0;
+// Cobalt->bearer via the shared ddb-client (KV-backed token, cached).
 async function getBearer(force) {
-  // Cobalt bearer TTL ~300s; refresh proactively.
-  if (!force && _bearer && (Date.now() - _bearerAt) < 240_000) return _bearer;
-  const r = await fetch(COBALT_URL, { method: 'POST', headers: { Cookie: `CobaltSession=${COBALT}` } });
-  if (!r.ok) throw new Error(`cobalt exchange failed (${r.status})`);
-  const b = await r.json();
-  if (!b.token) throw new Error('no bearer token returned');
-  _bearer = b.token; _bearerAt = Date.now();
-  vlog(`bearer refreshed (ttl ${b.ttl}s)`);
-  return _bearer;
+  const t = await ddbClient.bearer({ force });
+  vlog('bearer refreshed');
+  return t;
 }
 
 async function apiGet(url) {

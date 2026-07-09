@@ -6,7 +6,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const COBALT_TOKEN = process.env.DDB_COBALT_TOKEN;
+const COBALT_TOKEN = process.env.DDB_COBALT_TOKEN || process.env.DDB_COBALT_SESSION_TOKEN;
 if (!COBALT_TOKEN) { console.error("Set DDB_COBALT_TOKEN env var"); process.exit(1); }
 
 const OUT_DIR = path.join(__dirname, "..", "tmp", "frhof-raw");

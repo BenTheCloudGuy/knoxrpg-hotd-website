@@ -10,6 +10,9 @@ const require = createRequire(import.meta.url);
 
 const { toolDefinitions, executeTool } = require('../lib/ai-tools.js');
 const { searchEmbeddings } = require('../lib/rag.js');
+const homebrewSchema = require('../lib/homebrew-schema.js');
+const homebrewPublish = require('../lib/homebrew-publish.js');
+const { pgPool } = require('../db/pool.js');
 
 import { getOpenAIClient } from './openai-client.mjs';
 import { ragStatus } from './rag-status.mjs';
@@ -145,6 +148,53 @@ const customMcpTools = [
       required: ['prompt'],
     },
   },
+  {
+    name: 'list_homebrew_categories',
+    description:
+      'List the 7 D&D Beyond homebrew authoring categories (magic-item, feat, spell, monster, ' +
+      'species, subclass, background) with each label and whether it can be pushed to D&D Beyond.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_homebrew_drafts',
+    description:
+      'List saved homebrew drafts from hotd_homebrew (id, category, name, status, player-visibility, ' +
+      'D&D Beyond URL, RAG chunk count). Optionally filter by category.',
+    inputSchema: {
+      type: 'object',
+      properties: { category: { type: 'string', description: 'Optional category filter', enum: [...homebrewSchema.ORDER] } },
+    },
+  },
+  {
+    name: 'create_homebrew_draft',
+    description:
+      'Create or update a homebrew draft (saved to hotd_homebrew, not yet published). Provide ' +
+      'category, name, and a fields object matching that category schema (see list_homebrew_categories). ' +
+      'Set is_player_visible=false for DM-only. Returns the saved draft (with its id).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', description: 'Existing draft id to update (omit to create new)' },
+        category: { type: 'string', enum: [...homebrewSchema.ORDER] },
+        name: { type: 'string', description: 'Display name' },
+        fields: { type: 'object', description: 'Category fields: name, description, and category-specific keys' },
+        is_player_visible: { type: 'boolean', description: 'Player-searchable via DM AI when published (default true)' },
+      },
+      required: ['category', 'fields'],
+    },
+  },
+  {
+    name: 'publish_homebrew',
+    description:
+      'Publish a homebrew draft: mirror it into the campaign content tables, embed it into the RAG ' +
+      '(player-searchable via DM AI unless DM-only), and push to D&D Beyond when DDB push is enabled ' +
+      '(env DDB_ENABLE_PUSH). Returns a per-step report (mirror / embed / ddb).',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'integer', description: 'Draft id from create_homebrew_draft / list_homebrew_drafts' } },
+      required: ['id'],
+    },
+  },
 ];
 
 export const mcpToolList = [...websiteMcpTools, ...customMcpTools];
@@ -168,6 +218,27 @@ export async function dispatchTool(name, args) {
   }
   if (name === 'generate_campaign_content') {
     return await generateCampaignContent(openai, args || {});
+  }
+
+  if (name === 'list_homebrew_categories') {
+    return { categories: homebrewSchema.categoryList() };
+  }
+  if (name === 'list_homebrew_drafts') {
+    return { drafts: await homebrewPublish.listDrafts(pgPool, (args && args.category) || null) };
+  }
+  if (name === 'create_homebrew_draft') {
+    const { id, category, name: draftName, fields, is_player_visible } = args || {};
+    if (!homebrewSchema.getCategory(category)) throw new Error(`unknown category: ${category}`);
+    if (!fields || typeof fields !== 'object') throw new Error('fields object is required');
+    const draft = await homebrewPublish.saveDraft(pgPool, {
+      id, category, name: draftName, fields, is_player_visible, created_by: 'mcp',
+    });
+    return { draft };
+  }
+  if (name === 'publish_homebrew') {
+    if (!args || !args.id) throw new Error('id is required');
+    const report = await homebrewPublish.publishDraft(pgPool, openai, args.id, {});
+    return { report };
   }
 
   if (EXPOSED_WEBSITE_TOOLS.has(name)) {

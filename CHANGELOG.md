@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.34.0] - 2026-07-09
+
+### Added
+- **DDB homebrew push for all 7 categories** (plan §4). Reverse-engineered and live-verified the D&D Beyond homebrew create/edit flow for every category, so Publish can push homebrew straight to D&D Beyond (still gated behind `DDB_ENABLE_PUSH`, off in prod).
+  - `src/lib/ddb-homebrew.js` rewritten into a generic, schema-driven adapter: a category registry (entityTypeId, copy-base create body + default base entity, editor field overrides, public-URL slug) plus a `parseForm` step that captures the editor's full field set and merges only the fields we own (so structural fields — ability scores, AC, hidden ids — are preserved). Enum maps for rarity, magic-item type, spell school, monster type/size, challenge rating, and parent class.
+  - **Re-publish updates in place** — `pushDraft` accepts a `ddbId` and edits the existing DDB entry instead of creating a duplicate; `homebrew-publish` passes the stored `ddb_id`.
+  - `homebrew-schema.js`: all seven categories flipped to `pushable: true`.
+- **Homebrew authoring on the MCP/agent surface** (plan §7). New MCP tools in `src/mcp/tools.mjs`: `list_homebrew_categories`, `list_homebrew_drafts`, `create_homebrew_draft`, `publish_homebrew` — agents can now author, save, and publish homebrew (mirror + RAG embed + gated DDB push) programmatically.
+
+### Changed
+- **Unified DDB auth on the shared client** (plan §9). `src/lib/ddb-audit.js` (owned-on-DDB gap) and `src/lib/ddb-sync.js` (character fetch) now source the cobalt token and cobalt→bearer exchange through `src/lib/ddb-client.js`, so there is one Key-Vault-backed token and one auth path. Character sync now authenticates when a token is present (so **private** campaign characters sync too) and cleanly falls back to unauthenticated (public) with structured `reason` codes. `scripts/munch-ddb-drops.js` routes its bearer through `ddb-client`; the legacy `fetch-*` scripts accept either `DDB_COBALT_TOKEN` or `DDB_COBALT_SESSION_TOKEN`.
+
+### Notes
+- **Verified live against D&D Beyond and the campaign DB:** all 7 categories create + edit with correct field mapping (rarity/type/attunement, spell level/school/concentration, monster type/size/CR, descriptions all persist); the 6 non-subclass categories also delete cleanly; the full site path (publishDraft → mirror → embed → DDB create/edit → store `ddb_id` → delete) round-trips with no residue.
+- **Subclass limitation:** the DDB subclass builder is a JS app with **no reversible HTTP delete**, so subclass push is create + update-in-place only (removal is manual in DDB *My Creations*), and features-by-level aren't populated (the full text lives in the subclass description). This does not affect the normal publish/update path.
+- **Manual cleanup owed:** recon created test subclasses on the DDB account that can't be auto-deleted — remove any `ZZ Probe` / `ZZTEST` entries under *My Creations → Subclasses* (known ids `2845970`, `2845977`).
+
 ## [3.33.0] - 2026-07-09
 
 ### Added

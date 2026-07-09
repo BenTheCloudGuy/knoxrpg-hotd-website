@@ -160,11 +160,11 @@ async function publishDraft(pgPool, openaiClient, id, opts = {}) {
   try { report.steps.embed = { ok: true, chunks: await embedDraft(pgPool, openaiClient, draft) }; }
   catch (e) { report.steps.embed = { ok: false, error: e.message }; }
 
-  // 4. Push to DDB (gated; magic-item only)
+  // 4. Push to DDB (gated; all 7 categories mapped)
   if (def.pushable && ddbHb.pushEnabled()) {
     try {
-      const pushed = await ddbHb.pushDraft(draft.category, { baseId: opts.baseId, fields: draft.fields });
-      report.steps.ddb = { ok: pushed.edited, ddbUrl: pushed.ddbUrl, ddbId: pushed.id };
+      const pushed = await ddbHb.pushDraft(draft.category, { baseId: opts.baseId, fields: draft.fields, ddbId: draft.ddb_id || null });
+      report.steps.ddb = { ok: pushed.edited, ddbUrl: pushed.ddbUrl, ddbId: pushed.id, updated: !!pushed.updated, deletable: pushed.deletable };
       draft.ddb_id = pushed.id; draft.ddb_entity_type_id = pushed.entityTypeId; draft.ddb_url = pushed.ddbUrl;
     } catch (e) { report.steps.ddb = { ok: false, error: e.message, reason: e.reason || null }; }
   } else {
