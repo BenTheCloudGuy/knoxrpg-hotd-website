@@ -16,6 +16,8 @@ const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const { syncCharacterFromDDB } = require("../lib/ddb-sync");
 const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib/ddb-audit");
 const ddbClient = require("../lib/ddb-client");
+const homebrewSchema = require("../lib/homebrew-schema");
+const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
 const fs = require("fs");
 const os = require("os");
@@ -2015,6 +2017,108 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       console.error("DDB cobalt update error:", err);
       sendJSON(res, { error: err.message }, 500);
     }
+    return true;
+  }
+
+  // ── Homebrew authoring: category list + field schema ──────
+  if (decoded === "/api/dm-admin/homebrew/categories" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    sendJSON(res, { categories: homebrewSchema.categoryList() });
+    return true;
+  }
+  if (decoded === "/api/dm-admin/homebrew/schema" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const cat = new URL(req.url, "http://x").searchParams.get("category") || "";
+    const def = homebrewSchema.getCategory(cat);
+    if (!def) { sendJSON(res, { error: "unknown category" }, 400); return true; }
+    sendJSON(res, { category: cat, label: def.label, pushable: !!def.pushable, fields: def.fields });
+    return true;
+  }
+
+  // ── Homebrew authoring: draft list / get / save ────────────
+  if (decoded === "/api/dm-admin/homebrew/drafts" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const cat = new URL(req.url, "http://x").searchParams.get("category") || null;
+      sendJSON(res, { drafts: await homebrewPublish.listDrafts(pgPool, cat) });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+  if (decoded === "/api/dm-admin/homebrew/draft" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const id = new URL(req.url, "http://x").searchParams.get("id");
+      const d = await homebrewPublish.getDraft(pgPool, id);
+      if (!d) { sendJSON(res, { error: "not found" }, 404); return true; }
+      sendJSON(res, { draft: d });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+  if (decoded === "/api/dm-admin/homebrew/draft" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      if (!homebrewSchema.getCategory(body.category)) { sendJSON(res, { error: "unknown category" }, 400); return true; }
+      const row = await homebrewPublish.saveDraft(pgPool, { ...body, created_by: session.username || null });
+      sendJSON(res, { ok: true, draft: row });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Homebrew authoring: DM-AI field generation ───────────
+  // POST /api/dm-admin/homebrew/generate  { category, prompt }
+  if (decoded === "/api/dm-admin/homebrew/generate" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const def = homebrewSchema.getCategory(body.category);
+      const prompt = (body.prompt || "").trim();
+      if (!def) { sendJSON(res, { error: "unknown category" }, 400); return true; }
+      if (!prompt) { sendJSON(res, { error: "prompt is required" }, 400); return true; }
+      const model = azure.aiModel || "gpt-5.4-mini";
+      const completion = await azure.openaiClient.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: def.generate.system + " Return ONLY a JSON object." },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+      });
+      recordChatCompletion(completion, { model, username: session.username || "", isDM: true, source: "dm-admin.homebrew-generate" });
+      let fields = {};
+      try { fields = JSON.parse(completion.choices[0].message.content || "{}"); } catch (_) {}
+      sendJSON(res, { ok: true, fields });
+    } catch (e) { console.error("Homebrew generate error:", e); sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Homebrew authoring: "already in RAG?" check ──────────
+  if (decoded === "/api/dm-admin/homebrew/rag-check" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const u = new URL(req.url, "http://x").searchParams;
+      const name = (u.get("name") || "").trim();
+      if (name.length < 2) { sendJSON(res, { matches: [] }); return true; }
+      const r = await pgPool.query(
+        "SELECT DISTINCT title, source_type FROM hotd_embeddings WHERE title ILIKE $1 LIMIT 6",
+        [`%${name}%`]);
+      sendJSON(res, { matches: r.rows });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Homebrew authoring: publish (mirror + embed + gated push) ─
+  // POST /api/dm-admin/homebrew/publish  { id, baseId? }
+  if (decoded === "/api/dm-admin/homebrew/publish" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      if (!body.id) { sendJSON(res, { error: "draft id required" }, 400); return true; }
+      const report = await homebrewPublish.publishDraft(pgPool, azure.openaiClient, body.id, { baseId: body.baseId });
+      sendJSON(res, { ok: true, report });
+    } catch (e) { console.error("Homebrew publish error:", e); sendJSON(res, { error: e.message, reason: e.reason || null }, 500); }
     return true;
   }
 

@@ -393,6 +393,38 @@ async function renderDmAdminPage(session) {
         <div id="ddb-report"><p class="cards-hint">Running audit\u2026</p></div>
       </section>
 
+      <section class="dmc-panel" id="dmc-hb" style="display:none;">
+        <div class="dmc-panel-bar">
+          <h2 id="hb-title">Homebrew Authoring</h2>
+          <div class="dmc-bar-actions">
+            <label class="hb-vis"><input type="checkbox" id="hb-visible" checked /> Player-visible</label>
+            <button class="dmc-btn" onclick="hbSave()">Save Draft</button>
+            <button class="dmc-btn dmc-btn-primary" onclick="hbPublish()">Publish</button>
+          </div>
+        </div>
+        <p class="cards-hint" id="hb-hint">Describe what you want and let the DM AI draft it, then fine-tune the fields. <strong>Save</strong> keeps a draft; <strong>Publish</strong> mirrors it into the campaign content, embeds it into the RAG (player-searchable via DM AI), and pushes to D&amp;D Beyond when enabled.</p>
+        <div class="hb-layout">
+          <div class="hb-left">
+            <div class="hb-ai">
+              <textarea id="hb-prompt" class="dmc-textarea" rows="3" placeholder="e.g. A rare cloak that lets the wearer briefly turn to mist once per short rest\u2026"></textarea>
+              <button class="dmc-btn dmc-btn-primary" id="hb-gen-btn" onclick="hbGenerate()">&#10024; Generate with DM AI</button>
+            </div>
+            <div id="hb-form" class="hb-form"></div>
+            <p id="hb-status" class="cards-hint"></p>
+          </div>
+          <div class="hb-right">
+            <h4 class="dmc-section-title">Art</h4>
+            <div id="hb-art" class="hb-art"><span class="no-art">No art</span></div>
+            <div class="hb-art-actions">
+              <button class="dmc-btn" id="hb-img-btn" onclick="hbGenImage()">&#10024; Generate Image</button>
+            </div>
+            <input id="hb-img-url" class="dmc-input" placeholder="\u2026or paste an image URL" oninput="hbSetArt(this.value)" style="width:100%;margin-top:6px;" />
+            <div id="hb-ragcheck" class="cards-hint" style="margin-top:12px;"></div>
+            <div id="hb-published" class="cards-hint" style="margin-top:12px;"></div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -461,6 +493,21 @@ async function renderDmAdminPage(session) {
     .ddb-tok-bad { color:#e77; border-color:#a33; background:#241414; }
     .ddb-tok-miss { color:#caa; border-color:#654; background:#1e1a12; }
     .ddb-tok-update { display:flex; gap:8px; align-items:center; margin-left:auto; }
+    /* ── Homebrew authoring ── */
+    .hb-vis { font-size:0.78rem; color:#bbb; display:inline-flex; align-items:center; gap:5px; margin-right:6px; }
+    .hb-layout { display:flex; gap:20px; align-items:flex-start; }
+    .hb-left { flex:1; min-width:0; }
+    .hb-right { width:280px; flex:0 0 auto; background:#141414; border:1px solid #262626; border-radius:8px; padding:14px; }
+    .hb-ai { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .hb-ai .dmc-btn { align-self:flex-start; }
+    .hb-form { display:flex; flex-direction:column; gap:12px; }
+    .hb-field { display:flex; flex-direction:column; gap:4px; }
+    .hb-field > label { color:#c9c9c9; font-size:0.78rem; font-weight:600; }
+    .hb-field .hb-check { flex-direction:row; align-items:center; gap:7px; display:inline-flex; }
+    .hb-art { width:100%; aspect-ratio:1; background:#0d0d0d; border:1px solid #2a2a2a; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:10px; }
+    .hb-art img { width:100%; height:100%; object-fit:cover; }
+    .hb-art .no-art { color:#8a7a52; font-style:italic; font-size:0.82rem; }
+    .hb-art-actions { display:flex; gap:8px; }
     .card-row.is-selected { background:#12261a; }
     .card-row.is-selected.is-preview { background:#173021; }
     .card-row .cr-toggle { flex:0 0 auto; width:22px; height:22px; border-radius:5px; border:1px solid #355; background:#12241c; color:#5c8; font-size:0.95rem; line-height:1; cursor:pointer; padding:0; }
@@ -783,13 +830,16 @@ async function renderDmAdminPage(session) {
   // works from any page and switches panels in-place when already here.
   let _currentPanel = null;
   let _loaded = {};
-  const PANELS = ['chat','images','notes','characters','npcs','cards','ddb','ai','search','campaign','users'];
+  const PANELS = ['chat','images','notes','characters','npcs','cards','ddb','ai','search','campaign','users',
+    'hb-magic-item','hb-feat','hb-spell','hb-monster','hb-species','hb-subclass','hb-background'];
+  function panelElId(panel) { return panel && panel.indexOf('hb-') === 0 ? 'dmc-hb' : 'dmc-' + panel; }
   function showPanel(panel) {
-    if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
+    if (!panel || PANELS.indexOf(panel) === -1 || !el(panelElId(panel))) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
-    el('dmc-' + panel).style.display = 'block';
+    el(panelElId(panel)).style.display = 'block';
     _currentPanel = panel;
-    if (!_loaded[panel]) { _loaded[panel] = true; loadPanel(panel); }
+    // Homebrew panels re-load per category (shared element); others cache.
+    if (panel.indexOf('hb-') === 0 || !_loaded[panel]) { _loaded[panel] = true; loadPanel(panel); }
   }
   // Back-compat shim for any legacy dmc('panel') call: drive selection via hash.
   function dmc(panel) {
@@ -797,6 +847,7 @@ async function renderDmAdminPage(session) {
     else location.hash = panel;
   }
   function loadPanel(p) {
+    if (p && p.indexOf('hb-') === 0) { loadHb(p.slice(3)); return; }
     const loaders = { chat:loadChat, images:loadImages, notes:loadNotes,
       characters:loadChars, npcs:loadNpcs, cards:loadCards, ddb:loadDdb, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
@@ -2498,6 +2549,197 @@ async function renderDmAdminPage(session) {
       alert('Sync error: ' + e.message);
       btn.disabled = false; btn.textContent = label;
     }
+  }
+
+  // ═══ HOMEBREW AUTHORING (DDB) ═══
+  var _hbCat = null, _hbSchema = null, _hbDraftId = null, _hbArt = '', _hbRagTimer = null;
+
+  async function loadHb(cat) {
+    _hbCat = cat; _hbDraftId = null; _hbArt = '';
+    var titleEl = el('hb-title'); if (titleEl) titleEl.textContent = 'Homebrew Authoring';
+    var form = el('hb-form'); if (form) form.innerHTML = '<p class="cards-hint">Loading schema\u2026</p>';
+    if (el('hb-prompt')) el('hb-prompt').value = '';
+    if (el('hb-status')) el('hb-status').textContent = '';
+    if (el('hb-ragcheck')) el('hb-ragcheck').innerHTML = '';
+    if (el('hb-published')) el('hb-published').innerHTML = '';
+    if (el('hb-visible')) el('hb-visible').checked = true;
+    if (el('hb-img-url')) el('hb-img-url').value = '';
+    setHbArt('');
+    try {
+      var r = await fetch('/api/dm-admin/homebrew/schema?category=' + encodeURIComponent(cat));
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Schema load failed');
+      _hbSchema = d;
+      if (titleEl) titleEl.textContent = d.label + ' \u2014 Homebrew';
+      hbRenderForm(d);
+      var hint = el('hb-hint');
+      if (hint) hint.innerHTML = d.pushable
+        ? 'Describe it, generate with DM AI, tune the fields, then <strong>Publish</strong> to mirror it into campaign content, embed into the RAG, and push to D&amp;D Beyond (when enabled).'
+        : 'Describe it, generate with DM AI, tune the fields, then <strong>Publish</strong> to mirror it into campaign content and embed into the RAG. (DDB push for ' + esc(d.label) + ' is not enabled yet.)';
+    } catch (e) {
+      if (form) form.innerHTML = '<p class="cards-hint" style="color:#e06">' + esc(e.message) + '</p>';
+    }
+  }
+
+  function hbRenderForm(schema) {
+    var form = el('hb-form'); if (!form) return;
+    var html = '';
+    (schema.fields || []).forEach(function (f) {
+      var id = 'hbf-' + f.key;
+      var lbl = esc(f.label) + (f.required ? ' <span style="color:#c83232">*</span>' : '');
+      html += '<div class="hb-field">';
+      if (f.type === 'checkbox') {
+        html += '<label class="hb-check"><input type="checkbox" id="' + id + '" /> ' + lbl + '</label>';
+      } else {
+        html += '<label for="' + id + '">' + lbl + '</label>';
+        if (f.type === 'textarea') {
+          html += '<textarea id="' + id + '" class="dmc-textarea" rows="6"></textarea>';
+        } else if (f.type === 'select') {
+          html += '<select id="' + id + '" class="dmc-input"><option value="">\u2014</option>';
+          (f.options || []).forEach(function (o) { html += '<option value="' + esc(o) + '">' + esc(o) + '</option>'; });
+          html += '</select>';
+        } else if (f.type === 'number') {
+          html += '<input type="number" id="' + id + '" class="dmc-input" />';
+        } else {
+          html += '<input type="text" id="' + id + '" class="dmc-input" />';
+        }
+      }
+      html += '</div>';
+    });
+    form.innerHTML = html;
+    var nameEl = el('hbf-name'); if (nameEl) nameEl.addEventListener('input', hbRagCheck);
+  }
+
+  function hbFillForm(fields) {
+    if (!_hbSchema) return;
+    _hbSchema.fields.forEach(function (f) {
+      var elm = el('hbf-' + f.key);
+      if (!elm) return;
+      var v = fields[f.key];
+      if (f.type === 'checkbox') elm.checked = !!v;
+      else if (v !== undefined && v !== null) elm.value = v;
+    });
+    hbRagCheck();
+  }
+
+  function hbGather() {
+    var out = {};
+    if (!_hbSchema) return out;
+    _hbSchema.fields.forEach(function (f) {
+      var elm = el('hbf-' + f.key);
+      if (!elm) return;
+      if (f.type === 'checkbox') out[f.key] = elm.checked;
+      else if (f.type === 'number') out[f.key] = elm.value === '' ? null : Number(elm.value);
+      else out[f.key] = elm.value;
+    });
+    return out;
+  }
+
+  async function hbGenerate() {
+    var prompt = (el('hb-prompt').value || '').trim();
+    if (!prompt) { alert('Describe what you want first.'); return; }
+    var btn = el('hb-gen-btn'); btn.disabled = true; var lbl = btn.innerHTML; btn.innerHTML = 'Generating\u2026';
+    el('hb-status').textContent = 'DM AI is drafting\u2026';
+    try {
+      var r = await fetch('/api/dm-admin/homebrew/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:_hbCat, prompt:prompt }) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Generation failed');
+      hbFillForm(d.fields || {});
+      el('hb-status').textContent = 'Draft generated. Review and tune the fields.';
+    } catch (e) {
+      el('hb-status').textContent = 'Error: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.innerHTML = lbl;
+    }
+  }
+
+  async function hbSave() {
+    var fields = hbGather();
+    if (!fields.name) { alert('Name is required.'); return null; }
+    var body = { id: _hbDraftId, category: _hbCat, name: fields.name, fields: fields, image_url: _hbArt || null, is_player_visible: el('hb-visible').checked };
+    el('hb-status').textContent = 'Saving\u2026';
+    try {
+      var r = await fetch('/api/dm-admin/homebrew/draft', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Save failed');
+      _hbDraftId = d.draft.id;
+      el('hb-status').textContent = 'Draft saved (#' + d.draft.id + ').';
+      return d.draft;
+    } catch (e) {
+      el('hb-status').textContent = 'Error: ' + e.message;
+      return null;
+    }
+  }
+
+  async function hbPublish() {
+    var draft = await hbSave();
+    if (!draft) return;
+    if (!confirm('Publish "' + (draft.name || 'this') + '"? This mirrors it into campaign content and embeds it into the RAG (player-searchable via DM AI).')) return;
+    el('hb-status').textContent = 'Publishing (mirror + embed)\u2026';
+    try {
+      var r = await fetch('/api/dm-admin/homebrew/publish', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: _hbDraftId }) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Publish failed');
+      var steps = (d.report && d.report.steps) || {};
+      var parts = [];
+      if (steps.mirror && steps.mirror.ok) parts.push('mirrored to campaign content');
+      else if (steps.mirror && steps.mirror.skipped) parts.push('embed-only (no content table)');
+      else if (steps.mirror && steps.mirror.error) parts.push('mirror error: ' + esc(steps.mirror.error));
+      if (steps.embed && steps.embed.ok) parts.push((steps.embed.chunks || 0) + ' RAG chunk(s) embedded');
+      else if (steps.embed) parts.push('embed error: ' + esc(steps.embed.error || 'failed'));
+      if (steps.ddb && steps.ddb.ok) parts.push('pushed to D&amp;D Beyond');
+      else if (steps.ddb && steps.ddb.skipped) parts.push('DDB push ' + esc(steps.ddb.reason || 'skipped'));
+      else if (steps.ddb && steps.ddb.error) parts.push('DDB error: ' + esc(steps.ddb.error));
+      el('hb-published').innerHTML = '<strong style="color:#4ba84b">Published.</strong> ' + parts.join('; ') + '.';
+      el('hb-status').textContent = 'Published.';
+    } catch (e) {
+      el('hb-status').textContent = 'Publish error: ' + e.message;
+    }
+  }
+
+  async function hbGenImage() {
+    var fields = hbGather();
+    if (!fields.name) { alert('Enter a name first (used in the image prompt).'); return; }
+    var btn = el('hb-img-btn'); btn.disabled = true; var lbl = btn.innerHTML; btn.innerHTML = 'Generating\u2026';
+    var label = (_hbSchema && _hbSchema.label) || 'item';
+    var prompt = 'Fantasy D&D ' + label + ' art: ' + fields.name + '. ' + (fields.description || '').slice(0, 400) + ' Dark fantasy, dramatic lighting, no text.';
+    try {
+      var r = await fetch('/api/dm-admin/images/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: prompt, size:'1024x1024', quality:'standard', folder:'Homebrew', tags:['homebrew', _hbCat] }) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Image generation failed');
+      setHbArt(d.image.image_url);
+    } catch (e) {
+      alert('Image error: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.innerHTML = lbl;
+    }
+  }
+
+  function hbSetArt(url) { setHbArt((url || '').trim()); }
+  function setHbArt(url) {
+    _hbArt = url || '';
+    var box = el('hb-art'); if (!box) return;
+    if (_hbArt) box.innerHTML = '<img src="' + esc(_hbArt) + '" alt="art" />';
+    else box.innerHTML = '<span class="no-art">No art</span>';
+    var urlEl = el('hb-img-url'); if (urlEl && urlEl.value !== _hbArt) urlEl.value = _hbArt;
+  }
+
+  function hbRagCheck() {
+    clearTimeout(_hbRagTimer);
+    _hbRagTimer = setTimeout(async function () {
+      var nameEl = el('hbf-name'); if (!nameEl) return;
+      var name = (nameEl.value || '').trim();
+      var box = el('hb-ragcheck'); if (!box) return;
+      if (name.length < 2) { box.innerHTML = ''; return; }
+      try {
+        var r = await fetch('/api/dm-admin/homebrew/rag-check?name=' + encodeURIComponent(name));
+        var d = await r.json();
+        var m = d.matches || [];
+        if (!m.length) { box.innerHTML = '<span style="color:#4ba84b">\u2713 No existing RAG entry matches &ldquo;' + esc(name) + '&rdquo;.</span>'; return; }
+        var lines = m.map(function (x) { return '\u2022 ' + esc(x.title) + ' <span style="color:#666">(' + esc(x.source_type || '') + ')</span>'; });
+        box.innerHTML = '<span style="color:#e0a800">Possible existing RAG match:</span><br>' + lines.join('<br>');
+      } catch (e) { box.innerHTML = ''; }
+    }, 400);
   }
 
   // ═══ AI CONFIG ═══

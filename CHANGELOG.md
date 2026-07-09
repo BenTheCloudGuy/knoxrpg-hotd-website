@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.33.0] - 2026-07-09
+
+### Added
+- **DDB Homebrew Authoring vertical (plan §3.2–§6, §10).** A schema-driven authoring workspace in the DM Command Center for creating homebrew content, drafting it with the DM AI, generating art, and publishing it into the campaign content tables **and** the RAG (player-searchable via the DM AI), with an optional gated push to D&D Beyond.
+  - **Category schema registry (`src/lib/homebrew-schema.js`).** One entry per DDB homebrew category — **Magic Item, Feat, Spell, Monster, Species, Sub-Class, Background** — each defining its form fields (text / textarea / number / checkbox / select), the DM-AI generation system prompt + expected JSON keys, the local content-table mirror target, and the RAG embed-text composition (`composeText`). Magic Item is the fully DDB-pushable reference; the rest author/save/embed generically (`pushable:false`) until per-category DDB recon.
+  - **Publish orchestration (`src/lib/homebrew-publish.js`).** `saveDraft`/`listDrafts`/`getDraft`, plus `publishDraft` which: (1) validates required fields, (2) mirrors the draft into the matching content table (`magic_items`/`spells`/`monsters`/`feats`, `id=hb-{draftId}`, `source='hotd-homebrew'`, `is_homebrew=true`; species/subclass/background are embed-only), (3) embeds it into `hotd_embeddings` (`source_type='homebrew'`, chunked, `text-embedding-3-small`@1536, `is_dm_only` = not player-visible), and (4) pushes to D&D Beyond **only when `DDB_ENABLE_PUSH` is set and the category is pushable** — otherwise the step is cleanly skipped. Each step is independent and non-fatal, so Save + Embed always succeed even with DDB push off.
+  - **Authoring API (`src/routes/dm-admin-api.js`).** New admin endpoints: `GET /homebrew/categories`, `GET /homebrew/schema`, `GET /homebrew/drafts`, `GET`/`POST /homebrew/draft`, `POST /homebrew/generate` (DM-AI drafting via `gpt-5.4-mini` with a JSON-object response), `GET /homebrew/rag-check` ("is this name already in the RAG?"), and `POST /homebrew/publish`.
+  - **Authoring UI (`src/pages/dm-admin.js`, `src/config.js`).** A new **DDB Authoring** nav group (7 category entries) opens a shared, schema-rendered panel: a DM-AI prompt box that fills the form, an auto-built field form, an art block (reuses the image generator, or paste a URL), a live "already in RAG?" indicator, a player-visible toggle, and **Save Draft** / **Publish** actions.
+
+### Removed
+- **Cleanup (plan §10).** Removed consumed DDB epic scratch (`tmp/ddb-audit.js`, `tmp/ddb-audit.json`) now superseded by `src/lib/ddb-audit.js`, and two accidental junk files under `src/` (mistyped `psql` output redirects).
+
+### Notes
+- Validated live end-to-end against the campaign DB and OpenAI: magic-item **save → mirror (`magic_items.hb-{id}`) → embed (1 RAG chunk, player-visible) → DDB push skipped (`push-disabled`)**, with full cleanup and no residue. DM-AI generation returns exactly the schema fields. All rendered client scripts pass `node --check`.
+- DDB publish push for non-magic-item categories still needs per-category endpoint recon; those categories author/save/embed today and are wired to push once mapped. Images remain HOTD-hosted.
+
 ## [3.32.0] - 2026-07-09
 
 ### Added
