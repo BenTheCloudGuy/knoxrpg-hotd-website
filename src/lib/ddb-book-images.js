@@ -101,24 +101,22 @@ async function ensureTable(pgPool) {
   await pgPool.query("CREATE INDEX IF NOT EXISTS idx_ddb_book_images_book ON ddb_book_images (book_code, kind)");
 }
 
-// Download + store every image for `code`. opts: { onLog?, uploader?, maxPages?, force? }
-async function downloadBookImages(pgPool, code, opts = {}) {
+// Scrape-only: discover a book's reader pages and gather its image URLs
+// (no downloads, no DB writes). Returns { title, pages, imageUrls }.
+async function scanBook(cookie, code, opts = {}) {
   const log = typeof opts.onLog === "function" ? opts.onLog : () => {};
-  const uploader = opts.uploader || azure.uploadBlobToStorage;
   const maxPages = opts.maxPages || 80;
-  await ensureTable(pgPool);
-  const cookie = await ddbClient.getCobaltToken();
-  if (!cookie) { const e = new Error("No DDB cobalt token available"); e.reason = "ddb-token-missing"; throw e; }
-
   // 1. Landing page (try /sources/dnd/{code}, then /sources/{code}).
   let landing = await getHtml(`${BASE}/sources/dnd/${code}`, cookie);
   if (!landing.ok || /marketplace/.test(landing.finalUrl)) landing = await getHtml(`${BASE}/sources/${code}`, cookie);
-  if (!landing.ok || /marketplace/.test(landing.finalUrl)) { const e = new Error(`Book "${code}" not accessible (not owned or bad token)`); e.reason = "book-not-owned"; throw e; }
-  const bookTitle = ((landing.html.match(/<title>([^<]+)<\/title>/i) || [])[1] || code).split(/\s+[-|]\s+/)[0].trim() || code;
+  if (!landing.ok || /marketplace/.test(landing.finalUrl)) { const e = new Error(`Book "${code}" not accessible (not owned or has no reader pages)`); e.reason = "book-not-owned"; throw e; }
+  const title = ((landing.html.match(/<title>([^<]+)<\/title>/i) || [])[1] || code).split(/\s+[-|]\s+/)[0].trim() || code;
+  // Some codes redirect to a newer edition (e.g. mm -> mm-2024); discover
+  // sub-pages using the code in the FINAL url so we don't miss the reader.
+  const finalCode = (landing.finalUrl.match(/\/sources\/(?:dnd\/)?([^/?#]+)/) || [])[1] || code;
 
   // 2. Pages = landing + discovered sub-pages.
-  const pages = [landing.finalUrl, ...discoverPages(landing.html, code)];
-  const uniquePages = [...new Set(pages)].slice(0, maxPages);
+  const uniquePages = [...new Set([landing.finalUrl, ...discoverPages(landing.html, finalCode)])].slice(0, maxPages);
   log(`${code}: ${uniquePages.length} reader page(s)`);
 
   // 3. Gather all image URLs across pages.
@@ -132,9 +130,23 @@ async function downloadBookImages(pgPool, code, opts = {}) {
     if (++scanned % 10 === 0) log(`  scanned ${scanned}/${uniquePages.length} pages, ${imageUrls.size} images so far`);
   }
   log(`${code}: ${imageUrls.size} unique image(s) found`);
+  return { title, pages: uniquePages.length, imageUrls: [...imageUrls] };
+}
+
+// Download + store every image for `code`. opts: { onLog?, uploader?, maxPages?, force? }
+async function downloadBookImages(pgPool, code, opts = {}) {
+  const log = typeof opts.onLog === "function" ? opts.onLog : () => {};
+  const uploader = opts.uploader || azure.uploadBlobToStorage;
+  await ensureTable(pgPool);
+  const cookie = await ddbClient.getCobaltToken();
+  if (!cookie) { const e = new Error("No DDB cobalt token available"); e.reason = "ddb-token-missing"; throw e; }
+
+  const scan = await scanBook(cookie, code, opts);
+  const bookTitle = scan.title;
+  const imageUrls = scan.imageUrls;
 
   // 4. Skip already-downloaded (unless force).
-  const result = { book: code, title: bookTitle, pages: uniquePages.length, found: imageUrls.size, art: 0, maps: 0, uploaded: 0, published: 0, skipped: 0, failed: 0 };
+  const result = { book: code, title: bookTitle, pages: scan.pages, found: imageUrls.length, art: 0, maps: 0, uploaded: 0, published: 0, skipped: 0, failed: 0 };
   let known = new Set();
   if (!opts.force) {
     const { rows } = await pgPool.query("SELECT source_url FROM ddb_book_images WHERE book_code=$1", [code]);
@@ -166,4 +178,4 @@ async function downloadBookImages(pgPool, code, opts = {}) {
   return result;
 }
 
-module.exports = { downloadBookImages, ensureTable, classify };
+module.exports = { downloadBookImages, scanBook, ensureTable, classify };

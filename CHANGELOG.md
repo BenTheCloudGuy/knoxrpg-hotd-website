@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.38.1] - 2026-07-09
+
+### Fixed
+- **Superseded books returned 0 images.** Source codes that redirect to a newer edition (e.g. `mm` → `mm-2024`, `dmg` → `dmg-2024`, `phb` → `phb-2024`) had their sub-page discovery run against the *requested* code, which didn't match the redirected reader's page links, so only the landing was scanned. Page discovery now uses the code parsed from the final (redirected) URL. Recovered live: `mm` 0 → 320 images, `dmg` 0 → 256 (incl. 38 maps), `phb` 0 → 241.
+- Exposed `scanBook` (dry-run: discover pages + gather image URLs, no download/DB writes) from `ddb-book-images.js`; `downloadBookImages` now builds on it.
+
+### Notes
+- **Pre-push validation:** dry-ran the scraper against all **130 owned books** (no downloads, no DB writes). 104 yield images (~6,300 at an 8-page sample: ~5,190 art / ~1,110 maps); the redirect fix recovered the 2024 core books. The remaining zero-image books are handled gracefully — either fully JS-rendered reader TOCs (e.g. `ggtr`, `xgte`) or art-light rules books (e.g. `exeb`, `tcsr`) whose server HTML exposes no sub-page links / compendium images; 5 sources have no reader (clean `book-not-owned`), and the 2 Drops are correctly excluded. No crashes across the library. Background job registry unit-checked (running/done/error/missing).
+
 ## [3.38.0] - 2026-07-09
 
 ### Changed
