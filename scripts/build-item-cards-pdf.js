@@ -36,7 +36,7 @@ const ROOT = path.join(__dirname, '..');
 const ITEMS_DIR = path.join(ROOT, 'items');
 const IMAGES_DIR = path.join(ITEMS_DIR, 'magic-items', 'images');
 const REPORTS_DIR = path.join(ROOT, 'reports');
-const CACHE_PATH = path.join(__dirname, '.card-desc-cache.json');
+const CACHE_PATH = process.env.HOTD_CARD_CACHE_PATH || path.join(__dirname, '.card-desc-cache.json');
 
 // ---------------------------------------------------------------------------
 // Slug helpers (mirrors scripts/lib-item-base.js so variants share one image).
@@ -56,7 +56,7 @@ function baseSlug(name) {
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
   const args = {
-    slugs: [], out: null, title: null, size: 'letter', fromFile: null, keepHtml: false,
+    slugs: [], out: null, title: null, size: 'letter', fromFile: null, fromJson: null, keepHtml: false,
     shorten: true, targetChars: 480, model: 'gpt-5.4-mini',
   };
   for (let i = 0; i < argv.length; i++) {
@@ -66,6 +66,7 @@ function parseArgs(argv) {
     else if (a === '--title') args.title = argv[++i];
     else if (a === '--size') args.size = argv[++i].toLowerCase();
     else if (a === '--from-file') args.fromFile = argv[++i];
+    else if (a === '--from-json') args.fromJson = argv[++i];
     else if (a === '--keep-html') args.keepHtml = true;
     else if (a === '--no-shorten') args.shorten = false;
     else if (a === '--target-chars') args.targetChars = parseInt(argv[++i], 10);
@@ -91,6 +92,9 @@ function printHelp() {
   Positional slugs        Item file slugs (filename without .md), any number.
   --items a,b,c           Comma list of slugs (repeatable).
   --from-file PATH        Read slugs from a file, one per line (# comments ok).
+  --from-json PATH        Render normalized item objects from a JSON file/array
+                          ([{ id, title, rarity, type, requires_attunement,
+                          source, description, imageUrl }]). Used by the website.
   --out PATH              Output PDF (default reports/item-cards.pdf).
   --title TITLE           Optional footer title printed under each sheet.
   --size letter|a4        Paper size (default letter). Cards stay 2.5" x 3.5".
@@ -244,6 +248,7 @@ async function shortenDescriptions(items, opts) {
   async function worker() {
     while (queue.length) {
       const item = queue.shift();
+      if (item.cardText != null) { continue; }   // caller supplied a short blurb
       const source = descriptionText(item.body);
       if (source.length <= targetChars) { item.cardText = source; shortAlready++; continue; }
       const h = hashText(source);
@@ -294,15 +299,18 @@ function buildIndex() {
 }
 
 function resolveImageAbs(item) {
-  const img = item.front.image;
-  if (img && !/^https?:/i.test(img)) {
+  const img = item.front && item.front.image;
+  if (img && !/^https?:/i.test(img) && item.file) {
     const abs = path.resolve(path.dirname(item.file), img);
     if (fs.existsSync(abs)) return abs;
   }
-  const byBase = path.join(IMAGES_DIR, baseSlug(item.front.title || item.slug) + '.png');
+  const title = (item.front && item.front.title) || item.slug || '';
+  const byBase = path.join(IMAGES_DIR, baseSlug(title) + '.png');
   if (fs.existsSync(byBase)) return byBase;
-  const bySlug = path.join(IMAGES_DIR, item.slug + '.png');
-  if (fs.existsSync(bySlug)) return bySlug;
+  if (item.slug) {
+    const bySlug = path.join(IMAGES_DIR, item.slug + '.png');
+    if (fs.existsSync(bySlug)) return bySlug;
+  }
   return null;
 }
 
@@ -310,6 +318,61 @@ function imageDataUri(absPath) {
   const ext = path.extname(absPath).slice(1).toLowerCase();
   const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
   return `data:${mime};base64,${fs.readFileSync(absPath).toString('base64')}`;
+}
+
+// Fetch a remote image and return it as a base64 data URI (null on any failure).
+async function fetchRemoteDataUri(url) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!resp.ok) return null;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (!buf.length) return null;
+    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+    let mime = 'image/png';
+    if (ct.includes('jpeg') || /\.jpe?g(\?|$)/i.test(url)) mime = 'image/jpeg';
+    else if (ct.includes('webp') || /\.webp(\?|$)/i.test(url)) mime = 'image/webp';
+    else if (ct.includes('gif') || /\.gif(\?|$)/i.test(url)) mime = 'image/gif';
+    return `data:${mime};base64,${buf.toString('base64')}`;
+  } catch { return null; }
+}
+
+// Resolve every item's art to an embeddable data URI (local file or remote URL).
+async function prepareImages(items) {
+  await Promise.all(items.map(async (item) => {
+    if (!item || item.imageData) return;
+    let dataUri = null;
+    const localAbs = (item.imagePath && fs.existsSync(item.imagePath)) ? item.imagePath : resolveImageAbs(item);
+    if (localAbs) { try { dataUri = imageDataUri(localAbs); } catch { dataUri = null; } }
+    if (!dataUri) {
+      const url = item.imageUrl
+        || (item.front && /^https?:/i.test(item.front.image || '') ? item.front.image : null);
+      if (url) dataUri = await fetchRemoteDataUri(url);
+    }
+    item.imageData = dataUri;
+  }));
+}
+
+// Convert a website/DB item object into the internal item shape.
+function normalizeJsonItem(it) {
+  return {
+    slug: String(it.id || slugify(it.title || it.name || 'item')),
+    file: null,
+    front: {
+      title: it.title || it.name || 'Item',
+      rarity: it.rarity || '',
+      type: it.type || '',
+      requires_attunement: it.requires_attunement ? 'Yes' : 'No',
+      source: it.source || '',
+      image: it.imageUrl || it.image || '',
+    },
+    body: it.description || '',
+    imageUrl: it.imageUrl || it.image || null,
+    imagePath: it.imagePath || null,
+    cardText: it.cardText != null ? it.cardText : undefined,
+  };
 }
 
 function pickDemoItems(index, count) {
@@ -356,9 +419,8 @@ function statLine(front) {
 
 function frontCard(item) {
   if (!item) return '<div class="card"></div>';
-  const imgAbs = resolveImageAbs(item);
-  const art = imgAbs
-    ? `<img src="${imageDataUri(imgAbs)}" alt="">`
+  const art = item.imageData
+    ? `<img src="${item.imageData}" alt="">`
     : '<em class="no-art">No art</em>';
   const badgeBits = [item.front.rarity, humanizeType(item.front.type)].filter(Boolean).map(escapeHtml);
   return `<div class="card front"><div class="inner">
@@ -480,26 +542,32 @@ function renderHtml(items, opts) {
 // ---------------------------------------------------------------------------
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const index = buildIndex();
-
-  let slugs = [...args.slugs];
-  if (args.fromFile) {
-    const lines = fs.readFileSync(args.fromFile, 'utf8').split('\n')
-      .map(l => l.replace(/#.*$/, '').trim()).filter(Boolean);
-    slugs.push(...lines.map(s => s.replace(/\.md$/, '')));
-  }
 
   let items;
-  if (slugs.length === 0) {
-    items = pickDemoItems(index, 9);
-    console.log('No slugs given; auto-selected demo items with artwork:');
-    items.forEach(it => console.log(`  - ${it.slug}  (${it.front.title})`));
+  if (args.fromJson) {
+    const raw = JSON.parse(fs.readFileSync(args.fromJson, 'utf8'));
+    const arr = Array.isArray(raw) ? raw : (raw.items || []);
+    items = arr.map(normalizeJsonItem);
+    console.log(`Loaded ${items.length} item(s) from ${args.fromJson}`);
   } else {
-    items = [];
-    for (const slug of slugs) {
-      const it = index.get(slug);
-      if (!it) { console.warn(`  [skip] not found: ${slug}`); continue; }
-      items.push(it);
+    const index = buildIndex();
+    let slugs = [...args.slugs];
+    if (args.fromFile) {
+      const lines = fs.readFileSync(args.fromFile, 'utf8').split('\n')
+        .map(l => l.replace(/#.*$/, '').trim()).filter(Boolean);
+      slugs.push(...lines.map(s => s.replace(/\.md$/, '')));
+    }
+    if (slugs.length === 0) {
+      items = pickDemoItems(index, 9);
+      console.log('No slugs given; auto-selected demo items with artwork:');
+      items.forEach(it => console.log(`  - ${it.slug}  (${it.front.title})`));
+    } else {
+      items = [];
+      for (const slug of slugs) {
+        const it = index.get(slug);
+        if (!it) { console.warn(`  [skip] not found: ${slug}`); continue; }
+        items.push(it);
+      }
     }
   }
 
@@ -508,6 +576,7 @@ async function main() {
   if (args.shorten) {
     await shortenDescriptions(items, { model: args.model, targetChars: args.targetChars });
   }
+  await prepareImages(items);
 
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
   const outPdf = path.resolve(args.out || path.join(REPORTS_DIR, 'item-cards.pdf'));

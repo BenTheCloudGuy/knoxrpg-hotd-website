@@ -349,6 +349,37 @@ async function renderDmAdminPage(session) {
         <tbody id="users-body"><tr><td colspan="7" class="dmc-empty">Loading...</td></tr></tbody></table>
       </section>
 
+      <!-- ╔══ ITEM CARDS ══╗ -->
+      <section class="dmc-panel" id="dmc-cards" style="display:none;">
+        <div class="dmc-panel-bar">
+          <h2>Item Cards</h2>
+          <div class="dmc-bar-actions">
+            <select id="cards-kind" class="dmc-input" onchange="cardSearch()">
+              <option value="all">All items</option>
+              <option value="magic">Magic items</option>
+              <option value="mundane">Gear / mundane</option>
+            </select>
+            <input id="cards-q" class="dmc-input" placeholder="Search items by name\u2026" oninput="cardSearchDebounced()" style="min-width:220px;" />
+          </div>
+        </div>
+        <p class="cards-hint">Pick up to 9 items from the campaign database, then generate a print-ready PDF of baseball-card-size cards (front art + name, back stats + description). 9 items fill one double-sided sheet.</p>
+        <div class="cards-layout">
+          <div>
+            <h4 class="dmc-section-title">Results</h4>
+            <div id="cards-results" class="cards-results"><p class="cards-hint">Type at least 2 letters to search the item database.</p></div>
+          </div>
+          <div>
+            <h4 class="dmc-section-title">Selected (<span id="cards-count">0</span>/9)</h4>
+            <div id="cards-tray" class="cards-tray"><p class="cards-hint">Click items on the left to add them. 9 fill one printable sheet.</p></div>
+            <div class="cards-gen-row">
+              <input id="cards-title" class="dmc-input" placeholder="Optional footer title (e.g. Session 30 Loot)" style="flex:1;" />
+              <button id="cards-gen" class="dmc-btn dmc-btn-primary" onclick="cardGenerate()" disabled>Generate PDF</button>
+            </div>
+            <p id="cards-status" class="cards-hint"></p>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -378,6 +409,28 @@ async function renderDmAdminPage(session) {
     .dmc-btn-sm { padding:4px 10px; font-size:0.72rem; }
     .dmc-btn-danger { color:#f44; border-color:#f44; }
     .dmc-btn-danger:hover { background:#f44; color:#fff; }
+
+    /* ═══ ITEM CARDS ═══ */
+    .dmc-input { background:#1a1a1a; color:#ddd; border:1px solid #333; border-radius:6px; padding:6px 10px; font-size:0.8rem; }
+    .dmc-input:focus { outline:none; border-color:#c83232; }
+    .cards-layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; margin-top:8px; }
+    @media (max-width:820px){ .cards-layout{ grid-template-columns:1fr; } }
+    .cards-hint { color:#666; font-size:0.75rem; margin:6px 2px; }
+    .cards-results { max-height:58vh; overflow-y:auto; border:1px solid #222; border-radius:8px; }
+    .card-row { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #1c1c1c; cursor:pointer; }
+    .card-row:last-child { border-bottom:none; }
+    .card-row:hover { background:#181818; }
+    .card-row.is-selected { opacity:0.4; cursor:default; }
+    .card-row .cr-name { flex:1; color:#ddd; font-size:0.82rem; }
+    .card-row .cr-meta { color:#888; font-size:0.7rem; white-space:nowrap; }
+    .card-row .cr-badge { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.4px; padding:1px 6px; border-radius:10px; border:1px solid #333; color:#aaa; }
+    .card-row .cr-img { font-size:0.64rem; color:#3a8f5a; }
+    .cards-tray { min-height:120px; border:1px solid #222; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; }
+    .tray-row { display:flex; align-items:center; gap:8px; background:#161616; border:1px solid #262626; border-radius:6px; padding:6px 9px; }
+    .tray-row .tr-num { color:#c83232; font-weight:700; font-size:0.72rem; width:16px; text-align:right; }
+    .tray-row .tr-name { flex:1; color:#ddd; font-size:0.8rem; }
+    .tray-row button { background:none; border:none; color:#f55; cursor:pointer; font-size:1rem; line-height:1; padding:0 4px; }
+    .cards-gen-row { display:flex; gap:8px; margin-top:12px; align-items:center; }
 
     /* ── Forms ── */
     .dmc-form-row { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
@@ -661,7 +714,7 @@ async function renderDmAdminPage(session) {
   // works from any page and switches panels in-place when already here.
   let _currentPanel = null;
   let _loaded = {};
-  const PANELS = ['chat','images','notes','characters','npcs','ai','search','campaign','users'];
+  const PANELS = ['chat','images','notes','characters','npcs','cards','ai','search','campaign','users'];
   function showPanel(panel) {
     if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
@@ -676,9 +729,80 @@ async function renderDmAdminPage(session) {
   }
   function loadPanel(p) {
     const loaders = { chat:loadChat, images:loadImages, notes:loadNotes,
-      characters:loadChars, npcs:loadNpcs, ai:loadAiCfg,
+      characters:loadChars, npcs:loadNpcs, cards:loadCards, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
     if (loaders[p]) loaders[p]();
+  }
+
+  // ═══ ITEM CARDS ═══
+  let _cardResults = [];
+  let _cardSel = [];
+  let _cardSearchT = null;
+  const CARD_MAX = 9;
+
+  function loadCards() { renderCardTray(); cardSearch(); }
+  function cardSearchDebounced() { clearTimeout(_cardSearchT); _cardSearchT = setTimeout(cardSearch, 220); }
+
+  async function cardSearch() {
+    const q = el('cards-q').value.trim();
+    const kind = el('cards-kind').value;
+    const box = el('cards-results');
+    if (q.length < 2) { box.innerHTML = '<p class="cards-hint">Type at least 2 letters to search the item database.</p>'; return; }
+    try {
+      const r = await fetch('/api/dm-admin/item-cards/search?kind=' + encodeURIComponent(kind) + '&q=' + encodeURIComponent(q));
+      const data = await r.json();
+      _cardResults = data.results || [];
+      if (!_cardResults.length) { box.innerHTML = '<p class="cards-hint">No items match \u201c' + esc(q) + '\u201d.</p>'; return; }
+      box.innerHTML = _cardResults.map(function(it, i){
+        const selected = _cardSel.some(function(s){ return s.kind===it.kind && String(s.id)===String(it.id); });
+        const meta = [it.rarity, it.type].filter(Boolean).map(esc).join(' \u00b7 ');
+        return '<div class="card-row' + (selected?' is-selected':'') + '" onclick="cardAdd(' + i + ')">' +
+          '<span class="cr-badge">' + (it.kind==='magic'?'Magic':'Gear') + '</span>' +
+          '<span class="cr-name">' + esc(it.name) + '</span>' +
+          (it.hasImage ? '<span class="cr-img">art</span>' : '') +
+          '<span class="cr-meta">' + meta + '</span></div>';
+      }).join('');
+    } catch(e) { box.innerHTML = '<p class="cards-hint">Search failed: ' + esc(e.message) + '</p>'; }
+  }
+
+  function cardAdd(i) {
+    const it = _cardResults[i]; if (!it) return;
+    if (_cardSel.some(function(s){ return s.kind===it.kind && String(s.id)===String(it.id); })) return;
+    if (_cardSel.length >= CARD_MAX) { setCardStatus('Sheet is full (' + CARD_MAX + ' cards). Remove one to add another.'); return; }
+    _cardSel.push(it); setCardStatus(''); renderCardTray(); cardSearch();
+  }
+  function cardRemoveAt(i) { _cardSel.splice(i, 1); renderCardTray(); cardSearch(); }
+
+  function renderCardTray() {
+    el('cards-count').textContent = _cardSel.length;
+    const tray = el('cards-tray');
+    if (!_cardSel.length) { tray.innerHTML = '<p class="cards-hint">Click items on the left to add them. ' + CARD_MAX + ' fill one printable sheet.</p>'; }
+    else { tray.innerHTML = _cardSel.map(function(s, i){
+      return '<div class="tray-row"><span class="tr-num">' + (i+1) + '</span>' +
+        '<span class="tr-name">' + esc(s.name) + '</span>' +
+        '<button title="Remove" onclick="cardRemoveAt(' + i + ')">&times;</button></div>';
+    }).join(''); }
+    el('cards-gen').disabled = _cardSel.length === 0;
+  }
+  function setCardStatus(msg) { el('cards-status').textContent = msg || ''; }
+
+  async function cardGenerate() {
+    if (!_cardSel.length) return;
+    const btn = el('cards-gen'); btn.disabled = true;
+    setCardStatus('Generating ' + _cardSel.length + ' card(s)\u2026 this can take a few seconds.');
+    try {
+      const r = await fetch('/api/dm-admin/item-cards', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: _cardSel.map(function(s){ return { kind:s.kind, id:s.id }; }), title: el('cards-title').value.trim() })
+      });
+      if (!r.ok) { let msg = 'Generation failed'; try { const j = await r.json(); msg = j.error || msg; } catch(_){} throw new Error(msg); }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+      setCardStatus('Done. Opened the PDF in a new tab.');
+    } catch(e) { setCardStatus('Error: ' + e.message); }
+    finally { btn.disabled = _cardSel.length === 0; }
   }
 
   // ═══ DM CHAT ═══

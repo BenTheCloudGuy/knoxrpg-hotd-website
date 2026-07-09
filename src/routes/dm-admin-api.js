@@ -38,6 +38,8 @@ const REPO_ROOT = (function resolveRepoRoot() {
 })();
 const PDF_SCRIPT = process.env.HOTD_PDF_SCRIPT
   || notebookPath.join(REPO_ROOT, "scripts", "build-session-pdf.js");
+const CARD_SCRIPT = process.env.HOTD_ITEM_CARDS_SCRIPT
+  || notebookPath.join(REPO_ROOT, "scripts", "build-item-cards-pdf.js");
 const PDF_REPORTS_DIR = process.env.HOTD_REPORTS_DIR
   || notebookPath.join(REPO_ROOT, "reports");
 
@@ -1708,6 +1710,151 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       });
       sendJSON(res, { results });
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Item Cards: search DB items for the picker ─────────────
+  // GET /api/dm-admin/item-cards/search?q=...&kind=magic|mundane|all
+  if (decoded === "/api/dm-admin/item-cards/search" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const u = new URL(req.url, "http://localhost");
+      const q = (u.searchParams.get("q") || "").trim();
+      const kind = (u.searchParams.get("kind") || "all").toLowerCase();
+      if (q.length < 2) { sendJSON(res, { results: [] }); return true; }
+      const like = `%${q}%`;
+      const results = [];
+      if (kind !== "mundane") {
+        const r = await pgPool.query(
+          `SELECT id, name, rarity, type, requires_attunement,
+                  (avatar_url IS NOT NULL AND avatar_url <> '') AS has_image
+             FROM magic_items WHERE name ILIKE $1 ORDER BY name LIMIT 40`, [like]);
+        for (const row of r.rows) results.push({
+          kind: "magic", id: String(row.id), name: row.name,
+          rarity: row.rarity || "", type: row.type || "",
+          attune: !!row.requires_attunement, hasImage: !!row.has_image,
+        });
+      }
+      if (kind !== "magic") {
+        const r = await pgPool.query(
+          `SELECT id, name, category, type,
+                  (image IS NOT NULL AND image <> '') AS has_image
+             FROM items WHERE name ILIKE $1 ORDER BY name LIMIT 40`, [like]);
+        for (const row of r.rows) results.push({
+          kind: "mundane", id: String(row.id), name: row.name,
+          rarity: row.category || "", type: row.type || "",
+          attune: false, hasImage: !!row.has_image,
+        });
+      }
+      results.sort((a, b) => a.name.localeCompare(b.name));
+      sendJSON(res, { results: results.slice(0, 60) });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Item Cards: generate a print-ready PDF ─────────────────
+  // POST /api/dm-admin/item-cards  { items:[{kind,id}], title? }  → streams PDF
+  if (decoded === "/api/dm-admin/item-cards" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const picks = Array.isArray(body.items) ? body.items : [];
+      if (picks.length === 0) { sendJSON(res, { error: "No items selected" }, 400); return true; }
+      if (picks.length > 45) { sendJSON(res, { error: "Too many items (max 45 / 5 sheets)" }, 400); return true; }
+
+      if (!fs.existsSync(CARD_SCRIPT)) {
+        sendJSON(res, {
+          error: `Item-card builder not available in this deployment. Missing ${CARD_SCRIPT}. ` +
+                 `Ship scripts/build-item-cards-pdf.js (plus weasyprint) in the container.`,
+        }, 501);
+        return true;
+      }
+
+      const magicIds = picks.filter(p => p.kind === "magic").map(p => String(p.id));
+      const mundaneIds = picks.filter(p => p.kind === "mundane").map(p => String(p.id));
+      const byKey = new Map();
+      if (magicIds.length) {
+        const r = await pgPool.query(
+          `SELECT id, name, rarity, type, requires_attunement, source, source_page,
+                  description_text, avatar_url
+             FROM magic_items WHERE id = ANY($1)`, [magicIds]);
+        for (const row of r.rows) byKey.set("magic:" + row.id, {
+          id: "magic-" + row.id,
+          title: row.name,
+          rarity: row.rarity || "",
+          type: row.type || "",
+          requires_attunement: !!row.requires_attunement,
+          source: row.source ? (row.source + (row.source_page ? ", pg. " + row.source_page : "")) : "",
+          description: row.description_text || "",
+          imageUrl: row.avatar_url || null,
+        });
+      }
+      if (mundaneIds.length) {
+        const r = await pgPool.query(
+          `SELECT id, name, category, type, cost, weight, source, image
+             FROM items WHERE id = ANY($1)`, [mundaneIds]);
+        for (const row of r.rows) {
+          const bits = [];
+          if (row.category) bits.push(`**Category:** ${row.category}`);
+          if (row.type) bits.push(`**Type:** ${row.type}`);
+          if (row.cost) bits.push(`**Cost:** ${row.cost}`);
+          if (row.weight) bits.push(`**Weight:** ${row.weight}`);
+          byKey.set("mundane:" + row.id, {
+            id: "mundane-" + row.id,
+            title: row.name,
+            rarity: row.category || "",
+            type: row.type || "",
+            requires_attunement: false,
+            source: row.source || "",
+            description: bits.join("\n\n"),
+            imageUrl: row.image || null,
+          });
+        }
+      }
+      // Preserve the user's selection order; drop any that no longer exist.
+      const items = picks.map(p => byKey.get(p.kind + ":" + String(p.id))).filter(Boolean);
+      if (items.length === 0) { sendJSON(res, { error: "Selected items not found" }, 404); return true; }
+
+      try { fs.mkdirSync(PDF_REPORTS_DIR, { recursive: true }); } catch (_) {}
+      const stamp = Date.now();
+      const tmpJson = notebookPath.join(os.tmpdir(), `hotd-item-cards-${stamp}.json`);
+      const outAbsolute = notebookPath.join(PDF_REPORTS_DIR, `item-cards-${stamp}.pdf`);
+      fs.writeFileSync(tmpJson, JSON.stringify(items), "utf8");
+
+      const spawnArgs = [CARD_SCRIPT, "--from-json", tmpJson, "--out", outAbsolute];
+      if (body.title) spawnArgs.push("--title", String(body.title).slice(0, 120));
+
+      try {
+        await new Promise((resolve, reject) => {
+          const child = childProc.spawn(process.execPath, spawnArgs, {
+            cwd: REPO_ROOT,
+            stdio: ["ignore", "pipe", "pipe"],
+            env: { ...process.env, HOTD_CARD_CACHE_PATH: notebookPath.join(PDF_REPORTS_DIR, ".card-desc-cache.json") },
+          });
+          let stderr = "";
+          child.stderr.on("data", d => { stderr += d.toString(); });
+          child.on("error", reject);
+          child.on("exit", code => {
+            if (code === 0) resolve();
+            else reject(new Error(`Card builder exited ${code}: ${stderr.slice(0, 500)}`));
+          });
+        });
+      } finally {
+        try { fs.unlinkSync(tmpJson); } catch (_) {}
+      }
+
+      const pdf = fs.readFileSync(outAbsolute);
+      try { fs.unlinkSync(outAbsolute); } catch (_) {}
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="item-cards.pdf"`,
+        "Content-Length": pdf.length,
+      });
+      res.end(pdf);
+    } catch (e) {
+      console.error("Item cards PDF error:", e);
+      if (!res.headersSent) sendJSON(res, { error: e.message }, 500);
+    }
     return true;
   }
 

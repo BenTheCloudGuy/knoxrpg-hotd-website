@@ -83,6 +83,7 @@ const NAV_ITEMS = [
       { label: "NPCs", href: "/dm-admin#npcs" },
       { label: "Calendar Admin", href: "/calendar/admin" },
       { label: "Artifacts Admin", href: "/artifacts/admin" },
+      { label: "Item Cards", href: "/dm-admin#cards" },
       { label: "Handouts Admin", href: "/handouts/admin" },
       { header: "Config" },
       { label: "AI Config", href: "/dm-admin#ai" },
