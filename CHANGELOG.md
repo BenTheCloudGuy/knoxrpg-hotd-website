@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.41.1] - 2026-07-09
+
+### Fixed
+- **Confusing "0 / 0 / 0" Sync result on already-synced sources.** Re-syncing a source that was already imported reported `0 maps + 0 art stored; 0 RAG chunks`, which read like a failure even though the content and images were already present (images `skipped`, monster already embedded). The completion message now distinguishes **new vs. already-present** — it shows the skipped/already-present image count and, when nothing new was added, states "Already synced — maps are under Game Info → Maps, art under Art & Images." The background job now also aggregates the `found` image count.
+
+### Notes
+- Diagnosed live: `lke` (Lightning Keep) and `vnee` (Vecna: Nest of the Eldritch Eye) were already fully synced — their maps are in `hotd_maps` ("Lightning Keep", "Lightning Keep (Player)", "Catacombs", "Catacombs (Player)") and show under Game Info → Maps; the single monster was already embedded. No error — the sync was working; only the summary was misleading.
+
 ## [3.41.0] - 2026-07-09
 
 ### Added

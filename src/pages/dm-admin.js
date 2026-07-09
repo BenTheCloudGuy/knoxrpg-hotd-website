@@ -2578,7 +2578,14 @@ async function renderDmAdminPage(session) {
   }
   function ddbSyncSummary(j, name) {
     var x = j.result || {}; var c = x.content || {}; var im = x.images || {}; var em = x.embedded || {};
-    return 'Synced ' + name + ': ' + (c.monsters||0) + ' monsters, ' + (c.items||0) + ' items, ' + (c.feats||0) + ' feats; ' + (im.maps||0) + ' maps + ' + (im.art||0) + ' art stored; ' + (em.embedded||0) + ' RAG chunk(s).';
+    var storedImg = (im.maps||0) + (im.art||0);
+    var newContent = (c.monsters||0) + (c.items||0) + (c.feats||0);
+    var msg = 'Synced ' + name + ': ' + (c.monsters||0) + ' monsters, ' + (c.items||0) + ' items, ' + (c.feats||0) + ' feats downloaded; ' +
+      (im.maps||0) + ' maps + ' + (im.art||0) + ' art stored' + ((im.skipped||0) ? ' (' + (im.skipped||0) + ' already present)' : '') + '; ' +
+      (em.embedded||0) + ' new RAG chunk(s).';
+    if (storedImg === 0 && (em.embedded||0) === 0 && (im.skipped||0) > 0) msg += ' Already synced \u2014 maps are under Game Info \u2192 Maps, art under Art & Images.';
+    else if (storedImg === 0 && (em.embedded||0) === 0 && newContent === 0 && (im.found||0) === 0) msg += ' No reader art/maps found for this source.';
+    return msg;
   }
 
   // Sync ONE source: content -> RAG + art/maps -> Maps/Art galleries (background).

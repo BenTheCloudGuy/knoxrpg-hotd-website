@@ -2165,12 +2165,12 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       const job = ddbJobs.start(`Sync ${sourceCodes.length} source(s)${withImages ? " + art/maps" : ""}`, async (log) => {
         log(`Downloading stat content for ${sourceCodes.length} source(s)\u2026`);
         const content = await ddbDownload.downloadSources(pgPool, { sourceCodes, onLog: log });
-        const images = { uploaded: 0, art: 0, maps: 0, published: 0, skipped: 0, failed: 0, noImages: 0 };
+        const images = { found: 0, uploaded: 0, art: 0, maps: 0, published: 0, skipped: 0, failed: 0, noImages: 0 };
         if (withImages) {
           for (const code of sourceCodes) {
             try {
               const r = await ddbBookImages.downloadBookImages(pgPool, code, { onLog: log });
-              images.uploaded += r.uploaded; images.art += r.art; images.maps += r.maps;
+              images.found += r.found; images.uploaded += r.uploaded; images.art += r.art; images.maps += r.maps;
               images.published += r.published; images.skipped += r.skipped; images.failed += r.failed;
             } catch (e) { images.noImages++; log(`images ${code}: ${e.message}`); }
           }
