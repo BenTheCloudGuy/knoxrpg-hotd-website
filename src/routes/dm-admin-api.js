@@ -19,6 +19,7 @@ const ddbClient = require("../lib/ddb-client");
 const ddbDownload = require("../lib/ddb-download");
 const ddbBookImages = require("../lib/ddb-book-images");
 const ddbJobs = require("../lib/ddb-jobs");
+const imageIndex = require("../lib/image-index");
 const homebrewSchema = require("../lib/homebrew-schema");
 const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
@@ -2194,6 +2195,24 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     const v = ddbJobs.view(id);
     if (!v) { sendJSON(res, { error: "job not found" }, 404); return true; }
     sendJSON(res, { ok: true, job: v });
+    return true;
+  }
+
+  // ── Images: describe + index into the RAG for search (background) ──
+  // POST /api/dm-admin/images/index  { limit? }  → poll /ddb/sync-status?id=
+  if (decoded === "/api/dm-admin/images/index" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const limit = parseInt(body.limit, 10) || 120;
+      const openai = azure.openaiClient;
+      const job = ddbJobs.start(`Index images for search (limit ${limit})`, async (log) => imageIndex.describeAndIndexImages(pgPool, openai, { limit, onLog: log }));
+      sendJSON(res, { ok: true, jobId: job.id });
+    } catch (err) {
+      console.error("Image index error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
     return true;
   }
 

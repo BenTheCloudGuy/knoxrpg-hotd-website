@@ -49,7 +49,11 @@ async function renderDmAdminPage(session) {
 
       <!-- ╔══ IMAGE STUDIO ══╗ -->
       <section class="dmc-panel" id="dmc-images" style="display:none;">
-        <div class="dmc-panel-bar"><h2>Image Studio</h2></div>
+        <div class="dmc-panel-bar"><h2>Image Studio</h2>
+          <div class="dmc-bar-actions">
+            <button class="dmc-btn dmc-btn-sm" id="img-index-btn" onclick="imgIndexForSearch()" title="AI-describe gallery images (Art + Maps, incl. D&amp;D Beyond) and index them into the RAG so they're findable via Search and the DM AI">&#128269; Index Images for Search</button>
+          </div>
+        </div>
         <div class="dmc-form-row">
           <label style="flex:3">Prompt<textarea id="img-prompt" rows="2" class="dmc-textarea" placeholder="Describe what to generate..."></textarea></label>
         </div>
@@ -2620,6 +2624,27 @@ async function renderDmAdminPage(session) {
     } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync ALL Missing \u2192 RAG'; }
       alert('Sync error: ' + e.message);
+    }
+  }
+
+  // AI-describe + index gallery images (Art + Maps) into the RAG for search.
+  async function imgIndexForSearch() {
+    var btn = el('img-index-btn');
+    if (!confirm('AI-describe and index gallery images (Art + Maps, including D&D Beyond art) into the RAG so they are searchable via Search and the DM AI? Runs in the background; processes up to 120 new images per run.')) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Indexing\u2026'; }
+    try {
+      var r = await fetch('/api/dm-admin/images/index', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ limit: 120 }) });
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Failed to start');
+      ddbPollJob(d.jobId, function(j){ if (btn) btn.textContent = 'Indexing\u2026'; }, function(j){
+        if (btn) { btn.disabled = false; btn.textContent = 'Index Images for Search'; }
+        if (j.error) { alert('Index error: ' + j.error); return; }
+        var x = j.result || {};
+        alert('Indexed ' + (x.indexed||0) + ' image(s) (' + (x.vision||0) + ' via AI vision); ' + ((x.pending||0)-(x.processed||0)) + ' still pending. They are now searchable via HOTD Search and the DM AI.');
+      });
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Index Images for Search'; }
+      alert('Index error: ' + e.message);
     }
   }
 

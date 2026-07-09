@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.40.0] - 2026-07-09
+
+### Added
+- **Images & Maps are now AI-described and searchable.** New `src/lib/image-index.js` (`describeAndIndexImages`) builds a text description for each not-yet-indexed gallery image — **AI vision** (`gpt-4o-mini`) for Art/Maps that lack a good caption, and the generator prompt for DMCC images — plus filename keywords, then embeds it into `hotd_embeddings` as `source_type: 'image'`. Images are therefore findable through **HOTD Search** and the **DM AI** (both read `hotd_embeddings`). Idempotent by `source_path` (`image:{table}:{id}`); a re-run only indexes new images.
+  - New endpoint `POST /api/dm-admin/images/index` runs as a **background job** (poll `/ddb/sync-status?id=`), processing up to 120 new images per run.
+  - New **`Index Images for Search`** button in the DM Command Center → Image Studio.
+  - HOTD Search resolves `image` hits to the image URL (or the Maps/Art page) and labels them `Image`.
+
+### Notes
+- Verified live: vision produced a rich caption for a real D&D Beyond image; an indexed image embedding is retrieved by semantic search (score ~0.76) via the same path the DM AI uses.
+- Indexing runs **in-pod** (vision reads the image bytes from the uploads PVC). Run it from the Image Studio after syncing books; it's incremental (120/run) and idempotent.
+
 ## [3.39.0] - 2026-07-09
 
 ### Changed

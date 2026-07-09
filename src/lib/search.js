@@ -37,6 +37,7 @@ function resolveHref(r) {
       return null;
     }
     case 'lore_json': return null;
+    case 'image': return (r.metadata && r.metadata.url) ? r.metadata.url : ((r.metadata && r.metadata.kind === 'map') ? '/maps' : '/art');
     // DDB content has no dedicated page — shown inline in search results
     case 'ddb_race':       return null;
     case 'ddb_class':      return null;
@@ -58,6 +59,7 @@ function categoryLabel(type) {
     journal: 'Adventure Journal', lore: 'Campaign Lore', lore_json: 'Campaign Data',
     notebook: 'Campaign Notebook',
     spell: 'Spell', monster: 'Monster', magic_item: 'Magic Item',
+    image: 'Image',
     ddb_race: 'Race', ddb_class: 'Class', ddb_feat: 'Feat',
     ddb_background: 'Background', ddb_spell: 'Spell', ddb_monster: 'Monster',
     ddb_magic_item: 'Magic Item', dnd_book: 'D&D Rulebook',
