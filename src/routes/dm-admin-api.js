@@ -17,6 +17,7 @@ const { syncCharacterFromDDB } = require("../lib/ddb-sync");
 const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib/ddb-audit");
 const ddbClient = require("../lib/ddb-client");
 const ddbDownload = require("../lib/ddb-download");
+const ddbBookImages = require("../lib/ddb-book-images");
 const homebrewSchema = require("../lib/homebrew-schema");
 const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
@@ -2162,6 +2163,23 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       sendJSON(res, { ok: true, sources: sourceCodes, downloaded, embedded });
     } catch (err) {
       console.error("DDB sync-missing error:", err);
+      sendJSON(res, { error: err.message, reason: err.reason || null }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: extract a book's images (art + maps) → Storage Account ─
+  // POST /api/dm-admin/ddb/book-images  { book: "hwt", force? }
+  if (decoded === "/api/dm-admin/ddb/book-images" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const book = (body.book || "").toString().toLowerCase().trim();
+      if (!book) { sendJSON(res, { error: "book code is required" }, 400); return true; }
+      const result = await ddbBookImages.downloadBookImages(pgPool, book, { force: !!body.force });
+      sendJSON(res, { ok: true, result });
+    } catch (err) {
+      console.error("DDB book-images error:", err);
       sendJSON(res, { error: err.message, reason: err.reason || null }, 500);
     }
     return true;

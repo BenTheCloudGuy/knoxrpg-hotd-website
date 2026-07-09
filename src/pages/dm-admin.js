@@ -2520,7 +2520,7 @@ async function renderDmAdminPage(session) {
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
       html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.availableCount||0) + ' available, ' + ddbNum(o.missingCount) + ' missing)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported.</p>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> pulls stat content into the RAG; <strong>Art+Maps</strong> extracts the book\u2019s images (art + battle/region maps) into the Storage Account.</p>';
       if (o.missingCount > 0) {
         html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source from D&amp;D Beyond into the database, then embeds it. Large libraries can take several minutes.</span></p>';
       }
@@ -2529,9 +2529,9 @@ async function renderDmAdminPage(session) {
         var badge = s.status === 'Available'
           ? '<span class="ddb-badge ddb-badge-ok">Available</span>'
           : '<span class="ddb-badge ddb-badge-miss">Missing</span>';
-        var action = s.status === 'Missing'
-          ? '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '">Sync</button>'
-          : '';
+        var action = '';
+        if (s.status === 'Missing') action += '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '">Sync</button> ';
+        action += '<button class="dmc-btn dmc-btn-sm ddb-img-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '" title="Download this book\u2019s art + maps into the Storage Account">Art+Maps</button>';
         html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td><td>' + action + '</td></tr>';
       });
       html += '</tbody></table>';
@@ -2557,6 +2557,27 @@ async function renderDmAdminPage(session) {
     box.querySelectorAll('.ddb-sync-src').forEach(function(b){
       b.addEventListener('click', function(){ ddbSyncSource(b.getAttribute('data-code'), b.getAttribute('data-title'), b); });
     });
+    box.querySelectorAll('.ddb-img-src').forEach(function(b){
+      b.addEventListener('click', function(){ ddbBookImages(b.getAttribute('data-code'), b.getAttribute('data-title'), b); });
+    });
+  }
+
+  // Download a book's art + maps from DDB into the Storage Account.
+  async function ddbBookImages(code, title, btn) {
+    if (!code) return;
+    if (!confirm('Download all art + maps for "' + (title || code) + '" from D&D Beyond into the Storage Account? Large books can have hundreds of images and take a while.')) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Fetching\u2026'; }
+    try {
+      var r = await fetch('/api/dm-admin/ddb/book-images', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ book: code }) });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Image fetch failed');
+      var x = data.result || {};
+      alert('Stored images for ' + (title || code) + ': ' + (x.uploaded||0) + ' new (' + (x.art||0) + ' art, ' + (x.maps||0) + ' maps), ' + (x.skipped||0) + ' already had, ' + (x.failed||0) + ' failed.');
+    } catch (e) {
+      alert('Image fetch error: ' + e.message + (/token/i.test(e.message) ? ' (check the DDB token).' : ''));
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Art+Maps'; }
+    }
   }
 
   // Download a single Missing source from DDB, then embed it.

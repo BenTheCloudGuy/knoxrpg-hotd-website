@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.36.0] - 2026-07-09
+
+### Added
+- **Extract D&D Beyond book art + maps into the Storage Account.** New `src/lib/ddb-book-images.js` (`downloadBookImages`) scrapes an owned book's reader pages (entitlement-checked via the cobalt session), collects every compendium image — **cover art, chapter/scene art, and battle/region maps** (including DDB's `-player` map variants) — downloads the bytes, and stores them via `uploadBlobToStorage` under `ddb-books/{code}/{art|maps}/` (served at `/hotd-content/…`, backed up to the Storage Account). This generalizes the one-off `fetch-frhof-images.js` / `fetch-menzo-images.js` scripts to any owned book.
+  - New endpoint `POST /api/dm-admin/ddb/book-images { book, force? }`.
+  - New **`Art+Maps`** button on every source row in the DDB library-coverage table.
+  - New `ddb_book_images` manifest table (one row per image: book, filename, kind art/map, source URL, storage path, bytes) — gives a queryable index and idempotency (already-downloaded URLs are skipped unless `force`).
+
+### Notes
+- Verified live: page discovery + image scrape return real art + maps (e.g. `hwt` 17 pages → 239 images / 20 maps; `wel` → 165 / 52). Robust to both clean-link TOCs and fragment-anchor TOCs (e.g. `drde`). Downloaded a sample set end-to-end (art + maps classified and stored under `ddb-books/{code}/{art,maps}/`, manifest rows written), then cleaned up the test rows.
+- This is a **separate** step from content **Sync** (which imports stat blocks/text into the RAG). Images are not embedded — they're binary assets stored for display. A gallery/attach UI for the stored images is a possible follow-up.
+- Large books can carry hundreds of images; the action is per-book and the UI warns before running.
+
 ## [3.35.0] - 2026-07-09
 
 ### Added
