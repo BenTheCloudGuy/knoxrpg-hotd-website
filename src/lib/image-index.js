@@ -13,6 +13,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const { HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR } = require("../config");
+const imageTags = require("./image-tags");
 
 const EMBED_MODEL = "text-embedding-3-small";
 const EMBED_DIMENSIONS = 1536;
@@ -38,7 +39,7 @@ function resolveLocalPath(url) {
   return null;
 }
 
-// AI vision description (best-effort; caller falls back to text on failure).
+// AI vision: description + Type classification (best-effort; caller falls back).
 async function describeImage(openai, model, url) {
   const p = resolveLocalPath(url);
   let dataUrl;
@@ -47,15 +48,18 @@ async function describeImage(openai, model, url) {
   else return null;
   const resp = await openai.chat.completions.create({
     model,
+    response_format: { type: "json_object" },
     messages: [{
       role: "user",
       content: [
-        { type: "text", text: "Describe this Dungeons & Dragons fantasy image for a searchable campaign library: subjects, creatures, setting, mood, and any notable objects or (for maps) locations/features. 1-3 concise sentences, no preamble." },
+        { type: "text", text: 'Describe this Dungeons & Dragons fantasy image for a searchable campaign library (subjects, creatures, setting, mood, notable objects or map features), then classify it. Respond as JSON: {"description": "1-3 concise sentences", "type": one of "Portrait","Location/Landmark","Monster","Emblem","Other"}.' },
         { type: "image_url", image_url: { url: dataUrl } },
       ],
     }],
   });
-  return (resp.choices[0].message.content || "").trim();
+  let out = {};
+  try { out = JSON.parse(resp.choices[0].message.content || "{}"); } catch (_) { out = { description: (resp.choices[0].message.content || "").trim() }; }
+  return { description: (out.description || "").trim(), type: imageTags.normType(out.type) };
 }
 
 async function embedImage(pgPool, openai, item, text) {
@@ -99,7 +103,7 @@ async function describeAndIndexImages(pgPool, openai, opts = {}) {
 
   const work = await collectUnindexed(pgPool);
   const batch = work.slice(0, limit);
-  const result = { pending: work.length, processed: 0, indexed: 0, vision: 0, textOnly: 0, failed: 0 };
+  const result = { pending: work.length, processed: 0, indexed: 0, vision: 0, textOnly: 0, typed: 0, failed: 0 };
   log(`${work.length} image(s) to index; processing ${batch.length} this run.`);
 
   for (const item of batch) {
@@ -107,19 +111,29 @@ async function describeAndIndexImages(pgPool, openai, opts = {}) {
     // Base text: stored caption + filename keywords.
     const kw = keywordsFromUrl(item.url);
     let text = [item.caption, kw].filter(Boolean).join(". ").trim();
-    // Enrich with AI vision when the caption is weak/boilerplate.
+    // Auto source + a sensible default type (maps are locations).
+    const source = imageTags.deriveSource(item.table === "hotd_generated_images" ? "generated" : "file", item.url, item.caption);
+    let type = item.kind === "map" ? "Location/Landmark" : "Other";
+    // Enrich with AI vision (description + Type) when the caption is weak/boilerplate.
     const weak = !item.caption || /^From .+\(D&D Beyond\)$/i.test(item.caption);
     if (useVision && item.needsVision && weak) {
-      try { const v = await describeImage(openai, visionModel, item.url); if (v) { text = v; result.vision++; } else { result.textOnly++; } }
-      catch (e) { result.textOnly++; log(`vision skipped (${item.title || item.id}): ${e.message}`); }
+      try {
+        const v = await describeImage(openai, visionModel, item.url);
+        if (v && v.description) { text = v.description; result.vision++; if (v.type) type = v.type; }
+        else result.textOnly++;
+      } catch (e) { result.textOnly++; log(`vision skipped (${item.title || item.id}): ${e.message}`); }
     } else if (!item.needsVision) {
       result.textOnly++; // generated: prompt is the caption
     }
-    try { if (await embedImage(pgPool, openai, item, text || item.title)) result.indexed++; }
+    // Persist source + type tags (preserve any custom tags).
+    try { await imageTags.saveTags(pgPool, item.url, { source, type }); result.typed++; } catch (_) {}
+    // Embed description + type so tag/type queries match via RAG too.
+    const embedText = [text || item.title, `Type: ${type}`].filter(Boolean).join(". ");
+    try { if (await embedImage(pgPool, openai, item, embedText)) result.indexed++; }
     catch (e) { result.failed++; log(`embed failed (${item.title || item.id}): ${e.message}`); }
     if (result.processed % 20 === 0) log(`  indexed ${result.indexed}/${batch.length}`);
   }
-  log(`Done: indexed ${result.indexed} (${result.vision} via vision), ${result.failed} failed, ${result.pending - result.processed} still pending.`);
+  log(`Done: indexed ${result.indexed} (${result.vision} via vision), typed ${result.typed}, ${result.failed} failed, ${result.pending - result.processed} still pending.`);
   return result;
 }
 

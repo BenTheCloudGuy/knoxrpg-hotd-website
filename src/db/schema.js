@@ -127,6 +127,13 @@ async function ensureHotdTables() {
         sort_order  INTEGER DEFAULT 0,
         created_at  TIMESTAMPTZ DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS hotd_image_tags (
+        url         TEXT PRIMARY KEY,
+        source      TEXT DEFAULT '',
+        type        TEXT DEFAULT 'Other',
+        tags        TEXT[] DEFAULT ARRAY[]::TEXT[],
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+      );
       CREATE TABLE IF NOT EXISTS hotd_player_characters (
         id              SERIAL PRIMARY KEY,
         ddb_character_id BIGINT UNIQUE,

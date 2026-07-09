@@ -211,7 +211,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     case "/handouts":
       html = await renderHandoutsPage(session); break;
     case "/art":
-      html = await renderArtGalleryPage(session, url.searchParams.get("page")); break;
+      html = await renderArtGalleryPage(session, url.searchParams); break;
     case "/dungeon-master":
       if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
       html = renderDungeonMasterPage(session); break;

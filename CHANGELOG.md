@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.41.0] - 2026-07-09
+
+### Added
+- **Art & Images: search, counter, filters, tags, random landing.**
+  - **Centered search bar** at the top of `/art` filters images by name, description, source, type, or tag (`/art?q=…`).
+  - **Image counter** ("N images", or "M of N" when filtered).
+  - **Tagging** — new `hotd_image_tags` table (keyed by URL, works across all sources). Each image has an auto-derived **Source** (`DDB` / `DMAI` / `Upload`), a **Type** (`Portrait`, `Location/Landmark`, `Monster`, `Emblem`, `Other`), and **custom tags**. Filter chips for Source and Type on the page.
+  - **AI Type classification** — the image-index job's vision pass now also classifies each image's Type (and it's embedded into the RAG so type/tag queries match). Maps default to `Location/Landmark`.
+  - **Admin tag editor** — admins get a Type dropdown + custom-tags field in the image overlay (saved via `POST /api/dm-admin/images/tags`).
+  - **Random first screen** — the initial `/art` view (no filters) shows a randomized selection; searching/filtering/paging uses a stable order.
+
+### Changed
+- **Maps are excluded from Art & Images.** Any map image (by `/maps/` path or `map-*` filename) is kept out of the Art gallery — maps live only under **Game Info → Maps**.
+
+### Notes
+- Verified live: tag save/load round-trip (partial updates preserve other fields), map-URL art excluded from the gallery, search/counter/filter chips/overlay tag editor render, and all client scripts pass `node --check`.
+- Run **Index Images for Search** (Image Studio) in-pod to populate AI descriptions + Types; until then Type defaults to `Other` (maps → `Location/Landmark`) and everything is still filterable.
+
 ## [3.40.0] - 2026-07-09
 
 ### Added

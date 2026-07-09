@@ -389,10 +389,11 @@ async function renderCalendarPage(session, monthParam) {
   return pageShell("Calendar — Halls of the Damned", "/calendar", body, session);
 }
 
-// ── Pagination control (server-side, ?page=N) ────────────────
-function renderPager(basePath, page, totalPages) {
+// ── Pagination control (server-side, ?page=N; qs preserves filters) ──
+function renderPager(basePath, page, totalPages, qs) {
   if (totalPages <= 1) return "";
-  const link = (p, label, extra) => `<a href="${basePath}?page=${p}" class="pager-btn${extra || ""}">${label}</a>`;
+  const q = qs || "";
+  const link = (p, label, extra) => `<a href="${basePath}?${q}page=${p}" class="pager-btn${extra || ""}">${label}</a>`;
   const parts = [];
   parts.push(page > 1 ? link(page - 1, "&larr; Prev") : '<span class="pager-btn disabled">&larr; Prev</span>');
   const start = Math.max(1, page - 2), end = Math.min(totalPages, page + 2);
@@ -866,24 +867,29 @@ async function renderHandoutsPage(session) {
 }
 
 // ── Art / Images Gallery Page ─────────────────────────────────
-async function renderArtGalleryPage(session, pageParam) {
-  // Unified gallery: DB-backed art (D&D Beyond book art + admin-added +
-  // DMCC-published) + DMCC-generated images, plus legacy filesystem images
-  // under /hotd-content/images/ (excluding maps/). Deduped by URL.
+// ── Collect the unified gallery image list (with source/type/tags) ──
+async function collectGalleryImages(pgPool) {
+  const imageTags = require("../lib/image-tags");
   const { HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR } = require("../config");
+  const tagMap = await imageTags.loadTagMap(pgPool);
   const images = [];
   const seen = new Set();
-  const add = (url, title, description, source) => {
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    images.push({ url, title: title || "", description: description || "", source });
+  // Maps belong only under Game Info -> Maps; keep them out of Art & Images.
+  const isMap = (url) => {
+    const file = (url || "").split("/").pop().split("?")[0];
+    return /\/maps?\//i.test(url || "") || /(^|[-_/])map[-_.]/i.test(file);
   };
-
-  // 1. hotd_art — D&D Beyond book art, admin-added, DMCC-published (newest first)
+  const add = (url, title, description, origin, extraTags) => {
+    if (!url || seen.has(url) || isMap(url)) return;
+    seen.add(url);
+    const t = tagMap.get(url) || {};
+    const source = t.source || imageTags.deriveSource(origin, url, description);
+    const type = t.type || "Other";
+    const tags = [...new Set([...(t.tags || []), ...(extraTags || [])])];
+    images.push({ url, title: title || "", description: description || "", source, type, tags });
+  };
   try { const r = await pgPool.query("SELECT title, description, image_url FROM hotd_art ORDER BY sort_order, id DESC"); r.rows.forEach((x) => add(x.image_url, x.title, x.description, "art")); } catch (_) {}
-  // 2. hotd_generated_images — DMCC image generator (shows up automatically)
-  try { const r = await pgPool.query("SELECT prompt, revised_prompt, image_url FROM hotd_generated_images ORDER BY id DESC"); r.rows.forEach((x) => add(x.image_url, (x.prompt || "").slice(0, 60), x.revised_prompt || x.prompt || "", "generated")); } catch (_) {}
-  // 3. Legacy filesystem images/** (excluding maps/)
+  try { const r = await pgPool.query("SELECT prompt, revised_prompt, image_url, tags FROM hotd_generated_images ORDER BY id DESC"); r.rows.forEach((x) => add(x.image_url, (x.prompt || "").slice(0, 60), x.revised_prompt || x.prompt || "", "generated", x.tags)); } catch (_) {}
   const imageExts = /\.(png|jpg|jpeg|webp)$/i;
   const collect = (root) => {
     if (!root) return;
@@ -898,25 +904,68 @@ async function renderArtGalleryPage(session, pageParam) {
   };
   collect(HOTD_UPLOADS_DIR);
   collect(HOTD_CONTENT_DIR);
+  return images;
+}
 
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+
+async function renderArtGalleryPage(session, params) {
+  const imageTags = require("../lib/image-tags");
+  const get = (k) => (params && typeof params.get === "function" ? params.get(k) : null) || "";
+  const q = get("q").trim();
+  const fSource = get("source");
+  const fType = get("type");
+  const ql = q.toLowerCase();
+
+  const all = await collectGalleryImages(pgPool);
+  let list = all;
+  if (fSource) list = list.filter((im) => im.source === fSource);
+  if (fType) list = list.filter((im) => im.type === fType);
+  if (ql) list = list.filter((im) => `${im.title} ${im.description} ${im.source} ${im.type} ${(im.tags || []).join(" ")}`.toLowerCase().includes(ql));
+
+  const noFilter = !q && !fSource && !fType;
   const PER = 20;
-  const totalPages = Math.max(1, Math.ceil(images.length / PER));
-  const page = Math.min(totalPages, Math.max(1, parseInt(pageParam, 10) || 1));
-  const pageItems = images.slice((page - 1) * PER, page * PER);
+  const totalPages = Math.max(1, Math.ceil(list.length / PER));
+  const page = Math.min(totalPages, Math.max(1, parseInt(get("page"), 10) || 1));
+  // Random selection on the first screen (no filters); stable order elsewhere.
+  const ordered = (noFilter && page === 1) ? shuffleInPlace([...list]) : list;
+  const pageItems = ordered.slice((page - 1) * PER, page * PER);
 
   const artCards = pageItems.length > 0 ? pageItems.map((im) => `
-    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(im.url)}, ${JSON.stringify(im.title || "")})' title="${esc(im.title || "")}">
+    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(im.url)}, ${JSON.stringify(im.title || "")})' title="${esc(im.title || "")}${im.type && im.type !== "Other" ? " — " + esc(im.type) : ""}">
       <img src="${esc(im.url)}" alt="${esc(im.title || "")}" loading="lazy" />
-    </div>`).join("") : `<p style="color:#888;text-align:center;grid-column:1/-1;">No images found.</p>`;
+    </div>`).join("") : `<p style="color:#888;text-align:center;grid-column:1/-1;">No images match.</p>`;
+
+  // Filter chips (preserve the search query)
+  const qParam = q ? `q=${encodeURIComponent(q)}&` : "";
+  const chip = (label, key, val, active) => `<a href="/art?${qParam}${key ? key + "=" + encodeURIComponent(val) : ""}" class="gal-chip${active ? " active" : ""}">${esc(label)}</a>`;
+  const sourceChips = ["DDB", "DMAI", "Upload"].map((s) => chip(s, "source", s, fSource === s)).join("");
+  const typeChips = imageTags.TYPES.map((t) => chip(t, "type", t, fType === t)).join("");
+  const filtersActive = fSource || fType;
+  const qsForPager = `${qParam}${fSource ? "source=" + encodeURIComponent(fSource) + "&" : ""}${fType ? "type=" + encodeURIComponent(fType) + "&" : ""}`;
+  const countLabel = (fSource || fType || q) ? `${list.length} of ${all.length} images` : `${all.length} images`;
 
   const body = `
   <div class="content content-wide">
-    <h2 class="section-title">&#127912; Art &amp; Images</h2>
-    <p style="color:#888;margin-bottom:16px;">Campaign art, character portraits, scene illustrations, D&amp;D Beyond book art, and AI-generated images. Click to enlarge.${images.length ? ` <span style="color:#666;">(${images.length} images)</span>` : ""}</p>
+    <h2 class="section-title" style="text-align:center;">&#127912; Art &amp; Images</h2>
+    <form method="GET" action="/art" class="gal-search">
+      <input type="search" name="q" value="${esc(q)}" placeholder="Search art &amp; maps by name, description, or tag…" />
+      <button type="submit" class="dmc-btn">Search</button>
+      ${q ? '<a href="/art" class="gal-clear">Clear</a>' : ""}
+    </form>
+    <div class="gal-count">${countLabel}</div>
+    <div class="gal-filters">
+      <span class="gal-flabel">Source:</span> ${chip("All", "", "", !fSource)}${sourceChips}
+      <span class="gal-flabel">Type:</span> ${chip("All", "", "", !fType)}${typeChips}
+      ${filtersActive || q ? '<a href="/art" class="gal-chip gal-reset">Reset</a>' : ""}
+    </div>
     <div class="art-grid">${artCards}</div>
-    ${renderPager("/art", page, totalPages)}
+    ${renderPager("/art", page, totalPages, qsForPager)}
   </div>
-  ${artifactOverlayBlock("Art")}`;
+  ${artifactOverlayBlock("Art", { tagEditor: session && session.role === "admin" })}`;
   return pageShell("Art & Images — Halls of the Damned", "/art", body, session);
 }
 
@@ -1144,6 +1193,7 @@ module.exports = {
   renderHomePage,
   renderCalendarPage,
   renderMapsPage,
+  collectGalleryImages,
   renderNpcsPage,
   renderNpcDetailPage,
   renderSessionsPage,

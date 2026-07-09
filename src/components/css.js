@@ -491,6 +491,28 @@ function pageCss() {
     .pager-btn.active { background: #e8b923; color: #1a1a1a; border-color: #e8b923; font-weight: 700; }
     .pager-btn.disabled { color: #555; border-color: #262626; pointer-events: none; }
     .pager-gap { color: #666; padding: 0 4px; }
+    /* ── Gallery search + filters ── */
+    .gal-search { display: flex; gap: 8px; justify-content: center; align-items: center; margin: 4px 0 10px; flex-wrap: wrap; }
+    .gal-search input[type="search"] { width: min(560px, 90%); background: #141414; border: 1px solid #333; border-radius: 8px; color: #ddd; padding: 9px 14px; font-size: 0.9rem; }
+    .gal-search input[type="search"]:focus { outline: none; border-color: #e8b923; }
+    .gal-clear { color: #888; text-decoration: none; font-size: 0.85rem; }
+    .gal-clear:hover { color: #e8b923; }
+    .gal-count { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 10px; }
+    .gal-filters { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin-bottom: 18px; }
+    .gal-flabel { color: #777; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 2px 0 10px; }
+    .gal-chip { display: inline-block; padding: 3px 10px; border: 1px solid #333; border-radius: 12px; color: #bbb; background: #1a1a1a; text-decoration: none; font-size: 0.78rem; }
+    .gal-chip:hover { border-color: #e8b923; color: #e8b923; }
+    .gal-chip.active { background: #e8b923; color: #1a1a1a; border-color: #e8b923; font-weight: 700; }
+    .gal-reset { border-color: #733; color: #e77; }
+    .gal-reset:hover { border-color: #a33; color: #f99; }
+    /* ── Overlay admin tag editor ── */
+    .ov-tagbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; padding: 10px 14px; background: rgba(0,0,0,0.6); border-top: 1px solid #333; color: #ccc; font-size: 0.85rem; }
+    .ov-tagbar label { display: inline-flex; gap: 6px; align-items: center; }
+    .ov-tagbar select, .ov-tagbar input { background: #141414; border: 1px solid #333; border-radius: 6px; color: #ddd; padding: 6px 10px; font-size: 0.85rem; }
+    .ov-tagbar input { min-width: 240px; }
+    .ov-tagbar button { background: #e8b923; color: #1a1a1a; border: none; border-radius: 6px; padding: 6px 14px; font-weight: 700; cursor: pointer; }
+    .ov-tagsrc { color: #888; font-size: 0.78rem; }
+    .ov-tagstatus { color: #6c6; font-size: 0.8rem; }
     /* ── Calendar ── */
     .calendar-card {
       background: #1a1a1a; border: 1px solid #333; border-radius: 10px;

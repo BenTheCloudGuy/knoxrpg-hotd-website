@@ -20,6 +20,7 @@ const ddbDownload = require("../lib/ddb-download");
 const ddbBookImages = require("../lib/ddb-book-images");
 const ddbJobs = require("../lib/ddb-jobs");
 const imageIndex = require("../lib/image-index");
+const imageTags = require("../lib/image-tags");
 const homebrewSchema = require("../lib/homebrew-schema");
 const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
@@ -2213,6 +2214,31 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       console.error("Image index error:", err);
       sendJSON(res, { error: err.message }, 500);
     }
+    return true;
+  }
+
+  // ── Images: get/set tags (source auto, type, custom) ───────
+  // GET /api/dm-admin/images/tags?url=...   POST { url, type, tags }
+  if (decoded === "/api/dm-admin/images/tags" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const url = new URL(req.url, "http://x").searchParams.get("url") || "";
+      if (!url) { sendJSON(res, { error: "url is required" }, 400); return true; }
+      const r = await pgPool.query("SELECT source, type, tags FROM hotd_image_tags WHERE url=$1", [url]);
+      const row = r.rows[0] || { source: "", type: "Other", tags: [] };
+      sendJSON(res, { ok: true, types: imageTags.TYPES, tags: row });
+    } catch (err) { sendJSON(res, { error: err.message }, 500); }
+    return true;
+  }
+  if (decoded === "/api/dm-admin/images/tags" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      if (!body.url) { sendJSON(res, { error: "url is required" }, 400); return true; }
+      const tags = Array.isArray(body.tags) ? body.tags : (typeof body.tags === "string" ? body.tags.split(",") : null);
+      await imageTags.saveTags(pgPool, body.url, { source: body.source || null, type: body.type || null, tags });
+      sendJSON(res, { ok: true });
+    } catch (err) { sendJSON(res, { error: err.message }, 500); }
     return true;
   }
 
