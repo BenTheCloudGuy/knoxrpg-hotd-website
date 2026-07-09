@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.26.0] - 2026-07-08
+
+### Added
+- **Printable item cards (`scripts/build-item-cards-pdf.js`).** New generator that lays out D&D item cards at baseball-card size (2.5" x 3.5"), 9-up in a 3x3 grid on US Letter or A4, as a print-ready PDF. Each item renders a front (rarity-colored name banner, centered art, rarity/type badge) and a back (stat line of rarity, type, attunement, source, followed by the description). The back page mirrors each row's columns so a duplex flip on the long edge lands every back behind its own front for clean cutting; hairline cut guides sit on every card edge and outer crop marks aid trim registration. Item data comes from the exported markdown under `items/` (YAML front-matter + body); art is pulled from `items/magic-items/images/<base-slug>.png` and embedded as base64 so the rendered HTML is self-contained. Item slugs can be passed as positional args, `--items a,b,c`, or `--from-file`; more than 9 items paginate into additional sheet pairs. With no args it auto-selects 9 items that have artwork (one per name family) as a demo written to `reports/item-cards.pdf`. Options: `--out`, `--title`, `--size letter|a4`, `--keep-html`. Rendered with weasyprint; the layout uses inline-block tiling and fixed-height table-cell bands because the installed weasyprint (61.1) has no CSS grid and unreliable flex growth with images.
+
 ## [3.25.1] - 2026-07-06
 
 ### Added
