@@ -453,23 +453,22 @@ function renderHtml(items, opts) {
     .front .name > span { font-size: 10pt; }
     .back .name > span { font-size: 9.5pt; }
 
-    .front .art { display: table; width: 100%; height: 2.66in; table-layout: fixed; }
+    .front .art { display: table; width: 100%; height: 2.6in; table-layout: fixed; }
     .front .art > span { display: table-cell; vertical-align: middle; text-align: center; }
     .front .art img { max-width: 2.3in; max-height: 2.5in; }
     .front .no-art { color: #a89a7a; font-size: 8pt; font-style: italic; }
 
-    .front .badge { display: table; width: 100%; height: 0.33in; border-top: 0.75pt solid var(--gold);
-      table-layout: fixed; }
-    .front .badge > span { display: table-cell; vertical-align: middle; text-align: center;
-      font-size: 7.5pt; font-weight: 600; letter-spacing: 0.4pt; text-transform: uppercase;
-      color: var(--ink-soft); padding: 0 4pt; }
+    .front .badge { height: 0.33in; border-top: 0.75pt solid var(--gold); overflow: hidden;
+      text-align: center; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.4pt;
+      text-transform: uppercase; color: var(--ink-soft); padding: 5pt 4pt 0; line-height: 1.1; }
+    .front .badge > span { display: block; }
 
     .back .stat { height: 0.5in; border-bottom: 0.75pt solid var(--gold); overflow: hidden;
       text-align: center; font-size: 6.4pt; font-style: italic; color: var(--ink-soft);
       padding: 4pt 6pt; line-height: 1.28; }
     .back .stat > span { display: block; }
 
-    .back .desc { height: 2.49in; overflow: hidden; padding: 5pt 7pt; font-size: 7pt;
+    .back .desc { height: 2.43in; overflow: hidden; padding: 5pt 7pt; font-size: 7pt;
       line-height: 1.3; text-align: left; }
     .back .desc p { margin: 0 0 4pt; }
     .back .desc p:last-child { margin-bottom: 0; }
