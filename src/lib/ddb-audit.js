@@ -195,7 +195,9 @@ async function runAudit(pgPool, opts = {}) {
   // Optional: owned-on-DDB gap (requires cobalt token; degrades gracefully).
   if (opts.cobaltToken) {
     try {
-      report.ddbOwned = await ownedGap(pgPool);
+      // Codes whose downloaded content still has rows missing from the RAG.
+      const unembeddedCodes = new Set(missingSources.map((s) => s.code));
+      report.ddbOwned = await ownedGap(pgPool, unembeddedCodes);
       report.tokenAvailable = true;
     } catch (err) {
       report.ddbOwnedError = err.message;
@@ -208,9 +210,11 @@ async function runAudit(pgPool, opts = {}) {
 function mkAgg() { return { embeddable: 0, embedded: 0, missing: 0 }; }
 
 // ── OWNED-ON-DDB GAP (optional, needs cobalt token) ───────────
-// Enumerates the source books/drops that contain monsters the account
-// is entitled to but that have not been downloaded into the DB at all.
-async function ownedGap(pgPool) {
+// Enumerates the source books/drops that contain monsters the account is
+// entitled to, and marks each one Completed (downloaded into the DB AND
+// embedded into the RAG) or Missing (not yet imported, or downloaded but
+// not fully embedded).
+async function ownedGap(pgPool, unembeddedCodes = new Set()) {
   const H = await ddbClient.bearerHeaders();
 
   // Catalog: sourceId -> { code, title }
@@ -235,26 +239,34 @@ async function ownedGap(pgPool) {
     if (page > 100) break;
   }
 
-  // Synced source codes across the content tables.
+  // Downloaded source codes across the content tables.
   const { rows } = await pgPool.query(
     `SELECT DISTINCT lower(trim(unnest(string_to_array(source, ',')))) AS code
        FROM (SELECT source FROM monsters WHERE source IS NOT NULL
              UNION ALL SELECT source FROM magic_items WHERE source IS NOT NULL
              UNION ALL SELECT source FROM spells WHERE source IS NOT NULL) q`
   );
-  const synced = new Set(rows.map((r) => r.code).filter(Boolean));
+  const downloaded = new Set(rows.map((r) => r.code).filter(Boolean));
 
-  const missing = [];
+  // Annotate every owned source with a Completed / Missing status.
+  const all = [];
   for (const o of owned.values()) {
-    if (!synced.has(o.code)) missing.push(o);
+    o.downloaded = downloaded.has(o.code);
+    o.embedded = o.downloaded && !unembeddedCodes.has(o.code);
+    o.status = (o.downloaded && o.embedded) ? "Completed" : "Missing";
+    all.push(o);
   }
-  missing.sort((a, b) => b.monsters - a.monsters);
+  // Missing first (so gaps stand out), then most-content first.
+  all.sort((a, b) => (a.status === b.status ? b.monsters - a.monsters : (a.status === "Missing" ? -1 : 1)));
+  const missing = all.filter((o) => o.status === "Missing");
 
   return {
     ownedSources: owned.size,
-    syncedSources: synced.size,
-    missingCount: missing.length,
+    syncedSources: downloaded.size,
     entitledMonsters: total === Infinity ? null : total,
+    completedCount: all.length - missing.length,
+    missingCount: missing.length,
+    all,
     missing,
   };
 }

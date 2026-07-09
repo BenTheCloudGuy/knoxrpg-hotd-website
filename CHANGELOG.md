@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.34.1] - 2026-07-09
+
+### Changed
+- **DDB Content audit — library coverage view.** The "Owned on D&D Beyond but never downloaded" section now lists **every** owned source (not just the un-imported ones) and marks each one `[Completed]` (downloaded into the DB **and** embedded into the RAG) or `[Missing]` (not yet imported), missing-first. The per-row `~Monsters` count is replaced by a **Status** badge, and the heading now reads "D&D Beyond library coverage (N sources — X completed, Y missing)". `ddb-audit.js` `ownedGap` returns the full annotated list (`all`, `completedCount`) using the audit's un-embedded source codes to decide status.
+
+### Notes
+- Clarifies the earlier confusion: **Missing from RAG** counts *downloaded* rows not yet embedded (currently 0 — everything imported is embedded), whereas the coverage list counts *owned-but-never-imported* sources (a separate backlog). Verified live: 9,541/9,541 embedded (0 missing from RAG); 132 owned sources → 85 completed, 47 missing.
+
 ## [3.34.0] - 2026-07-09
 
 ### Added

@@ -388,7 +388,7 @@ async function renderDmAdminPage(session) {
             <button id="ddb-sync-btn" class="dmc-btn" onclick="runDdbSync()" disabled title="Embed downloaded-but-unembedded content into the RAG">Sync Missing \u2192 RAG</button>
           </div>
         </div>
-        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. Comparison against your full DDB library (books/drops you own but have never downloaded) activates when the DDB token is valid.</p>
+        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. When the DDB token is valid, a <strong>library coverage</strong> list shows every source you own on D&amp;D Beyond marked <span class="ddb-badge ddb-badge-ok">Completed</span> (downloaded + embedded) or <span class="ddb-badge ddb-badge-miss">Missing</span> (not yet imported).</p>
         <div id="ddb-cobalt" class="ddb-cobalt"><span class="cards-hint">Checking D&amp;D Beyond token\u2026</span></div>
         <div id="ddb-report"><p class="cards-hint">Running audit\u2026</p></div>
       </section>
@@ -486,6 +486,9 @@ async function renderDmAdminPage(session) {
     .ddb-table code { color:#9cc; font-size:0.76rem; }
     .ddb-table .ddb-miss { color:#cd6; font-weight:600; }
     .ddb-table .ddb-ex { color:#777; font-size:0.74rem; }
+    .ddb-badge { display:inline-block; font-size:0.68rem; font-weight:700; padding:1px 8px; border-radius:10px; border:1px solid #333; white-space:nowrap; }
+    .ddb-badge-ok { color:#6c6; border-color:#2e5; background:#12210f; }
+    .ddb-badge-miss { color:#e0a800; border-color:#8a6d1a; background:#241f10; }
     .ddb-cobalt { margin:6px 0 12px; }
     .ddb-cobalt-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#141414; border:1px solid #262626; border-radius:8px; padding:8px 12px; }
     .ddb-tok-pill { font-size:0.72rem; font-weight:600; padding:2px 10px; border-radius:12px; border:1px solid #333; }
@@ -2507,11 +2510,14 @@ async function renderDmAdminPage(session) {
     // Owned-on-DDB gap
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
-      html += '<h4 class="dmc-section-title">Owned on D&amp;D Beyond but never downloaded (' + ddbNum(o.missingCount) + ' sources)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' synced locally.</p>';
-      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>~Monsters</th></tr></thead><tbody>';
-      (o.missing||[]).slice(0,60).forEach(function(s){
-        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + ddbNum(s.monsters) + '</td></tr>';
+      html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.completedCount||0) + ' completed, ' + ddbNum(o.missingCount) + ' missing)</h4>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Completed</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported.</p>';
+      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th></tr></thead><tbody>';
+      (o.all||o.missing||[]).slice(0,200).forEach(function(s){
+        var badge = s.status === 'Completed'
+          ? '<span class="ddb-badge ddb-badge-ok">[Completed]</span>'
+          : '<span class="ddb-badge ddb-badge-miss">[Missing]</span>';
+        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td></tr>';
       });
       html += '</tbody></table>';
     } else {
