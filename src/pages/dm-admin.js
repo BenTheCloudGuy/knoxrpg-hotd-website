@@ -384,12 +384,13 @@ async function renderDmAdminPage(session) {
         <div class="dmc-panel-bar">
           <h2>DDB Content</h2>
           <div class="dmc-bar-actions">
-            <button id="ddb-audit-btn" class="dmc-btn dmc-btn-primary" onclick="runDdbAudit()">Run Audit</button>
+            <button id="ddb-audit-btn" class="dmc-btn dmc-btn-primary" onclick="runDdbAudit()">Refresh Audit</button>
             <button id="ddb-sync-btn" class="dmc-btn" onclick="runDdbSync()" disabled title="Embed downloaded-but-unembedded content into the RAG">Sync Missing \u2192 RAG</button>
           </div>
         </div>
-        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. Comparison against your full DDB library (books/drops you own but have never downloaded) activates when the DDB token is provisioned.</p>
-        <div id="ddb-report"><p class="cards-hint">Click <strong>Run Audit</strong> to scan the content tables and the RAG.</p></div>
+        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. Comparison against your full DDB library (books/drops you own but have never downloaded) activates when the DDB token is valid.</p>
+        <div id="ddb-cobalt" class="ddb-cobalt"><span class="cards-hint">Checking D&amp;D Beyond token\u2026</span></div>
+        <div id="ddb-report"><p class="cards-hint">Running audit\u2026</p></div>
       </section>
 
     </main>
@@ -453,6 +454,13 @@ async function renderDmAdminPage(session) {
     .ddb-table code { color:#9cc; font-size:0.76rem; }
     .ddb-table .ddb-miss { color:#cd6; font-weight:600; }
     .ddb-table .ddb-ex { color:#777; font-size:0.74rem; }
+    .ddb-cobalt { margin:6px 0 12px; }
+    .ddb-cobalt-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#141414; border:1px solid #262626; border-radius:8px; padding:8px 12px; }
+    .ddb-tok-pill { font-size:0.72rem; font-weight:600; padding:2px 10px; border-radius:12px; border:1px solid #333; }
+    .ddb-tok-ok { color:#6c6; border-color:#2e5; background:#12210f; }
+    .ddb-tok-bad { color:#e77; border-color:#a33; background:#241414; }
+    .ddb-tok-miss { color:#caa; border-color:#654; background:#1e1a12; }
+    .ddb-tok-update { display:flex; gap:8px; align-items:center; margin-left:auto; }
     .card-row.is-selected { background:#12261a; }
     .card-row.is-selected.is-preview { background:#173021; }
     .card-row .cr-toggle { flex:0 0 auto; width:22px; height:22px; border-radius:5px; border:1px solid #355; background:#12241c; color:#5c8; font-size:0.95rem; line-height:1; cursor:pointer; padding:0; }
@@ -2318,7 +2326,69 @@ async function renderDmAdminPage(session) {
 
   // ═══ DDB CONTENT ═══
   var _ddbReport = null;
-  function loadDdb() { /* audit runs on demand via the button */ }
+  function loadDdb() {
+    ddbLoadCobalt();
+    if (!_ddbReport) runDdbAudit();
+  }
+
+  // ── Cobalt token health + update (KV-backed) ──
+  async function ddbLoadCobalt() {
+    var box = el('ddb-cobalt'); if (!box) return;
+    try {
+      var r = await fetch('/api/dm-admin/ddb/cobalt');
+      var data = await r.json();
+      renderCobalt(data.status || {});
+    } catch (e) { box.innerHTML = '<span class="cards-hint">Token status unavailable: ' + esc(e.message) + '</span>'; }
+  }
+
+  function ddbAgo(iso) {
+    if (!iso) return 'unknown';
+    var d = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (d < 60) return 'just now';
+    if (d < 3600) return Math.floor(d/60) + 'm ago';
+    if (d < 86400) return Math.floor(d/3600) + 'h ago';
+    return Math.floor(d/86400) + 'd ago';
+  }
+
+  function renderCobalt(s) {
+    var box = el('ddb-cobalt'); if (!box) return;
+    var cls, label;
+    if (!s.configured) { cls = 'miss'; label = 'No token'; }
+    else if (s.valid) { cls = 'ok'; label = 'Valid'; }
+    else { cls = 'bad'; label = 'Expired / invalid'; }
+    var src = s.source && s.source !== 'none' ? s.source : '';
+    var meta = [];
+    if (src) meta.push('source: ' + esc(src));
+    if (s.updatedOn) meta.push('updated ' + ddbAgo(s.updatedOn));
+    if (!s.valid && s.reason) meta.push(esc(s.reason));
+    box.innerHTML =
+      '<div class="ddb-cobalt-row">' +
+        '<span class="ddb-tok-pill ddb-tok-' + cls + '">DDB token: ' + label + '</span>' +
+        (meta.length ? '<span class="cards-hint" style="margin:0;">' + meta.join(' \u00b7 ') + '</span>' : '') +
+        '<span class="ddb-tok-update">' +
+          '<input id="ddb-tok-input" class="dmc-input" type="password" placeholder="Paste new CobaltSession token\u2026" style="min-width:220px;" />' +
+          '<button class="dmc-btn dmc-btn-primary" onclick="ddbUpdateCobalt()">Update</button>' +
+        '</span>' +
+      '</div>';
+  }
+
+  async function ddbUpdateCobalt() {
+    var inp = el('ddb-tok-input'); if (!inp) return;
+    var token = (inp.value || '').trim();
+    if (!token) { alert('Paste a CobaltSession token first.'); return; }
+    var box = el('ddb-cobalt');
+    box.innerHTML = '<span class="cards-hint">Validating and saving token to Key Vault\u2026</span>';
+    try {
+      var r = await fetch('/api/dm-admin/ddb/cobalt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: token }) });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Update failed');
+      renderCobalt(data.status || {});
+      runDdbAudit();
+    } catch (e) {
+      alert('Token update failed: ' + e.message);
+      ddbLoadCobalt();
+    }
+  }
 
   async function runDdbAudit() {
     var btn = el('ddb-audit-btn');

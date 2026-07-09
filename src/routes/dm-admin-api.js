@@ -15,6 +15,7 @@ const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const { syncCharacterFromDDB } = require("../lib/ddb-sync");
 const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib/ddb-audit");
+const ddbClient = require("../lib/ddb-client");
 const sessionsLib = require("../lib/sessions");
 const fs = require("fs");
 const os = require("os");
@@ -1973,11 +1974,45 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
   if (decoded === "/api/dm-admin/ddb/audit" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     try {
-      const cobaltToken = process.env.DDB_COBALT_TOKEN || process.env.DDB_COBALT_SESSION_TOKEN || "";
+      const cobaltToken = await ddbClient.getCobaltToken();
       const report = await runDdbAudit(pgPool, { cobaltToken });
       sendJSON(res, { ok: true, report });
     } catch (err) {
       console.error("DDB audit error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: cobalt token health ────────────────────────────────
+  // GET /api/dm-admin/ddb/cobalt  → { configured, source, valid, updatedOn, ... }
+  if (decoded === "/api/dm-admin/ddb/cobalt" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const s = await ddbClient.status();
+      sendJSON(res, { ok: true, status: s });
+    } catch (err) {
+      console.error("DDB cobalt status error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: update cobalt token (validate → save to Key Vault) ──
+  // POST /api/dm-admin/ddb/cobalt  { token }
+  if (decoded === "/api/dm-admin/ddb/cobalt" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const token = (body.token || "").trim();
+      if (!token) { sendJSON(res, { error: "token is required" }, 400); return true; }
+      const v = await ddbClient.validateToken(token);
+      if (!v.ok) { sendJSON(res, { error: `Token rejected by D&D Beyond (${v.status || v.error || "invalid"})`, reason: "invalid-token" }, 400); return true; }
+      await ddbClient.setCobaltToken(token);
+      const s = await ddbClient.status();
+      sendJSON(res, { ok: true, saved: true, status: s });
+    } catch (err) {
+      console.error("DDB cobalt update error:", err);
       sendJSON(res, { error: err.message }, 500);
     }
     return true;

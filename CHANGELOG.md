@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.31.0] - 2026-07-09
+
+### Added
+- **Shared D&D Beyond client (`src/lib/ddb-client.js`)** — one source of truth for the cobalt session token and the cobalt→bearer exchange, so every DDB consumer stops re-implementing auth or reading env. `getCobaltToken()` resolves from the Key Vault secret `ddb-cobalt-session-token` first (via `keyvault.js`, v3.30.0), falling back to `DDB_COBALT_TOKEN`/`DDB_COBALT_SESSION_TOKEN` env; `setCobaltToken()` writes back to Key Vault; `bearer()`/`bearerHeaders()` cache the exchange; `validateToken()` tests a pasted token; `status()` reports `{ configured, source, valid, updatedOn }`. Validated live against the vault.
+- **Cobalt token management on the DDB Content page (`/dm-admin#ddb`).** A token strip shows health (Valid / Expired / No token), the credential source, and when the Key Vault secret was last updated, plus an inline **Update** control: paste a new `CobaltSession` token → it is validated against D&D Beyond, then saved to Key Vault (`keyvault.setSecret`) and the audit re-runs. New endpoints `GET`/`POST /api/dm-admin/ddb/cobalt`. Because the cobalt token is an opaque encrypted JWE, expiry is not derivable, so the UI shows live validity + "updated N ago" rather than a countdown.
+
+### Changed
+- **The DDB Content page now audits automatically on open** (no more "Run Audit" click; the button becomes **Refresh Audit**), and the audit endpoint sources the cobalt token through `ddb-client` (Key Vault-backed) instead of reading `process.env` inline — so the whole page uses one token source.
+
 ## [3.30.0] - 2026-07-09
 
 ### Added
