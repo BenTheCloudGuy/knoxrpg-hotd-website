@@ -2520,7 +2520,7 @@ async function renderDmAdminPage(session) {
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
       html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.availableCount||0) + ' available, ' + ddbNum(o.missingCount) + ' missing)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> pulls stat content into the RAG; <strong>Art+Maps</strong> extracts the book\u2019s images (art + battle/region maps) into the Storage Account.</p>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> pulls stat content into the RAG; <strong>Art+Maps</strong> extracts the book\u2019s images into the Storage Account \u2014 maps appear under Game Info \u2192 Maps, other art under Game Info \u2192 Art &amp; Images.</p>';
       if (o.missingCount > 0) {
         html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source from D&amp;D Beyond into the database, then embeds it. Large libraries can take several minutes.</span></p>';
       }
@@ -2572,7 +2572,7 @@ async function renderDmAdminPage(session) {
       var data = await r.json();
       if (!data.ok) throw new Error(data.error || 'Image fetch failed');
       var x = data.result || {};
-      alert('Stored images for ' + (title || code) + ': ' + (x.uploaded||0) + ' new (' + (x.art||0) + ' art, ' + (x.maps||0) + ' maps), ' + (x.skipped||0) + ' already had, ' + (x.failed||0) + ' failed.');
+      alert('Stored images for ' + (title || code) + ': ' + (x.uploaded||0) + ' new (' + (x.art||0) + ' art, ' + (x.maps||0) + ' maps), ' + (x.skipped||0) + ' already had, ' + (x.failed||0) + ' failed. Maps now show under Game Info \u2192 Maps; art under Game Info \u2192 Art & Images.');
     } catch (e) {
       alert('Image fetch error: ' + e.message + (/token/i.test(e.message) ? ' (check the DDB token).' : ''));
     } finally {

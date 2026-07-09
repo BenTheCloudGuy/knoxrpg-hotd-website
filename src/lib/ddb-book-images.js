@@ -29,6 +29,33 @@ function classify(url) {
   return "art";
 }
 
+// Derive a readable display name from a DDB image filename.
+function prettyName(filename, kind) {
+  let base = filename.replace(/\.[a-z0-9]+$/i, "");
+  let player = false;
+  if (kind === "maps") {
+    if (/-player$/i.test(base)) { player = true; base = base.replace(/-player$/i, ""); }
+    base = base.replace(/^map[-_.]/i, "");
+  }
+  base = base.replace(/^[0-9]+([.\-][0-9]+)*[.\-]?/, ""); // strip leading numeric prefixes (05.01-, 01-001.)
+  base = base.replace(/[-_.]+/g, " ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!base) base = filename;
+  return player ? `${base} (Player)` : base;
+}
+
+// Publish a stored image into the site galleries (hotd_maps / hotd_art) so it
+// shows up automatically under Game Info → Maps / Art & Images. Idempotent by
+// image_url (safe on re-runs / force). Returns true if a row was inserted.
+async function publishToGallery(pgPool, kind, name, desc, url) {
+  const q = kind === "maps"
+    ? `INSERT INTO hotd_maps (name, description, image_url, sort_order)
+         SELECT $1,$2,$3,0 WHERE NOT EXISTS (SELECT 1 FROM hotd_maps WHERE image_url=$3) RETURNING id`
+    : `INSERT INTO hotd_art (title, description, image_url, sort_order)
+         SELECT $1,$2,$3,0 WHERE NOT EXISTS (SELECT 1 FROM hotd_art WHERE image_url=$3) RETURNING id`;
+  const r = await pgPool.query(q, [name, desc, url]);
+  return r.rowCount > 0;
+}
+
 async function getHtml(url, cookie) {
   const r = await fetch(url, { headers: { Cookie: `CobaltSession=${cookie}`, "User-Agent": UA, Accept: "text/html,application/xhtml+xml,*/*" }, redirect: "follow" });
   return { status: r.status, finalUrl: r.url, ok: r.ok, html: r.ok ? await r.text() : "" };
@@ -85,6 +112,7 @@ async function downloadBookImages(pgPool, code, opts = {}) {
   let landing = await getHtml(`${BASE}/sources/dnd/${code}`, cookie);
   if (!landing.ok || /marketplace/.test(landing.finalUrl)) landing = await getHtml(`${BASE}/sources/${code}`, cookie);
   if (!landing.ok || /marketplace/.test(landing.finalUrl)) { const e = new Error(`Book "${code}" not accessible (not owned or bad token)`); e.reason = "book-not-owned"; throw e; }
+  const bookTitle = ((landing.html.match(/<title>([^<]+)<\/title>/i) || [])[1] || code).split(/\s+[-|]\s+/)[0].trim() || code;
 
   // 2. Pages = landing + discovered sub-pages.
   const pages = [landing.finalUrl, ...discoverPages(landing.html, code)];
@@ -104,14 +132,15 @@ async function downloadBookImages(pgPool, code, opts = {}) {
   log(`${code}: ${imageUrls.size} unique image(s) found`);
 
   // 4. Skip already-downloaded (unless force).
-  const result = { book: code, pages: uniquePages.length, found: imageUrls.size, art: 0, maps: 0, uploaded: 0, skipped: 0, failed: 0 };
+  const result = { book: code, title: bookTitle, pages: uniquePages.length, found: imageUrls.size, art: 0, maps: 0, uploaded: 0, published: 0, skipped: 0, failed: 0 };
   let known = new Set();
   if (!opts.force) {
     const { rows } = await pgPool.query("SELECT source_url FROM ddb_book_images WHERE book_code=$1", [code]);
     known = new Set(rows.map((r) => r.source_url));
   }
 
-  // 5. Download + store each image.
+  // 5. Download + store each image, then publish it to the site galleries.
+  const publish = opts.publish !== false;
   for (const url of imageUrls) {
     if (known.has(url)) { result.skipped++; continue; }
     const kind = classify(url);
@@ -128,9 +157,10 @@ async function downloadBookImages(pgPool, code, opts = {}) {
         [code, filename, kind, url, storagePath, buf.length]
       );
       result.uploaded++; result[kind]++;
+      if (publish && await publishToGallery(pgPool, kind, prettyName(filename, kind), `From ${bookTitle} (D&D Beyond)`, storagePath)) result.published++;
     } catch (_) { result.failed++; }
   }
-  log(`${code}: stored ${result.uploaded} (${result.art} art, ${result.maps} maps), skipped ${result.skipped}, failed ${result.failed}`);
+  log(`${code}: stored ${result.uploaded} (${result.art} art, ${result.maps} maps), published ${result.published} to galleries, skipped ${result.skipped}, failed ${result.failed}`);
   return result;
 }
 

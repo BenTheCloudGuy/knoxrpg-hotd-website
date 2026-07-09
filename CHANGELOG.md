@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.37.0] - 2026-07-09
+
+### Added
+- **Extracted DDB book images now publish to the site galleries automatically.** When `Art+Maps` pulls a book's images, each **map** is added to the **Maps** page (`hotd_maps`, Game Info → Maps) and each non-map **image** to the **Art & Images** gallery (`hotd_art`, Game Info → Art & Images) — no extra step. Filenames become readable titles (e.g. `map-01.01-everden-world-player.jpg` → "Everden World (Player)"; `01-001.alderheart-view-up.jpg` → "Alderheart View Up"), and each entry is tagged with its source (`From {Book Title} (D&D Beyond)`).
+  - Publishing is idempotent by `image_url` (`INSERT … WHERE NOT EXISTS`), so re-runs / `force` don't create duplicates; the book title is read from the DDB reader page.
+
+### Notes
+- Verified live: downloading `hwt` published its maps to `hotd_maps` ("Everden World", "Everden World (Player)") and its art to `hotd_art` ("Alderheart View Up", "Scholar Bird", …) with the correct `/hotd-content/ddb-books/{code}/…` URLs, then the test rows were cleaned up.
+- Heads-up: art-heavy books add many entries to the Art & Images gallery (e.g. `wel` ≈ 165 art). It's per-book and DM-triggered, so you control which books populate the galleries.
+
 ## [3.36.0] - 2026-07-09
 
 ### Added
