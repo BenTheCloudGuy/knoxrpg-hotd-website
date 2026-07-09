@@ -248,24 +248,26 @@ async function ownedGap(pgPool, unembeddedCodes = new Set()) {
   );
   const downloaded = new Set(rows.map((r) => r.code).filter(Boolean));
 
-  // Annotate every owned source with a Completed / Missing status.
+  // Annotate every owned source with an Available / Missing status.
   const all = [];
   for (const o of owned.values()) {
     o.downloaded = downloaded.has(o.code);
     o.embedded = o.downloaded && !unembeddedCodes.has(o.code);
-    o.status = (o.downloaded && o.embedded) ? "Completed" : "Missing";
+    o.status = (o.downloaded && o.embedded) ? "Available" : "Missing";
     all.push(o);
   }
   // Missing first (so gaps stand out), then most-content first.
   all.sort((a, b) => (a.status === b.status ? b.monsters - a.monsters : (a.status === "Missing" ? -1 : 1)));
   const missing = all.filter((o) => o.status === "Missing");
+  const missingMonsters = missing.reduce((s, o) => s + (o.monsters || 0), 0);
 
   return {
     ownedSources: owned.size,
     syncedSources: downloaded.size,
     entitledMonsters: total === Infinity ? null : total,
-    completedCount: all.length - missing.length,
+    availableCount: all.length - missing.length,
     missingCount: missing.length,
+    missingMonsters,
     all,
     missing,
   };

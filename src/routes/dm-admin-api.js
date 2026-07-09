@@ -16,6 +16,7 @@ const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const { syncCharacterFromDDB } = require("../lib/ddb-sync");
 const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib/ddb-audit");
 const ddbClient = require("../lib/ddb-client");
+const ddbDownload = require("../lib/ddb-download");
 const homebrewSchema = require("../lib/homebrew-schema");
 const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
@@ -2135,6 +2136,33 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     } catch (err) {
       console.error("DDB sync error:", err);
       sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: sync MISSING (download from DDB → DB, then embed) ────
+  // POST /api/dm-admin/ddb/sync-missing  { sources?: ["wel", ...], types? }
+  // With no `sources`, downloads every source currently Missing on DDB.
+  if (decoded === "/api/dm-admin/ddb/sync-missing" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const types = Array.isArray(body.types) && body.types.length ? body.types : undefined;
+      let sourceCodes = Array.isArray(body.sources) ? body.sources.map((s) => String(s).toLowerCase()).filter(Boolean) : [];
+      // No explicit sources → resolve every currently-Missing source via a fresh audit.
+      if (!sourceCodes.length) {
+        const cobaltToken = await ddbClient.getCobaltToken();
+        const audit = await runDdbAudit(pgPool, { cobaltToken });
+        sourceCodes = ((audit.ddbOwned && audit.ddbOwned.missing) || []).map((s) => s.code);
+      }
+      if (!sourceCodes.length) { sendJSON(res, { ok: true, sources: [], downloaded: { monsters: 0, items: 0, feats: 0 }, embedded: { embedded: 0 }, note: "nothing missing" }); return true; }
+      const downloaded = await ddbDownload.downloadSources(pgPool, { sourceCodes, types });
+      const embedded = await embedDdbMissing(pgPool, azure.openaiClient, {});
+      sendJSON(res, { ok: true, sources: sourceCodes, downloaded, embedded });
+    } catch (err) {
+      console.error("DDB sync-missing error:", err);
+      sendJSON(res, { error: err.message, reason: err.reason || null }, 500);
     }
     return true;
   }

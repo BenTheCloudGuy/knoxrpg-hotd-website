@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.35.0] - 2026-07-09
+
+### Added
+- **DDB "Sync Missing → RAG" now downloads, then embeds.** The DDB Content page can pull owned-but-un-imported D&D Beyond content into the database and embed it into the RAG in one action — previously Sync only embedded already-downloaded rows.
+  - New pod-callable downloader `src/lib/ddb-download.js` (`downloadSources`) — the in-app, per-source generalization of `scripts/munch-ddb-drops.js`. Given source codes/ids, it pulls monsters (monster-service), magic items and feats (character game-data), composes stat-block/description text, and upserts into `monsters` / `magic_items` / `feats`. Auth via the shared `ddb-client`.
+  - New endpoint `POST /api/dm-admin/ddb/sync-missing { sources?, types? }` — downloads the given sources (or every currently-Missing source) then runs the RAG embed. Returns downloaded + embedded counts.
+  - **Per-source `Sync` buttons** on each Missing row in the library-coverage table, plus a **`Sync ALL Missing → RAG`** button (with a volume/time confirm).
+
+### Changed
+- **Coverage status labels** are now `Available` / `Missing` (no brackets), replacing `[Completed]` / `[Missing]`.
+- **"Missing from RAG"** headline now spans both gaps: downloaded-but-unembedded rows **plus** entitled content on DDB not yet imported (with a breakdown line: `X downloaded-not-embedded + Y entitled monsters across Z un-imported sources`).
+
+### Notes
+- Verified live end-to-end: downloaded `dddod` (Dr Dhrolin's Dictionary of Dinosaurs → 138 monsters into the DB), embedded 207 chunks, and the source flipped **Missing → Available** (coverage 85→86 available, 47→46 missing; Missing-from-RAG back to 0).
+- Scope: the downloader covers **monsters, magic items, feats** (what the munch pipeline proves). **Spells** and **homebrew** imports are not yet wired into this action. "Sync ALL Missing" can be long-running for large libraries; per-source Sync is the recommended path and the UI warns on the bulk action.
+
 ## [3.34.1] - 2026-07-09
 
 ### Changed

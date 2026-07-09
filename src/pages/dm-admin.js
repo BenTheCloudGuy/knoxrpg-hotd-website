@@ -388,7 +388,7 @@ async function renderDmAdminPage(session) {
             <button id="ddb-sync-btn" class="dmc-btn" onclick="runDdbSync()" disabled title="Embed downloaded-but-unembedded content into the RAG">Sync Missing \u2192 RAG</button>
           </div>
         </div>
-        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. When the DDB token is valid, a <strong>library coverage</strong> list shows every source you own on D&amp;D Beyond marked <span class="ddb-badge ddb-badge-ok">Completed</span> (downloaded + embedded) or <span class="ddb-badge ddb-badge-miss">Missing</span> (not yet imported).</p>
+        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> downloads any missing content from D&amp;D Beyond into the database, then embeds everything not yet in the RAG. When the DDB token is valid, a <strong>library coverage</strong> list shows every source you own on D&amp;D Beyond marked <span class="ddb-badge ddb-badge-ok">Available</span> (downloaded + embedded) or <span class="ddb-badge ddb-badge-miss">Missing</span> (not yet imported).</p>
         <div id="ddb-cobalt" class="ddb-cobalt"><span class="cards-hint">Checking D&amp;D Beyond token\u2026</span></div>
         <div id="ddb-report"><p class="cards-hint">Running audit\u2026</p></div>
       </section>
@@ -2469,12 +2469,21 @@ async function renderDmAdminPage(session) {
     var t = rep.totals || { embeddable:0, embedded:0, missing:0 };
     var html = '';
 
+    // "Missing from RAG" spans both downloaded-but-unembedded rows AND content
+    // owned on DDB but never imported (entitled monsters in Missing sources).
+    var ownedMissingMon = (rep.ddbOwned && rep.ddbOwned.missingMonsters) || 0;
+    var ownedMissingSrc = (rep.ddbOwned && rep.ddbOwned.missingCount) || 0;
+    var totalMissing = (t.missing||0) + ownedMissingMon;
+
     // Summary cards
     html += '<div class="ddb-cards">' +
       '<div class="ddb-card"><span class="ddb-card-n">' + ddbNum(t.embeddable) + '</span><span class="ddb-card-l">Downloaded (embeddable)</span></div>' +
       '<div class="ddb-card"><span class="ddb-card-n">' + ddbNum(t.embedded) + '</span><span class="ddb-card-l">In RAG</span></div>' +
-      '<div class="ddb-card' + (t.missing>0?' ddb-card-warn':'') + '"><span class="ddb-card-n">' + ddbNum(t.missing) + '</span><span class="ddb-card-l">Missing from RAG</span></div>' +
+      '<div class="ddb-card' + (totalMissing>0?' ddb-card-warn':'') + '"><span class="ddb-card-n">' + ddbNum(totalMissing) + '</span><span class="ddb-card-l">Missing from RAG</span></div>' +
       '</div>';
+    if (rep.tokenAvailable) {
+      html += '<p class="cards-hint" style="margin-top:-4px;">Missing from RAG = ' + ddbNum(t.missing) + ' downloaded-but-not-embedded + ' + ddbNum(ownedMissingMon) + ' entitled monster(s) across ' + ddbNum(ownedMissingSrc) + ' un-imported source(s). Use <strong>Sync Missing \u2192 RAG</strong> to pull them in.</p>';
+    }
 
     // By source class
     html += '<h4 class="dmc-section-title">Coverage by source class</h4>';
@@ -2510,14 +2519,20 @@ async function renderDmAdminPage(session) {
     // Owned-on-DDB gap
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
-      html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.completedCount||0) + ' completed, ' + ddbNum(o.missingCount) + ' missing)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Completed</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported.</p>';
-      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th></tr></thead><tbody>';
+      html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.availableCount||0) + ' available, ' + ddbNum(o.missingCount) + ' missing)</h4>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported.</p>';
+      if (o.missingCount > 0) {
+        html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source from D&amp;D Beyond into the database, then embeds it. Large libraries can take several minutes.</span></p>';
+      }
+      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th><th></th></tr></thead><tbody>';
       (o.all||o.missing||[]).slice(0,200).forEach(function(s){
-        var badge = s.status === 'Completed'
-          ? '<span class="ddb-badge ddb-badge-ok">[Completed]</span>'
-          : '<span class="ddb-badge ddb-badge-miss">[Missing]</span>';
-        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td></tr>';
+        var badge = s.status === 'Available'
+          ? '<span class="ddb-badge ddb-badge-ok">Available</span>'
+          : '<span class="ddb-badge ddb-badge-miss">Missing</span>';
+        var action = s.status === 'Missing'
+          ? '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '">Sync</button>'
+          : '';
+        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td><td>' + action + '</td></tr>';
       });
       html += '</tbody></table>';
     } else {
@@ -2538,6 +2553,50 @@ async function renderDmAdminPage(session) {
 
     box.innerHTML = html;
     el('ddb-sync-btn').disabled = !(t.missing > 0);
+    // Bind per-source Sync buttons (data-code) without inline quote escaping.
+    box.querySelectorAll('.ddb-sync-src').forEach(function(b){
+      b.addEventListener('click', function(){ ddbSyncSource(b.getAttribute('data-code'), b.getAttribute('data-title'), b); });
+    });
+  }
+
+  // Download a single Missing source from DDB, then embed it.
+  async function ddbSyncSource(code, title, btn) {
+    if (!code) return;
+    if (!confirm('Download "' + (title || code) + '" from D&D Beyond and embed it into the RAG?')) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Syncing\u2026'; }
+    try {
+      var r = await fetch('/api/dm-admin/ddb/sync-missing', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: [code] }) });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Sync failed');
+      var d = data.downloaded || {}; var e = data.embedded || {};
+      alert('Synced ' + (title || code) + ': downloaded ' + (d.monsters||0) + ' monsters, ' + (d.items||0) + ' items, ' + (d.feats||0) + ' feats; embedded ' + (e.embedded||0) + ' RAG chunk(s).');
+      runDdbAudit();
+    } catch (err) {
+      alert('Sync error: ' + err.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Sync'; }
+    }
+  }
+
+  // Download + embed every currently-Missing source.
+  async function ddbSyncAllMissing() {
+    var o = (_ddbReport && _ddbReport.ddbOwned) || {};
+    var n = o.missingCount || 0;
+    if (!n) { alert('Nothing missing.'); return; }
+    if (!confirm('Download and embed ALL ' + n + ' Missing source(s) from D&D Beyond? This pulls their content into the database and embeds it into the RAG, and can take several minutes for large libraries.')) return;
+    var btn = el('ddb-syncall-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Syncing all\u2026 (this can take a while)'; }
+    try {
+      var codes = (o.missing || []).map(function(s){ return s.code; });
+      var r = await fetch('/api/dm-admin/ddb/sync-missing', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: codes }) });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Sync failed');
+      var d = data.downloaded || {}; var e = data.embedded || {};
+      alert('Synced ' + (data.sources ? data.sources.length : n) + ' source(s): downloaded ' + (d.monsters||0) + ' monsters, ' + (d.items||0) + ' items, ' + (d.feats||0) + ' feats; embedded ' + (e.embedded||0) + ' RAG chunk(s).');
+      runDdbAudit();
+    } catch (err) {
+      alert('Sync error: ' + err.message + ' (The download may still be running server-side; re-run the audit in a minute to check.)');
+      if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync ALL Missing \u2192 RAG'; }
+    }
   }
 
   async function runDdbSync() {
