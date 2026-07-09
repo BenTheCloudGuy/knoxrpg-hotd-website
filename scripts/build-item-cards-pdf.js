@@ -340,14 +340,6 @@ function pickDemoItems(index, count) {
 // ---------------------------------------------------------------------------
 // Card rendering
 // ---------------------------------------------------------------------------
-const RARITY_CLASS = {
-  common: 'common', uncommon: 'uncommon', rare: 'rare',
-  'very rare': 'very-rare', legendary: 'legendary', artifact: 'artifact',
-};
-function rarityClass(r) {
-  return RARITY_CLASS[String(r || '').toLowerCase().trim()] || 'unknown';
-}
-
 // "WondrousItem" -> "Wondrous Item"
 function humanizeType(t) {
   return String(t || '').replace(/([a-z])([A-Z])/g, '$1 $2');
@@ -364,13 +356,12 @@ function statLine(front) {
 
 function frontCard(item) {
   if (!item) return '<div class="card"></div>';
-  const rc = rarityClass(item.front.rarity);
   const imgAbs = resolveImageAbs(item);
   const art = imgAbs
     ? `<img src="${imageDataUri(imgAbs)}" alt="">`
     : '<em class="no-art">No art</em>';
   const badgeBits = [item.front.rarity, humanizeType(item.front.type)].filter(Boolean).map(escapeHtml);
-  return `<div class="card front rarity-${rc}"><div class="inner">
+  return `<div class="card front"><div class="inner">
     <div class="name"><span>${escapeHtml(item.front.title || item.slug)}</span></div>
     <div class="art"><span>${art}</span></div>
     <div class="badge"><span>${badgeBits.join(' &middot; ')}</span></div>
@@ -379,9 +370,8 @@ function frontCard(item) {
 
 function backCard(item) {
   if (!item) return '<div class="card"></div>';
-  const rc = rarityClass(item.front.rarity);
   const desc = item.cardText != null ? textToHtml(item.cardText) : descriptionHtml(item.body);
-  return `<div class="card back rarity-${rc}"><div class="inner">
+  return `<div class="card back"><div class="inner">
     <div class="name"><span>${escapeHtml(item.front.title || item.slug)}</span></div>
     <div class="stat"><span>${statLine(item.front)}</span></div>
     <div class="desc">${desc}</div>
@@ -437,7 +427,9 @@ function renderHtml(items, opts) {
     ${pageCss}
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
-    body { font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif; color: #1a1a1a; }
+    body { font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif; color: #3a2a17;
+      --ink: #3a2a17; --ink-soft: #6b5233; --leather: #4a3320; --gold: #9c7a34;
+      --banner: #3f2a17; --banner-text: #ecd6a4; }
     .page { position: relative; width: 7.5in; height: 10.5in; break-after: page; }
     .page:last-child { break-after: auto; }
     .grid { width: 7.5in; height: 10.5in; font-size: 0; line-height: 0; }
@@ -447,39 +439,33 @@ function renderHtml(items, opts) {
 
     .card { display: inline-block; vertical-align: top; width: 2.5in; height: 3.5in;
       border: 0.4pt dashed #b8b8b8; overflow: hidden; }
-    .card .inner { width: 100%; height: 3.49in; border: 1.5pt solid var(--rc, #444);
-      border-radius: 7pt; overflow: hidden; background: #fff; }
-
-    /* Rarity accents (D&D convention) */
-    .rarity-common    { --rc: #6b6b6b; }
-    .rarity-uncommon  { --rc: #1a7f37; }
-    .rarity-rare      { --rc: #1f6feb; }
-    .rarity-very-rare { --rc: #8250df; }
-    .rarity-legendary { --rc: #bf8700; }
-    .rarity-artifact  { --rc: #a40e26; }
-    .rarity-unknown   { --rc: #444444; }
+    .card .inner { width: 100%; height: 3.49in; border: 2pt solid var(--leather);
+      border-radius: 8pt; overflow: hidden; color: var(--ink);
+      background: radial-gradient(ellipse at 50% 38%, #f7edd6 0%, #ecdcb6 58%, #e0cb9e 100%); }
 
     /* Fixed-height table-cell bands (WeasyPrint has no CSS grid and unreliable
        flex growth with images, so the card interior is laid out with tables). */
-    .name { display: table; width: 100%; height: 0.5in; background: var(--rc); table-layout: fixed; }
-    .name > span { display: table-cell; vertical-align: middle; text-align: center; color: #fff;
-      font-weight: 700; line-height: 1.05; padding: 2pt 5pt; }
+    .name { display: table; width: 100%; height: 0.5in; background: var(--banner);
+      border-bottom: 1pt solid var(--gold); table-layout: fixed; }
+    .name > span { display: table-cell; vertical-align: middle; text-align: center;
+      color: var(--banner-text); font-weight: 700; line-height: 1.05; padding: 2pt 5pt;
+      letter-spacing: 0.3pt; }
     .front .name > span { font-size: 10pt; }
     .back .name > span { font-size: 9.5pt; }
 
     .front .art { display: table; width: 100%; height: 2.66in; table-layout: fixed; }
     .front .art > span { display: table-cell; vertical-align: middle; text-align: center; }
     .front .art img { max-width: 2.3in; max-height: 2.5in; }
-    .front .no-art { color: #bbb; font-size: 8pt; font-style: italic; }
+    .front .no-art { color: #a89a7a; font-size: 8pt; font-style: italic; }
 
-    .front .badge { display: table; width: 100%; height: 0.33in; border-top: 0.5pt solid #e2e2e2;
+    .front .badge { display: table; width: 100%; height: 0.33in; border-top: 0.75pt solid var(--gold);
       table-layout: fixed; }
     .front .badge > span { display: table-cell; vertical-align: middle; text-align: center;
       font-size: 7.5pt; font-weight: 600; letter-spacing: 0.4pt; text-transform: uppercase;
-      color: var(--rc); padding: 0 4pt; }
+      color: var(--ink-soft); padding: 0 4pt; }
 
-    .back .stat { height: 0.5in; border-bottom: 0.5pt solid #e2e2e2; overflow: hidden;
-      text-align: center; font-size: 6.4pt; font-style: italic; color: #444;
+    .back .stat { height: 0.5in; border-bottom: 0.75pt solid var(--gold); overflow: hidden;
+      text-align: center; font-size: 6.4pt; font-style: italic; color: var(--ink-soft);
       padding: 4pt 6pt; line-height: 1.28; }
     .back .stat > span { display: block; }
 
