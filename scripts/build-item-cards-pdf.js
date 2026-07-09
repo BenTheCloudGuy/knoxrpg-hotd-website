@@ -29,12 +29,14 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const ITEMS_DIR = path.join(ROOT, 'items');
 const IMAGES_DIR = path.join(ITEMS_DIR, 'magic-items', 'images');
 const REPORTS_DIR = path.join(ROOT, 'reports');
+const CACHE_PATH = path.join(__dirname, '.card-desc-cache.json');
 
 // ---------------------------------------------------------------------------
 // Slug helpers (mirrors scripts/lib-item-base.js so variants share one image).
@@ -53,7 +55,10 @@ function baseSlug(name) {
 // Arg parsing
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const args = { slugs: [], out: null, title: null, size: 'letter', fromFile: null, keepHtml: false };
+  const args = {
+    slugs: [], out: null, title: null, size: 'letter', fromFile: null, keepHtml: false,
+    shorten: true, targetChars: 480, model: 'gpt-5.4-mini',
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--items') args.slugs.push(...argv[++i].split(',').map(s => s.trim()).filter(Boolean));
@@ -62,12 +67,19 @@ function parseArgs(argv) {
     else if (a === '--size') args.size = argv[++i].toLowerCase();
     else if (a === '--from-file') args.fromFile = argv[++i];
     else if (a === '--keep-html') args.keepHtml = true;
+    else if (a === '--no-shorten') args.shorten = false;
+    else if (a === '--target-chars') args.targetChars = parseInt(argv[++i], 10);
+    else if (a === '--model') args.model = argv[++i];
     else if (a === '--help' || a === '-h') { printHelp(); process.exit(0); }
     else if (a.startsWith('--')) { console.error(`Unknown arg: ${a}`); printHelp(); process.exit(1); }
     else args.slugs.push(a.replace(/\.md$/, '').trim());
   }
   if (!['letter', 'a4'].includes(args.size)) {
     console.error(`Unknown size: ${args.size}. Use letter or a4.`);
+    process.exit(1);
+  }
+  if (!Number.isInteger(args.targetChars) || args.targetChars < 120) {
+    console.error(`--target-chars must be an integer >= 120 (got ${args.targetChars})`);
     process.exit(1);
   }
   return args;
@@ -83,9 +95,15 @@ function printHelp() {
   --title TITLE           Optional footer title printed under each sheet.
   --size letter|a4        Paper size (default letter). Cards stay 2.5" x 3.5".
   --keep-html             Keep the intermediate HTML next to the PDF.
+  --no-shorten            Keep full descriptions (they may clip on long items).
+  --target-chars N        Target length for AI-shortened descriptions (default 480).
+  --model NAME            OpenAI model for shortening (default gpt-5.4-mini).
   -h, --help              Show this help.
 
-  With no slugs, 9 items that already have artwork are auto-selected as a demo.
+  Descriptions longer than the target are condensed with OpenAI so the full rules
+  fit the card back; results cache to scripts/.card-desc-cache.json. Needs
+  OPENAI_API_KEY (falls back to full text if unset). With no slugs, 9 items that
+  already have artwork are auto-selected as a demo.
 `);
 }
 
@@ -116,20 +134,137 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-// Turn the item body into a compact HTML blurb suitable for a tiny card back.
-function descriptionHtml(body) {
+// Clean the raw item body into an array of plain-text paragraphs.
+function cleanParas(body) {
   let text = body;
   text = text.replace(/^#\s+.*$/m, '');               // drop the H1 title
   text = text.replace(/!\[[^\]]*\]\([^)]*\)/g, '');    // drop image markdown
   // Drop the auto-generated "Applicable Weapons" pseudo-table and anything after.
   text = text.replace(/\n\s*Applicable\s+\w+:?[\s\S]*$/i, '');
-  const paras = text
+  return text
     .split(/\n{2,}/)
     .map(p => p.replace(/\s+/g, ' ').trim())
     .filter(p => p && p.length > 1);
+}
+
+function paragraphsToHtml(paras) {
   return paras
     .map(p => `<p>${escapeHtml(p).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`)
     .join('');
+}
+
+// Full description as HTML (card back, when not shortening).
+function descriptionHtml(body) {
+  return paragraphsToHtml(cleanParas(body));
+}
+
+// Full description as plain text (source for AI shortening / length checks).
+function descriptionText(body) {
+  return cleanParas(body).join('\n\n');
+}
+
+// Render already-clean prose (e.g. an AI-shortened blurb) to HTML paragraphs.
+function textToHtml(text) {
+  const paras = String(text).split(/\n{2,}/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return paragraphsToHtml(paras);
+}
+
+// ---------------------------------------------------------------------------
+// AI description shortening (fits the full rules onto a small card back)
+// ---------------------------------------------------------------------------
+function hashText(s) {
+  return crypto.createHash('sha1').update(s).digest('hex').slice(0, 12);
+}
+
+function loadCache() {
+  try { return JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')); } catch { return {}; }
+}
+
+function saveCache(cache) {
+  try { fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2)); } catch { /* best effort */ }
+}
+
+// Truncate at a word boundary as a fallback if the AI call fails.
+function hardTrim(text, n) {
+  if (text.length <= n) return text;
+  const cut = text.slice(0, n);
+  const sp = cut.lastIndexOf(' ');
+  return (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,;:.]+$/, '') + '\u2026';
+}
+
+const SHORTEN_SYSTEM =
+  'You condense Dungeons & Dragons 5e magic-item descriptions so the full rules fit on a ' +
+  'small printed card. Preserve every mechanical detail that matters at the table: bonuses, ' +
+  'dice, save DCs, charges and recharge, activation/action cost, attunement effects, and ' +
+  'conditions. Drop tables, "applicable weapons" lists, restatements of the rarity/type line, ' +
+  'and pure filler. Keep a light touch of flavor only if space allows. Write plain prose ' +
+  '(no markdown headings, no bullet symbols), short sentences, and use **bold** only for ' +
+  'named properties. Never invent rules that are not in the source.';
+
+async function shortenOne(client, model, item, targetChars) {
+  const source = descriptionText(item.body);
+  if (source.length <= targetChars) return source;   // already fits; no call needed
+  const user =
+    `Item: ${item.front.title || item.slug}\n` +
+    `Rarity/Type: ${[item.front.rarity, humanizeType(item.front.type)].filter(Boolean).join(', ')}\n\n` +
+    `Full description:\n${source}\n\n` +
+    `Condense to about ${targetChars} characters (hard maximum ${Math.round(targetChars * 1.15)}). ` +
+    `Return only the condensed description.`;
+  const completion = await client.chat.completions.create({
+    model,
+    messages: [
+      { role: 'system', content: SHORTEN_SYSTEM },
+      { role: 'user', content: user },
+    ],
+    max_completion_tokens: 400,
+    temperature: 0.3,
+  });
+  const out = (completion.choices?.[0]?.message?.content || '').trim();
+  return out || hardTrim(source, targetChars);
+}
+
+// Attach `cardText` to every item, using a disk cache keyed by source hash.
+async function shortenDescriptions(items, opts) {
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn('  [shorten] OPENAI_API_KEY not set; using full descriptions (may clip).');
+    return;
+  }
+  let OpenAI;
+  try { OpenAI = require('openai'); } catch {
+    console.warn('  [shorten] openai package not installed; using full descriptions.');
+    return;
+  }
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const cache = loadCache();
+  const { model, targetChars } = opts;
+  let calls = 0, cached = 0, shortAlready = 0;
+
+  // Small concurrency pool: quick without hammering the API.
+  const queue = items.slice();
+  async function worker() {
+    while (queue.length) {
+      const item = queue.shift();
+      const source = descriptionText(item.body);
+      if (source.length <= targetChars) { item.cardText = source; shortAlready++; continue; }
+      const h = hashText(source);
+      const hit = cache[item.slug];
+      if (hit && hit.hash === h && hit.model === model && hit.target === targetChars && hit.text) {
+        item.cardText = hit.text; cached++; continue;
+      }
+      try {
+        const text = await shortenOne(client, model, item, targetChars);
+        item.cardText = text;
+        cache[item.slug] = { hash: h, model, target: targetChars, text };
+        calls++;
+      } catch (err) {
+        console.warn(`  [shorten] ${item.slug}: ${err.message}; truncating instead.`);
+        item.cardText = hardTrim(source, targetChars);
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(4, items.length) }, worker));
+  saveCache(cache);
+  console.log(`  [shorten] ${calls} generated, ${cached} cached, ${shortAlready} already short (target ~${targetChars} chars).`);
 }
 
 // ---------------------------------------------------------------------------
@@ -245,10 +380,11 @@ function frontCard(item) {
 function backCard(item) {
   if (!item) return '<div class="card"></div>';
   const rc = rarityClass(item.front.rarity);
+  const desc = item.cardText != null ? textToHtml(item.cardText) : descriptionHtml(item.body);
   return `<div class="card back rarity-${rc}"><div class="inner">
     <div class="name"><span>${escapeHtml(item.front.title || item.slug)}</span></div>
     <div class="stat"><span>${statLine(item.front)}</span></div>
-    <div class="desc">${descriptionHtml(item.body)}</div>
+    <div class="desc">${desc}</div>
   </div></div>`;
 }
 
@@ -347,9 +483,9 @@ function renderHtml(items, opts) {
       padding: 4pt 6pt; line-height: 1.28; }
     .back .stat > span { display: block; }
 
-    .back .desc { height: 2.49in; overflow: hidden; padding: 5pt 7pt; font-size: 6.8pt;
-      line-height: 1.28; text-align: left; }
-    .back .desc p { margin: 0 0 3.5pt; }
+    .back .desc { height: 2.49in; overflow: hidden; padding: 5pt 7pt; font-size: 7pt;
+      line-height: 1.3; text-align: left; }
+    .back .desc p { margin: 0 0 4pt; }
     .back .desc p:last-child { margin-bottom: 0; }
   </style></head><body>${pages.join('')}</body></html>`;
 }
@@ -357,7 +493,7 @@ function renderHtml(items, opts) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   const index = buildIndex();
 
@@ -384,6 +520,10 @@ function main() {
 
   if (items.length === 0) { console.error('No items to render.'); process.exit(1); }
 
+  if (args.shorten) {
+    await shortenDescriptions(items, { model: args.model, targetChars: args.targetChars });
+  }
+
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
   const outPdf = path.resolve(args.out || path.join(REPORTS_DIR, 'item-cards.pdf'));
   const htmlPath = outPdf.replace(/\.pdf$/i, '') + '.html';
@@ -405,4 +545,4 @@ function main() {
   console.log('Print double-sided, flip on the long edge, then cut on the card borders.');
 }
 
-main();
+main().catch((err) => { console.error(err); process.exit(1); });

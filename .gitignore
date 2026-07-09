@@ -25,6 +25,11 @@ reports/session*-dm-guide.pdf
 reports/session*-combined.md
 reports/session*-combined.html
 
+# Item-card generator output + AI-shortened description cache
+reports/item-cards*.pdf
+reports/item-cards*.html
+scripts/.card-desc-cache.json
+
 # Scratch / scrape working directory — never commit (may contain auth tokens,
 # third-party copyrighted content, or other sensitive captures)
 tmp/frhof-raw/
