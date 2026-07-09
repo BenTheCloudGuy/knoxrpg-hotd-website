@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.27.0] - 2026-07-09
+
+### Added
+- **D&D Beyond Drops munch (`scripts/munch-ddb-drops.js`).** New recurring importer that pulls D&D Beyond Drops subscriber content (which was entirely absent from HOTD) into the local content tables so the RAG embed pipeline can pick it up. It exchanges the `DDB_COBALT_TOKEN` for a short-lived bearer, loads the DDB config catalog for ID→name lookups (challenge ratings, sizes, types, alignments, ability stats, movements), then pulls monsters (`monster-service`, paged) and magic items + feats (`character-service/game-data`, filtered to the Drops source IDs). Each entity is mapped to its table row with a composed `description_text`: full statblocks for monsters (type line, AC/HP/Speed, CR/XP/PB, ability scores with mods, skills/senses/immunities/languages, characteristics, traits, actions, bonus/reactions/legendary/mythic/lair), type+rarity+attunement headers for magic items, and prerequisite lines for feats. Rows upsert on `id` (idempotent), so re-running each month captures new drops without duplicates. Defaults to source IDs `272` (ddbd) + `283` (ddbdsp); flags: `--sources`, `--only monsters,items,feats`, `--dry-run`, `--verbose`. First run loaded 8 monsters, 13 magic items, and 9 feats. After a run, embed with `node scripts/embed-ddb-content.js --phase 2 --mode incremental`.
+
+### Notes
+- Companion audit report `reports/ddb-rag-coverage-audit.md` documents the broader DDB→RAG coverage gap (43 owned source books not yet synced) that motivated this importer.
+
 ## [3.26.0] - 2026-07-08
 
 ### Added
