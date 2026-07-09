@@ -18,6 +18,7 @@ const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib
 const ddbClient = require("../lib/ddb-client");
 const ddbDownload = require("../lib/ddb-download");
 const ddbBookImages = require("../lib/ddb-book-images");
+const ddbJobs = require("../lib/ddb-jobs");
 const homebrewSchema = require("../lib/homebrew-schema");
 const homebrewPublish = require("../lib/homebrew-publish");
 const sessionsLib = require("../lib/sessions");
@@ -2141,30 +2142,58 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     return true;
   }
 
-  // ── DDB: sync MISSING (download from DDB → DB, then embed) ────
-  // POST /api/dm-admin/ddb/sync-missing  { sources?: ["wel", ...], types? }
-  // With no `sources`, downloads every source currently Missing on DDB.
+  // ── DDB: sync sources (download content + art/maps → embed) [background] ─
+  // POST /api/dm-admin/ddb/sync-missing  { sources?: ["wel"], images? }
+  // No `sources` → every currently-Missing source. Runs in the background
+  // (big books exceed proxy timeouts); poll /ddb/sync-status?id=.
   if (decoded === "/api/dm-admin/ddb/sync-missing" && req.method === "POST") {
     if (!requireAdmin(session, res)) return true;
     if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
     try {
       const body = JSON.parse((await readBody(req)) || "{}");
-      const types = Array.isArray(body.types) && body.types.length ? body.types : undefined;
       let sourceCodes = Array.isArray(body.sources) ? body.sources.map((s) => String(s).toLowerCase()).filter(Boolean) : [];
-      // No explicit sources → resolve every currently-Missing source via a fresh audit.
       if (!sourceCodes.length) {
         const cobaltToken = await ddbClient.getCobaltToken();
         const audit = await runDdbAudit(pgPool, { cobaltToken });
         sourceCodes = ((audit.ddbOwned && audit.ddbOwned.missing) || []).map((s) => s.code);
       }
-      if (!sourceCodes.length) { sendJSON(res, { ok: true, sources: [], downloaded: { monsters: 0, items: 0, feats: 0 }, embedded: { embedded: 0 }, note: "nothing missing" }); return true; }
-      const downloaded = await ddbDownload.downloadSources(pgPool, { sourceCodes, types });
-      const embedded = await embedDdbMissing(pgPool, azure.openaiClient, {});
-      sendJSON(res, { ok: true, sources: sourceCodes, downloaded, embedded });
+      if (!sourceCodes.length) { sendJSON(res, { ok: true, empty: true, note: "nothing missing" }); return true; }
+      const withImages = body.images !== false;
+      const openai = azure.openaiClient;
+      const job = ddbJobs.start(`Sync ${sourceCodes.length} source(s)${withImages ? " + art/maps" : ""}`, async (log) => {
+        log(`Downloading stat content for ${sourceCodes.length} source(s)\u2026`);
+        const content = await ddbDownload.downloadSources(pgPool, { sourceCodes, onLog: log });
+        const images = { uploaded: 0, art: 0, maps: 0, published: 0, skipped: 0, failed: 0, noImages: 0 };
+        if (withImages) {
+          for (const code of sourceCodes) {
+            try {
+              const r = await ddbBookImages.downloadBookImages(pgPool, code, { onLog: log });
+              images.uploaded += r.uploaded; images.art += r.art; images.maps += r.maps;
+              images.published += r.published; images.skipped += r.skipped; images.failed += r.failed;
+            } catch (e) { images.noImages++; log(`images ${code}: ${e.message}`); }
+          }
+        }
+        log("Embedding new content into the RAG\u2026");
+        const embedded = await embedDdbMissing(pgPool, openai, {});
+        log("Done.");
+        return { sources: sourceCodes, content, images, embedded };
+      });
+      sendJSON(res, { ok: true, jobId: job.id, sources: sourceCodes.length });
     } catch (err) {
       console.error("DDB sync-missing error:", err);
       sendJSON(res, { error: err.message, reason: err.reason || null }, 500);
     }
+    return true;
+  }
+
+  // ── DDB: background sync job status ──────────────────────
+  // GET /api/dm-admin/ddb/sync-status?id=...
+  if (decoded === "/api/dm-admin/ddb/sync-status" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    const id = new URL(req.url, "http://x").searchParams.get("id") || "";
+    const v = ddbJobs.view(id);
+    if (!v) { sendJSON(res, { error: "job not found" }, 404); return true; }
+    sendJSON(res, { ok: true, job: v });
     return true;
   }
 

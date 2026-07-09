@@ -2520,18 +2520,16 @@ async function renderDmAdminPage(session) {
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
       html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.availableCount||0) + ' available, ' + ddbNum(o.missingCount) + ' missing)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> pulls stat content into the RAG; <strong>Art+Maps</strong> extracts the book\u2019s images into the Storage Account \u2014 maps appear under Game Info \u2192 Maps, other art under Game Info \u2192 Art &amp; Images.</p>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> downloads a source&#39;s stat content into the RAG and its art + maps for the book\u2019s images into the Storage Account \u2014 maps appear under Game Info \u2192 Maps, other art under Game Info \u2192 Art &amp; Images.</p>';
       if (o.missingCount > 0) {
-        html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source from D&amp;D Beyond into the database, then embeds it. Large libraries can take several minutes.</span></p>';
+        html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source (stat content + art + maps) and embeds it. Runs in the background; large libraries can take a while.</span></p>';
       }
       html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th><th></th></tr></thead><tbody>';
       (o.all||o.missing||[]).slice(0,200).forEach(function(s){
         var badge = s.status === 'Available'
           ? '<span class="ddb-badge ddb-badge-ok">Available</span>'
           : '<span class="ddb-badge ddb-badge-miss">Missing</span>';
-        var action = '';
-        if (s.status === 'Missing') action += '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '">Sync</button> ';
-        action += '<button class="dmc-btn dmc-btn-sm ddb-img-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '" title="Download this book\u2019s art + maps into the Storage Account">Art+Maps</button>';
+        var action = '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '" title="Download this book\u2019s stat content into the RAG and its art + maps into the galleries">Sync</button>';
         html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td><td>' + action + '</td></tr>';
       });
       html += '</tbody></table>';
@@ -2557,66 +2555,71 @@ async function renderDmAdminPage(session) {
     box.querySelectorAll('.ddb-sync-src').forEach(function(b){
       b.addEventListener('click', function(){ ddbSyncSource(b.getAttribute('data-code'), b.getAttribute('data-title'), b); });
     });
-    box.querySelectorAll('.ddb-img-src').forEach(function(b){
-      b.addEventListener('click', function(){ ddbBookImages(b.getAttribute('data-code'), b.getAttribute('data-title'), b); });
-    });
   }
 
-  // Download a book's art + maps from DDB into the Storage Account.
-  async function ddbBookImages(code, title, btn) {
-    if (!code) return;
-    if (!confirm('Download all art + maps for "' + (title || code) + '" from D&D Beyond into the Storage Account? Large books can have hundreds of images and take a while.')) return;
-    if (btn) { btn.disabled = true; btn.textContent = 'Fetching\u2026'; }
-    try {
-      var r = await fetch('/api/dm-admin/ddb/book-images', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ book: code }) });
-      var data = await r.json();
-      if (!data.ok) throw new Error(data.error || 'Image fetch failed');
-      var x = data.result || {};
-      alert('Stored images for ' + (title || code) + ': ' + (x.uploaded||0) + ' new (' + (x.art||0) + ' art, ' + (x.maps||0) + ' maps), ' + (x.skipped||0) + ' already had, ' + (x.failed||0) + ' failed. Maps now show under Game Info \u2192 Maps; art under Game Info \u2192 Art & Images.');
-    } catch (e) {
-      alert('Image fetch error: ' + e.message + (/token/i.test(e.message) ? ' (check the DDB token).' : ''));
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Art+Maps'; }
+  // Poll a background sync job until it finishes.
+  function ddbPollJob(jobId, onProgress, onDone) {
+    var errs = 0;
+    function tick() {
+      fetch('/api/dm-admin/ddb/sync-status?id=' + encodeURIComponent(jobId))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d.ok || !d.job) { onDone({ error: (d && d.error) || 'status unavailable' }); return; }
+          errs = 0; onProgress(d.job);
+          if (d.job.status === 'running') setTimeout(tick, 2500); else onDone(d.job);
+        })
+        .catch(function(e){ if (++errs < 40) setTimeout(tick, 3000); else onDone({ error: e.message }); });
     }
+    tick();
+  }
+  function ddbSyncSummary(j, name) {
+    var x = j.result || {}; var c = x.content || {}; var im = x.images || {}; var em = x.embedded || {};
+    return 'Synced ' + name + ': ' + (c.monsters||0) + ' monsters, ' + (c.items||0) + ' items, ' + (c.feats||0) + ' feats; ' + (im.maps||0) + ' maps + ' + (im.art||0) + ' art stored; ' + (em.embedded||0) + ' RAG chunk(s).';
   }
 
-  // Download a single Missing source from DDB, then embed it.
+  // Sync ONE source: content -> RAG + art/maps -> Maps/Art galleries (background).
   async function ddbSyncSource(code, title, btn) {
     if (!code) return;
-    if (!confirm('Download "' + (title || code) + '" from D&D Beyond and embed it into the RAG?')) return;
-    if (btn) { btn.disabled = true; btn.textContent = 'Syncing\u2026'; }
+    if (!confirm('Sync "' + (title || code) + '" from D&D Beyond? Downloads its stat content into the RAG and its art + maps into the Maps / Art galleries. Runs in the background.')) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting\u2026'; }
     try {
       var r = await fetch('/api/dm-admin/ddb/sync-missing', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: [code] }) });
-      var data = await r.json();
-      if (!data.ok) throw new Error(data.error || 'Sync failed');
-      var d = data.downloaded || {}; var e = data.embedded || {};
-      alert('Synced ' + (title || code) + ': downloaded ' + (d.monsters||0) + ' monsters, ' + (d.items||0) + ' items, ' + (d.feats||0) + ' feats; embedded ' + (e.embedded||0) + ' RAG chunk(s).');
-      runDdbAudit();
-    } catch (err) {
-      alert('Sync error: ' + err.message);
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Sync failed to start');
+      ddbPollJob(d.jobId, function(j){ if (btn) btn.textContent = 'Syncing\u2026'; }, function(j){
+        if (btn) { btn.disabled = false; btn.textContent = 'Sync'; }
+        if (j.error) { alert('Sync error: ' + j.error); return; }
+        alert(ddbSyncSummary(j, title || code));
+        runDdbAudit();
+      });
+    } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Sync'; }
+      alert('Sync error: ' + e.message);
     }
   }
 
-  // Download + embed every currently-Missing source.
+  // Sync ALL currently-Missing sources (content + art/maps) in the background.
   async function ddbSyncAllMissing() {
     var o = (_ddbReport && _ddbReport.ddbOwned) || {};
     var n = o.missingCount || 0;
     if (!n) { alert('Nothing missing.'); return; }
-    if (!confirm('Download and embed ALL ' + n + ' Missing source(s) from D&D Beyond? This pulls their content into the database and embeds it into the RAG, and can take several minutes for large libraries.')) return;
+    if (!confirm('Sync ALL ' + n + ' Missing source(s) from D&D Beyond (stat content + art + maps)? Runs in the background and can take a long time for large libraries.')) return;
     var btn = el('ddb-syncall-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Syncing all\u2026 (this can take a while)'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting\u2026'; }
     try {
       var codes = (o.missing || []).map(function(s){ return s.code; });
       var r = await fetch('/api/dm-admin/ddb/sync-missing', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: codes }) });
-      var data = await r.json();
-      if (!data.ok) throw new Error(data.error || 'Sync failed');
-      var d = data.downloaded || {}; var e = data.embedded || {};
-      alert('Synced ' + (data.sources ? data.sources.length : n) + ' source(s): downloaded ' + (d.monsters||0) + ' monsters, ' + (d.items||0) + ' items, ' + (d.feats||0) + ' feats; embedded ' + (e.embedded||0) + ' RAG chunk(s).');
-      runDdbAudit();
-    } catch (err) {
-      alert('Sync error: ' + err.message + ' (The download may still be running server-side; re-run the audit in a minute to check.)');
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Sync failed to start');
+      ddbPollJob(d.jobId, function(j){ if (btn) { var last = (j.progress && j.progress.length) ? j.progress[j.progress.length-1] : ''; btn.textContent = 'Syncing\u2026 ' + last.slice(0,32); } }, function(j){
+        if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync ALL Missing \u2192 RAG'; }
+        if (j.error) { alert('Sync error: ' + j.error); return; }
+        alert(ddbSyncSummary(j, ((j.result && j.result.sources && j.result.sources.length) || n) + ' source(s)'));
+        runDdbAudit();
+      });
+    } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync ALL Missing \u2192 RAG'; }
+      alert('Sync error: ' + e.message);
     }
   }
 

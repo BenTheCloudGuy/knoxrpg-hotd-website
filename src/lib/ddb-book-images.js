@@ -70,15 +70,17 @@ function discoverPages(html, code) {
   return [...set];
 }
 
-// Extract this book's compendium/attachment image URLs from a page (skip UI chrome).
-function extractImages(html, code) {
+// Extract this book's compendium/attachment image URLs from a page. We accept
+// any /compendium-images/{prefix}/… on the book's own pages (the image prefix
+// often differs from the source code — e.g. book `mm-2024` uses `/mm/`), and
+// skip UI chrome (/…/ui/) and site assets.
+function extractImages(html) {
   const urls = new Set();
   for (const m of html.matchAll(/https:\/\/media\.dndbeyond\.com\/(?:compendium-images|attachments)\/[^\s"')\\]+/gi)) {
-    let u = m[0].replace(/&amp;/g, "&");
-    if (!(u.includes(`/compendium-images/${code}/`) || u.includes("/attachments/"))) continue;
-    if (new RegExp(`/compendium-images/${code}/ui/`, "i").test(u)) continue; // site chrome
+    const u = m[0].replace(/&amp;/g, "&").split("#")[0];
+    if (/\/compendium-images\/[^/]+\/ui\//i.test(u)) continue; // TOC / chrome
     if (!/\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(u)) continue;
-    urls.add(u.split("#")[0]);
+    urls.add(u);
   }
   return [...urls];
 }
@@ -121,11 +123,11 @@ async function downloadBookImages(pgPool, code, opts = {}) {
 
   // 3. Gather all image URLs across pages.
   const imageUrls = new Set();
-  extractImages(landing.html, code).forEach((u) => imageUrls.add(u));
+  extractImages(landing.html).forEach((u) => imageUrls.add(u));
   let scanned = 1;
   for (const p of uniquePages) {
     if (p === landing.finalUrl) continue;
-    try { const r = await getHtml(p, cookie); extractImages(r.html, code).forEach((u) => imageUrls.add(u)); }
+    try { const r = await getHtml(p, cookie); extractImages(r.html).forEach((u) => imageUrls.add(u)); }
     catch (_) { /* skip a bad page */ }
     if (++scanned % 10 === 0) log(`  scanned ${scanned}/${uniquePages.length} pages, ${imageUrls.size} images so far`);
   }

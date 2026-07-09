@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.38.0] - 2026-07-09
+
+### Changed
+- **Art + Maps is now part of Sync (one operation).** The separate `Art+Maps` button is gone; every source row has a single **Sync** that downloads the book's **stat content → RAG** *and* its **art + maps → Maps / Art galleries** in one step. `Sync ALL Missing` does the same across all Missing sources.
+- **Sync runs as a background job with progress polling.** The `sync-missing` endpoint now starts a job and returns immediately; the UI polls `GET /ddb/sync-status?id=` and reports progress. This fixes the proxy timeout that made large books (e.g. Tome of Beasts) fail with an HTML gateway-error response ("… is not valid JSON"). New `src/lib/ddb-jobs.js` (tiny in-memory job registry).
+
+### Fixed
+- **Book image extraction returned 0 images for versioned books.** Books whose image prefix differs from their source code (e.g. `mm-2024` → `/compendium-images/mm/…`) matched nothing. Image matching now accepts any non-UI compendium image found on the book's own (entitlement-checked) pages, so `mm-2024`, `mm`, etc. work. Verified live: `mm-2024` now yields images (was 0).
+
+### Notes
+- Verified live: `mm-2024` scrape → 27 art on 3 pages, published to the Art gallery; modules load; all rendered client scripts pass `node --check`.
+- A single `Sync` now covers content + images; re-running is idempotent (content upserts, images skip-known, embeddings dedupe by hash).
+
 ## [3.37.0] - 2026-07-09
 
 ### Added
