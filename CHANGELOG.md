@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.29.0] - 2026-07-09
+
+### Changed
+- **Item Cards panel redesigned (`/dm-admin#cards`).** Reworked into a two-column workspace: the **results list is the left 1/3** and a **live card preview fills the right 2/3**. The **Generate PDF** button and **Selected (n/9)** count now sit directly above the results list. Each result row has an **Add (`+`) / Remove (`−`) toggle** to the left of the name, selected rows are **highlighted in place** (the separate "selected" tray box was removed), and clicking a row opens its preview. The preview renders the **front** (name banner, art, rarity/type badge) and **back** (name, stat line, description) of the card so you see what will print before generating.
+
+### Added
+- **Per-item card art override + art picker.** Because the D&D Beyond avatar images are gone cluster-wide (the `cloudgeekcusgaming01` blobs 404), items that "had art" rendered as *No art*. The preview now attempts the catalog image and falls back cleanly, and a **Choose Art…** button lets you assign real art from the generated-image gallery (grid picker) or by pasting a `/hotd-content/…` or external URL, with **Clear Art** to reset. Overrides persist in a new `hotd_card_art` table (`schema.js`) and are used by both the preview and the PDF: the generator resolves local `/hotd-content/*` overrides to an absolute `imagePath` so chosen art actually embeds. New endpoints in `src/routes/dm-admin-api.js`: `GET /api/dm-admin/item-cards/item` (single-item detail for the preview) and `POST /api/dm-admin/item-cards/art` (set/clear override); the search + PDF queries now `LEFT JOIN hotd_card_art` and report `hasOverride`.
+
 ## [3.28.0] - 2026-07-09
 
 ### Added

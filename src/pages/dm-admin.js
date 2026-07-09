@@ -354,28 +354,28 @@ async function renderDmAdminPage(session) {
         <div class="dmc-panel-bar">
           <h2>Item Cards</h2>
           <div class="dmc-bar-actions">
-            <select id="cards-kind" class="dmc-input" onchange="cardSearch()">
-              <option value="all">All items</option>
-              <option value="magic">Magic items</option>
-              <option value="mundane">Gear / mundane</option>
-            </select>
-            <input id="cards-q" class="dmc-input" placeholder="Search items by name\u2026" oninput="cardSearchDebounced()" style="min-width:220px;" />
+            <input id="cards-title" class="dmc-input" placeholder="Optional footer title (e.g. Session 30 Loot)" style="min-width:200px;" />
           </div>
         </div>
-        <p class="cards-hint">Pick up to 9 items from the campaign database, then generate a print-ready PDF of baseball-card-size cards (front art + name, back stats + description). 9 items fill one double-sided sheet.</p>
-        <div class="cards-layout">
-          <div>
-            <h4 class="dmc-section-title">Results</h4>
-            <div id="cards-results" class="cards-results"><p class="cards-hint">Type at least 2 letters to search the item database.</p></div>
-          </div>
-          <div>
-            <h4 class="dmc-section-title">Selected (<span id="cards-count">0</span>/9)</h4>
-            <div id="cards-tray" class="cards-tray"><p class="cards-hint">Click items on the left to add them. 9 fill one printable sheet.</p></div>
-            <div class="cards-gen-row">
-              <input id="cards-title" class="dmc-input" placeholder="Optional footer title (e.g. Session 30 Loot)" style="flex:1;" />
-              <button id="cards-gen" class="dmc-btn dmc-btn-primary" onclick="cardGenerate()" disabled>Generate PDF</button>
+        <div class="cards-split">
+          <div class="cards-left">
+            <div class="cards-searchbar">
+              <select id="cards-kind" class="dmc-input" onchange="cardSearch()">
+                <option value="all">All items</option>
+                <option value="magic">Magic items</option>
+                <option value="mundane">Gear / mundane</option>
+              </select>
+              <input id="cards-q" class="dmc-input" placeholder="Search items by name\u2026" oninput="cardSearchDebounced()" style="flex:1;" />
             </div>
+            <div class="cards-genbar">
+              <button id="cards-gen" class="dmc-btn dmc-btn-primary" onclick="cardGenerate()" disabled>Generate PDF</button>
+              <span id="cards-count-badge" class="cards-count-badge">Selected <span id="cards-count">0</span>/9</span>
+            </div>
+            <div id="cards-results" class="cards-results"><p class="cards-hint">Type at least 2 letters to search the item database.</p></div>
             <p id="cards-status" class="cards-hint"></p>
+          </div>
+          <div class="cards-right">
+            <div id="cards-preview" class="cards-preview"><p class="cards-hint">Select an item on the left to preview the front and back of its card.</p></div>
           </div>
         </div>
       </section>
@@ -426,13 +426,20 @@ async function renderDmAdminPage(session) {
     /* ═══ ITEM CARDS ═══ */
     .dmc-input { background:#1a1a1a; color:#ddd; border:1px solid #333; border-radius:6px; padding:6px 10px; font-size:0.8rem; }
     .dmc-input:focus { outline:none; border-color:#c83232; }
-    .cards-layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; margin-top:8px; }
-    @media (max-width:820px){ .cards-layout{ grid-template-columns:1fr; } }
+    .cards-split { display:flex; gap:16px; align-items:stretch; margin-top:8px; height:calc(100vh - 170px); }
+    .cards-left { flex:0 0 33%; max-width:33%; min-width:260px; display:flex; flex-direction:column; gap:10px; min-height:0; }
+    .cards-right { flex:1; min-width:0; overflow-y:auto; border:1px solid #222; border-radius:10px; background:#0d0d0d; }
+    @media (max-width:820px){ .cards-split{ flex-direction:column; height:auto; } .cards-left{ flex-basis:auto; max-width:100%; } }
+    .cards-searchbar { display:flex; gap:8px; }
+    .cards-genbar { display:flex; gap:10px; align-items:center; }
+    .cards-count-badge { color:#999; font-size:0.75rem; }
+    .cards-count-badge.full { color:#cd6; }
     .cards-hint { color:#666; font-size:0.75rem; margin:6px 2px; }
-    .cards-results { max-height:58vh; overflow-y:auto; border:1px solid #222; border-radius:8px; }
-    .card-row { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #1c1c1c; cursor:pointer; }
+    .cards-results { flex:1; overflow-y:auto; border:1px solid #222; border-radius:8px; min-height:0; }
+    .card-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid #1c1c1c; cursor:pointer; }
     .card-row:last-child { border-bottom:none; }
     .card-row:hover { background:#181818; }
+    .card-row.is-preview { background:#1d1512; }
     /* ── DDB Content ── */
     .ddb-cards { display:flex; gap:12px; flex-wrap:wrap; margin:6px 0 14px; }
     .ddb-card { display:flex; flex-direction:column; min-width:150px; background:#161616; border:1px solid #262626; border-radius:8px; padding:12px 16px; }
@@ -446,17 +453,45 @@ async function renderDmAdminPage(session) {
     .ddb-table code { color:#9cc; font-size:0.76rem; }
     .ddb-table .ddb-miss { color:#cd6; font-weight:600; }
     .ddb-table .ddb-ex { color:#777; font-size:0.74rem; }
-    .card-row.is-selected { opacity:0.4; cursor:default; }
-    .card-row .cr-name { flex:1; color:#ddd; font-size:0.82rem; }
+    .card-row.is-selected { background:#12261a; }
+    .card-row.is-selected.is-preview { background:#173021; }
+    .card-row .cr-toggle { flex:0 0 auto; width:22px; height:22px; border-radius:5px; border:1px solid #355; background:#12241c; color:#5c8; font-size:0.95rem; line-height:1; cursor:pointer; padding:0; }
+    .card-row .cr-toggle.rm { border-color:#733; background:#241414; color:#e77; }
+    .card-row .cr-toggle:hover { filter:brightness(1.3); }
+    .card-row .cr-name { flex:1; color:#ddd; font-size:0.82rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .card-row .cr-meta { color:#888; font-size:0.7rem; white-space:nowrap; }
     .card-row .cr-badge { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.4px; padding:1px 6px; border-radius:10px; border:1px solid #333; color:#aaa; }
-    .card-row .cr-img { font-size:0.64rem; color:#3a8f5a; }
-    .cards-tray { min-height:120px; border:1px solid #222; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; }
-    .tray-row { display:flex; align-items:center; gap:8px; background:#161616; border:1px solid #262626; border-radius:6px; padding:6px 9px; }
-    .tray-row .tr-num { color:#c83232; font-weight:700; font-size:0.72rem; width:16px; text-align:right; }
-    .tray-row .tr-name { flex:1; color:#ddd; font-size:0.8rem; }
-    .tray-row button { background:none; border:none; color:#f55; cursor:pointer; font-size:1rem; line-height:1; padding:0 4px; }
-    .cards-gen-row { display:flex; gap:8px; margin-top:12px; align-items:center; }
+    .card-row .cr-img { font-size:0.62rem; color:#3a8f5a; }
+    .card-row .cr-img.none { color:#654; }
+
+    /* ── Card preview (front + back) ── */
+    .cards-preview { padding:20px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+    .cards-preview .pv-head { color:#999; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; align-self:flex-start; }
+    .pv-cards { display:flex; gap:22px; flex-wrap:wrap; justify-content:center; }
+    .pcard { width:250px; height:350px; border-radius:12px; border:2px solid #6b5836; background:linear-gradient(#efe4c9,#e2d3ad); color:#2a2118; box-shadow:0 6px 18px rgba(0,0,0,0.5); display:flex; flex-direction:column; overflow:hidden; }
+    .pcard-label { font-size:0.66rem; color:#888; text-transform:uppercase; letter-spacing:1px; text-align:center; margin-bottom:6px; }
+    .pcard .pc-name { background:#2a2118; color:#f2e6c8; font-weight:700; text-align:center; padding:8px 6px; font-size:0.9rem; border-bottom:2px solid #b89a5a; }
+    .pcard .pc-art { flex:1; margin:8px; border:1px solid #b89a5a; border-radius:6px; background:#d8c9a0; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+    .pcard .pc-art img { width:100%; height:100%; object-fit:cover; }
+    .pcard .pc-art .no-art { color:#8a7a52; font-style:italic; font-size:0.8rem; }
+    .pcard .pc-badge { text-align:center; font-size:0.66rem; color:#4a3d24; padding:6px 8px 10px; }
+    .pcard.back { padding:0; }
+    .pcard.back .pc-stat { text-align:center; font-size:0.66rem; color:#4a3d24; padding:6px 10px; border-bottom:1px solid #b89a5a; margin:0 8px; }
+    .pcard.back .pc-desc { flex:1; overflow-y:auto; padding:8px 12px; font-size:0.68rem; line-height:1.3; color:#2a2118; }
+    .pcard.back .pc-desc p { margin:0 0 6px; }
+    .pv-artbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .pv-artbar .cards-hint { margin:0; }
+
+    /* ── Art picker modal ── */
+    .artpick-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50; display:flex; align-items:center; justify-content:center; }
+    .artpick { background:#141414; border:1px solid #333; border-radius:10px; width:min(760px,92vw); max-height:82vh; display:flex; flex-direction:column; overflow:hidden; }
+    .artpick-head { display:flex; gap:8px; align-items:center; padding:12px 14px; border-bottom:1px solid #262626; }
+    .artpick-head h3 { margin:0; color:#c83232; font-size:0.95rem; flex:1; }
+    .artpick-grid { padding:12px; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; }
+    .artpick-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:2px solid #262626; border-radius:6px; cursor:pointer; }
+    .artpick-grid img:hover { border-color:#c83232; }
+    .artpick-foot { display:flex; gap:8px; padding:10px 14px; border-top:1px solid #262626; align-items:center; }
+    .artpick-foot input { flex:1; }
 
     /* ── Forms ── */
     .dmc-form-row { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
@@ -764,9 +799,16 @@ async function renderDmAdminPage(session) {
   let _cardResults = [];
   let _cardSel = [];
   let _cardSearchT = null;
+  let _cardPreview = null;      // full detail of the item shown in the preview pane
+  let _cardPreviewKey = null;   // 'kind:id' of the previewed item
+  let _artChoices = [];         // gallery images for the art picker
   const CARD_MAX = 9;
 
-  function loadCards() { renderCardTray(); cardSearch(); }
+  function cardKey(x) { return x.kind + ':' + String(x.id); }
+  function cardIsSelected(x) { return _cardSel.some(function(s){ return cardKey(s) === cardKey(x); }); }
+  function cardHumanize(t) { return String(t || '').replace(/([a-z])([A-Z])/g, '$1 $2'); }
+
+  function loadCards() { renderCardCount(); cardSearch(); }
   function cardSearchDebounced() { clearTimeout(_cardSearchT); _cardSearchT = setTimeout(cardSearch, 220); }
 
   async function cardSearch() {
@@ -778,39 +820,169 @@ async function renderDmAdminPage(session) {
       const r = await fetch('/api/dm-admin/item-cards/search?kind=' + encodeURIComponent(kind) + '&q=' + encodeURIComponent(q));
       const data = await r.json();
       _cardResults = data.results || [];
-      if (!_cardResults.length) { box.innerHTML = '<p class="cards-hint">No items match \u201c' + esc(q) + '\u201d.</p>'; return; }
-      box.innerHTML = _cardResults.map(function(it, i){
-        const selected = _cardSel.some(function(s){ return s.kind===it.kind && String(s.id)===String(it.id); });
-        const meta = [it.rarity, it.type].filter(Boolean).map(esc).join(' \u00b7 ');
-        return '<div class="card-row' + (selected?' is-selected':'') + '" onclick="cardAdd(' + i + ')">' +
-          '<span class="cr-badge">' + (it.kind==='magic'?'Magic':'Gear') + '</span>' +
-          '<span class="cr-name">' + esc(it.name) + '</span>' +
-          (it.hasImage ? '<span class="cr-img">art</span>' : '') +
-          '<span class="cr-meta">' + meta + '</span></div>';
-      }).join('');
+      renderCardResults();
     } catch(e) { box.innerHTML = '<p class="cards-hint">Search failed: ' + esc(e.message) + '</p>'; }
   }
 
-  function cardAdd(i) {
-    const it = _cardResults[i]; if (!it) return;
-    if (_cardSel.some(function(s){ return s.kind===it.kind && String(s.id)===String(it.id); })) return;
-    if (_cardSel.length >= CARD_MAX) { setCardStatus('Sheet is full (' + CARD_MAX + ' cards). Remove one to add another.'); return; }
-    _cardSel.push(it); setCardStatus(''); renderCardTray(); cardSearch();
+  function renderCardResults() {
+    const box = el('cards-results');
+    if (!_cardResults.length) { box.innerHTML = '<p class="cards-hint">No matching items.</p>'; return; }
+    box.innerHTML = _cardResults.map(function(it, i){
+      const sel = cardIsSelected(it);
+      const isPrev = _cardPreviewKey === cardKey(it);
+      const meta = [it.rarity, it.type].filter(Boolean).map(esc).join(' \u00b7 ');
+      const artInd = it.hasOverride
+        ? '<span class="cr-img">art</span>'
+        : '<span class="cr-img none">no art</span>';
+      return '<div class="card-row' + (sel?' is-selected':'') + (isPrev?' is-preview':'') + '" onclick="cardPreview(' + i + ')">' +
+        '<button class="cr-toggle' + (sel?' rm':'') + '" title="' + (sel?'Remove from sheet':'Add to sheet') + '" onclick="cardToggle(event,' + i + ')">' + (sel?'\u2212':'+') + '</button>' +
+        '<span class="cr-name">' + esc(it.name) + '</span>' +
+        artInd +
+        '<span class="cr-meta">' + meta + '</span></div>';
+    }).join('');
   }
-  function cardRemoveAt(i) { _cardSel.splice(i, 1); renderCardTray(); cardSearch(); }
 
-  function renderCardTray() {
+  function cardToggle(ev, i) {
+    if (ev) ev.stopPropagation();
+    const it = _cardResults[i]; if (!it) return;
+    if (cardIsSelected(it)) {
+      _cardSel = _cardSel.filter(function(s){ return cardKey(s) !== cardKey(it); });
+      setCardStatus('');
+    } else {
+      if (_cardSel.length >= CARD_MAX) { setCardStatus('Sheet is full (' + CARD_MAX + ' cards). Remove one to add another.'); return; }
+      _cardSel.push({ kind: it.kind, id: it.id, name: it.name });
+      setCardStatus('');
+    }
+    renderCardCount(); renderCardResults();
+  }
+
+  // Toggle the item currently shown in the preview pane.
+  function cardToggleCurrent() {
+    if (!_cardPreview) return;
+    const idx = _cardResults.findIndex(function(x){ return cardKey(x) === cardKey(_cardPreview); });
+    if (idx >= 0) { cardToggle(null, idx); }
+    else {
+      // previewed item not in current results; toggle directly
+      if (cardIsSelected(_cardPreview)) _cardSel = _cardSel.filter(function(s){ return cardKey(s) !== cardKey(_cardPreview); });
+      else if (_cardSel.length < CARD_MAX) _cardSel.push({ kind:_cardPreview.kind, id:_cardPreview.id, name:_cardPreview.name });
+      renderCardCount();
+    }
+    if (_cardPreview) renderCardPreview(_cardPreview);
+  }
+
+  function renderCardCount() {
     el('cards-count').textContent = _cardSel.length;
-    const tray = el('cards-tray');
-    if (!_cardSel.length) { tray.innerHTML = '<p class="cards-hint">Click items on the left to add them. ' + CARD_MAX + ' fill one printable sheet.</p>'; }
-    else { tray.innerHTML = _cardSel.map(function(s, i){
-      return '<div class="tray-row"><span class="tr-num">' + (i+1) + '</span>' +
-        '<span class="tr-name">' + esc(s.name) + '</span>' +
-        '<button title="Remove" onclick="cardRemoveAt(' + i + ')">&times;</button></div>';
-    }).join(''); }
+    const badge = el('cards-count-badge');
+    if (badge) badge.className = 'cards-count-badge' + (_cardSel.length >= CARD_MAX ? ' full' : '');
     el('cards-gen').disabled = _cardSel.length === 0;
   }
   function setCardStatus(msg) { el('cards-status').textContent = msg || ''; }
+
+  async function cardPreview(i) {
+    const it = _cardResults[i]; if (!it) return;
+    _cardPreviewKey = cardKey(it);
+    renderCardResults();
+    el('cards-preview').innerHTML = '<p class="cards-hint">Loading preview\u2026</p>';
+    try {
+      const r = await fetch('/api/dm-admin/item-cards/item?kind=' + encodeURIComponent(it.kind) + '&id=' + encodeURIComponent(it.id));
+      const data = await r.json();
+      if (!data.item) throw new Error(data.error || 'Not found');
+      _cardPreview = data.item;
+      renderCardPreview(_cardPreview);
+    } catch(e) { el('cards-preview').innerHTML = '<p class="cards-hint">Preview failed: ' + esc(e.message) + '</p>'; }
+  }
+
+  function cardArtError(img) {
+    img.style.display = 'none';
+    const na = img.parentNode.querySelector('.no-art');
+    if (na) na.style.display = 'flex';
+  }
+
+  function renderCardPreview(item) {
+    const sel = cardIsSelected(item);
+    const frontArt = item.art
+      ? '<img src="' + esc(item.art) + '" alt="" onerror="cardArtError(this)"><span class="no-art" style="display:none;">No art</span>'
+      : '<span class="no-art">No art</span>';
+    const badge = [item.rarity, cardHumanize(item.type)].filter(Boolean).map(esc).join(' \u00b7 ');
+    const artNote = item.hasOverride ? 'Custom art set.' : (item.art ? 'Using catalog art (may be missing).' : 'No art on file \u2014 choose one.');
+    el('cards-preview').innerHTML =
+      '<div class="pv-head">' + esc(item.name) + '</div>' +
+      '<div class="pv-cards">' +
+        '<div><div class="pcard-label">Front</div><div class="pcard front">' +
+          '<div class="pc-name">' + esc(item.name) + '</div>' +
+          '<div class="pc-art">' + frontArt + '</div>' +
+          '<div class="pc-badge">' + badge + '</div>' +
+        '</div></div>' +
+        '<div><div class="pcard-label">Back</div><div class="pcard back">' +
+          '<div class="pc-name">' + esc(item.name) + '</div>' +
+          '<div class="pc-stat">' + esc(item.statLine) + '</div>' +
+          '<div class="pc-desc">' + renderMd(item.description) + '</div>' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="pv-artbar">' +
+        '<button class="dmc-btn" onclick="cardChooseArt()">Choose Art\u2026</button>' +
+        (item.hasOverride ? '<button class="dmc-btn" onclick="cardClearArt()">Clear Art</button>' : '') +
+        '<button class="dmc-btn ' + (sel?'':'dmc-btn-primary') + '" onclick="cardToggleCurrent()">' + (sel?'Remove from sheet':'Add to sheet') + '</button>' +
+        '<span class="cards-hint">' + esc(artNote) + '</span>' +
+      '</div>';
+  }
+
+  // ── Art picker ──
+  async function cardChooseArt() {
+    if (!_cardPreview) return;
+    let overlay = el('artpick-overlay');
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.id = 'artpick-overlay';
+    overlay.className = 'artpick-overlay';
+    overlay.innerHTML =
+      '<div class="artpick">' +
+        '<div class="artpick-head"><h3>Choose art for ' + esc(_cardPreview.name) + '</h3>' +
+          '<button class="dmc-btn" onclick="cardCloseArt()">Close</button></div>' +
+        '<div id="artpick-grid" class="artpick-grid"><p class="cards-hint">Loading gallery\u2026</p></div>' +
+        '<div class="artpick-foot">' +
+          '<input id="artpick-url" class="dmc-input" placeholder="\u2026or paste an image URL (e.g. /hotd-content/images/\u2026)" />' +
+          '<button class="dmc-btn dmc-btn-primary" onclick="cardUseArtUrl()">Use URL</button>' +
+        '</div>' +
+      '</div>';
+    overlay.onclick = function(e){ if (e.target === overlay) cardCloseArt(); };
+    document.body.appendChild(overlay);
+    try {
+      const r = await fetch('/api/dm-admin/images');
+      const data = await r.json();
+      _artChoices = data.images || [];
+      const grid = el('artpick-grid');
+      if (!_artChoices.length) { grid.innerHTML = '<p class="cards-hint">No images in the gallery yet. Generate some in Image Studio, or paste a URL below.</p>'; return; }
+      grid.innerHTML = _artChoices.map(function(im, i){
+        const src = im.thumbnail_url || im.image_url;
+        return '<img src="' + esc(src) + '" title="' + esc(im.prompt || '') + '" onclick="cardPickArtIdx(' + i + ')" />';
+      }).join('');
+    } catch(e) { el('artpick-grid').innerHTML = '<p class="cards-hint">Could not load gallery: ' + esc(e.message) + '</p>'; }
+  }
+  function cardCloseArt() { const o = el('artpick-overlay'); if (o) o.remove(); }
+  function cardPickArtIdx(i) { const im = _artChoices[i]; if (im) cardSaveArt(im.image_url); }
+  function cardUseArtUrl() { const v = (el('artpick-url').value || '').trim(); if (v) cardSaveArt(v); }
+  function cardClearArt() { cardSaveArt(''); }
+
+  async function cardSaveArt(url) {
+    if (!_cardPreview) return;
+    try {
+      const r = await fetch('/api/dm-admin/item-cards/art', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: _cardPreview.kind, id: _cardPreview.id, image_url: url })
+      });
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Save failed');
+      _cardPreview.art = url || '';
+      _cardPreview.hasOverride = !!url;
+      // reflect the new art state in the results list
+      const res = _cardResults.find(function(x){ return cardKey(x) === cardKey(_cardPreview); });
+      if (res) { res.hasOverride = !!url; res.hasImage = !!url; }
+      cardCloseArt();
+      renderCardPreview(_cardPreview);
+      renderCardResults();
+    } catch(e) { alert('Art update failed: ' + e.message); }
+  }
 
   async function cardGenerate() {
     if (!_cardSel.length) return;

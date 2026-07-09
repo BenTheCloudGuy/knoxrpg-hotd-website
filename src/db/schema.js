@@ -335,6 +335,13 @@ async function ensureHotdTables() {
         folder       TEXT DEFAULT 'General',
         created_at   TIMESTAMPTZ DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS hotd_card_art (
+        kind       TEXT NOT NULL,
+        item_id    TEXT NOT NULL,
+        image_url  TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (kind, item_id)
+      );
     `).catch(() => {});
 
     // Additional column migrations

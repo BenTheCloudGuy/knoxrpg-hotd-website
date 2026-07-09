@@ -131,6 +131,20 @@ async function upsertSessionShadow(parsed, content) {
   return ins.rows[0].id;
 }
 
+// Resolve a /hotd-content/* asset URL to an absolute local file path so the
+// spawned card builder can embed it directly (relative URLs can't be fetched
+// from the subprocess). Returns null for remote/unresolvable URLs.
+function resolveLocalArt(url) {
+  if (!url || typeof url !== "string" || !url.startsWith("/hotd-content/")) return null;
+  const rel = url.slice("/hotd-content/".length);
+  for (const root of [process.env.HOTD_UPLOADS_DIR, process.env.HOTD_CONTENT_DIR]) {
+    if (!root) continue;
+    const abs = notebookPath.join(root, rel);
+    try { if (fs.existsSync(abs)) return abs; } catch (_) {}
+  }
+  return null;
+}
+
 function requireAdmin(session, res) {
   if (!session || session.role !== "admin") {
     sendJSON(res, { error: "Unauthorized" }, 403);
@@ -1727,28 +1741,116 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       const results = [];
       if (kind !== "mundane") {
         const r = await pgPool.query(
-          `SELECT id, name, rarity, type, requires_attunement,
-                  (avatar_url IS NOT NULL AND avatar_url <> '') AS has_image
-             FROM magic_items WHERE name ILIKE $1 ORDER BY name LIMIT 40`, [like]);
-        for (const row of r.rows) results.push({
-          kind: "magic", id: String(row.id), name: row.name,
-          rarity: row.rarity || "", type: row.type || "",
-          attune: !!row.requires_attunement, hasImage: !!row.has_image,
-        });
+          `SELECT m.id, m.name, m.rarity, m.type, m.requires_attunement, m.avatar_url,
+                  ca.image_url AS override
+             FROM magic_items m
+             LEFT JOIN hotd_card_art ca ON ca.kind = 'magic' AND ca.item_id = m.id::text
+            WHERE m.name ILIKE $1 ORDER BY m.name LIMIT 40`, [like]);
+        for (const row of r.rows) {
+          const art = row.override || row.avatar_url || "";
+          results.push({
+            kind: "magic", id: String(row.id), name: row.name,
+            rarity: row.rarity || "", type: row.type || "",
+            attune: !!row.requires_attunement, hasImage: !!art,
+            hasOverride: !!row.override,
+          });
+        }
       }
       if (kind !== "magic") {
         const r = await pgPool.query(
-          `SELECT id, name, category, type,
-                  (image IS NOT NULL AND image <> '') AS has_image
-             FROM items WHERE name ILIKE $1 ORDER BY name LIMIT 40`, [like]);
-        for (const row of r.rows) results.push({
-          kind: "mundane", id: String(row.id), name: row.name,
-          rarity: row.category || "", type: row.type || "",
-          attune: false, hasImage: !!row.has_image,
-        });
+          `SELECT i.id, i.name, i.category, i.type, i.image,
+                  ca.image_url AS override
+             FROM items i
+             LEFT JOIN hotd_card_art ca ON ca.kind = 'mundane' AND ca.item_id = i.id::text
+            WHERE i.name ILIKE $1 ORDER BY i.name LIMIT 40`, [like]);
+        for (const row of r.rows) {
+          const art = row.override || row.image || "";
+          results.push({
+            kind: "mundane", id: String(row.id), name: row.name,
+            rarity: row.category || "", type: row.type || "",
+            attune: false, hasImage: !!art, hasOverride: !!row.override,
+          });
+        }
       }
       results.sort((a, b) => a.name.localeCompare(b.name));
       sendJSON(res, { results: results.slice(0, 60) });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Item Cards: single item detail (for the live preview) ────
+  // GET /api/dm-admin/item-cards/item?kind=magic|mundane&id=...
+  if (decoded === "/api/dm-admin/item-cards/item" && req.method === "GET") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const u = new URL(req.url, "http://localhost");
+      const kind = (u.searchParams.get("kind") || "").toLowerCase();
+      const id = String(u.searchParams.get("id") || "");
+      if (!id || (kind !== "magic" && kind !== "mundane")) { sendJSON(res, { error: "kind and id required" }, 400); return true; }
+      const ovR = await pgPool.query("SELECT image_url FROM hotd_card_art WHERE kind=$1 AND item_id=$2", [kind, id]);
+      const override = ovR.rows.length ? ovR.rows[0].image_url : null;
+      let item = null;
+      if (kind === "magic") {
+        const r = await pgPool.query(
+          `SELECT id, name, rarity, type, requires_attunement, source, source_page, description_text, avatar_url
+             FROM magic_items WHERE id = $1`, [id]);
+        if (r.rows.length) {
+          const row = r.rows[0];
+          const statBits = [row.rarity, row.type, row.requires_attunement ? "Requires Attunement" : null,
+            row.source ? (row.source + (row.source_page ? ", pg. " + row.source_page : "")) : null].filter(Boolean);
+          item = {
+            kind, id: String(row.id), name: row.name, rarity: row.rarity || "", type: row.type || "",
+            attune: !!row.requires_attunement, source: row.source || "",
+            statLine: statBits.join(" \u00b7 "), description: row.description_text || "",
+            art: override || row.avatar_url || "", hasOverride: !!override,
+          };
+        }
+      } else {
+        const r = await pgPool.query(
+          `SELECT id, name, category, type, cost, weight, source, image
+             FROM items WHERE id = $1`, [id]);
+        if (r.rows.length) {
+          const row = r.rows[0];
+          const bits = [];
+          if (row.category) bits.push(`**Category:** ${row.category}`);
+          if (row.type) bits.push(`**Type:** ${row.type}`);
+          if (row.cost) bits.push(`**Cost:** ${row.cost}`);
+          if (row.weight) bits.push(`**Weight:** ${row.weight}`);
+          const statBits = [row.category, row.type, row.source].filter(Boolean);
+          item = {
+            kind, id: String(row.id), name: row.name, rarity: row.category || "", type: row.type || "",
+            attune: false, source: row.source || "",
+            statLine: statBits.join(" \u00b7 "), description: bits.join("\n\n"),
+            art: override || row.image || "", hasOverride: !!override,
+          };
+        }
+      }
+      if (!item) { sendJSON(res, { error: "Item not found" }, 404); return true; }
+      sendJSON(res, { item });
+    } catch (e) { sendJSON(res, { error: e.message }, 500); }
+    return true;
+  }
+
+  // ── Item Cards: set/clear the art override for an item ─────
+  // POST /api/dm-admin/item-cards/art  { kind, id, image_url }
+  if (decoded === "/api/dm-admin/item-cards/art" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const kind = String(body.kind || "").toLowerCase();
+      const id = String(body.id || "");
+      const imageUrl = (body.image_url || "").trim();
+      if (!id || (kind !== "magic" && kind !== "mundane")) { sendJSON(res, { error: "kind and id required" }, 400); return true; }
+      if (!imageUrl) {
+        await pgPool.query("DELETE FROM hotd_card_art WHERE kind=$1 AND item_id=$2", [kind, id]);
+        sendJSON(res, { ok: true, cleared: true });
+      } else {
+        await pgPool.query(
+          `INSERT INTO hotd_card_art (kind, item_id, image_url, updated_at) VALUES ($1,$2,$3,NOW())
+           ON CONFLICT (kind, item_id) DO UPDATE SET image_url = EXCLUDED.image_url, updated_at = NOW()`,
+          [kind, id, imageUrl]);
+        sendJSON(res, { ok: true, image_url: imageUrl });
+      }
     } catch (e) { sendJSON(res, { error: e.message }, 500); }
     return true;
   }
@@ -1776,9 +1878,11 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       const byKey = new Map();
       if (magicIds.length) {
         const r = await pgPool.query(
-          `SELECT id, name, rarity, type, requires_attunement, source, source_page,
-                  description_text, avatar_url
-             FROM magic_items WHERE id = ANY($1)`, [magicIds]);
+          `SELECT m.id, m.name, m.rarity, m.type, m.requires_attunement, m.source, m.source_page,
+                  m.description_text, m.avatar_url, ca.image_url AS override
+             FROM magic_items m
+             LEFT JOIN hotd_card_art ca ON ca.kind = 'magic' AND ca.item_id = m.id::text
+            WHERE m.id = ANY($1)`, [magicIds]);
         for (const row of r.rows) byKey.set("magic:" + row.id, {
           id: "magic-" + row.id,
           title: row.name,
@@ -1787,13 +1891,17 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
           requires_attunement: !!row.requires_attunement,
           source: row.source ? (row.source + (row.source_page ? ", pg. " + row.source_page : "")) : "",
           description: row.description_text || "",
-          imageUrl: row.avatar_url || null,
+          imageUrl: row.override || row.avatar_url || null,
+          imagePath: resolveLocalArt(row.override || row.avatar_url),
         });
       }
       if (mundaneIds.length) {
         const r = await pgPool.query(
-          `SELECT id, name, category, type, cost, weight, source, image
-             FROM items WHERE id = ANY($1)`, [mundaneIds]);
+          `SELECT i.id, i.name, i.category, i.type, i.cost, i.weight, i.source, i.image,
+                  ca.image_url AS override
+             FROM items i
+             LEFT JOIN hotd_card_art ca ON ca.kind = 'mundane' AND ca.item_id = i.id::text
+            WHERE i.id = ANY($1)`, [mundaneIds]);
         for (const row of r.rows) {
           const bits = [];
           if (row.category) bits.push(`**Category:** ${row.category}`);
@@ -1808,7 +1916,8 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
             requires_attunement: false,
             source: row.source || "",
             description: bits.join("\n\n"),
-            imageUrl: row.image || null,
+            imageUrl: row.override || row.image || null,
+            imagePath: resolveLocalArt(row.override || row.image),
           });
         }
       }
