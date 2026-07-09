@@ -193,7 +193,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     case "/calendar":
       html = await renderCalendarPage(session, url.searchParams.get("month")); break;
     case "/maps":
-      html = await renderMapsPage(session); break;
+      html = await renderMapsPage(session, url.searchParams.get("page")); break;
     case "/npcs":
       html = await renderNpcsPage(session); break;
     case "/characters":
@@ -211,7 +211,7 @@ async function handlePageRoutes(decoded, req, res, session, url) {
     case "/handouts":
       html = await renderHandoutsPage(session); break;
     case "/art":
-      html = await renderArtGalleryPage(session); break;
+      html = await renderArtGalleryPage(session, url.searchParams.get("page")); break;
     case "/dungeon-master":
       if (!session) { res.writeHead(302, { Location: "/login" }); res.end(); return true; }
       html = renderDungeonMasterPage(session); break;

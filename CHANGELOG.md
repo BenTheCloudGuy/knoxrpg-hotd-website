@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.39.0] - 2026-07-09
+
+### Changed
+- **Art & Images gallery is now unified + paginated.** The gallery pulls from **all** sources automatically: `hotd_art` (D&D Beyond book art + admin-added + DMCC-published), `hotd_generated_images` (the DMCC image generator), and legacy filesystem images under `/hotd-content/images/` (deduped by URL). Previously it only scanned the filesystem, so DDB art and generated images never appeared.
+- **Pagination (20 per page)** on both **Art & Images** (`/art?page=N`) and **Maps** (`/maps?page=N`), with a windowed page control.
+- **Wider, more responsive grid.** Gallery pages use a wide container (`content-wide`, up to 1600px) so the auto-fill grid fills more of the screen on large displays; more columns at higher widths.
+
+### Notes
+- Verified live: `/art` and `/maps` render with unified sources + pager across pages.
+- Visibility note: the Art page is player-visible, so DDB book art and generated images now appear to players once synced/generated. Say the word if you want DM-only filtering.
+
 ## [3.38.1] - 2026-07-09
 
 ### Fixed

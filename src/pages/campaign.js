@@ -389,12 +389,33 @@ async function renderCalendarPage(session, monthParam) {
   return pageShell("Calendar — Halls of the Damned", "/calendar", body, session);
 }
 
-// ── Maps Page (DB-backed, overlay with zoom/pan) ──────────────
-async function renderMapsPage(session) {
+// ── Pagination control (server-side, ?page=N) ────────────────
+function renderPager(basePath, page, totalPages) {
+  if (totalPages <= 1) return "";
+  const link = (p, label, extra) => `<a href="${basePath}?page=${p}" class="pager-btn${extra || ""}">${label}</a>`;
+  const parts = [];
+  parts.push(page > 1 ? link(page - 1, "&larr; Prev") : '<span class="pager-btn disabled">&larr; Prev</span>');
+  const start = Math.max(1, page - 2), end = Math.min(totalPages, page + 2);
+  if (start > 1) parts.push(link(1, "1"));
+  if (start > 2) parts.push('<span class="pager-gap">&hellip;</span>');
+  for (let p = start; p <= end; p++) parts.push(p === page ? `<span class="pager-btn active">${p}</span>` : link(p, String(p)));
+  if (end < totalPages - 1) parts.push('<span class="pager-gap">&hellip;</span>');
+  if (end < totalPages) parts.push(link(totalPages, String(totalPages)));
+  parts.push(page < totalPages ? link(page + 1, "Next &rarr;") : '<span class="pager-btn disabled">Next &rarr;</span>');
+  return `<div class="pager">${parts.join("")}</div>`;
+}
+
+// ── Maps Page (DB-backed, overlay with zoom/pan, paginated) ───
+async function renderMapsPage(session, pageParam) {
   let maps = [];
   try { const r = await pgPool.query("SELECT * FROM hotd_maps ORDER BY sort_order, id"); maps = r.rows; } catch (_) {}
 
-  const mapCards = maps.length > 0 ? maps.map(m =>
+  const PER = 20;
+  const totalPages = Math.max(1, Math.ceil(maps.length / PER));
+  const page = Math.min(totalPages, Math.max(1, parseInt(pageParam, 10) || 1));
+  const pageMaps = maps.slice((page - 1) * PER, page * PER);
+
+  const mapCards = maps.length > 0 ? pageMaps.map(m =>
     `<div class="map-card" onclick="openMapOverlay('${esc(m.image_url)}','${esc(m.name)}')" style="cursor:pointer;">
       <img src="${esc(m.image_url)}" alt="${esc(m.name)}" loading="lazy" onerror="this.outerHTML='<div class=\\'map-placeholder\\'>&#128506;</div>'" />
       <div class="map-card-body"><h3>${esc(m.name)}</h3>${renderRichTextBlock(m.description, "", "color:#aaa;font-size:0.9rem;line-height:1.5;")}</div>
@@ -402,10 +423,11 @@ async function renderMapsPage(session) {
   ).join("") : `<div class="map-card"><div class="map-placeholder">&#128506;</div><div class="map-card-body"><h3>Maps Coming Soon</h3><p>As the party explores, acquired maps will appear here.</p></div></div>`;
 
   const body = `
-  <div class="content">
+  <div class="content content-wide">
     <h2 class="section-title">&#128506; Acquired Maps</h2>
-    <p style="color:#888;margin-bottom:24px;">Maps the party has found, purchased, or otherwise acquired. Click a map to view it in detail with zoom and pan.</p>
-    <div class="map-grid" style="grid-template-columns:repeat(3,1fr);">${mapCards}</div>
+    <p style="color:#888;margin-bottom:24px;">Maps the party has found, purchased, or otherwise acquired. Click a map to view it in detail with zoom and pan.${maps.length ? ` <span style="color:#666;">(${maps.length} maps)</span>` : ""}</p>
+    <div class="map-grid">${mapCards}</div>
+    ${renderPager("/maps", page, totalPages)}
   </div>
   ${mapOverlayBlock()}`;
   return pageShell("Maps — Halls of the Damned", "/maps", body, session);
@@ -844,45 +866,55 @@ async function renderHandoutsPage(session) {
 }
 
 // ── Art / Images Gallery Page ─────────────────────────────────
-async function renderArtGalleryPage(session) {
-  // Images live on the uploads PVC / NAS (served under /hotd-content/images/),
-  // not the repo. Scan the writable uploads dir first, then the read-only NAS,
-  // unioning by relative path. Everything except maps/ is shown.
+async function renderArtGalleryPage(session, pageParam) {
+  // Unified gallery: DB-backed art (D&D Beyond book art + admin-added +
+  // DMCC-published) + DMCC-generated images, plus legacy filesystem images
+  // under /hotd-content/images/ (excluding maps/). Deduped by URL.
   const { HOTD_UPLOADS_DIR, HOTD_CONTENT_DIR } = require("../config");
-  const imageExts = /\.(png|jpg|jpeg|webp)$/i;
-  const excludeDirs = new Set(['maps']);
-  const rels = new Set();
+  const images = [];
+  const seen = new Set();
+  const add = (url, title, description, source) => {
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    images.push({ url, title: title || "", description: description || "", source });
+  };
 
-  function collect(root) {
+  // 1. hotd_art — D&D Beyond book art, admin-added, DMCC-published (newest first)
+  try { const r = await pgPool.query("SELECT title, description, image_url FROM hotd_art ORDER BY sort_order, id DESC"); r.rows.forEach((x) => add(x.image_url, x.title, x.description, "art")); } catch (_) {}
+  // 2. hotd_generated_images — DMCC image generator (shows up automatically)
+  try { const r = await pgPool.query("SELECT prompt, revised_prompt, image_url FROM hotd_generated_images ORDER BY id DESC"); r.rows.forEach((x) => add(x.image_url, (x.prompt || "").slice(0, 60), x.revised_prompt || x.prompt || "", "generated")); } catch (_) {}
+  // 3. Legacy filesystem images/** (excluding maps/)
+  const imageExts = /\.(png|jpg|jpeg|webp)$/i;
+  const collect = (root) => {
     if (!root) return;
-    const base = path.join(root, 'images');
+    const base = path.join(root, "images");
     (function walk(dir, rel) {
       if (!fs.existsSync(dir)) return;
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-          if (excludeDirs.has(entry.name)) continue;
-          walk(path.join(dir, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
-        } else if (imageExts.test(entry.name)) {
-          rels.add(rel ? `${rel}/${entry.name}` : entry.name);
-        }
+        if (entry.isDirectory()) { if (entry.name === "maps") continue; walk(path.join(dir, entry.name), rel ? `${rel}/${entry.name}` : entry.name); }
+        else if (imageExts.test(entry.name)) { add(`/hotd-content/images/${rel ? rel + "/" : ""}${entry.name}`, entry.name.replace(imageExts, ""), "", "file"); }
       }
-    })(base, '');
-  }
+    })(base, "");
+  };
   collect(HOTD_UPLOADS_DIR);
   collect(HOTD_CONTENT_DIR);
 
-  const allImages = [...rels].sort().map(r => `/hotd-content/images/${r}`);
+  const PER = 20;
+  const totalPages = Math.max(1, Math.ceil(images.length / PER));
+  const page = Math.min(totalPages, Math.max(1, parseInt(pageParam, 10) || 1));
+  const pageItems = images.slice((page - 1) * PER, page * PER);
 
-  const artCards = allImages.length > 0 ? allImages.map(url => `
-    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(url)}, "")'>
-      <img src="${esc(url)}" alt="" loading="lazy" />
-    </div>`).join("") : `<p style="color:#888;text-align:center;">No images found.</p>`;
+  const artCards = pageItems.length > 0 ? pageItems.map((im) => `
+    <div class="art-card" onclick='openArtifactOverlay(${JSON.stringify(im.url)}, ${JSON.stringify(im.title || "")})' title="${esc(im.title || "")}">
+      <img src="${esc(im.url)}" alt="${esc(im.title || "")}" loading="lazy" />
+    </div>`).join("") : `<p style="color:#888;text-align:center;grid-column:1/-1;">No images found.</p>`;
 
   const body = `
-  <div class="content">
+  <div class="content content-wide">
     <h2 class="section-title">&#127912; Art &amp; Images</h2>
-    <p style="color:#888;margin-bottom:24px;">Campaign art, character portraits, scene illustrations, and other images. Click to enlarge.</p>
+    <p style="color:#888;margin-bottom:16px;">Campaign art, character portraits, scene illustrations, D&amp;D Beyond book art, and AI-generated images. Click to enlarge.${images.length ? ` <span style="color:#666;">(${images.length} images)</span>` : ""}</p>
     <div class="art-grid">${artCards}</div>
+    ${renderPager("/art", page, totalPages)}
   </div>
   ${artifactOverlayBlock("Art")}`;
   return pageShell("Art & Images — Halls of the Damned", "/art", body, session);

@@ -483,6 +483,14 @@ function pageCss() {
     }
     .art-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(232,185,35,0.15); }
     .art-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* ── Wide gallery container + pagination ── */
+    .content-wide { max-width: 1600px; }
+    .pager { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin: 8px 0 48px; }
+    .pager-btn { display: inline-block; min-width: 34px; text-align: center; padding: 6px 10px; border: 1px solid #333; border-radius: 6px; color: #ccc; background: #1a1a1a; text-decoration: none; font-size: 0.85rem; }
+    .pager-btn:hover { border-color: #e8b923; color: #e8b923; }
+    .pager-btn.active { background: #e8b923; color: #1a1a1a; border-color: #e8b923; font-weight: 700; }
+    .pager-btn.disabled { color: #555; border-color: #262626; pointer-events: none; }
+    .pager-gap { color: #666; padding: 0 4px; }
     /* ── Calendar ── */
     .calendar-card {
       background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
