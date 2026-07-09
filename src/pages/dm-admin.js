@@ -380,8 +380,21 @@ async function renderDmAdminPage(session) {
         </div>
       </section>
 
+      <section class="dmc-panel" id="dmc-ddb" style="display:none;">
+        <div class="dmc-panel-bar">
+          <h2>DDB Content</h2>
+          <div class="dmc-bar-actions">
+            <button id="ddb-audit-btn" class="dmc-btn dmc-btn-primary" onclick="runDdbAudit()">Run Audit</button>
+            <button id="ddb-sync-btn" class="dmc-btn" onclick="runDdbSync()" disabled title="Embed downloaded-but-unembedded content into the RAG">Sync Missing \u2192 RAG</button>
+          </div>
+        </div>
+        <p class="cards-hint">Audits D&amp;D Beyond content that has been downloaded into the local tables against what is embedded in the campaign RAG, grouped by Source (Book / Drop / Homebrew) and Type (Spell / Monster / Magic Item / Feat). <strong>Sync</strong> embeds anything downloaded but not yet in the RAG. Comparison against your full DDB library (books/drops you own but have never downloaded) activates when the DDB token is provisioned.</p>
+        <div id="ddb-report"><p class="cards-hint">Click <strong>Run Audit</strong> to scan the content tables and the RAG.</p></div>
+      </section>
+
     </main>
   </div>
+
 
   <style>
     /* ═══ DM COMMAND CENTER LAYOUT ═══ */
@@ -420,6 +433,19 @@ async function renderDmAdminPage(session) {
     .card-row { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #1c1c1c; cursor:pointer; }
     .card-row:last-child { border-bottom:none; }
     .card-row:hover { background:#181818; }
+    /* ── DDB Content ── */
+    .ddb-cards { display:flex; gap:12px; flex-wrap:wrap; margin:6px 0 14px; }
+    .ddb-card { display:flex; flex-direction:column; min-width:150px; background:#161616; border:1px solid #262626; border-radius:8px; padding:12px 16px; }
+    .ddb-card-n { font-size:1.5rem; font-weight:700; color:#ddd; }
+    .ddb-card-l { font-size:0.72rem; color:#888; text-transform:uppercase; letter-spacing:0.04em; }
+    .ddb-card-warn { border-color:#7a4; }
+    .ddb-card-warn .ddb-card-n { color:#cd6; }
+    .ddb-table { width:100%; border-collapse:collapse; margin:6px 0 16px; font-size:0.8rem; }
+    .ddb-table th { text-align:left; color:#c83232; font-weight:600; border-bottom:1px solid #333; padding:6px 10px; }
+    .ddb-table td { border-bottom:1px solid #1c1c1c; padding:5px 10px; color:#bbb; vertical-align:top; }
+    .ddb-table code { color:#9cc; font-size:0.76rem; }
+    .ddb-table .ddb-miss { color:#cd6; font-weight:600; }
+    .ddb-table .ddb-ex { color:#777; font-size:0.74rem; }
     .card-row.is-selected { opacity:0.4; cursor:default; }
     .card-row .cr-name { flex:1; color:#ddd; font-size:0.82rem; }
     .card-row .cr-meta { color:#888; font-size:0.7rem; white-space:nowrap; }
@@ -714,7 +740,7 @@ async function renderDmAdminPage(session) {
   // works from any page and switches panels in-place when already here.
   let _currentPanel = null;
   let _loaded = {};
-  const PANELS = ['chat','images','notes','characters','npcs','cards','ai','search','campaign','users'];
+  const PANELS = ['chat','images','notes','characters','npcs','cards','ddb','ai','search','campaign','users'];
   function showPanel(panel) {
     if (!panel || PANELS.indexOf(panel) === -1 || !el('dmc-' + panel)) panel = 'chat';
     document.querySelectorAll('.dmc-panel').forEach(p => p.style.display = 'none');
@@ -729,7 +755,7 @@ async function renderDmAdminPage(session) {
   }
   function loadPanel(p) {
     const loaders = { chat:loadChat, images:loadImages, notes:loadNotes,
-      characters:loadChars, npcs:loadNpcs, cards:loadCards, ai:loadAiCfg,
+      characters:loadChars, npcs:loadNpcs, cards:loadCards, ddb:loadDdb, ai:loadAiCfg,
       search:loadSearchCfg, campaign:loadCampCfg, users:loadUsers };
     if (loaders[p]) loaders[p]();
   }
@@ -2116,6 +2142,120 @@ async function renderDmAdminPage(session) {
     if (!confirm('Delete NPC: '+name+'?')) return;
     await fetch('/api/dm-admin/npcs/'+id,{method:'DELETE'});
     loadNpcs();
+  }
+
+  // ═══ DDB CONTENT ═══
+  var _ddbReport = null;
+  function loadDdb() { /* audit runs on demand via the button */ }
+
+  async function runDdbAudit() {
+    var btn = el('ddb-audit-btn');
+    var box = el('ddb-report');
+    btn.disabled = true; var label = btn.textContent; btn.textContent = 'Auditing\u2026';
+    box.innerHTML = '<p class="cards-hint">Scanning content tables and the RAG\u2026</p>';
+    try {
+      var r = await fetch('/api/dm-admin/ddb/audit', { method:'POST' });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Audit failed');
+      _ddbReport = data.report;
+      renderDdbReport(_ddbReport);
+    } catch (e) {
+      box.innerHTML = '<p class="cards-hint" style="color:#e06">Audit error: ' + esc(e.message) + '</p>';
+    } finally {
+      btn.disabled = false; btn.textContent = label;
+    }
+  }
+
+  function ddbNum(n) { var v = Number(n == null ? 0 : n); return isNaN(v) ? String(n) : v.toLocaleString('en-US'); }
+
+  function renderDdbReport(rep) {
+    var box = el('ddb-report');
+    var t = rep.totals || { embeddable:0, embedded:0, missing:0 };
+    var html = '';
+
+    // Summary cards
+    html += '<div class="ddb-cards">' +
+      '<div class="ddb-card"><span class="ddb-card-n">' + ddbNum(t.embeddable) + '</span><span class="ddb-card-l">Downloaded (embeddable)</span></div>' +
+      '<div class="ddb-card"><span class="ddb-card-n">' + ddbNum(t.embedded) + '</span><span class="ddb-card-l">In RAG</span></div>' +
+      '<div class="ddb-card' + (t.missing>0?' ddb-card-warn':'') + '"><span class="ddb-card-n">' + ddbNum(t.missing) + '</span><span class="ddb-card-l">Missing from RAG</span></div>' +
+      '</div>';
+
+    // By source class
+    html += '<h4 class="dmc-section-title">Coverage by source class</h4>';
+    html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Downloaded</th><th>In RAG</th><th>Missing</th></tr></thead><tbody>';
+    ['Book','Drop','Homebrew','Other'].forEach(function(cls){
+      var a = (rep.byClass && rep.byClass[cls]) || { embeddable:0, embedded:0, missing:0 };
+      if (!a.embeddable) return;
+      html += '<tr><td>' + cls + '</td><td>' + ddbNum(a.embeddable) + '</td><td>' + ddbNum(a.embedded) + '</td><td' + (a.missing>0?' class="ddb-miss"':'') + '>' + ddbNum(a.missing) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    // By type
+    html += '<h4 class="dmc-section-title">Coverage by type</h4>';
+    html += '<table class="ddb-table"><thead><tr><th>Type</th><th>Downloaded</th><th>In RAG</th><th>Missing</th></tr></thead><tbody>';
+    (rep.byType || []).forEach(function(x){
+      html += '<tr><td>' + esc(x.type) + '</td><td>' + ddbNum(x.embeddable) + '</td><td>' + ddbNum(x.embedded) + '</td><td' + (x.missing>0?' class="ddb-miss"':'') + '>' + ddbNum(x.missing) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    // Missing detail
+    var miss = rep.missingSources || [];
+    if (miss.length) {
+      html += '<h4 class="dmc-section-title">Downloaded but not embedded (' + miss.length + ' source/type groups)</h4>';
+      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Type</th><th>Missing</th><th>Examples</th></tr></thead><tbody>';
+      miss.forEach(function(m){
+        html += '<tr><td>' + esc(m.class) + '</td><td><code>' + esc(m.code) + '</code></td><td>' + esc(m.type) + '</td><td class="ddb-miss">' + ddbNum(m.missing) + '</td><td class="ddb-ex">' + esc((m.sampleNames||[]).join(', ')) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<p class="cards-hint" style="color:#6c6">\u2713 Everything downloaded into the content tables is embedded in the RAG.</p>';
+    }
+
+    // Owned-on-DDB gap
+    if (rep.tokenAvailable && rep.ddbOwned) {
+      var o = rep.ddbOwned;
+      html += '<h4 class="dmc-section-title">Owned on D&amp;D Beyond but never downloaded (' + ddbNum(o.missingCount) + ' sources)</h4>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' synced locally.</p>';
+      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>~Monsters</th></tr></thead><tbody>';
+      (o.missing||[]).slice(0,60).forEach(function(s){
+        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + ddbNum(s.monsters) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<p class="cards-hint" style="margin-top:14px;border-top:1px solid #222;padding-top:12px;">' +
+        (rep.ddbOwnedError ? ('Owned-on-DDB check failed: ' + esc(rep.ddbOwnedError)) :
+        'Owned-on-DDB comparison is disabled. Provision the <code>DDB_COBALT_TOKEN</code> secret to compare against your full D&amp;D Beyond library (books/drops you own but have never downloaded).') + '</p>';
+    }
+
+    // RAG inventory
+    html += '<h4 class="dmc-section-title">RAG inventory (all sources)</h4>';
+    html += '<table class="ddb-table"><thead><tr><th>Source type</th><th>Chunks</th><th>Sources</th></tr></thead><tbody>';
+    (rep.ragInventory || []).forEach(function(x){
+      html += '<tr><td><code>' + esc(x.source_type) + '</code></td><td>' + ddbNum(x.chunks) + '</td><td>' + ddbNum(x.sources) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    html += '<p class="cards-hint" style="margin-top:10px;">Audited ' + esc((rep.generatedAt||'').replace('T',' ').split('.')[0]) + ' UTC.</p>';
+
+    box.innerHTML = html;
+    el('ddb-sync-btn').disabled = !(t.missing > 0);
+  }
+
+  async function runDdbSync() {
+    if (!_ddbReport || !confirm('Embed ' + ddbNum(_ddbReport.totals.missing) + ' downloaded item(s) into the RAG?')) return;
+    var btn = el('ddb-sync-btn');
+    btn.disabled = true; var label = btn.textContent; btn.textContent = 'Syncing\u2026';
+    try {
+      var r = await fetch('/api/dm-admin/ddb/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Sync failed');
+      var n = (data.result && data.result.embedded) || 0;
+      alert('Embedded ' + n + ' chunk(s) into the RAG.');
+      runDdbAudit();
+    } catch (e) {
+      alert('Sync error: ' + e.message);
+      btn.disabled = false; btn.textContent = label;
+    }
   }
 
   // ═══ AI CONFIG ═══

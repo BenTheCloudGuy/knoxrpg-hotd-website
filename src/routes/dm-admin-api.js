@@ -14,6 +14,7 @@ const { extractCanonUpdates } = require("../lib/canon-extractor");
 const { applyCanonUpdates, reindexSources } = require("../lib/canon-applier");
 const { recordChatCompletion, trackAiImage } = require("../lib/telemetry");
 const { syncCharacterFromDDB } = require("../lib/ddb-sync");
+const { runAudit: runDdbAudit, embedMissing: embedDdbMissing } = require("../lib/ddb-audit");
 const sessionsLib = require("../lib/sessions");
 const fs = require("fs");
 const os = require("os");
@@ -1854,6 +1855,38 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     } catch (e) {
       console.error("Item cards PDF error:", e);
       if (!res.headersSent) sendJSON(res, { error: e.message }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: audit downloaded content vs the RAG ────────────────
+  // POST /api/dm-admin/ddb/audit  → structured coverage report
+  if (decoded === "/api/dm-admin/ddb/audit" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const cobaltToken = process.env.DDB_COBALT_TOKEN || process.env.DDB_COBALT_SESSION_TOKEN || "";
+      const report = await runDdbAudit(pgPool, { cobaltToken });
+      sendJSON(res, { ok: true, report });
+    } catch (err) {
+      console.error("DDB audit error:", err);
+      sendJSON(res, { error: err.message }, 500);
+    }
+    return true;
+  }
+
+  // ── DDB: sync (embed downloaded-but-unembedded rows into RAG) ─
+  // POST /api/dm-admin/ddb/sync  { types?: ["ddb_monster", ...] }
+  if (decoded === "/api/dm-admin/ddb/sync" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    if (!azure.openaiClient) { sendJSON(res, { error: "OpenAI client not initialized" }, 500); return true; }
+    try {
+      let types = [];
+      try { const body = JSON.parse(await readBody(req) || "{}"); types = Array.isArray(body.types) ? body.types : []; } catch (_) {}
+      const result = await embedDdbMissing(pgPool, azure.openaiClient, { types });
+      sendJSON(res, { ok: true, result });
+    } catch (err) {
+      console.error("DDB sync error:", err);
+      sendJSON(res, { error: err.message }, 500);
     }
     return true;
   }

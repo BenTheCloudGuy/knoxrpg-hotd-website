@@ -85,6 +85,8 @@ const NAV_ITEMS = [
       { label: "Artifacts Admin", href: "/artifacts/admin" },
       { label: "Item Cards", href: "/dm-admin#cards" },
       { label: "Handouts Admin", href: "/handouts/admin" },
+      { header: "DDB" },
+      { label: "DDB Content", href: "/dm-admin#ddb" },
       { header: "Config" },
       { label: "AI Config", href: "/dm-admin#ai" },
       { label: "Search", href: "/dm-admin#search" },

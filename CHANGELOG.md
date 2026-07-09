@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.28.0] - 2026-07-09
+
+### Added
+- **DDB Content panel in the DM Command Center (`/dm-admin#ddb`).** New admin section for managing D&D Beyond content coverage. **Run Audit** compares every DDB entity downloaded into the content tables (`spells`, `monsters`, `magic_items`, `feats`) against what is embedded in the campaign RAG (`hotd_embeddings`), grouped by **Source class** (Book / Drop / Homebrew) and **Type** (Spell / Monster / Magic Item / Feat), and lists exactly which downloaded rows are not yet searchable (with example names) plus a full RAG inventory. **Sync Missing → RAG** embeds any downloaded-but-unembedded rows using the app's OpenAI client (`text-embedding-3-small` @1536, chunk-hash deduped, `ON CONFLICT` upsert). Backed by a new reusable engine `src/lib/ddb-audit.js` (`runAudit` + `embedMissing`) that runs entirely on the PostgreSQL pool, so it works in-pod with no external credentials. Feats are matched to the RAG by name (they reach embeddings via the book-extract pipeline, not the `db:<table>:<id>` path) while spells/monsters/magic items match by id, so the audit is accurate for both. New routes `POST /api/dm-admin/ddb/audit` and `POST /api/dm-admin/ddb/sync` (`src/routes/dm-admin-api.js`), a "DDB" nav group in `src/config.js`, and the panel + client render in `src/pages/dm-admin.js`.
+- **Owned-on-DDB comparison (optional).** When a DDB cobalt token is present (`DDB_COBALT_TOKEN`), the audit additionally enumerates the source books/drops the account is entitled to (via `monster-service`) and flags those never downloaded locally. The website pod has no token today, so this section degrades gracefully to a "provision the token to enable" note; the DB↔RAG audit and Sync work without it.
+
+### Notes
+- First live audit found the D&D Beyond Drops content (from 3.27.0) plus 14 book feats downloaded but not embedded; running Sync embedded all of it (RAG gap → 0). The full owned-vs-synced library gap (43 books) remains available via `reports/ddb-rag-coverage-audit.md` and activates in-panel once the cobalt token secret is wired.
+
 ## [3.27.0] - 2026-07-09
 
 ### Added
