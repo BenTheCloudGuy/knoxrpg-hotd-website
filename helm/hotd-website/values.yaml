@@ -85,6 +85,21 @@ openai:
   existingSecret: "openai-api-key"
   existingSecretKey: "openai-api-key"
 
+# -- Azure Key Vault (DMCC secret/key/cert management) ------------------------
+# The website/DMCC layer (NOT the dnd-rag backend) uses a service principal to
+# read/write Key Vault secrets/keys/certs (e.g. the DDB cobalt token). Pre-create
+# the Secret with the SP credentials, then point `existingSecret` at it:
+#   kubectl create secret generic hotd-website-azure-sp -n hotd-website \
+#     --from-literal=azure-client-id=<appId> \
+#     --from-literal=azure-client-secret=<password> \
+#     --from-literal=azure-tenant-id=<tenant> \
+#     --from-literal=azure-keyvault-name=cloudgeek-cus-keyvault
+# Keys expected in the Secret: azure-client-id, azure-client-secret,
+# azure-tenant-id, azure-keyvault-name.
+azure:
+  enabled: true
+  existingSecret: "hotd-website-azure-sp"
+
 # -- Storage URL rewriting ----------------------------------------------------
 # Legacy `<account>.blob.core.windows.net` URLs in the DB are rewritten on
 # read to the current storage host (and to /hotd-content/ in dev when

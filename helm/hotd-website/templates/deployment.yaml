@@ -82,6 +82,29 @@ spec:
                   name: {{ .Values.openai.existingSecret | default (printf "%s-app-secrets" (include "hotd-website.fullname" .)) }}
                   key: {{ .Values.openai.existingSecretKey | default "openai-api-key" }}
             {{- end }}
+            {{- if and .Values.azure .Values.azure.enabled .Values.azure.existingSecret }}
+            # ── Azure Key Vault (DMCC secret/key/cert management; SP creds) ──
+            - name: AZURE_KEYVAULT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.azure.existingSecret }}
+                  key: azure-keyvault-name
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.azure.existingSecret }}
+                  key: azure-client-id
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.azure.existingSecret }}
+                  key: azure-client-secret
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.azure.existingSecret }}
+                  key: azure-tenant-id
+            {{- end }}
             - name: HOTD_REPO_ROOT
               value: "/app"
             - name: HOTD_PDF_SCRIPT

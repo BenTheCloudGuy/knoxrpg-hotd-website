@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.30.0] - 2026-07-09
+
+### Added
+- **Azure Key Vault access for the DMCC/website layer (`src/lib/keyvault.js`).** A shared, admin-only helper that lets the **`hotd-website`** deployment read/write Key Vault **secrets, keys, and certificates** via a service-principal `ClientSecretCredential`. Functions: `healthCheck`, `getSecret`/`setSecret` (upsert)/`listSecrets`/`deleteSecret`, `getKey`/`createKey`/`listKeys`, `getCertificate`/`importCertificate`/`createCertificate`/`listCertificates`. It degrades gracefully (`isConfigured()` false) when creds are absent and never logs secret material. Added `@azure/identity` + `@azure/keyvault-secrets|keys|certificates` to `src/package.json`. This is the foundation for managing the DDB cobalt token (and other secrets) from the DM Command Center instead of hand-editing env/KeyVault. The **`dnd-rag`** backend deliberately does **not** get this — Key Vault orchestration belongs to the website/DMCC layer only.
+- **Service-principal credentials wired to the pod.** New k8s secret `hotd-website-azure-sp` (keys `azure-client-id`, `azure-client-secret`, `azure-tenant-id`, `azure-keyvault-name`) plus Helm wiring (`values.yaml` `azure.existingSecret`, deployment env `AZURE_KEYVAULT_NAME`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`/`AZURE_TENANT_ID` via `secretKeyRef`). Uses the existing cortana automation SP (RBAC read+write on `cloudgeek-cus-keyvault`, verified). Takes effect on the next deploy.
+
+### Notes
+- **Security:** the wired SP is the broad cortana automation principal, so a website compromise could reach the whole vault. All KV operations must stay behind `requireAdmin`; a least-privilege SP scoped to just the DDB secret is a recommended future hardening.
+- Corrected a topology fact: `dnd-rag` and `hotd-website` are **separate** deployments in the `hotd-website` namespace — the DMCC site is `hotd-website` (this chart), not `dnd-rag`.
+
 ## [3.29.0] - 2026-07-09
 
 ### Changed

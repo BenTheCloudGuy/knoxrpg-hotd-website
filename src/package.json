@@ -10,6 +10,10 @@
     "mcp:http": "node mcp/server.mjs --transport http"
   },
   "dependencies": {
+    "@azure/identity": "^4.13.1",
+    "@azure/keyvault-certificates": "^4.9.0",
+    "@azure/keyvault-keys": "^4.9.0",
+    "@azure/keyvault-secrets": "^4.9.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "bcryptjs": "^2.4.3",
     "geoip-lite": "^1.4.10",
