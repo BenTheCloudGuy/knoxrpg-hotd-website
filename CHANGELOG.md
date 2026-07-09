@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.32.0] - 2026-07-09
+
+### Added
+- **Homebrew authoring foundation (DDB Homebrew Authoring plan §2–§3.1).** New `hotd_homebrew` drafts table (`src/db/schema.js`): `category`, `name`, `fields` (jsonb form state), `status`, `image_url`, `is_player_visible`, `ddb_id`/`ddb_entity_type_id`/`ddb_url`, `local_row_id`, `rag_chunks`, timestamps.
+- **Shared DDB homebrew push library (`src/lib/ddb-homebrew.js`).** Ports the verified, CSRF-protected create/edit/delete flow (`ddb-homebrew-push.md`) behind an authenticated `session()` that sources the cobalt token via `ddb-client` (Key Vault-backed). Exposes `createDraft`/`editDraft`/`deleteDraft`/`pushDraft` with a mapped **magic-item** adapter (rarity/type/base-type value tables; the edit body merges the author's fields over the editor's current values). **Every DDB write is gated behind `pushEnabled()` (env `DDB_ENABLE_PUSH`, default off)** so Save/Embed keep working with pushing disabled. `publishDraft` (public/campaign visibility) and `uploadImage` are guarded stubs pending the §1.3/§1.4 decisions. Validated live end-to-end (create → edit → delete a throwaway draft, no residue).
+
+### Notes
+- Per the DM's build decisions: MVP is the Magic Item page first; published homebrew will mirror into the matching content table (`source='hotd-homebrew'`) plus the RAG; publish stays **campaign-only/private** and the actual DDB publish push is **not executed** until the §1.3 endpoint recon is confirmed; images stay HOTD-only for now; and Publish is non-blocking (Save+Embed always succeed).
+
 ## [3.31.0] - 2026-07-09
 
 ### Added

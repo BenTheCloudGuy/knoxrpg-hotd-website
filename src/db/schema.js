@@ -342,6 +342,24 @@ async function ensureHotdTables() {
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         PRIMARY KEY (kind, item_id)
       );
+      CREATE TABLE IF NOT EXISTS hotd_homebrew (
+        id                 SERIAL PRIMARY KEY,
+        category           TEXT NOT NULL,
+        name               TEXT NOT NULL DEFAULT '',
+        fields             JSONB NOT NULL DEFAULT '{}',
+        status             TEXT NOT NULL DEFAULT 'draft',
+        image_url          TEXT,
+        is_player_visible  BOOLEAN NOT NULL DEFAULT TRUE,
+        ddb_id             TEXT,
+        ddb_entity_type_id TEXT,
+        ddb_url            TEXT,
+        local_row_id       TEXT,
+        rag_chunks         INTEGER DEFAULT 0,
+        created_by         TEXT,
+        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_hotd_homebrew_category ON hotd_homebrew (category, status);
     `).catch(() => {});
 
     // Additional column migrations
