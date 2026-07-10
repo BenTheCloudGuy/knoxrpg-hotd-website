@@ -5,10 +5,12 @@
 /**
  * Returns the HTML + JS for the map zoom/pan overlay.
  * Used on the Maps page.
+ * @param {object} [opts] - { tagEditor?: boolean } to show the admin editor.
  */
-function mapOverlayBlock() {
+function mapOverlayBlock(opts) {
+  const tagEditor = !!(opts && opts.tagEditor);
   return `
-  <div class="map-overlay" id="mapOverlay">
+  <div class="map-overlay${tagEditor ? ' ov-with-tags' : ''}" id="mapOverlay">
     <div class="map-overlay-header">
       <span class="map-overlay-title" id="mapOverlayTitle"></span>
       <button class="map-overlay-close" onclick="closeMapOverlay()">&times;</button>
@@ -21,13 +23,30 @@ function mapOverlayBlock() {
       <button onclick="mapZoom(0.7)">&#128269;- Zoom Out</button>
       <button onclick="mapReset()">Reset</button>
     </div>
+    ${tagEditor ? `<div class="ov-tagbar" id="mapTagBar" style="display:none;">
+      <div class="ov-tagrow">
+        <label>Location <input id="mapTagLoc" placeholder="Location name" /></label>
+        <label>Source book <input id="mapTagBook" placeholder="Source book" /></label>
+      </div>
+      <div class="ov-tagrow">
+        <label class="ov-desclabel">Description
+          <textarea id="mapTagDesc" rows="2" placeholder="Shown on the Maps page and used for AI search"></textarea>
+        </label>
+      </div>
+      <div class="ov-tagrow">
+        <button onclick="mapSaveTags()">Save</button>
+        <span id="mapTagStatus" class="ov-tagstatus"></span>
+      </div>
+    </div>` : ''}
   </div>
   <script>
   (function(){
     var ov=document.getElementById('mapOverlay'),img=document.getElementById('mapOverlayImg'),
         cnt=document.getElementById('mapOverlayContainer'),sc=1,px=0,py=0,dr=false,sx=0,sy=0;
+    var TAGEDIT=${tagEditor ? 'true' : 'false'};
     window.openMapOverlay=function(u,t){img.src=u;document.getElementById('mapOverlayTitle').textContent=t;
-      sc=1;px=0;py=0;img.style.transform='scale(1) translate(0px,0px)';ov.classList.add('active');document.body.style.overflow='hidden';};
+      sc=1;px=0;py=0;img.style.transform='scale(1) translate(0px,0px)';ov.classList.add('active');document.body.style.overflow='hidden';
+      if(TAGEDIT)mapLoadTags(u);};
     window.closeMapOverlay=function(){ov.classList.remove('active');document.body.style.overflow='';img.src='';};
     window.mapZoom=function(f){sc=Math.max(0.3,Math.min(8,sc*f));img.style.transform='scale('+sc+') translate('+px+'px,'+py+'px)';};
     window.mapReset=function(){sc=1;px=0;py=0;img.style.transform='scale(1) translate(0px,0px)';};
@@ -43,6 +62,26 @@ function mapOverlayBlock() {
       else if(e.touches.length===1&&dr){px=e.touches[0].clientX/sc-sx;py=e.touches[0].clientY/sc-sy;img.style.transform='scale('+sc+') translate('+px+'px,'+py+'px)';}},{passive:false});
     cnt.addEventListener('touchend',function(){dr=false;ld=0;});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ov.classList.contains('active'))closeMapOverlay();});
+    if(TAGEDIT){
+      window._mapTagUrl='';
+      window.mapLoadTags=function(u){window._mapTagUrl=u;var bar=document.getElementById('mapTagBar');if(bar)bar.style.display='flex';
+        var st=document.getElementById('mapTagStatus');if(st)st.textContent='';
+        fetch('/api/dm-admin/images/tags?url='+encodeURIComponent(u)).then(function(r){return r.json();}).then(function(d){
+          if(!d.ok)return;var tags=(d.tags&&d.tags.tags)||[];var loc='',book='';
+          tags.forEach(function(x){if(x.indexOf('loc:')===0)loc=x.slice(4);else if(x.indexOf('book:')===0)book=x.slice(5);});
+          var li=document.getElementById('mapTagLoc');if(li)li.value=loc;
+          var bi=document.getElementById('mapTagBook');if(bi)bi.value=book;
+          var de=document.getElementById('mapTagDesc');if(de)de.value=d.description||'';
+        }).catch(function(){});};
+      window.mapSaveTags=function(){var st=document.getElementById('mapTagStatus');if(st)st.textContent='Saving...';
+        var loc=((document.getElementById('mapTagLoc')||{}).value||'').trim();
+        var book=((document.getElementById('mapTagBook')||{}).value||'').trim();
+        var desc=(document.getElementById('mapTagDesc')||{}).value||'';
+        var tags=[];if(loc)tags.push('loc:'+loc);if(book)tags.push('book:'+book);
+        fetch('/api/dm-admin/images/tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:window._mapTagUrl,type:'Location/Landmark',tags:tags,description:desc})})
+          .then(function(r){return r.json();}).then(function(d){if(st)st.textContent=d.ok?'Saved':(d.error||'Error');})
+          .catch(function(e){if(st)st.textContent='Error';});};
+    }
   })();
   </script>`;
 }
@@ -58,7 +97,7 @@ function artifactOverlayBlock(defaultTitle, opts) {
   const { TYPES } = require('../lib/image-tags');
   const typeOptions = TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
   return `
-  <div class="map-overlay" id="artifactOverlay">
+  <div class="map-overlay${tagEditor ? ' ov-with-tags' : ''}" id="artifactOverlay">
     <div class="map-overlay-header">
       <span class="map-overlay-title" id="artifactOverlayTitle"></span>
       <button class="map-overlay-close" onclick="closeArtifactOverlay()">&times;</button>
@@ -72,11 +111,20 @@ function artifactOverlayBlock(defaultTitle, opts) {
       <button onclick="artifactReset()">Reset</button>
     </div>
     ${tagEditor ? `<div class="ov-tagbar" id="ovTagBar" style="display:none;">
-      <span class="ov-tagsrc" id="ovTagSrc"></span>
-      <label>Type <select id="ovTagType">${typeOptions}</select></label>
-      <input id="ovTagCustom" placeholder="custom tags, comma-separated" />
-      <button onclick="ovSaveTags()">Save Tags</button>
-      <span id="ovTagStatus" class="ov-tagstatus"></span>
+      <div class="ov-tagrow">
+        <span class="ov-tagsrc" id="ovTagSrc"></span>
+        <label>Type <select id="ovTagType">${typeOptions}</select></label>
+        <input id="ovTagCustom" placeholder="custom tags, comma-separated" />
+      </div>
+      <div class="ov-tagrow">
+        <label class="ov-desclabel">Description
+          <textarea id="ovTagDesc" rows="2" placeholder="Shown on the gallery and used for AI search"></textarea>
+        </label>
+      </div>
+      <div class="ov-tagrow">
+        <button onclick="ovSaveTags()">Save</button>
+        <span id="ovTagStatus" class="ov-tagstatus"></span>
+      </div>
     </div>` : ''}
   </div>
   <script>
@@ -110,12 +158,14 @@ function artifactOverlayBlock(defaultTitle, opts) {
           if(!d.ok)return;var t=d.tags||{};
           var sel=document.getElementById('ovTagType');if(sel)sel.value=t.type||'Other';
           var ci=document.getElementById('ovTagCustom');if(ci)ci.value=(t.tags||[]).join(', ');
+          var de=document.getElementById('ovTagDesc');if(de)de.value=d.description||'';
           var src=document.getElementById('ovTagSrc');if(src)src.textContent=t.source?('Source: '+t.source):'';
         }).catch(function(){});};
       window.ovSaveTags=function(){var st=document.getElementById('ovTagStatus');if(st)st.textContent='Saving...';
         var type=document.getElementById('ovTagType').value;
         var tags=document.getElementById('ovTagCustom').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
-        fetch('/api/dm-admin/images/tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:window._ovTagUrl,type:type,tags:tags})})
+        var de=document.getElementById('ovTagDesc');var desc=de?de.value:'';
+        fetch('/api/dm-admin/images/tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:window._ovTagUrl,type:type,tags:tags,description:desc})})
           .then(function(r){return r.json();}).then(function(d){if(st)st.textContent=d.ok?'Saved':(d.error||'Error');})
           .catch(function(e){if(st)st.textContent='Error';});};
     }

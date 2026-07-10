@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.42.1] - 2026-07-09
+
+### Fixed
+- **Art & Images overlay tag editor was unusable.** The admin tag bar was rendered on the same bottom strip as the Zoom In / Zoom Out / Reset buttons, so the controls overlapped the Type dropdown and custom-tags field and the fields were hard to hit. The zoom/reset controls now move to a vertical stack on the right edge when the tag editor is present, and the tag editor is a full-width bottom panel laid out in rows.
+
+### Added
+- **Edit the image Description in the overlay.** The tag editor now includes a **Description** textarea (below Type / custom tags). It loads the current gallery description and saves it back to `hotd_art` / `hotd_maps` via `POST /api/dm-admin/images/tags` (now accepts `description`). `GET …/images/tags` returns the current description (art / maps / generated). The image max-height shrinks when the editor is open so the panel doesn't cover the art.
+- **Maps overlay now has an admin editor too.** Opening a map on Game Info → Maps as an admin shows a bottom panel with **Location name**, **Source book**, and **Description** fields (Type is fixed to `Location/Landmark`). Location/source are stored as `loc:` / `book:` tags in `hotd_image_tags` and round-trip into the two fields; Description saves to `hotd_maps`. Zoom/Reset move to the right edge here as well.
+
+### Notes
+- Descriptions edited here are the gallery display text; the RAG search embedding is only refreshed when the image is re-indexed (indexer is idempotent by `source_path`).
+- Validated: `/art` and `/maps` render for admin (editor shown) and non-admin (editor hidden); all overlay client scripts pass `node --check`.
+
 ## [3.42.0] - 2026-07-09
 
 ### Added

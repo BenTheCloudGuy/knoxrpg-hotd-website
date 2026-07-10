@@ -430,7 +430,7 @@ async function renderMapsPage(session, pageParam) {
     <div class="map-grid">${mapCards}</div>
     ${renderPager("/maps", page, totalPages)}
   </div>
-  ${mapOverlayBlock()}`;
+  ${mapOverlayBlock({ tagEditor: session && session.role === "admin" })}`;
   return pageShell("Maps — Halls of the Damned", "/maps", body, session);
 }
 

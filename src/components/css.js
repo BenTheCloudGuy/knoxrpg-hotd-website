@@ -506,13 +506,19 @@ function pageCss() {
     .gal-reset { border-color: #733; color: #e77; }
     .gal-reset:hover { border-color: #a33; color: #f99; }
     /* ── Overlay admin tag editor ── */
-    .ov-tagbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; padding: 10px 14px; background: rgba(0,0,0,0.6); border-top: 1px solid #333; color: #ccc; font-size: 0.85rem; }
+    .ov-tagbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 50003; display: flex; flex-direction: column; gap: 8px; padding: 12px 18px 14px; background: rgba(0,0,0,0.9); border-top: 1px solid #333; color: #ccc; font-size: 0.85rem; box-shadow: 0 -6px 18px rgba(0,0,0,0.5); }
+    .ov-tagrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
     .ov-tagbar label { display: inline-flex; gap: 6px; align-items: center; }
-    .ov-tagbar select, .ov-tagbar input { background: #141414; border: 1px solid #333; border-radius: 6px; color: #ddd; padding: 6px 10px; font-size: 0.85rem; }
+    .ov-desclabel { display: flex; align-items: flex-start; gap: 8px; width: 100%; max-width: 880px; margin: 0 auto; }
+    .ov-tagbar select, .ov-tagbar input, .ov-tagbar textarea { background: #141414; border: 1px solid #333; border-radius: 6px; color: #ddd; padding: 6px 10px; font-size: 0.85rem; }
     .ov-tagbar input { min-width: 240px; }
-    .ov-tagbar button { background: #e8b923; color: #1a1a1a; border: none; border-radius: 6px; padding: 6px 14px; font-weight: 700; cursor: pointer; }
+    .ov-tagbar textarea { flex: 1; min-width: 320px; min-height: 42px; resize: vertical; font-family: inherit; line-height: 1.4; }
+    .ov-tagbar button { background: #e8b923; color: #1a1a1a; border: none; border-radius: 6px; padding: 7px 20px; font-weight: 700; cursor: pointer; }
     .ov-tagsrc { color: #888; font-size: 0.78rem; }
     .ov-tagstatus { color: #6c6; font-size: 0.8rem; }
+    /* Keep the zoom/reset controls clear of the bottom tag editor. */
+    .map-overlay.ov-with-tags .map-overlay-controls { bottom: auto; top: 50%; left: auto; right: 16px; transform: translateY(-50%); flex-direction: column; z-index: 50004; }
+    .map-overlay.ov-with-tags .map-overlay-img { max-height: 66vh; }
     /* ── Calendar ── */
     .calendar-card {
       background: #1a1a1a; border: 1px solid #333; border-radius: 10px;

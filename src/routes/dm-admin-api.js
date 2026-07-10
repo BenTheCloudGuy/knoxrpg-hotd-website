@@ -2266,7 +2266,17 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       if (!url) { sendJSON(res, { error: "url is required" }, 400); return true; }
       const r = await pgPool.query("SELECT source, type, tags FROM hotd_image_tags WHERE url=$1", [url]);
       const row = r.rows[0] || { source: "", type: "Other", tags: [] };
-      sendJSON(res, { ok: true, types: imageTags.TYPES, tags: row });
+      // Current gallery description (art / maps / generated) keyed by image_url.
+      let description = "";
+      try {
+        const d = await pgPool.query(
+          `SELECT description FROM hotd_art WHERE image_url=$1
+           UNION ALL SELECT description FROM hotd_maps WHERE image_url=$1
+           UNION ALL SELECT COALESCE(revised_prompt, prompt) FROM hotd_generated_images WHERE image_url=$1
+           LIMIT 1`, [url]);
+        description = (d.rows[0] && d.rows[0].description) || "";
+      } catch (_) { /* tables may vary */ }
+      sendJSON(res, { ok: true, types: imageTags.TYPES, tags: row, description });
     } catch (err) { sendJSON(res, { error: err.message }, 500); }
     return true;
   }
@@ -2277,6 +2287,12 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
       if (!body.url) { sendJSON(res, { error: "url is required" }, 400); return true; }
       const tags = Array.isArray(body.tags) ? body.tags : (typeof body.tags === "string" ? body.tags.split(",") : null);
       await imageTags.saveTags(pgPool, body.url, { source: body.source || null, type: body.type || null, tags });
+      // Persist the description onto whichever gallery table owns this image.
+      if (typeof body.description === "string") {
+        const desc = body.description;
+        try { await pgPool.query("UPDATE hotd_art SET description=$2 WHERE image_url=$1", [body.url, desc]); } catch (_) {}
+        try { await pgPool.query("UPDATE hotd_maps SET description=$2 WHERE image_url=$1", [body.url, desc]); } catch (_) {}
+      }
       sendJSON(res, { ok: true });
     } catch (err) { sendJSON(res, { error: err.message }, 500); }
     return true;
