@@ -2524,17 +2524,23 @@ async function renderDmAdminPage(session) {
     if (rep.tokenAvailable && rep.ddbOwned) {
       var o = rep.ddbOwned;
       html += '<h4 class="dmc-section-title">D&amp;D Beyond library coverage (' + ddbNum(o.ownedSources) + ' sources \u2014 ' + ddbNum(o.availableCount||0) + ' available, ' + ddbNum(o.missingCount) + ' missing)</h4>';
-      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. <strong>Sync</strong> downloads a source&#39;s stat content into the RAG and its art + maps for the book\u2019s images into the Storage Account \u2014 maps appear under Game Info \u2192 Maps, other art under Game Info \u2192 Art &amp; Images.</p>';
+      html += '<p class="cards-hint">' + ddbNum(o.entitledMonsters||0) + ' monsters entitled across ' + ddbNum(o.ownedSources) + ' owned sources; ' + ddbNum(o.syncedSources) + ' downloaded locally. <span class="ddb-badge ddb-badge-ok">Available</span> = stat content downloaded to the DB and embedded into the RAG; <span class="ddb-badge ddb-badge-miss">Missing</span> = not yet imported. The <strong>Images</strong> column shows art + maps downloaded for each book \u2014 <em>content status does not include images</em>. <strong>Sync</strong> downloads a source&#39;s stat content into the RAG and its art + maps into the Storage Account \u2014 maps appear under Game Info \u2192 Maps, other art under Game Info \u2192 Art &amp; Images.</p>';
+      html += '<p class="cards-hint">' + ddbNum(o.totalImages||0) + ' images downloaded (' + ddbNum(o.totalArt||0) + ' art, ' + ddbNum(o.totalMaps||0) + ' maps) across ' + ddbNum(o.booksWithImages||0) + ' book(s); ' + ddbNum(o.imagelessCount||0) + ' owned book(s) have no images yet.</p>';
       if (o.missingCount > 0) {
         html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncall-btn" onclick="ddbSyncAllMissing()">\u2193 Sync ALL Missing \u2192 RAG (' + ddbNum(o.missingCount) + ' sources)</button> <span class="cards-hint">Downloads each Missing source (stat content + art + maps) and embeds it. Runs in the background; large libraries can take a while.</span></p>';
       }
-      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th><th></th></tr></thead><tbody>';
+      if ((o.imagelessCount||0) > 0) {
+        html += '<p style="margin:0 0 10px;"><button class="dmc-btn dmc-btn-primary" id="ddb-syncimg-btn" onclick="ddbSyncAllImages()">\u2193 Sync images for ALL owned books (' + ddbNum(o.imagelessCount) + ' without art/maps)</button> <span class="cards-hint">Downloads art + maps for every owned book that has none yet. Then run \u201cIndex Images for Search\u201d to make them searchable. Runs in the background; can take a long time.</span></p>';
+      }
+      html += '<table class="ddb-table"><thead><tr><th>Class</th><th>Source</th><th>Title</th><th>Status</th><th>Images</th><th></th></tr></thead><tbody>';
       (o.all||o.missing||[]).slice(0,200).forEach(function(s){
         var badge = s.status === 'Available'
           ? '<span class="ddb-badge ddb-badge-ok">Available</span>'
           : '<span class="ddb-badge ddb-badge-miss">Missing</span>';
+        var imgTxt = s.images ? ((s.art ? ddbNum(s.art) + ' art' : '') + (s.art && s.maps ? ', ' : '') + (s.maps ? ddbNum(s.maps) + ' map' + (s.maps === 1 ? '' : 's') : '')) : 'none';
+        var imgCell = '<span class="ddb-badge ' + (s.images ? 'ddb-badge-ok' : 'ddb-badge-miss') + '">' + imgTxt + '</span>';
         var action = '<button class="dmc-btn dmc-btn-sm ddb-sync-src" data-code="' + esc(s.code) + '" data-title="' + esc(s.title) + '" title="Download this book\u2019s stat content into the RAG and its art + maps into the galleries">Sync</button>';
-        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td><td>' + action + '</td></tr>';
+        html += '<tr><td>' + esc(s.class) + '</td><td><code>' + esc(s.code) + '</code></td><td>' + esc(s.title) + '</td><td>' + badge + '</td><td>' + imgCell + '</td><td>' + action + '</td></tr>';
       });
       html += '</tbody></table>';
     } else {
@@ -2634,7 +2640,30 @@ async function renderDmAdminPage(session) {
     }
   }
 
-  // AI-describe + index gallery images (Art + Maps) into the RAG for search.
+  // Download art + maps for ALL owned books that have none yet (background).
+  async function ddbSyncAllImages() {
+    var o = (_ddbReport && _ddbReport.ddbOwned) || {};
+    var n = o.imagelessCount || 0;
+    if (!n) { alert('Every owned book already has images (or yields none).'); return; }
+    if (!confirm('Download art + maps for ALL ' + n + ' owned book(s) that have none yet? Runs in the background and can take a long time for large libraries.')) return;
+    var btn = el('ddb-syncimg-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting\u2026'; }
+    try {
+      var r = await fetch('/api/dm-admin/ddb/sync-all-images', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Failed to start');
+      ddbPollJob(d.jobId, function(j){ if (btn) { var last = (j.progress && j.progress.length) ? j.progress[j.progress.length-1] : ''; btn.textContent = 'Syncing\u2026 ' + last.slice(0,28); } }, function(j){
+        if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync images for ALL owned books'; }
+        if (j.error) { alert('Image sync error: ' + j.error); return; }
+        var x = j.result || {};
+        alert('Downloaded ' + (x.art||0) + ' art + ' + (x.maps||0) + ' maps across ' + (x.booksWithImages||0) + ' book(s); ' + (x.noImages||0) + ' yielded none. Now run \u201cIndex Images for Search\u201d to make them searchable.');
+        runDdbAudit();
+      });
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = '\u2193 Sync images for ALL owned books'; }
+      alert('Image sync error: ' + e.message);
+    }
+  }
   async function imgIndexForSearch() {
     var btn = el('img-index-btn');
     if (!confirm('AI-describe and index gallery images (Art + Maps, including D&D Beyond art) into the RAG so they are searchable via Search and the DM AI? Runs in the background; processes up to 120 new images per run.')) return;

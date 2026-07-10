@@ -2188,6 +2188,46 @@ ${promptOverride ? `Additional instructions from the DM: ${promptOverride}` : ""
     return true;
   }
 
+  // POST /api/dm-admin/ddb/sync-all-images  { sources? }
+  // Downloads art + maps for owned books that have none yet (or an explicit
+  // list). Content is left untouched. Runs in the background; poll
+  // /ddb/sync-status?id=. Follow with POST /images/index to make them searchable.
+  if (decoded === "/api/dm-admin/ddb/sync-all-images" && req.method === "POST") {
+    if (!requireAdmin(session, res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      let sourceCodes = Array.isArray(body.sources) ? body.sources.map((s) => String(s).toLowerCase()).filter(Boolean) : [];
+      if (!sourceCodes.length) {
+        const cobaltToken = await ddbClient.getCobaltToken();
+        const audit = await runDdbAudit(pgPool, { cobaltToken });
+        sourceCodes = (audit.ddbOwned && audit.ddbOwned.imagelessAvailable) || [];
+      }
+      if (!sourceCodes.length) { sendJSON(res, { ok: true, empty: true, note: "no books need images" }); return true; }
+      const job = ddbJobs.start(`Image sync ${sourceCodes.length} book(s)`, async (log) => {
+        const totals = { books: sourceCodes.length, found: 0, uploaded: 0, art: 0, maps: 0, published: 0, skipped: 0, failed: 0, booksWithImages: 0, noImages: 0 };
+        let i = 0;
+        for (const code of sourceCodes) {
+          i++;
+          try {
+            log(`[${i}/${sourceCodes.length}] ${code}\u2026`);
+            const r = await ddbBookImages.downloadBookImages(pgPool, code, { onLog: log });
+            totals.found += r.found || 0; totals.uploaded += r.uploaded || 0;
+            totals.art += r.art || 0; totals.maps += r.maps || 0;
+            totals.published += r.published || 0; totals.skipped += r.skipped || 0; totals.failed += r.failed || 0;
+            if ((r.art || 0) + (r.maps || 0) > 0) totals.booksWithImages++; else totals.noImages++;
+          } catch (e) { totals.noImages++; log(`${code}: ${e.message}`); }
+        }
+        log("Done.");
+        return totals;
+      });
+      sendJSON(res, { ok: true, jobId: job.id, books: sourceCodes.length });
+    } catch (err) {
+      console.error("DDB sync-all-images error:", err);
+      sendJSON(res, { error: err.message, reason: err.reason || null }, 500);
+    }
+    return true;
+  }
+
   // ── DDB: background sync job status ──────────────────────
   // GET /api/dm-admin/ddb/sync-status?id=...
   if (decoded === "/api/dm-admin/ddb/sync-status" && req.method === "GET") {

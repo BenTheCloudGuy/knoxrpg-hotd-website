@@ -6,6 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.42.0] - 2026-07-09
+
+### Added
+- **Image-aware DDB library coverage + bulk image sync.** The coverage panel previously marked a book **Available** based only on its *stat content* (monsters/items/spells embedded in the RAG); it said nothing about whether the book's **art/maps** were downloaded. Result: 131 books showed green while only 4 actually had images.
+  - New **Images** column in the coverage table shows the art + maps downloaded per book (or `none`), with a note that content status excludes images.
+  - `ownedGap()` (`src/lib/ddb-audit.js`) now joins `ddb_book_images` and returns per-book `art`/`maps`/`images` counts plus library totals (`totalArt`, `totalMaps`, `totalImages`, `booksWithImages`, `imagelessCount`, `imagelessAvailable`).
+  - New **"Sync images for ALL owned books"** button downloads art + maps for every owned book that has none yet, in the background.
+  - New endpoint `POST /api/dm-admin/ddb/sync-all-images` (`{ sources? }`) — with no list it targets `imagelessAvailable`; runs `downloadBookImages` per book and aggregates totals. Poll via `/ddb/sync-status?id=`.
+
+### Notes
+- Content was never the problem: 5,572 monsters across 141 source codes are downloaded + embedded. The gap was images (only `mm-2024`, `tob1`, `vnee`, `lke`) and 0 image embeddings in the RAG.
+- After a bulk image sync, run **Index Images for Search** (Image Studio) so the new art/maps become searchable via HOTD Search and the DM AI.
+- Validated: `node --check` passes on all rendered dm-admin client scripts (2191-line block included); no lint errors in `ddb-audit.js`, `dm-admin.js`, `dm-admin-api.js`.
+
 ## [3.41.1] - 2026-07-09
 
 ### Fixed

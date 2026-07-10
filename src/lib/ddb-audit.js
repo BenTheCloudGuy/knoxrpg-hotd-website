@@ -248,18 +248,34 @@ async function ownedGap(pgPool, unembeddedCodes = new Set()) {
   );
   const downloaded = new Set(rows.map((r) => r.code).filter(Boolean));
 
-  // Annotate every owned source with an Available / Missing status.
+  // Per-book downloaded-image counts (art + maps) from ddb_book_images.
+  const imgCounts = new Map();
+  try {
+    const ir = await pgPool.query(
+      "SELECT book_code, count(*) FILTER (WHERE kind='art') AS art, count(*) FILTER (WHERE kind='maps') AS maps FROM ddb_book_images GROUP BY book_code"
+    );
+    for (const r of ir.rows) imgCounts.set(r.book_code, { art: +r.art || 0, maps: +r.maps || 0 });
+  } catch (_) { /* table may not exist yet */ }
+
+  // Annotate every owned source with an Available / Missing status + image coverage.
   const all = [];
+  let totalArt = 0, totalMaps = 0, booksWithImages = 0;
   for (const o of owned.values()) {
     o.downloaded = downloaded.has(o.code);
     o.embedded = o.downloaded && !unembeddedCodes.has(o.code);
     o.status = (o.downloaded && o.embedded) ? "Available" : "Missing";
+    const im = imgCounts.get(o.code) || { art: 0, maps: 0 };
+    o.art = im.art; o.maps = im.maps; o.images = im.art + im.maps;
+    o.hasImages = o.images > 0;
+    totalArt += im.art; totalMaps += im.maps; if (o.hasImages) booksWithImages++;
     all.push(o);
   }
   // Missing first (so gaps stand out), then most-content first.
   all.sort((a, b) => (a.status === b.status ? b.monsters - a.monsters : (a.status === "Missing" ? -1 : 1)));
   const missing = all.filter((o) => o.status === "Missing");
   const missingMonsters = missing.reduce((s, o) => s + (o.monsters || 0), 0);
+  // Owned books whose content is present but that have no images downloaded yet.
+  const imagelessAvailable = all.filter((o) => !o.hasImages).map((o) => o.code);
 
   return {
     ownedSources: owned.size,
@@ -268,6 +284,12 @@ async function ownedGap(pgPool, unembeddedCodes = new Set()) {
     availableCount: all.length - missing.length,
     missingCount: missing.length,
     missingMonsters,
+    totalArt,
+    totalMaps,
+    totalImages: totalArt + totalMaps,
+    booksWithImages,
+    imagelessCount: imagelessAvailable.length,
+    imagelessAvailable,
     all,
     missing,
   };
