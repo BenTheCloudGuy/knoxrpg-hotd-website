@@ -269,7 +269,8 @@ async function executeTool(name, args, openaiClient, isDM = false) {
     }
 
     case "get_session_log": {
-      const all = await listSessionPages({ publishedOnly: false });
+      // Players only ever see published sessions; the DM (isDM) also sees drafts.
+      const all = await listSessionPages({ publishedOnly: !isDM });
       if (args.session_number != null) {
         const s = all.find(x => x.sessionNumber === parseInt(args.session_number, 10));
         if (!s) return JSON.stringify({ found: false, message: `Session ${args.session_number} not found` });
@@ -698,7 +699,9 @@ You are speaking to a player. Do not reveal:
 - Full monster stat blocks (AC, HP, exact ability scores, legendary actions).
 - Secret plot points or upcoming story elements.
 
-When asked about a monster, describe what the character might know based on common knowledge or relevant skill checks (Arcana, Nature, History, Religion). Frame it as in-world knowledge, not game mechanics. You may mention the creature's general type, size, and known behaviors, but do not provide AC, HP, ability scores, or other stat block details.`;
+When asked about a monster, describe what the character might know based on common knowledge or relevant skill checks (Arcana, Nature, History, Religion). Frame it as in-world knowledge, not game mechanics. You may mention the creature's general type, size, and known behaviors, but do not provide AC, HP, ability scores, or other stat block details.
+
+This restriction applies even if you already know the creature's statistics from general D&D knowledge or official sourcebooks. NEVER state a monster's Armor Class, hit points, ability scores, saving throws, damage, challenge rating, or legendary actions to a player, no matter where that information comes from (tool results OR your own training knowledge). This rule OVERRIDES any general instruction elsewhere in this prompt that allows you to supplement answers with general D&D knowledge: for a player, mechanical monster statistics are never supplied from memory. If you are about to write an "Armor Class", "Hit Points", ability-score table, or "Challenge" line for a player, stop and replace it with a descriptive, in-world sentence instead. If a player asks for a stat block or specific combat numbers, politely decline and instead offer in-world descriptive knowledge (appearance, reputation, general behaviors) and suggest they can learn more through skill checks during play.`;
 
 /**
  * Build the full system prompt for the given role and user context.

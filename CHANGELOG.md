@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 
 > **Policy:** every entry in this file MUST be under a real `## [X.Y.Z] - YYYY-MM-DD` heading. The literal `## [Unreleased]` section is forbidden — the deploy workflow extracts the image tag from the first `## [...]` heading in this file, and an `[Unreleased]` tag produces no rollout. New changes get a new versioned section (patch / minor / major per semver) at the top.
 
+## [3.42.2] - 2026-07-11
+
+### Fixed
+- **DM AI leaked unpublished/draft sessions to players.** The `get_session_log` tool (`src/lib/ai-tools.js`) called `listSessionPages({ publishedOnly: false })` unconditionally, so a player asking the DM AI "what happened recently" could receive the titles and draft summaries of sessions that have not been published yet (spoilers). It now passes `publishedOnly: !isDM` — players only ever receive published sessions, while the DM still sees drafts. Verified: player latest = Session 31 (published); DM latest = Session 35 (draft).
+
+### Security
+- **Hardened player-mode system prompt against stat-block reconstruction.** The player addon in `buildSystemPrompt` now explicitly forbids stating a monster's AC, hit points, ability scores, saving throws, damage, challenge rating, or legendary actions to a player *regardless of source*, and states that this overrides the general "you may supplement with general D&D knowledge" instruction in the base prompt.
+
+### Notes
+- The prompt hardening is **model-dependent**: it is effective for the local Qwen3-32B model (it now declines and gives in-world description), but `gpt-5.4-mini` still reconstructs published monster stats from its training knowledge despite the instruction. Prompt-only guardrails are soft; a code-level output filter (strip stat-block fields from player responses) is the reliable follow-up if hard secrecy is required. The underlying `lookup_monster` tool already correctly withholds stats from player calls — the residual leak is purely the model answering from parametric knowledge.
+- The `get_session_log` fix closes the leak at the tool boundary regardless of model.
+
 ## [3.42.1] - 2026-07-09
 
 ### Fixed
