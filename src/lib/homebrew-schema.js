@@ -10,9 +10,14 @@
 // ══════════════════════════════════════════════════════════════
 
 const RARITY_OPTS = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary", "Artifact", "Varies", "Unknown"];
-const MI_TYPE_OPTS = ["Wondrous Item", "Ring", "Rod", "Potion", "Scroll", "Staff", "Wand", "Armor", "Weapon"];
+const MI_TYPE_OPTS = ["Wondrous Item", "Ring", "Rod", "Potion", "Scroll", "Staff", "Wand"];
+const BASE_ITEM_TYPE_OPTS = ["Item", "Armor", "Weapon"];
+const ARMOR_DEX_OPTS = ["Full", "Max 2", "None"];
+const ARMOR_STEALTH_OPTS = ["None", "Disadvantage"];
 const SCHOOLS = ["Abjuration", "Conjuration", "Divination", "Enchantment", "Evocation", "Illusion", "Necromancy", "Transmutation"];
 const SIZES = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"];
+const MONSTER_TYPES = ["Aberration", "Beast", "Celestial", "Construct", "Dragon", "Elemental", "Fey", "Fiend", "Giant", "Humanoid", "Monstrosity", "Ooze", "Plant", "Undead"];
+const CLASS_OPTS = ["Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"];
 
 const CATEGORIES = {
   "magic-item": {
@@ -22,16 +27,23 @@ const CATEGORIES = {
     pushable: true,
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
+      { key: "version", label: "Version", type: "text" },
       { key: "rarity", label: "Rarity", type: "select", options: RARITY_OPTS },
-      { key: "type", label: "Type", type: "select", options: MI_TYPE_OPTS },
+      { key: "base_item_type", label: "Base Item Type", type: "select", options: BASE_ITEM_TYPE_OPTS },
+      { key: "magic_item_type", label: "Magic Item Type", type: "select", options: MI_TYPE_OPTS },
+      { key: "base_armor", label: "Base Armor (DDB id)", type: "text" },
+      { key: "dexterity_modifier", label: "Armor Dex Modifier", type: "select", options: ARMOR_DEX_OPTS },
+      { key: "strength_requirement", label: "Armor Strength Requirement", type: "text" },
+      { key: "stealth_check", label: "Armor Stealth Check", type: "select", options: ARMOR_STEALTH_OPTS },
+      { key: "base_weapon", label: "Base Weapon (DDB id)", type: "text" },
       { key: "requires_attunement", label: "Requires Attunement", type: "checkbox" },
       { key: "attunement_description", label: "Attunement (by whom)", type: "text" },
       { key: "weight", label: "Weight (lb)", type: "text" },
       { key: "description", label: "Description", type: "textarea", required: true },
     ],
     generate: {
-      jsonKeys: ["name", "rarity", "type", "requires_attunement", "attunement_description", "description"],
-      system: "You are a D&D 5e (2024) magic item designer. Given a prompt, return ONE balanced homebrew magic item as strict JSON with keys: name (string), rarity (one of Common/Uncommon/Rare/Very Rare/Legendary/Artifact), type (one of Wondrous Item/Ring/Rod/Potion/Scroll/Staff/Wand/Armor/Weapon), requires_attunement (boolean), attunement_description (string, e.g. 'by a spellcaster' or ''), description (string, full rules text with any bonuses, charges, activation). Keep power appropriate to the rarity. No markdown, JSON only.",
+      jsonKeys: ["name", "version", "rarity", "base_item_type", "magic_item_type", "base_armor", "dexterity_modifier", "strength_requirement", "stealth_check", "base_weapon", "requires_attunement", "attunement_description", "weight", "description"],
+      system: "You are a D&D 5e (2024) magic item designer. Given a prompt, return ONE balanced homebrew magic item as strict JSON with keys: name (string), version (string, usually '1'), rarity (one of Common/Uncommon/Rare/Very Rare/Legendary/Artifact/Varies/Unknown), base_item_type (one of Item/Armor/Weapon), magic_item_type (one of Wondrous Item/Ring/Rod/Potion/Scroll/Staff/Wand), base_armor (string DDB id or ''), dexterity_modifier (one of Full/Max 2/None or ''), strength_requirement (string number or ''), stealth_check (one of None/Disadvantage or ''), base_weapon (string DDB id or ''), requires_attunement (boolean), attunement_description (string, e.g. 'by a spellcaster' or ''), weight (string, e.g. '1' or ''), description (string, full rules text with any bonuses, charges, activation). If base_item_type is Item, leave base_armor/base_weapon and armor-only fields empty. Keep power appropriate to rarity. No markdown, JSON only.",
     },
   },
 
@@ -65,7 +77,7 @@ const CATEGORIES = {
     fields: [
       { key: "name", label: "Name", type: "text", required: true },
       { key: "size", label: "Size", type: "select", options: SIZES },
-      { key: "type", label: "Creature Type", type: "text" },
+      { key: "type", label: "Creature Type", type: "select", options: MONSTER_TYPES },
       { key: "alignment", label: "Alignment", type: "text" },
       { key: "challenge_rating", label: "CR", type: "text" },
       { key: "description", label: "Stat Block + Lore", type: "textarea", required: true },
@@ -116,7 +128,7 @@ const CATEGORIES = {
     pushable: true,
     fields: [
       { key: "name", label: "Subclass Name", type: "text", required: true },
-      { key: "parent_class", label: "Parent Class", type: "text", required: true },
+      { key: "parent_class", label: "Parent Class", type: "select", options: CLASS_OPTS, required: true },
       { key: "description", label: "Features by Level + Lore", type: "textarea", required: true },
     ],
     generate: {
@@ -153,7 +165,10 @@ function composeText(cat, fields) {
   const f = fields || {};
   const head = [];
   head.push(`# ${f.name || "Homebrew " + def.label}`);
-  if (cat === "magic-item") head.push(`${f.rarity || ""} ${f.type || ""}${f.requires_attunement ? " (requires attunement" + (f.attunement_description ? " " + f.attunement_description : "") + ")" : ""}`.trim());
+  if (cat === "magic-item") {
+    const t = f.base_item_type || f.magic_item_type || f.type || "";
+    head.push(`${f.rarity || ""} ${t}${f.requires_attunement ? " (requires attunement" + (f.attunement_description ? " " + f.attunement_description : "") + ")" : ""}`.trim());
+  }
   else if (cat === "spell") head.push(`${(f.level === 0 || f.level === "0") ? "Cantrip" : "Level " + (f.level || "?")} ${f.school || ""} spell`.trim());
   else if (cat === "monster") head.push(`${f.size || ""} ${f.type || ""}, ${f.alignment || "unaligned"} (CR ${f.challenge_rating || "?"})`.trim());
   else if (cat === "feat" && f.prerequisite) head.push(`Prerequisite: ${f.prerequisite}`);

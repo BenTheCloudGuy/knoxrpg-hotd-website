@@ -171,6 +171,18 @@ async function publishDraft(pgPool, openaiClient, id, opts = {}) {
     report.steps.ddb = { ok: false, skipped: true, reason: def.pushable ? "push-disabled" : "category-not-pushable" };
   }
 
+  // 4b. Upload image to the DDB item (only after it exists on DDB). Non-fatal.
+  if (def.pushable && ddbHb.pushEnabled() && draft.image_url) {
+    if (report.steps.ddb && report.steps.ddb.ok && draft.ddb_id) {
+      try {
+        const img = await ddbHb.uploadImage(draft.category, draft.ddb_id, draft.image_url);
+        report.steps.ddbImage = { ok: img.ok, ddbUrl: img.ddbUrl, bytes: img.bytes, contentType: img.contentType };
+      } catch (e) { report.steps.ddbImage = { ok: false, error: e.message, reason: e.reason || null }; }
+    } else {
+      report.steps.ddbImage = { ok: false, skipped: true, reason: !(report.steps.ddb && report.steps.ddb.ok) ? "ddb-push-failed" : "no-ddb-id" };
+    }
+  }
+
   // 5. Persist status
   const r = await pgPool.query(
     `UPDATE hotd_homebrew SET status='published', local_row_id=$1, rag_chunks=$2, ddb_id=$3, ddb_entity_type_id=$4, ddb_url=$5, updated_at=NOW()
